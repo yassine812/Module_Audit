@@ -1,7 +1,23 @@
 from django.urls import path
 from .views import *
+from .auth import LoginView, LogoutView
+from .api_views import (
+    LoginAPIView, LogoutAPIView, TypeAuditListAPIView, 
+    TypeAuditDetailAPIView, ChapitreNormeListAPIView, CritereListAPIView, TypeCotationListAPIView, SousCritereListAPIView, FormulaireAuditListAPIView, ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView
+)
 
 urlpatterns = [
+
+    # =====================================================
+    # AUTHENTICATION
+    # =====================================================
+    path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    
+    # =====================================================
+    # DASHBOARD
+    # =====================================================
+    path("", DashboardView.as_view(), name="dashboard"),
 
     # =====================================================
     # TYPE AUDIT
@@ -89,7 +105,7 @@ urlpatterns = [
     path("liste-audit/create/", ListeAuditCreateView.as_view(), name="liste_audit_create"),
     path("liste-audit/<int:pk>/", ListeAuditDetailView.as_view(), name="liste_audit_detail"),
     path("liste-audit/<int:pk>/edit/", ListeAuditUpdateView.as_view(), name="liste_audit_update"),
-    path("liste-audit/<int:pk>/delete/", ListeAuditDeleteView.as_view(), name="liste_audit_delete"),
+    # path("liste-audit/<int:pk>/delete/", ListeAuditDeleteView.as_view(), name="liste_audit_delete"),
 
     # =====================================================
     # EXECUTION ENGINE
@@ -101,4 +117,24 @@ urlpatterns = [
     path("resultat/<int:pk>/update-detail/", DetailResultatAuditUpdateView.as_view(), name="detail_update"),
     path("resultat/<int:pk>/close/", CloseAuditView.as_view(), name="resultat_close"),
     path("resultat/<int:pk>/report/", ResultatAuditReportView.as_view(), name="resultat_report"),
+
+    # =====================================================
+    # API ENDPOINTS
+    # =====================================================
+    path("api/login/", LoginAPIView.as_view(), name="api_login"),
+    path("api/logout/", LogoutAPIView.as_view(), name="api_logout"),
+    path("api/type-audit/", TypeAuditListAPIView.as_view(), name="api_typeaudit_list"),
+    path("api/type-audit/<int:pk>/", TypeAuditDetailAPIView.as_view(), name="api_typeaudit_detail"),
+    path("api/textref/", TextRefListAPIView.as_view(), name="api_textref_list"),
+    path("api/chapitre-norme/", ChapitreNormeListAPIView.as_view(), name="api_chapitre_norme_list"),
+    path("api/criteres/", CritereListAPIView.as_view(), name="api_critere_list"),
+    path("api/type-cotation/", TypeCotationListAPIView.as_view(), name="api_type_cotation_list"),
+    path("api/sous-criteres/", SousCritereListAPIView.as_view(), name="api_sous_critere_list"),
+    path("api/formulaire-audit/", FormulaireAuditListAPIView.as_view(), name="api_formulaire_audit_list"),
+    path("api/liste-audit/", ListeAuditListAPIView.as_view(), name="api_liste_audit_list"),
+    path("api/resultat-audit/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_list"),
+    path("api/type-preuve/", TypePreuveListAPIView.as_view(), name="api_type_preuve_list"),
+    path("api/preuve-attendu/", PreuveAttenduListAPIView.as_view(), name="api_preuve_attendu_list"),
+    path("api/sous-critere-type-audit/", SousCritereTypeAuditListAPIView.as_view(), name="api_sous_critere_type_audit_list"),
+    path("api/formulaire-sous-critere/", FormulaireSousCritereListAPIView.as_view(), name="api_formulaire_sous_critere_list"),
 ]

@@ -40,6 +40,10 @@ from .views import (
     EquipementUpdateView,
     EquipementDeleteView,
 )
+from .api_views import (
+    SectionListAPIView, SectionDetailAPIView, SiteListAPIView,
+    ProcessusListAPIView, TypeEquipementListAPIView, EquipementListAPIView, NiveauAttenduListAPIView
+)
 
 urlpatterns = [
 
@@ -96,4 +100,15 @@ urlpatterns = [
     path("equipements/create/", EquipementCreateView.as_view(), name="equipement_create"),
     path("equipements/<int:pk>/update/", EquipementUpdateView.as_view(), name="equipement_update"),
     path("equipements/<int:pk>/delete/", EquipementDeleteView.as_view(), name="equipement_delete"),
+
+    # =====================================================
+    # API ENDPOINTS
+    # =====================================================
+    path("api/sections/", SectionListAPIView.as_view(), name="api_section_list"),
+    path("api/sections/<int:pk>/", SectionDetailAPIView.as_view(), name="api_section_detail"),
+    path("api/sites/", SiteListAPIView.as_view(), name="api_site_list"),
+    path("api/processus/", ProcessusListAPIView.as_view(), name="api_processus_list"),
+    path("api/types-equipements/", TypeEquipementListAPIView.as_view(), name="api_type_equipement_list"),
+    path("api/equipements/", EquipementListAPIView.as_view(), name="api_equipement_list"),
+    path("api/niveau-attendu/", NiveauAttenduListAPIView.as_view(), name="api_niveau_attendu_list"),
 ]

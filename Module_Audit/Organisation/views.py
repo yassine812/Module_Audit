@@ -82,8 +82,6 @@ class ProcessusListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     template_name = "org/processus/processus_list.html"
     context_object_name = "processus_list"
     ordering = ["name"]
-
-
 # ==============================
 # CREATE VIEW
 # ==============================
@@ -150,12 +148,9 @@ class TypeEquipementCreateView(LoginRequiredMixin, SuperuserRequiredMixin, Creat
     fields = ["name", "description"]
     template_name = "org/typeequipement/typeequipement_form.html"
     success_url = reverse_lazy("typeequipement_list")
-
-
 # ==============================
 # UPDATE VIEW
 # ==============================
-
 class TypeEquipementUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
     model = TypeEquipement
     fields = ["name"]
@@ -181,19 +176,14 @@ class NiveauAttenduCreateView(LoginRequiredMixin, SuperuserRequiredMixin, Create
     fields = ["name", "pourcentage", "commentaire"]
     template_name = "org/niveauattendu/niveauattendu_form.html"
     success_url = reverse_lazy("niveauattendu_list")
-
-
 # =====================================================
 # UPDATE VIEW
 # =====================================================
-
 class NiveauAttenduUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
     model = NiveauAttendu
     fields = ["name", "pourcentage", "commentaire"]
     template_name = "org/niveauattendu/niveauattendu_form.html"
     success_url = reverse_lazy("niveauattendu_list")
-
-
 # =====================================================
 # DELETE VIEW
 # =====================================================
@@ -211,8 +201,6 @@ class EquipementListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     template_name = "org/equipement/equipement_list.html"
     context_object_name = "equipements"
     ordering = ["name"]
-
-
 # =====================================================
 # DETAIL VIEW
 # =====================================================
