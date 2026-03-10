@@ -27,9 +27,6 @@
       <li class="nav-item">
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
-      <li class="nav-item d-none d-sm-inline-block">
-        <a href="{% url 'typeaudit_list' %}" class="nav-link">Accueil</a>
-      </li>
     </ul>
 
     <!-- Right navbar links -->
@@ -86,19 +83,9 @@
           <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
         </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" data-widget="fullscreen" href="#" role="button">
-          <i class="fas fa-expand-arrows-alt"></i>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-          <i class="fas fa-th-large"></i>
-        </a>
-      </li>
-    </ul>
+      </ul>
   </nav>
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <aside class="main-sidebar sidebar-light-info elevation-4">
     <a href="{% url 'typeaudit_list' %}" class="brand-link">
       <img src="{% static 'adminlte/dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Audit d'entreprise</span>
@@ -124,31 +111,34 @@
       </div>
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <li class="nav-item">
-            <a href="{% url 'typeaudit_list' %}" class="nav-link">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>Tableau de Bord</p>
-            </a>
-          </li>
-          <li class="nav-item">
+          
+          <!-- Organisation -->
+          <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-calendar-alt"></i>
-              <p>Planification d'Audit</p>
+              <i class="nav-icon fas fa-building"></i>
+              <p>
+                Organisation
+                <i class="right fas fa-angle-left"></i>
+              </p>
             </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Sites</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Processus</p>
+                </a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-chart-line"></i>
-              <p>Résultats d'Audit</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-wpforms"></i>
-              <p>Gestion des Formulaires</p>
-            </a>
-          </li>
-          <li class="nav-item">
+          
+          <!-- Référentiel -->
+          <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-book"></i>
               <p>
@@ -158,37 +148,143 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="{% url 'textref_list' %}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Types d'audit</p>
+                  <p>Textes de Référence</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'chapitre_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Chapitres de Normes</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'critere_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Critères</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'souscritere_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Sous-Critères</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'cotation_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Cotations</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Normes & Chapitres</p>
+                  <p>Niveaux Attendus</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Critères & Cotations</p>
+                  <p>Types de Cotation</p>
                 </a>
               </li>
             </ul>
           </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-users"></i>
-              <p>Utilisateurs</p>
+          
+          <!-- Audit -->
+          <li class="nav-item has-treeview menu-open">
+            <a href="#" class="nav-link active">
+              <i class="nav-icon fas fa-clipboard-list"></i>
+              <p>
+                Audit
+                <i class="right fas fa-angle-left"></i>
+              </p>
             </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{% url 'typeaudit_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Types d'Audit</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'formulaire_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Formulaires d'Audit</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'liste_audit_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Listes d'Audits</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'resultat_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Résultats d'Audits</p>
+                </a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item">
+          
+          <!-- Preuves -->
+          <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-cog"></i>
-              <p>Paramètres</p>
+              <i class="nav-icon fas fa-folder"></i>
+              <p>
+                Preuves
+                <i class="right fas fa-angle-left"></i>
+              </p>
             </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Types de Preuves</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'preuveattendu_list' %}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Preuves Attendues</p>
+                </a>
+              </li>
+            </ul>
           </li>
+          
+          <!-- Ressources -->
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-box"></i>
+              <p>
+                Ressources
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Documents</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Equipements</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Types d'Equipements</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+
         </ul>
       </nav>
     </div>
@@ -232,8 +328,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
-              <li class="breadcrumb-item active">{% block breadcrumb %}Dashboard{% endblock %}</li>
+              <li class="breadcrumb-item active">{% block breadcrumb %}Tableau de Bord{% endblock %}</li>
             </ol>
           </div>
         </div>
@@ -276,6 +371,51 @@
 <script src="{% static 'adminlte/plugins/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'adminlte/dist/js/adminlte.min.js' %}"></script>
+
+<!-- Enhanced Sidebar Functionality -->
+<script>
+  $(function () {
+    // Initialize sidebar search
+    $('[data-widget="sidebar-search"]').SidebarSearch({
+      // Add search options here if needed
+    });
+    
+    // Enhanced sidebar toggle with smooth animation
+    $('[data-widget="pushmenu"]').on('click', function(e) {
+      e.preventDefault();
+      $('body').toggleClass('sidebar-collapse');
+      
+      // Add smooth transition effect
+      $('.main-sidebar').addClass('transition-all duration-300');
+      
+      // Save sidebar state to localStorage
+      if ($('body').hasClass('sidebar-collapse')) {
+        localStorage.setItem('sidebar-collapsed', 'true');
+      } else {
+        localStorage.removeItem('sidebar-collapsed');
+      }
+    });
+    
+    // Restore sidebar state on page load
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+      $('body').addClass('sidebar-collapse');
+    }
+    
+    // Auto-collapse sidebar on small screens
+    if ($(window).width() < 768) {
+      $('body').addClass('sidebar-collapse');
+    }
+    
+    // Handle window resize
+    $(window).on('resize', function() {
+      if ($(window).width() < 768) {
+        $('body').addClass('sidebar-collapse');
+      } else if (localStorage.getItem('sidebar-collapsed') !== 'true') {
+        $('body').removeClass('sidebar-collapse');
+      }
+    });
+  });
+</script>
 
 {% block extra_js %}{% endblock %}
 </body>

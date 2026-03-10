@@ -29,7 +29,7 @@ from .models import (
 
 # Dashboard View
 class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = "audit/dashboard.html"
+    template_name = "dashboard.html"
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -37,6 +37,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['formulaires_count'] = FormulaireAudit.objects.count()
         context['audits_count'] = ListeAudit.objects.count()
         context['resultats_count'] = ResultatAudit.objects.count()
+        
+        # Calculate progress percentages
+        context['types_audit_progress'] = min(int((context['types_audit_count'] / 50) * 100), 100) if context['types_audit_count'] > 0 else 0
+        context['formulaires_progress'] = min(int((context['formulaires_count'] / 100) * 100), 100) if context['formulaires_count'] > 0 else 0
+        context['audits_progress'] = min(int((context['audits_count'] / 200) * 100), 100) if context['audits_count'] > 0 else 0
+        context['resultats_progress'] = min(int((context['resultats_count'] / 150) * 100), 100) if context['resultats_count'] > 0 else 0
+        
         return context
 
 #type audit
