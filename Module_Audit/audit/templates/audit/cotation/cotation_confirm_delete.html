@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer Cotation{% endblock %}
+
+{% block page_title %}Supprimer Cotation{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'cotation_list' %}">Cotations</a>
+  </li>
+  <li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-exclamation-triangle mr-2 text-danger"></i>
+      Confirmation de Suppression
+    </h3>
+  </div>
+  <!-- /.card-header -->
+  <div class="card-body">
+    <div class="alert alert-warning">
+      <h5>
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        Êtes-vous sûr de vouloir supprimer cette cotation ?
+      </h5>
+      <p class="mb-0">
+        Cette action est irréversible. Toutes les données associées à cette cotation seront définitivement perdues.
+      </p>
+    </div>
+
+    <div class="card bg-light">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-info-circle mr-2"></i>
+          Détails de la Cotation
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <strong>ID:</strong> {{ object.id }}<br>
+            <strong>Valeur:</strong> {{ object.valeur }}<br>
+            <strong>Content:</strong> {{ object.content }}
+          </div>
+          <div class="col-md-6">
+            <strong>Code:</strong> {{ object.code }}<br>
+            <strong>Type Cotation:</strong> {{ object.type_cotation.name|default:"-" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="post" class="mt-3">
+      {% csrf_token %}
+      <div class="btn-group">
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-trash mr-1"></i>
+          Supprimer
+        </button>
+        <a href="{% url 'cotation_list' %}" class="btn btn-secondary">
+          <i class="fas fa-times mr-1"></i>
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->
+{% endblock %}

@@ -38,10 +38,10 @@ urlpatterns = [
     # =====================================================
     # CHAPITRE NORME
     # =====================================================
-    path("chapitre/", ChapitreNormeListView.as_view(), name="chapitre_list"),
-    path("chapitre/create/", ChapitreNormeCreateView.as_view(), name="chapitre_create"),
-    path("chapitre/<int:pk>/edit/", ChapitreNormeUpdateView.as_view(), name="chapitre_update"),
-    path("chapitre/<int:pk>/delete/", ChapitreNormeDeleteView.as_view(), name="chapitre_delete"),
+    path("chapitres/", ChapitreNormeListView.as_view(), name="chapitre_list"),
+    path("chapitres/create/", ChapitreNormeCreateView.as_view(), name="chapitre_create"),
+    path("chapitres/<int:pk>/update/", ChapitreNormeUpdateView.as_view(), name="chapitre_update"),
+    path("chapitres/<int:pk>/delete/", ChapitreNormeDeleteView.as_view(), name="chapitre_delete"),
 
     # =====================================================
     # CRITERE
@@ -75,6 +75,14 @@ urlpatterns = [
     path("preuve-attendue/<int:pk>/", PreuveAttenduDetailView.as_view(), name="preuveattendu_detail"),
     path("preuve-attendue/<int:pk>/edit/", PreuveAttenduUpdateView.as_view(), name="preuveattendu_update"),
     path("preuve-attendue/<int:pk>/delete/", PreuveAttenduDeleteView.as_view(), name="preuveattendu_delete"),
+
+    # =====================================================
+    # TYPE COTATION
+    # =====================================================
+    path("typecotation/", TypeCotationListView.as_view(), name="typecotation_list"),
+    path("typecotation/create/", TypeCotationCreateView.as_view(), name="typecotation_create"),
+    path("typecotation/<int:pk>/edit/", TypeCotationUpdateView.as_view(), name="typecotation_update"),
+    path("typecotation/<int:pk>/delete/", TypeCotationDeleteView.as_view(), name="typecotation_delete"),
 
     # =====================================================
     # COTATION

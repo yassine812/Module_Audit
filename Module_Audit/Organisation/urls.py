@@ -29,6 +29,7 @@ from .views import (
     TypeEquipementDeleteView,
 
     # NiveauAttendu
+    NiveauAttenduListView,
     NiveauAttenduCreateView,
     NiveauAttenduUpdateView,
     NiveauAttenduDeleteView,
@@ -88,6 +89,7 @@ urlpatterns = [
     # =====================================================
     # NIVEAU ATTENDU
     # =====================================================
+    path("niveau-attendu/", NiveauAttenduListView.as_view(), name="niveauattendu_list"),
     path("niveau-attendu/create/", NiveauAttenduCreateView.as_view(), name="niveauattendu_create"),
     path("niveau-attendu/<int:pk>/update/", NiveauAttenduUpdateView.as_view(), name="niveauattendu_update"),
     path("niveau-attendu/<int:pk>/delete/", NiveauAttenduDeleteView.as_view(), name="niveauattendu_delete"),

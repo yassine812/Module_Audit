@@ -16,6 +16,114 @@
   <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
   
   {% block extra_css %}{% endblock %}
+  
+  <!-- Enhanced Collapsed Sidebar Styles -->
+  <style>
+    /* Improved collapsed sidebar design */
+    .sidebar-collapse .main-sidebar {
+      width: 60px !important;
+    }
+    
+    .sidebar-collapse .content-wrapper,
+    .sidebar-collapse .main-footer,
+    .sidebar-collapse .main-header {
+      margin-left: 60px !important;
+    }
+    
+    /* Center and improve icons in collapsed state */
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link {
+      text-align: center !important;
+      padding: 12px 5px !important;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link > .nav-icon {
+      font-size: 18px !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    
+    /* Hide text but keep icons */
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link > p,
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link > .nav-icon + i {
+      display: none !important;
+    }
+    
+    /* Improved hover effects */
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link:hover {
+      background-color: rgba(0, 0, 0, 0.1) !important;
+      border-radius: 4px;
+      margin: 2px 8px;
+    }
+    
+    /* Tooltip styling */
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link {
+      position: relative;
+    }
+    
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 10px;
+      background: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .sidebar-collapse .nav-sidebar > .nav-item > .nav-link:hover::after {
+      opacity: 1;
+    }
+    
+    /* Brand title in collapsed state */
+    .sidebar-collapse .brand-link {
+      padding: 10px !important;
+      text-align: center;
+    }
+    
+    .sidebar-collapse .brand-link .brand-text {
+      display: none !important;
+    }
+    
+    /* Search behavior in collapsed state */
+    .sidebar-collapse .form-inline {
+      padding: 5px !important;
+    }
+    
+    .sidebar-collapse .form-control-sidebar {
+      display: none !important;
+    }
+    
+    .sidebar-collapse .input-group-append {
+      margin: 0 auto !important;
+    }
+    
+    .sidebar-collapse .btn-sidebar {
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 50% !important;
+      background-color: #f8f9fa !important;
+      border: 1px solid #dee2e6 !important;
+    }
+    
+    .sidebar-collapse .btn-sidebar:hover {
+      background-color: #e9ecef !important;
+    }
+    
+    /* Treeview improvements in collapsed state */
+    .sidebar-collapse .nav-treeview {
+      display: none !important;
+    }
+  </style>
 </head>
 <body class="{% block body_class %}hold-transition sidebar-mini layout-fixed{% endblock %}">
 <div class="wrapper">
@@ -25,7 +133,9 @@
     <!-- Left navbar links -->
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button" id="sidebar-toggle-btn">
+          <i class="fas fa-chevron-left" id="sidebar-toggle-icon"></i>
+        </a>
       </li>
     </ul>
 
@@ -35,86 +145,64 @@
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
           <i class="far fa-comments"></i>
-          <span class="badge badge-danger navbar-badge">3</span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <a href="#" class="dropdown-item">
-            <!-- Message Start -->
-            <div class="media">
-              <img src="{% static 'adminlte/dist/img/user1-128x128.jpg' %}" alt="User Avatar" class="img-size-50 mr-3 img-circle">
-              <div class="media-body">
-                <h3 class="dropdown-item-title">
-                  Brad Diesel
-                  <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
-                </h3>
-                <p class="text-sm">Call me whenever you can...</p>
-                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-              </div>
-            </div>
-            <!-- Message End -->
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
+          <a href="#" class="dropdown-item dropdown-footer">Voir tous les messages</a>
         </div>
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
           <i class="far fa-bell"></i>
-          <span class="badge badge-warning navbar-badge">15</span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <span class="dropdown-item dropdown-header">15 Notifications</span>
-          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item dropdown-footer">Voir toutes les notifications</a>
+        </div>
+      </li>
+      <!-- User Account Menu -->
+      <li class="nav-item dropdown">
+        <a class="nav-link" data-toggle="dropdown" href="#">
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
+               style="width:35px;height:35px;">
+            <i class="fas fa-user text-white"></i>
+          </div>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
           <a href="#" class="dropdown-item">
-            <i class="fas fa-envelope mr-2"></i> 4 new messages
-            <span class="float-right text-muted text-sm">3 mins</span>
+            <i class="fas fa-user mr-2"></i> Profil
           </a>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-users mr-2"></i> 8 friend requests
-            <span class="float-right text-muted text-sm">12 hours</span>
+          <a href="{% url 'logout' %}" class="dropdown-item">
+            <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
           </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-file mr-2"></i> 3 new reports
-            <span class="float-right text-muted text-sm">2 days</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
         </div>
       </li>
       </ul>
   </nav>
   <aside class="main-sidebar sidebar-light-info elevation-4">
     <a href="{% url 'typeaudit_list' %}" class="brand-link">
-      <img src="{% static 'adminlte/dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Audit d'entreprise</span>
     </a>
     <div class="sidebar">
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="{% static 'adminlte/dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
-        </div>
-        <div class="info">
-          <a href="#" class="d-block">{{ user.username }}</a>
-        </div>
-      </div>
       <div class="form-inline">
         <div class="input-group" data-widget="sidebar-search">
-          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+          <input class="form-control form-control-sidebar" type="search" id="sidebarSearchInput" placeholder="Rechercher" aria-label="Rechercher" autocomplete="off">
           <div class="input-group-append">
             <button class="btn btn-sidebar">
               <i class="fas fa-search fa-fw"></i>
             </button>
           </div>
         </div>
+        <!-- Search Suggestions Dropdown -->
+        <div id="searchSuggestions" class="search-suggestions-dropdown" style="display: none;">
+          <div class="search-suggestions-list"></div>
+        </div>
       </div>
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           
           <!-- Organisation -->
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {% if 'site_list' in request.path or 'section_list' in request.path or 'processus_list' in request.path or 'processusdoc' in request.path %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if 'site_list' in request.path or 'section_list' in request.path or 'processus_list' in request.path or 'processusdoc' in request.path %}active{% endif %}" data-tooltip="Organisation">
               <i class="nav-icon fas fa-building"></i>
               <p>
                 Organisation
@@ -123,14 +211,20 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'site_list' %}" class="nav-link {% if request.resolver_match.url_name == 'site_list' %}active{% endif %}">
+                  <i class="fas fa-industry nav-icon"></i>
                   <p>Sites</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'section_list' %}" class="nav-link {% if request.resolver_match.url_name == 'section_list' %}active{% endif %}">
+                  <i class="fas fa-sitemap nav-icon"></i>
+                  <p>Section</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'processus_list' %}" class="nav-link {% if request.resolver_match.url_name == 'processus_list' %}active{% endif %}">
+                  <i class="fas fa-project-diagram nav-icon"></i>
                   <p>Processus</p>
                 </a>
               </li>
@@ -138,8 +232,8 @@
           </li>
           
           <!-- Référentiel -->
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {% if 'textref' in request.path or 'chapitre' in request.path or 'critere' in request.path or 'souscritere' in request.path or 'cotation' in request.path or 'niveauattendu' in request.path %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if 'textref' in request.path or 'chapitre' in request.path or 'critere' in request.path or 'souscritere' in request.path or 'cotation' in request.path or 'niveauattendu' in request.path %}active{% endif %}" data-tooltip="Référentiel">
               <i class="nav-icon fas fa-book"></i>
               <p>
                 Référentiel
@@ -148,44 +242,44 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{% url 'textref_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'textref_list' %}" class="nav-link {% if request.resolver_match.url_name == 'textref_list' %}active{% endif %}">
+                  <i class="fas fa-book nav-icon"></i>
                   <p>Textes de Référence</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'chapitre_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'chapitre_list' %}" class="nav-link {% if request.resolver_match.url_name == 'chapitre_list' %}active{% endif %}">
+                  <i class="fas fa-file-alt nav-icon"></i>
                   <p>Chapitres de Normes</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'critere_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'critere_list' %}" class="nav-link {% if request.resolver_match.url_name == 'critere_list' %}active{% endif %}">
+                  <i class="fas fa-check-square nav-icon"></i>
                   <p>Critères</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'souscritere_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'souscritere_list' %}" class="nav-link {% if request.resolver_match.url_name == 'souscritere_list' %}active{% endif %}">
+                  <i class="fas fa-list-ul nav-icon"></i>
                   <p>Sous-Critères</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'cotation_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'cotation_list' %}" class="nav-link {% if request.resolver_match.url_name == 'cotation_list' %}active{% endif %}">
+                  <i class="fas fa-star nav-icon"></i>
                   <p>Cotations</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'niveauattendu_list' %}" class="nav-link {% if request.resolver_match.url_name == 'niveauattendu_list' %}active{% endif %}">
+                  <i class="fas fa-bullseye nav-icon"></i>
                   <p>Niveaux Attendus</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'typecotation_list' %}" class="nav-link {% if request.resolver_match.url_name == 'typecotation_list' %}active{% endif %}">
+                  <i class="fas fa-tags nav-icon"></i>
                   <p>Types de Cotation</p>
                 </a>
               </li>
@@ -193,8 +287,8 @@
           </li>
           
           <!-- Audit -->
-          <li class="nav-item has-treeview menu-open">
-            <a href="#" class="nav-link active">
+          <li class="nav-item has-treeview {% if 'typeaudit' in request.path or 'formulaire' in request.path or 'liste_audit' in request.path or 'resultat' in request.path %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if 'typeaudit' in request.path or 'formulaire' in request.path or 'liste_audit' in request.path or 'resultat' in request.path %}active{% endif %}" data-tooltip="Audit">
               <i class="nav-icon fas fa-clipboard-list"></i>
               <p>
                 Audit
@@ -203,26 +297,26 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{% url 'typeaudit_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'typeaudit_list' %}" class="nav-link {% if request.resolver_match.url_name == 'typeaudit_list' %}active{% endif %}">
+                  <i class="fas fa-clipboard-list nav-icon"></i>
                   <p>Types d'Audit</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'formulaire_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'formulaire_list' %}" class="nav-link {% if request.resolver_match.url_name == 'formulaire_list' %}active{% endif %}">
+                  <i class="fas fa-file-signature nav-icon"></i>
                   <p>Formulaires d'Audit</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'liste_audit_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'liste_audit_list' %}" class="nav-link {% if request.resolver_match.url_name == 'liste_audit_list' %}active{% endif %}">
+                  <i class="fas fa-tasks nav-icon"></i>
                   <p>Listes d'Audits</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'resultat_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'resultat_list' %}" class="nav-link {% if request.resolver_match.url_name == 'resultat_list' %}active{% endif %}">
+                  <i class="fas fa-chart-bar nav-icon"></i>
                   <p>Résultats d'Audits</p>
                 </a>
               </li>
@@ -230,8 +324,8 @@
           </li>
           
           <!-- Preuves -->
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {% if 'preuve' in request.path %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if 'preuve' in request.path %}active{% endif %}" data-tooltip="Preuves">
               <i class="nav-icon fas fa-folder"></i>
               <p>
                 Preuves
@@ -241,13 +335,13 @@
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="fas fa-layer-group nav-icon"></i>
                   <p>Types de Preuves</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{% url 'preuveattendu_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'preuveattendu_list' %}" class="nav-link {% if request.resolver_match.url_name == 'preuveattendu_list' %}active{% endif %}">
+                  <i class="fas fa-check-double nav-icon"></i>
                   <p>Preuves Attendues</p>
                 </a>
               </li>
@@ -255,8 +349,8 @@
           </li>
           
           <!-- Ressources -->
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {% if 'equipement' in request.path or 'typeequipement' in request.path or 'processusdoc' in request.path %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if 'equipement' in request.path or 'typeequipement' in request.path or 'processusdoc' in request.path %}active{% endif %}" data-tooltip="Ressources">
               <i class="nav-icon fas fa-box"></i>
               <p>
                 Ressources
@@ -265,20 +359,20 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'processusdoc_list' %}" class="nav-link {% if request.resolver_match.url_name == 'processusdoc_list' %}active{% endif %}">
+                  <i class="far fa-file-alt nav-icon"></i>
                   <p>Documents</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'equipement_list' %}" class="nav-link {% if request.resolver_match.url_name == 'equipement_list' %}active{% endif %}">
+                  <i class="fas fa-cogs nav-icon"></i>
                   <p>Equipements</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                <a href="{% url 'typeequipement_list' %}" class="nav-link {% if request.resolver_match.url_name == 'typeequipement_list' %}active{% endif %}">
+                  <i class="fas fa-tools nav-icon"></i>
                   <p>Types d'Equipements</p>
                 </a>
               </li>
@@ -297,7 +391,7 @@
             <nav class="nav nav-pills nav-fill">
               <a href="{% url 'dashboard' %}" class="nav-item nav-link active">
                 <i class="fas fa-tachometer-alt mr-2"></i>
-                Dashboard
+                Tableau de bord
               </a>
               <a href="#" class="nav-item nav-link">
                 <i class="fas fa-clipboard-list mr-2"></i>
@@ -324,7 +418,7 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">{% block page_title %}Dashboard{% endblock %}</h1>
+            <h1 class="m-0">{% block page_title %}Tableau de bord{% endblock %}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -337,18 +431,6 @@
     <section class="content">
       <div class="container-fluid">
         {% block content %}
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Bienvenue sur le système d'audit</h3>
-              </div>
-              <div class="card-body">
-                <p>Ceci est la page principale du système d'audit d'entreprise.</p>
-              </div>
-            </div>
-          </div>
-        </div>
         {% endblock %}
       </div>
     </section>
@@ -356,14 +438,13 @@
   <aside class="control-sidebar control-sidebar-dark">
     <div class="p-3">
       <h5>Paramètres</h5>
-      <p>Contenu de la barre latérale de contrôle</p>
     </div>
   </aside>
   <footer class="main-footer">
-    <strong>Copyright &copy; 2023 <a href="#">Audit d'entreprise</a>.</strong>
+    <strong>Copyright &copy; <a href="#">Audit d'entreprise</a>.</strong>
     Tous droits réservés.
     <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 2.4.1 Build 2023.08
+      <b>Version</b>
     </div>
   </footer>
 </div>
@@ -380,13 +461,25 @@
       // Add search options here if needed
     });
     
-    // Enhanced sidebar toggle with smooth animation
-    $('[data-widget="pushmenu"]').on('click', function(e) {
+    // Update chevron icon based on sidebar state
+    function updateChevronIcon() {
+      const icon = $('#sidebar-toggle-icon');
+      if ($('body').hasClass('sidebar-collapse')) {
+        icon.removeClass('fa-chevron-left').addClass('fa-chevron-right');
+      } else {
+        icon.removeClass('fa-chevron-right').addClass('fa-chevron-left');
+      }
+    }
+    
+    // Handle AdminLTE pushmenu events
+    $(document).on('click', '[data-widget="pushmenu"]', function(e) {
       e.preventDefault();
+      
+      // Toggle sidebar using AdminLTE's built-in functionality
       $('body').toggleClass('sidebar-collapse');
       
-      // Add smooth transition effect
-      $('.main-sidebar').addClass('transition-all duration-300');
+      // Update chevron icon
+      updateChevronIcon();
       
       // Save sidebar state to localStorage
       if ($('body').hasClass('sidebar-collapse')) {
@@ -396,14 +489,26 @@
       }
     });
     
+    // Keyboard shortcut for sidebar toggle (Ctrl/Cmd + B)
+    $(document).on('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        $('[data-widget="pushmenu"]').click();
+      }
+    });
+    
     // Restore sidebar state on page load
     if (localStorage.getItem('sidebar-collapsed') === 'true') {
       $('body').addClass('sidebar-collapse');
     }
     
+    // Update chevron icon on page load
+    updateChevronIcon();
+    
     // Auto-collapse sidebar on small screens
     if ($(window).width() < 768) {
       $('body').addClass('sidebar-collapse');
+      updateChevronIcon();
     }
     
     // Handle window resize
@@ -413,7 +518,20 @@
       } else if (localStorage.getItem('sidebar-collapsed') !== 'true') {
         $('body').removeClass('sidebar-collapse');
       }
+      updateChevronIcon();
     });
+    
+    // Add hover effect for collapsed sidebar items
+    $('.nav-sidebar > .nav-item > .nav-link').hover(
+      function() {
+        if ($('body').hasClass('sidebar-collapse')) {
+          $(this).addClass('sidebar-hover');
+        }
+      },
+      function() {
+        $(this).removeClass('sidebar-hover');
+      }
+    );
   });
 </script>
 

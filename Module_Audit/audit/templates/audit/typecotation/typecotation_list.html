@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Liste des Types de Cotation{% endblock %}
+
+{% block page_title %}Liste des Types de Cotation{% endblock %}
+
+{% block breadcrumb %}Liste des Types de Cotation{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-list mr-2"></i>
+      Liste des Types de Cotation
+    </h3>
+    <div class="card-tools">
+      <a href="{% url 'typecotation_create' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>
+        Ajouter Type Cotation
+      </a>
+    </div>
+  </div>
+  <!-- /.card-header -->
+  <div class="card-body">
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th style="width: 10%">ID</th>
+          <th>Nom</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for typecotation in typecotations %}
+        <tr>
+          <td>{{ typecotation.id }}</td>
+          <td>{{ typecotation.name }}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'typecotation_update' typecotation.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i>
+              </a>
+              <a href="{% url 'typecotation_delete' typecotation.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="text-center">Aucun type de cotation trouvé</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->
+{% endblock %}

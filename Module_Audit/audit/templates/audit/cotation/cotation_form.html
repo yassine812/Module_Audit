@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier Cotation{% else %}Ajouter Cotation{% endif %}{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Modifier Cotation{% else %}Ajouter Cotation{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'cotation_list' %}">Cotations</a>
+  </li>
+  <li class="breadcrumb-item active">
+    {% if form.instance.pk %}Modifier{% else %}Ajouter{% endif %}
+  </li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} mr-2"></i>
+      {% if form.instance.pk %}Modifier la Cotation{% else %}Ajouter une Cotation{% endif %}
+    </h3>
+  </div>
+  <!-- /.card-header -->
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="{{ form.valeur.id_for_label }}">Valeur</label>
+            {{ form.valeur|add_class:"form-control" }}
+            {% if form.valeur.errors %}
+              <div class="text-danger">
+                {% for error in form.valeur.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="{{ form.code.id_for_label }}">Code</label>
+            {{ form.code|add_class:"form-control" }}
+            {% if form.code.errors %}
+              <div class="text-danger">
+                {% for error in form.code.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Content</label>
+            {{ form.content|add_class:"form-control" }}
+            {% if form.content.errors %}
+              <div class="text-danger">
+                {% for error in form.content.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="{{ form.type_cotation.id_for_label }}">Type Cotation</label>
+            {{ form.type_cotation|add_class:"form-control" }}
+            {% if form.type_cotation.errors %}
+              <div class="text-danger">
+                {% for error in form.type_cotation.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save mr-1"></i>
+          Enregistrer
+        </button>
+        <a href="{% url 'cotation_list' %}" class="btn btn-secondary">
+          <i class="fas fa-times mr-1"></i>
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->
+{% endblock %}

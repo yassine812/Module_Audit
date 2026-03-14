@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste Chapitre Normes{% endblock %}
+
+{% block page_title %}Liste Chapitre Normes{% endblock %}
+
+{% block breadcrumb %}Chapitre Normes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-book mr-2"></i>
+            Chapitre Normes Management
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if chapitres %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Name</th>
+                <th>Text Reference</th>
+                <th style="width: 100px;">Page</th>
+                <th style="width: 150px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for chapitre in chapitres %}
+              <tr>
+                <td>{{ chapitre.id }}</td>
+                <td>
+                  <strong>{{ chapitre.name }}</strong>
+                </td>
+                <td>
+                  {% if chapitre.text_ref %}
+                    <span class="badge badge-info">
+                      <i class="fas fa-file-alt mr-1"></i>
+                      {{ chapitre.text_ref.norme }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">Aucune référence</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if chapitre.page %}
+                    <span class="badge badge-secondary">{{ chapitre.page }}</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'chapitre_update' chapitre.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'chapitre_delete' chapitre.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun chapitre de norme trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier chapitre de norme.</p>
+            <a href="{% url 'chapitre_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if chapitres %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ chapitres|length }} chapitre{{ chapitres|length|pluralize }} de norme{{ chapitres|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'chapitre_create' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter un Chapitre Norme
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

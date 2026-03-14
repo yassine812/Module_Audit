@@ -125,8 +125,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication URLs
 LOGIN_URL = '/audit/login/'
-LOGIN_REDIRECT_URL = '/audit/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/audit/login/'
+
+# Custom Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'audit.backends.UsernameOrEmailBackend',
+]
 
 STATIC_URL = '/static/'
 

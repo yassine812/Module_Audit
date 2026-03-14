@@ -73,12 +73,14 @@ class TextRefListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = TextRef
     template_name = "audit/textref/textref_list.html"
     context_object_name = "textrefs"
-    ordering = ["name"]
+    ordering = ["norme"]
+
 class TextRefCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
     model = TextRef
     fields = "__all__"
     template_name = "audit/textref/textref_form.html"
     success_url = reverse_lazy("textref_list")
+
 class TextRefUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
     model = TextRef
     fields = "__all__"
@@ -133,7 +135,7 @@ class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = SousCritere
     template_name = "audit/souscritere/souscritere_list.html"
     context_object_name = "souscriteres"
-    ordering = ["name"]
+    ordering = ["critere__name"]
 class SousCritereCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
     model = SousCritere
     fields = "__all__"
@@ -206,7 +208,34 @@ class PreuveAttenduUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, Update
 class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
     model = PreuveAttendu
     template_name = "org/preuveattendu/preuveattendu_confirm_delete.html"
-    success_url = reverse_lazy("preuveattendu_list")
+    success_url = reverse_lazy("preuveDetailResultatAudit")
+
+# =====================================================
+# TYPE COTATION VIEWS
+# =====================================================
+
+class TypeCotationListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+    model = TypeCotation
+    template_name = "audit/typecotation/typecotation_list.html"
+    context_object_name = "typecotations"
+    ordering = ["name"]
+
+class TypeCotationCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
+    model = TypeCotation
+    fields = ["name"]
+    template_name = "audit/typecotation/typecotation_form.html"
+    success_url = reverse_lazy("typecotation_list")
+
+class TypeCotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
+    model = TypeCotation
+    fields = ["name"]
+    template_name = "audit/typecotation/typecotation_form.html"
+    success_url = reverse_lazy("typecotation_list")
+
+class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+    model = TypeCotation
+    template_name = "audit/typecotation/typecotation_confirm_delete.html"
+    success_url = reverse_lazy("typecotation_list")
 
 # =====================================================
 # COTATION VIEWS
@@ -214,7 +243,7 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
 
 class CotationListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = Cotation
-    template_name = "org/cotation/cotation_list.html"
+    template_name = "audit/cotation/cotation_list.html"
     context_object_name = "cotations"
     ordering = ["type_cotation", "valeur"]
 
@@ -224,7 +253,7 @@ class CotationListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
 
 class CotationDetailView(LoginRequiredMixin, SuperuserRequiredMixin, DetailView):
     model = Cotation
-    template_name = "org/cotation/cotation_detail.html"
+    template_name = "audit/cotation/cotation_detail.html"
     context_object_name = "cotation"
 
 # =====================================================
@@ -239,7 +268,7 @@ class CotationCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView)
         "code",
         "type_cotation",
     ]
-    template_name = "org/cotation/cotation_form.html"
+    template_name = "audit/cotation/cotation_form.html"
     success_url = reverse_lazy("cotation_list")
 
 # =====================================================
@@ -254,7 +283,7 @@ class CotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView)
         "code",
         "type_cotation",
     ]
-    template_name = "org/cotation/cotation_form.html"
+    template_name = "audit/cotation/cotation_form.html"
     success_url = reverse_lazy("cotation_list")
 
 # =====================================================
@@ -263,7 +292,7 @@ class CotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView)
 
 class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
     model = Cotation
-    template_name = "org/cotation/cotation_confirm_delete.html"
+    template_name = "audit/cotation/cotation_confirm_delete.html"
     success_url = reverse_lazy("cotation_list")
 
 

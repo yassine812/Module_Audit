@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Critère{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Critère{% endblock %}
+
+{% block breadcrumb %}Critères / {% if form.instance.pk %}Modifier{% else %}Créer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-list mr-2"></i>
+            {% if form.instance.pk %}Modifier le Critère{% else %}Nouveau Critère{% endif %}
+          </h3>
+        </div>
+        
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-8">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}">
+                    Nom du Critère <span class="text-danger">*</span>
+                  </label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.name.help_text %}
+                    <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="{{ form.chapitre_norme.id_for_label }}">
+                    Chapitre Norme
+                  </label>
+                  {{ form.chapitre_norme }}
+                  {% if form.chapitre_norme.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.chapitre_norme.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.chapitre_norme.help_text %}
+                    <small class="form-text text-muted">{{ form.chapitre_norme.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.chapitre_norme %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Chapitre actuel: {{ form.instance.chapitre_norme.name }}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'critere_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if form.instance.pk %}Mettre à jour{% else %}Créer{% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+  .form-group input[type="text"],
+  .form-group select {
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-group input[type="text"]:focus,
+  .form-group select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+{% endblock %}

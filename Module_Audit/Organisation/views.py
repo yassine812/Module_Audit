@@ -6,7 +6,7 @@ from .models import Section, TypeEquipement, Equipement,ProcessusDoc,Processus,N
 
 class SectionListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = Section
-    template_name = "org/section_list.html"
+    template_name = "org/section/section_list.html"
     context_object_name = "sections"
     ordering = ["name"]
 # ==============================
@@ -15,7 +15,7 @@ class SectionListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
 class SectionCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
     model = Section
     fields = ["name", "description"]
-    template_name = "org/section_form.html"
+    template_name = "org/section/section_form.html"
     success_url = reverse_lazy("section_list")
 # ==============================
 # UPDATE VIEW
@@ -23,14 +23,14 @@ class SectionCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
 class SectionUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
     model = Section
     fields = ["name", "description"]
-    template_name = "org/section_form.html"
+    template_name = "org/section/section_form.html"
     success_url = reverse_lazy("section_list")
 # ==============================
 # DELETE VIEW
 # ==============================
 class SectionDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
     model = Section
-    template_name = "org/section_confirm_delete.html"
+    template_name = "org/section/section_confirm_delete.html"
     success_url = reverse_lazy("section_list")
 # ==============================
 # LIST VIEW
@@ -166,6 +166,16 @@ class TypeEquipementDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delet
     model = TypeEquipement
     template_name = "org/typeequipement/typeequipement_confirm_delete.html"
     success_url = reverse_lazy("typeequipement_list")
+
+# =====================================================
+# LIST VIEW
+# =====================================================
+
+class NiveauAttenduListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+    model = NiveauAttendu
+    template_name = "org/niveauattendu/niveauattendu_list.html"
+    context_object_name = "niveaux_attendus"
+    ordering = ["name"]
 
 # =====================================================
 # CREATE VIEW
