@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Types de Preuves{% endblock %}
+
+{% block page_title %}Types de Preuves{% endblock %}
+
+{% block breadcrumb %}Types de Preuves{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-layer-group mr-2"></i>
+            Gestion des Types de Preuves
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if types_preuve %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nom</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for preuve in types_preuve %}
+              <tr>
+                <td>{{ preuve.id }}</td>
+                <td>
+                  <strong>{{ preuve.name }}</strong>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'typepreuve_update' preuve.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'typepreuve_delete' preuve.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun type de preuve trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier type de preuve.</p>
+            <a href="{% url 'typepreuve_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if types_preuve %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ types_preuve|length }} type{{ types_preuve|length|pluralize }} de preuve
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'typepreuve_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter un Type de Preuve
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

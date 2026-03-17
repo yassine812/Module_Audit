@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Niveaux Attendus{% endblock %}
+
+{% block page_title %}Niveaux Attendus{% endblock %}
+
+{% block breadcrumb %}Niveaux Attendus{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-chart-line mr-2"></i>
+            Gestion des Niveaux Attendus
+          </h3>
+        
+        </div>
+        
+        <div class="card-body">
+          {% if niveaux_attendus %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Pourcentage</th>
+                <th>Commentaire</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for niveau in niveaux_attendus %}
+              <tr>
+                <td>
+                  <strong>{{ niveau.name }}</strong>
+                </td>
+                <td>
+                  <span class="badge badge-info">{{ niveau.pourcentage }}%</span>
+                </td>
+                <td>
+                  {% if niveau.commentaire %}
+                    {{ niveau.commentaire|truncatewords:10 }}
+                  {% else %}
+                    <span class="text-muted">Aucun commentaire</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'niveauattendu_update' niveau.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'niveauattendu_delete' niveau.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Niveaux Attendus found</h4>
+            <p class="text-muted">Get started by creating your first Niveau Attendu.</p>
+            <a href="{% url 'niveauattendu_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Create Niveau Attendu
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if niveaux_attendus %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Showing {{ niveaux_attendus|length }} niveau{{ niveaux_attendus|length|pluralize }} attendu{{ niveaux_attendus|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'niveauattendu_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Add New Niveau Attendu
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

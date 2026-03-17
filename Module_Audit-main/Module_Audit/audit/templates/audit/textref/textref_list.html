@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Textes de Référence{% endblock %}
+
+{% block page_title %}Textes de Référence{% endblock %}
+
+{% block breadcrumb %}Textes de Référence{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-file-alt mr-2"></i>
+            Gestion des Textes de Référence
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if textrefs %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Norme</th>
+                <th>Fichier</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for textref in textrefs %}
+              <tr>
+                <td>{{ textref.id }}</td>
+                <td>
+                  <strong>{{ textref.norme }}</strong>
+                </td>
+                <td>
+                  {% if textref.text_ref %}
+                    <a href="{{ textref.text_ref.url }}" target="_blank" class="btn btn-sm btn-info" title="Télécharger">
+                      <i class="fas fa-download"></i>
+                      {{ textref.text_ref.name|cut:"text_refs/" }}
+                    </a>
+                  {% else %}
+                    <span class="text-muted">Aucun fichier</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'textref_update' textref.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'textref_delete' textref.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun texte de référence trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier texte de référence.</p>
+            <a href="{% url 'textref_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if textrefs %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ textrefs|length }} texte{{ textrefs|length|pluralize }} de référence
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'textref_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter un Texte de Référence
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

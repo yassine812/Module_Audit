@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord - Audit d'entreprise{% endblock %}
+
+{% block page_title %}Tableau de Bord{% endblock %}
+
+{% block breadcrumb %}Tableau de Bord{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Statistics Cards -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ types_audit_count }}</h3>
+        <p>Types d'Audit</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <a href="{% url 'typeaudit_list' %}" class="small-box-footer">
+        Voir plus <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ formulaires_count }}</h3>
+        <p>Formulaires</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-wpforms"></i>
+      </div>
+      <a href="{% url 'formulaire_list' %}" class="small-box-footer">
+        Voir plus <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ audits_count }}</h3>
+        <p>Audits Planifiés</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <a href="{% url 'liste_audit_list' %}" class="small-box-footer">
+        Voir plus <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3>{{ resultats_count }}</h3>
+        <p>Résultats</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <a href="{% url 'resultat_list' %}" class="small-box-footer">
+        Voir plus <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Recap Report -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Rapport Mensuel d'Audit</h5>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+          <div class="btn-group">
+            <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-wrench"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" role="menu">
+              <a href="#" class="dropdown-item">Action</a>
+              <a href="#" class="dropdown-item">Autre action</a>
+              <a href="#" class="dropdown-item">Autre chose ici</a>
+              <a class="dropdown-divider"></a>
+              <a href="#" class="dropdown-item">Lien séparé</a>
+            </div>
+          </div>
+          <button type="button" class="btn btn-tool" data-card-widget="remove">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="text-center">
+              <strong>Audits: {% now "d M, Y" %} - Temps Réel</strong>
+            </p>
+            <div class="chart">
+              <canvas id="salesChart" height="180" style="height: 180px;"></canvas>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <p class="text-center">
+              <strong>Progression</strong>
+            </p>
+            <div class="progress-group">
+              Types d'Audit Créés
+              <span class="float-right"><b>{{ types_audit_count }}</b></span>
+              <div class="progress progress-sm">
+                <div class="progress-bar bg-primary" style="width: {{ types_audit_progress }}%"></div>
+              </div>
+            </div>
+            <div class="progress-group">
+              Formulaires Complétés
+              <span class="float-right"><b>{{ formulaires_count }}</b></span>
+              <div class="progress progress-sm">
+                <div class="progress-bar bg-danger" style="width: {{ formulaires_progress }}%"></div>
+              </div>
+            </div>
+            <div class="progress-group">
+              Audits Planifiés
+              <span class="float-right"><b>{{ audits_count }}</b></span>
+              <div class="progress progress-sm">
+                <div class="progress-bar bg-success" style="width: {{ audits_progress }}%"></div>
+              </div>
+            </div>
+            <div class="progress-group">
+              Résultats d'Audit
+              <span class="float-right"><b>{{ resultats_count }}</b></span>
+              <div class="progress progress-sm">
+                <div class="progress-bar bg-warning" style="width: {{ resultats_progress }}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="row">
+          <div class="col-sm-3 col-6">
+            <div class="description-block border-right">
+              <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> {{ types_audit_count }}%</span>
+              <h5 class="description-header">{{ types_audit_count }}</h5>
+              <span class="description-text">TYPES D'AUDIT</span>
+            </div>
+          </div>
+          <div class="col-sm-3 col-6">
+            <div class="description-block border-right">
+              <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> {{ formulaires_count }}%</span>
+              <h5 class="description-header">{{ formulaires_count }}</h5>
+              <span class="description-text">FORMULAIRES</span>
+            </div>
+          </div>
+          <div class="col-sm-3 col-6">
+            <div class="description-block border-right">
+              <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> {{ audits_count }}%</span>
+              <h5 class="description-header">{{ audits_count }}</h5>
+              <span class="description-text">AUDITS PLANIFIÉS</span>
+            </div>
+          </div>
+          <div class="col-sm-3 col-6">
+            <div class="description-block">
+              <span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> {{ resultats_count }}%</span>
+              <h5 class="description-header">{{ resultats_count }}</h5>
+              <span class="description-text">RÉSULTATS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Quick Actions -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Actions Rapides</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6 text-center mb-3">
+            <a href="{% url 'typeaudit_create' %}" class="btn btn-primary btn-block">
+              <i class="fas fa-plus"></i> Nouveau Type d'Audit
+            </a>
+          </div>
+          <div class="col-6 text-center mb-3">
+            <a href="{% url 'formulaire_create' %}" class="btn btn-success btn-block">
+              <i class="fas fa-plus"></i> Nouveau Formulaire
+            </a>
+          </div>
+          <div class="col-6 text-center mb-3">
+            <a href="{% url 'liste_audit_create' %}" class="btn btn-warning btn-block">
+              <i class="fas fa-plus"></i> Planifier Audit
+            </a>
+          </div>
+          <div class="col-6 text-center mb-3">
+            <a href="{% url 'chapitre_create' %}" class="btn btn-info btn-block">
+              <i class="fas fa-plus"></i> Nouveau Chapitre
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Activity -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Activité Récente</h3>
+      </div>
+      <div class="card-body">
+        <div class="timeline timeline-inverse">
+          <div class="time-label">
+            <span class="bg-info">Aujourd'hui</span>
+          </div>
+          <div>
+            <i class="fas fa-envelope bg-blue"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Bienvenue sur le système d'audit</h3>
+              <div class="timeline-body">
+                Utilisez le menu de gauche pour naviguer dans les différentes sections du système.
+              </div>
+            </div>
+          </div>
+          <div>
+            <i class="far fa-clock bg-gray"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  $(function () {
+    // Get Django context data
+    var typesAuditCount = {{ types_audit_count|default:0 }};
+    var formulairesCount = {{ formulaires_count|default:0 }};
+    var auditsCount = {{ audits_count|default:0 }};
+    var resultatsCount = {{ resultats_count|default:0 }};
+    
+    // Sales chart
+    var salesChartCanvas = $('#salesChart').get(0).getContext('2d')
+    var salesChartOptions = {
+      maintainAspectRatio: false,
+      responsive: true,
+      legend: {
+        display: true,
+        position: 'bottom'
+      },
+      scales: {
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }],
+        yAxes: [{
+          gridLines: {
+            display: false
+          },
+          beginAtZero: true
+        }]
+      }
+    }
+
+    // This will get the first returned node in the jQuery collection.
+    var salesChart = new Chart(salesChartCanvas, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Juil'],
+        datasets: [{
+          label: 'Types d\'Audit',
+          data: [Math.floor(typesAuditCount * 0.3), Math.floor(typesAuditCount * 0.5), Math.floor(typesAuditCount * 0.7), Math.floor(typesAuditCount * 0.8), Math.floor(typesAuditCount * 0.9), typesAuditCount, typesAuditCount],
+          borderColor: 'rgba(60,141,188,0.8)',
+          backgroundColor: 'rgba(60,141,188,0.5)',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true
+        }, {
+          label: 'Formulaires',
+          data: [Math.floor(formulairesCount * 0.2), Math.floor(formulairesCount * 0.4), Math.floor(formulairesCount * 0.6), Math.floor(formulairesCount * 0.7), Math.floor(formulairesCount * 0.85), formulairesCount, formulairesCount],
+          borderColor: 'rgba(28,200,138,0.8)',
+          backgroundColor: 'rgba(28,200,138,0.5)',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true
+        }, {
+          label: 'Audits Planifiés',
+          data: [Math.floor(auditsCount * 0.1), Math.floor(auditsCount * 0.3), Math.floor(auditsCount * 0.5), Math.floor(auditsCount * 0.6), Math.floor(auditsCount * 0.8), auditsCount, auditsCount],
+          borderColor: 'rgba(255,193,7,0.8)',
+          backgroundColor: 'rgba(255,193,7,0.5)',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true
+        }, {
+          label: 'Résultats',
+          data: [Math.floor(resultatsCount * 0.15), Math.floor(resultatsCount * 0.25), Math.floor(resultatsCount * 0.4), Math.floor(resultatsCount * 0.55), Math.floor(resultatsCount * 0.75), resultatsCount, resultatsCount],
+          borderColor: 'rgba(220,53,69,0.8)',
+          backgroundColor: 'rgba(220,53,69,0.5)',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true
+        }]
+      },
+      options: salesChartOptions
+    })
+  })
+</script>
+{% endblock %}

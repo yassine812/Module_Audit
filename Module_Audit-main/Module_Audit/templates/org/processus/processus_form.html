@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if object %}
+    Modifier Processus
+  {% else %}
+    Créer Processus
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if object %}
+    Modifier Processus
+  {% else %}
+    Créer Processus
+  {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+  {% if object %}
+    Processus / Modifier
+  {% else %}
+    Processus / Créer
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-cogs mr-2"></i>
+            {% if object %}
+              Modifier Processus: {{ object.name }}
+            {% else %}
+              Créer Nouveau Processus
+            {% endif %}
+          </h3>
+        </div>
+        
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-8">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}">
+                    <i class="fas fa-tag mr-1"></i>
+                    Nom du Processus <span class="text-danger">*</span>
+                  </label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Entrez le nom du processus (ex: Production, Qualité, Logistique)</small>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="text-muted">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Information Processus
+                  </label>
+                  <div class="alert alert-info">
+                    <small>
+                      <strong>Détails du Processus:</strong><br>
+                      • Le nom est obligatoire<br>
+                      • Maximum 150 caractères<br>
+                      • Utilisé pour organiser les activités<br>
+                      • Doit être unique et descriptif
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'processus_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if object %}
+                    Modifier Processus
+                  {% else %}
+                    Créer Processus
+                  {% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Add form classes for better styling
+    $('#id_name').addClass('form-control').focus();
+    
+    // Character counter
+    $('#id_name').on('input', function() {
+      let length = $(this).val().length;
+      let maxLength = 150;
+      let remaining = maxLength - length;
+      
+      if (remaining < 0) {
+        $(this).val($(this).val().substring(0, maxLength));
+        remaining = 0;
+      }
+      
+      // Update character counter if exists
+      if ($('#char-counter').length === 0) {
+        $(this).after('<small id="char-counter" class="form-text text-muted">' + remaining + ' caractères restants</small>');
+      } else {
+        $('#char-counter').text(remaining + ' caractères restants');
+      }
+    });
+  });
+</script>
+{% endblock %}

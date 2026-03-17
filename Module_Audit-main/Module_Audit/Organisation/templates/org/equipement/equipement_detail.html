@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails de l'Équipement{% endblock %}
+
+{% block page_title %}Détails de l'Équipement{% endblock %}
+
+{% block breadcrumb %}Équipements / Détails{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-tools mr-2"></i>
+            Détails de l'Équipement
+          </h3>
+          <div class="card-tools">
+            <a href="{% url 'equipement_update' equipement.id %}" class="btn btn-warning btn-sm">
+              <i class="fas fa-edit"></i>
+              Modifier
+            </a>
+            <a href="{% url 'equipement_list' %}" class="btn btn-secondary btn-sm ml-2">
+              <i class="fas fa-arrow-left"></i>
+              Retour à la liste
+            </a>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="card card-outline card-info">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informations de l'Équipement
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <table class="table table-bordered">
+                    <tr>
+                      <th style="width: 150px;">ID :</th>
+                      <td>{{ equipement.id }}</td>
+                    </tr>
+                    <tr>
+                      <th>Nom :</th>
+                      <td><strong>{{ equipement.name }}</strong></td>
+                    </tr>
+                    <tr>
+                      <th>Type d'Équipement :</th>
+                      <td>
+                        {% if equipement.type_equipement %}
+                          <span class="badge badge-info">{{ equipement.type_equipement.name }}</span>
+                        {% else %}
+                          <span class="badge badge-warning">Aucun type</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Site :</th>
+                      <td>
+                        {% if equipement.site %}
+                          <span class="badge badge-primary">{{ equipement.site.name }}</span>
+                        {% else %}
+                          <span class="badge badge-warning">Aucun site</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Numéro de Série :</th>
+                      <td>
+                        {% if equipement.serial_number %}
+                          <code>{{ equipement.serial_number }}</code>
+                        {% else %}
+                          <span class="text-muted">Non spécifié</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Commentaire :</th>
+                      <td>
+                        {% if equipement.commentaire %}
+                          {{ equipement.commentaire|linebreaks }}
+                        {% else %}
+                          <span class="text-muted">Aucun commentaire</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="callout callout-info">
+                <h5><i class="fas fa-info-circle"></i> Résumé</h5>
+                <ul>
+                  <li>ID : {{ equipement.id }}</li>
+                  <li>Type : {% if equipement.type_equipement %}{{ equipement.type_equipement.name }}{% else %}Non défini{% endif %}</li>
+                  <li>Site : {% if equipement.site %}{{ equipement.site.name }}{% else %}Non défini{% endif %}</li>
+                  <li>Série : {% if equipement.serial_number %}{{ equipement.serial_number }}{% else %}Non défini{% endif %}</li>
+                </ul>
+              </div>
+              
+              <div class="card card-outline card-warning">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-tools"></i>
+                    Actions
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <div class="d-grid gap-2">
+                    <a href="{% url 'equipement_update' equipement.id %}" class="btn btn-warning">
+                      <i class="fas fa-edit"></i>
+                      Modifier
+                    </a>
+                    <a href="{% url 'equipement_delete' equipement.id %}" class="btn btn-danger">
+                      <i class="fas fa-trash"></i>
+                      Supprimer
+                    </a>
+                    <a href="{% url 'equipement_list' %}" class="btn btn-secondary">
+                      <i class="fas fa-arrow-left"></i>
+                      Retour
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

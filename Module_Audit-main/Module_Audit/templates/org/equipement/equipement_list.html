@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Équipements{% endblock %}
+
+{% block page_title %}Équipements{% endblock %}
+
+{% block breadcrumb %}Équipements{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-tools mr-2"></i>
+            Gestion des Équipements
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if object_list %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nom</th>
+                <th>Type d'Équipement</th>
+                <th>Site</th>
+                <th>Numéro de Série</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for equipement in object_list %}
+              <tr>
+                <td>{{ equipement.id }}</td>
+                <td>
+                  <strong>{{ equipement.name }}</strong>
+                </td>
+                <td>
+                  {% if equipement.type_equipement %}
+                    <span class="badge badge-info">{{ equipement.type_equipement.name }}</span>
+                  {% else %}
+                    <span class="badge badge-warning">Aucun type</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if equipement.site %}
+                    <span class="badge badge-primary">{{ equipement.site.name }}</span>
+                  {% else %}
+                    <span class="badge badge-warning">Aucun site</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if equipement.serial_number %}
+                    <code>{{ equipement.serial_number }}</code>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'equipement_detail' equipement.pk %}" class="btn btn-info" title="Voir">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'equipement_update' equipement.pk %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'equipement_delete' equipement.pk %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun équipement trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier équipement.</p>
+            <a href="{% url 'equipement_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if object_list %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ object_list|length }} équipement{{ object_list|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'equipement_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter un Équipement
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

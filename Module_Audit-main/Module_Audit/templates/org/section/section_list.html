@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sections{% endblock %}
+
+{% block page_title %}Sections{% endblock %}
+
+{% block breadcrumb %}Sections{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-folder mr-2"></i>
+            Gestion des Sections
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if sections %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nom</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for section in sections %}
+              <tr>
+                <td>{{ section.id }}</td>
+                <td>
+                  <strong>{{ section.name }}</strong>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'section_update' section.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'section_delete' section.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-folder fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucune section trouvée</h4>
+            <p class="text-muted">Commencez par créer votre première section.</p>
+            <a href="{% url 'section_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer une Section
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if sections %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ sections|length }} section{{ sections|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'section_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter une Nouvelle Section
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
