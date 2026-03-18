@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Sous Critère{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Sous Critère{% endblock %}
+
+{% block breadcrumb %}Sous Critères / {% if form.instance.pk %}Modifier{% else %}Créer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-list-ul mr-2"></i>
+            {% if form.instance.pk %}Modifier le Sous Critère{% else %}Nouveau Sous Critère{% endif %}
+          </h3>
+        </div>
+        
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.critere.id_for_label }}">
+                    Critère <span class="text-danger">*</span>
+                  </label>
+                  {{ form.critere }}
+                  {% if form.critere.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.critere.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.critere.help_text %}
+                    <small class="form-text text-muted">{{ form.critere.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.critere %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Critère actuel: {{ form.instance.critere.name }}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.type_cotation.id_for_label }}">
+                    Type Cotation
+                  </label>
+                  {{ form.type_cotation }}
+                  {% if form.type_cotation.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.type_cotation.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.type_cotation.help_text %}
+                    <small class="form-text text-muted">{{ form.type_cotation.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.type_cotation %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Type actuel: {{ form.instance.type_cotation.name }}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.content.id_for_label }}">
+                    Contenu <span class="text-danger">*</span>
+                  </label>
+                  {{ form.content }}
+                  {% if form.content.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.content.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.content.help_text %}
+                    <small class="form-text text-muted">{{ form.content.help_text }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.reaction.id_for_label }}">
+                    Réaction
+                  </label>
+                  {{ form.reaction }}
+                  {% if form.reaction.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.reaction.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.reaction.help_text %}
+                    <small class="form-text text-muted">{{ form.reaction.help_text }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.type_audit.id_for_label }}">
+                    Types d'Audit
+                  </label>
+                  {{ form.type_audit }}
+                  {% if form.type_audit.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.type_audit.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.type_audit.help_text %}
+                    <small class="form-text text-muted">{{ form.type_audit.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.type_audit.all %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Types actuels: 
+                      {% for type_audit in form.instance.type_audit.all %}
+                        {{ type_audit.name }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.preuve_attendu.id_for_label }}">
+                    Preuves Attendues
+                  </label>
+                  {{ form.preuve_attendu }}
+                  {% if form.preuve_attendu.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.preuve_attendu.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.preuve_attendu.help_text %}
+                    <small class="form-text text-muted">{{ form.preuve_attendu.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.preuve_attendu.all %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Preuves actuelles: 
+                      {% for preuve in form.instance.preuve_attendu.all %}
+                        {{ preuve.name|truncatechars:30 }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'souscritere_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if form.instance.pk %}Mettre à jour{% else %}Créer{% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+  .form-group input[type="text"],
+  .form-group textarea,
+  .form-group select {
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-group input[type="text"]:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+{% endblock %}

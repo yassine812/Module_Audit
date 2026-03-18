@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Liste des Cotations{% endblock %}
+
+{% block page_title %}Liste des Cotations{% endblock %}
+
+{% block breadcrumb %}Liste des Cotations{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-list mr-2"></i>
+      Liste des Cotations
+    </h3>
+    <div class="card-tools">
+      <a href="{% url 'cotation_create' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>
+        Ajouter Cotation
+      </a>
+    </div>
+  </div>
+  <!-- /.card-header -->
+  <div class="card-body">
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th style="width: 10%">ID</th>
+          <th style="width: 15%">Valeur</th>
+          <th style="width: 25%">Content</th>
+          <th style="width: 10%">Code</th>
+          <th style="width: 25%">Type Cotation</th>
+          <th style="width: 15%">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cotation in cotations %}
+        <tr>
+          <td>{{ cotation.id }}</td>
+          <td>{{ cotation.valeur }}</td>
+          <td>{{ cotation.content }}</td>
+          <td>{{ cotation.code }}</td>
+          <td>{{ cotation.type_cotation.name|default:"-" }}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'cotation_update' cotation.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i>
+              </a>
+              <a href="{% url 'cotation_delete' cotation.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">Aucune cotation trouvée</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->
+{% endblock %}

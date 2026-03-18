@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Chapitre Norme{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Chapitre Norme{% endblock %}
+
+{% block breadcrumb %}Chapitre Normes / {% if form.instance.pk %}Modifier{% else %}Créer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-book mr-2"></i>
+            {% if form.instance.pk %}Modifier le Chapitre Norme{% else %}Nouveau Chapitre Norme{% endif %}
+          </h3>
+        </div>
+        
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}">
+                    Nom du Chapitre <span class="text-danger">*</span>
+                  </label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.name.help_text %}
+                    <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.page.id_for_label }}">
+                    Page
+                  </label>
+                  {{ form.page }}
+                  {% if form.page.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.page.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.page.help_text %}
+                    <small class="form-text text-muted">{{ form.page.help_text }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.text_ref.id_for_label }}">
+                    Texte de Référence
+                  </label>
+                  {{ form.text_ref }}
+                  {% if form.text_ref.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.text_ref.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if form.text_ref.help_text %}
+                    <small class="form-text text-muted">{{ form.text_ref.help_text }}</small>
+                  {% endif %}
+                  {% if form.instance.text_ref %}
+                    <small class="form-text text-info">
+                      <i class="fas fa-info-circle"></i>
+                      Référence actuelle: {{ form.instance.text_ref.norme }}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'chapitre_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if form.instance.pk %}Mettre à jour{% else %}Créer{% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select {
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-group input[type="text"]:focus,
+  .form-group input[type="number"]:focus,
+  .form-group select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+{% endblock %}

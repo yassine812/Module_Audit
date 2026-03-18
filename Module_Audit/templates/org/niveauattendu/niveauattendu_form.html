@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if object %}
+    Update Niveau Attendu
+  {% else %}
+    Create Niveau Attendu
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if object %}
+    Update Niveau Attendu
+  {% else %}
+    Create Niveau Attendu
+  {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+  {% if object %}
+    Niveaux Attendus / Update
+  {% else %}
+    Niveaux Attendus / Create
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-chart-line mr-2"></i>
+            {% if object %}
+              Update Niveau Attendu: {{ object.name }}
+            {% else %}
+              Create New Niveau Attendu
+            {% endif %}
+          </h3>
+        </div>
+        
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}">
+                    <i class="fas fa-tag mr-1"></i>
+                    Name <span class="text-danger">*</span>
+                  </label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Enter the name of the niveau attendu</small>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.pourcentage.id_for_label }}">
+                    <i class="fas fa-percentage mr-1"></i>
+                    Pourcentage <span class="text-danger">*</span>
+                  </label>
+                  {{ form.pourcentage }}
+                  {% if form.pourcentage.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.pourcentage.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Enter the percentage value (e.g., 75.50)</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.commentaire.id_for_label }}">
+                    <i class="fas fa-comment mr-1"></i>
+                    Commentaire
+                  </label>
+                  {{ form.commentaire }}
+                  {% if form.commentaire.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.commentaire.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Add any additional comments or notes (optional)</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <div class="alert alert-info">
+                  <h6><i class="fas fa-info-circle mr-2"></i>Niveau Attendu Information</h6>
+                  <small>
+                    • Name is required and must be unique<br>
+                    • Pourcentage is required (format: 99.99)<br>
+                    • Commentaire is optional<br>
+                    • Used to define expected levels for audit criteria
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'niveauattendu_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Cancel
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if object %}
+                    Update
+                  {% else %}
+                    Save
+                  {% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Add form classes for better styling
+    $('#id_name').addClass('form-control').focus();
+    $('#id_pourcentage').addClass('form-control');
+    $('#id_commentaire').addClass('form-control');
+    
+    // Character counter for name field
+    $('#id_name').on('input', function() {
+      let length = $(this).val().length;
+      let maxLength = 120;
+      let remaining = maxLength - length;
+      
+      if (remaining < 0) {
+        $(this).val($(this).val().substring(0, maxLength));
+        remaining = 0;
+      }
+      
+      // Update character counter if exists
+      if ($('#name-char-counter').length === 0) {
+        $(this).after('<small id="name-char-counter" class="form-text text-muted">' + remaining + ' characters remaining</small>');
+      } else {
+        $('#name-char-counter').text(remaining + ' characters remaining');
+      }
+    });
+    
+    // Percentage validation
+    $('#id_pourcentage').on('input', function() {
+      let value = parseFloat($(this).val());
+      if (value < 0) {
+        $(this).val('0.00');
+      } else if (value > 100) {
+        $(this).val('100.00');
+      }
+      
+      // Format to 2 decimal places
+      if (!isNaN(value)) {
+        $(this).val(parseFloat($(this).val()).toFixed(2));
+      }
+    });
+  });
+</script>
+{% endblock %}

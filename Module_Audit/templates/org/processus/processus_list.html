@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Processus{% endblock %}
+
+{% block page_title %}Processus{% endblock %}
+
+{% block breadcrumb %}Processus{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-cogs mr-2"></i>
+            Gestion des Processus
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if processus_list %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nom du Processus</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for processus in processus_list %}
+              <tr>
+                <td>{{ processus.id }}</td>
+                <td>
+                  <strong>{{ processus.name }}</strong>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'processus_update' processus.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'processus_delete' processus.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun processus trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier processus.</p>
+            <a href="{% url 'processus_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if processus_list %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ processus_list|length }} processus{{ processus_list|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'processus_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter un Processus
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

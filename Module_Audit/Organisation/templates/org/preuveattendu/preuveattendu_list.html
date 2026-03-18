@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preuves Attendues{% endblock %}
+
+{% block page_title %}Preuves Attendues{% endblock %}
+
+{% block breadcrumb %}Preuves Attendues{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        {% if message.tags == "success" %}
+          <i class="icon fas fa-check"></i>
+        {% elif message.tags == "error" %}
+          <i class="icon fas fa-times"></i>
+        {% elif message.tags == "warning" %}
+          <i class="icon fas fa-exclamation-triangle"></i>
+        {% else %}
+          <i class="icon fas fa-info"></i>
+        {% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">
+            <i class="fas fa-check-double mr-2"></i>
+            Gestion des Preuves Attendues
+          </h3>
+          
+        </div>
+        
+        <div class="card-body">
+          {% if preuves %}
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nom</th>
+                <th>Type de Preuve</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for preuve in preuves %}
+              <tr>
+                <td>{{ preuve.id }}</td>
+                <td>
+                  <strong>{{ preuve.name|truncatewords:10 }}</strong>
+                </td>
+                <td>
+                  {% if preuve.type_preuve %}
+                    <span class="badge badge-info">
+                      {{ preuve.type_preuve.name }}
+                    </span>
+                  {% else %}
+                    <span class="badge badge-warning">
+                      Aucun type
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'preuveattendu_detail' preuve.id %}" class="btn btn-info" title="Voir">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'preuveattendu_update' preuve.id %}" class="btn btn-warning" title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'preuveattendu_delete' preuve.id %}" class="btn btn-danger" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-check-double fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucune preuve attendue trouvée</h4>
+            <p class="text-muted">Commencez par créer votre première preuve attendue.</p>
+            <a href="{% url 'preuveattendu_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>
+              Créer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if preuves %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">
+                Affichage de {{ preuves|length }} preuve{{ preuves|length|pluralize }} attendue{{ preuves|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+              <a href="{% url 'preuveattendu_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Ajouter une Preuve Attendue
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer l'Équipement{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-trash text-danger"></i>
+                        Supprimer un Équipement
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'equipement_list' %}">Équipements</a></li>
+                        <li class="breadcrumb-item active">Suppression</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h4><i class="fas fa-exclamation-triangle"></i> Êtes-vous sûr de vouloir supprimer cet équipement ?</h4>
+                                <p class="mb-0">
+                                    Cette action supprimera définitivement l'équipement "<strong>{{ object.name }}</strong>" et toutes les données associées.
+                                </p>
+                                {% if object.serial_number %}
+                                <p class="mb-0">
+                                    <small>Numéro de série : <code>{{ object.serial_number }}</code></small>
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            <form method="post" class="mt-3">
+                                {% csrf_token %}
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-danger btn-lg">
+                                        <i class="fas fa-trash"></i>
+                                        Confirmer suppression
+                                    </button>
+                                    <a href="{% url 'equipement_list' %}" class="btn btn-secondary btn-lg ml-2">
+                                        <i class="fas fa-times"></i>
+                                        Annuler
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

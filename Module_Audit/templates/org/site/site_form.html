@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if object %}
+    Modifier le Site
+  {% else %}
+    Créer un Site
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if object %}
+    Modifier le Site
+  {% else %}
+    Créer un Site
+  {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+  {% if object %}
+    Sites / Modifier
+  {% else %}
+    Sites / Créer
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-building mr-2"></i>
+            {% if object %}
+              Modifier le Site: {{ object.name }}
+            {% else %}
+              Créer un Nouveau Site
+            {% endif %}
+          </h3>
+        </div>
+        
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="card-body">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}">
+                    <i class="fas fa-tag mr-1"></i>
+                    Nom du Site <span class="text-danger">*</span>
+                  </label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Entrez le nom du site</small>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.section.id_for_label }}">
+                    <i class="fas fa-folder mr-1"></i>
+                    Section <span class="text-danger">*</span>
+                  </label>
+                  {{ form.section }}
+                  {% if form.section.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.section.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <small class="form-text text-muted">Sélectionnez la section à laquelle ce site appartient</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-12">
+                <div class="form-group">
+                  <label for="{{ form.niveau_evaluation.id_for_label }}">
+                    <i class="fas fa-chart-line mr-1"></i>
+                    Niveau d'Évaluation
+                  </label>
+                  {{ form.niveau_evaluation }}
+                  {% if form.niveau_evaluation.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in form.niveau_evaluation.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                <a href="{% url 'site_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  {% if object %}
+                    Modifier le Site
+                  {% else %}
+                    Créer le Site
+                  {% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Auto-format JSON field
+    $('#id_niveau_evaluation').on('blur', function() {
+      let value = $(this).val().trim();
+      if (value) {
+        try {
+          // Try to parse and format JSON
+          const parsed = JSON.parse(value);
+          $(this).val(JSON.stringify(parsed, null, 2));
+        } catch (e) {
+          // If invalid JSON, leave as is
+        }
+      }
+    });
+    
+    // Add form classes for better styling
+    $('#id_name, #id_section').addClass('form-control');
+    $('#id_niveau_evaluation').addClass('form-control').attr('rows', '4');
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Niveau Attendu{% endblock %}
+
+{% block page_title %}Delete Niveau Attendu{% endblock %}
+
+{% block breadcrumb %}Niveaux Attendus / Delete{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h3 class="card-title">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Confirmation de Suppression
+          </h3>
+        </div>
+        
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <h5>
+              <i class="fas fa-question-circle mr-2"></i>
+              Êtes-vous sûr de vouloir supprimer ce Niveau Attendu ?
+            </h5>
+            <p class="mb-0">Cette action ne peut pas être annulée. Tous les critères d'audit utilisant ce niveau attendu seront affectés.</p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-8">
+              <div class="table-responsive">
+                <table class="table table-bordered">
+                  <tr>
+                    <th style="width: 150px;">ID:</th>
+                    <td>{{ object.id }}</td>
+                  </tr>
+                  <tr>
+                    <th>Nom:</th>
+                    <td><strong>{{ object.name }}</strong></td>
+                  </tr>
+                  <tr>
+                    <th>Pourcentage:</th>
+                    <td>
+                      <span class="badge badge-info">{{ object.pourcentage }}%</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Commentaire:</th>
+                    <td>
+                      {% if object.commentaire %}
+                        {{ object.commentaire|truncatewords:20 }}
+                      {% else %}
+                        <span class="text-muted">Aucun commentaire</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Status:</th>
+                    <td>
+                      <span class="badge badge-warning">Sera supprimé</span>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="text-center">
+                <i class="fas fa-chart-line fa-5x text-muted mb-3"></i>
+                <h5 class="text-muted">{{ object.name }}</h5>
+                <p class="text-muted">
+                  <strong>{{ object.pourcentage }}%</strong><br>
+                  <small>Niveau Attendu ID: #{{ object.id }}</small>
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <form method="post" class="mt-4">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'niveauattendu_list' %}" class="btn btn-secondary btn-lg">
+                  <i class="fas fa-times mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-danger btn-lg">
+                  <i class="fas fa-trash mr-2"></i>
+                  Confirmer la Suppression
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
