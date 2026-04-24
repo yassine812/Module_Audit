@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer un Sous Critère{% endblock %}
+
+{% block page_title %}Supprimer un Sous Critère{% endblock %}
+
+{% block breadcrumb %}Sous Critères / Supprimer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i data-lucide="alert-triangle" class="mr-2 text-danger"></i>
+            Confirmation de Suppression
+          </h3>
+        </div>
+        
+        <div class="card-body">
+          <div class="alert alert-warning" role="alert">
+            <h5 class="alert-heading">
+              <i data-lucide="alert-triangle" class="mr-2"></i>
+              Êtes-vous sûr de vouloir supprimer ce sous critère ?
+            </h5>
+            <hr>
+            <p class="mb-0">Cette action est irréversible et supprimera définitivement les données suivantes :</p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-outline card-danger">
+                <div class="card-header">
+                  <h4 class="card-title">Détails du Sous Critère</h4>
+                </div>
+                <div class="card-body">
+                  <table class="table table-borderless">
+                    <tr>
+                      <td style="width: 150px;"><strong>ID:</strong></td>
+                      <td>{{ object.id }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Critère:</strong></td>
+                      <td>
+                        {% if object.critere %}
+                          <span class="badge badge-info">
+                            <i data-lucide="list" class="mr-1"></i>
+                            {{ object.critere.name }}
+                          </span>
+                        {% else %}
+                          <span class="">Aucun critère</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Contenu:</strong></td>
+                      <td>
+                        {% if object.content %}
+                          <div class="bg-light p-2 rounded" style="max-height: 100px; overflow-y: auto;">
+                            {{ object.content|linebreaks }}
+                          </div>
+                        {% else %}
+                          <span class="">-</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Type Cotation:</strong></td>
+                      <td>
+                        {% if object.type_cotation %}
+                          <span class="badge badge-secondary">
+                            {{ object.type_cotation.name }}
+                          </span>
+                        {% else %}
+                          <span class="">-</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Réaction:</strong></td>
+                      <td>
+                        {% if object.reaction %}
+                          <div class="bg-light p-2 rounded" style="max-height: 80px; overflow-y: auto;">
+                            {{ object.reaction|linebreaks }}
+                          </div>
+                        {% else %}
+                          <span class="">-</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Types d'Audit:</strong></td>
+                      <td>
+                        {% if object.type_audit.all %}
+                          <div>
+                            {% for type_audit in object.type_audit.all %}
+                              <span class="badge badge-info mr-1">{{ type_audit.name }}</span>
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <span class="">Aucun type d'audit</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Preuves Attendues:</strong></td>
+                      <td>
+                        {% if object.preuve_attendu.all %}
+                          <div>
+                            {% for preuve in object.preuve_attendu.all %}
+                              <span class="badge badge-warning mr-1">{{ preuve.name }}</span>
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <span class="">Aucune preuve attendue</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'souscritere_list' %}" class="btn btn-secondary">
+                  <i data-lucide="x" class="mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-link text-danger p-1">
+                  <i data-lucide="trash-2" class="mr-2"></i>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

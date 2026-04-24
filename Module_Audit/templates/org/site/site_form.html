@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+{% if object %} Modifier le Site {% else %} Créer un Nouveau Site {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<style>
+    .st-wrapper { width: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    .st-card {
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    .st-header {
+        padding: 40px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        display: flex; align-items: center; gap: 20px;
+    }
+    .st-header-ico {
+        width: 56px; height: 56px; border-radius: 16px;
+        background: rgba(255,255,255,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.5rem; flex-shrink: 0;
+        backdrop-filter: blur(8px);
+    }
+    .st-header h2 { margin: 0; color: #fff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.025em; }
+    .st-header p { margin: 4px 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; font-weight: 500; }
+    
+    .st-body { padding: 40px; }
+    
+    .st-section-title {
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 800; font-size: 0.9rem; text-transform: uppercase;
+        letter-spacing: 0.05em; color: #64748b; margin-bottom: 24px;
+    }
+    .st-num {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: #10b981; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 900;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+    @media (max-width: 1024px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-group {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .input-label {
+        font-size: 0.875rem; font-weight: 700; color: #1e293b;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .modern-input {
+        width: 100%; padding: 12px 16px;
+        border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #f8fafc; font-size: 0.95rem; font-weight: 500;
+        transition: all 0.2s ease;
+        color: #1e293b;
+    }
+    .modern-input:focus {
+        border-color: #10b981; background: #fff; outline: none;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    .modern-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.25rem;
+    }
+
+    /* Levels List */
+    .levels-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px; margin-top: 16px;
+    }
+    .level-card {
+        padding: 16px; border-radius: 16px; border: 2px solid #f1f5f9;
+        background: #fff; cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .level-card:hover { border-color: #e2e8f0; background: #f8fafc; }
+    .level-card.selected { border-color: #10b981; background: #f0fdf4; }
+    
+    .level-check {
+        width: 20px; height: 20px; border-radius: 6px; border: 2px solid #cbd5e1;
+        display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .level-card.selected .level-check { background: #10b981; border-color: #10b981; color: #fff; }
+    
+    .level-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .level-info { flex-grow: 1; }
+    .level-name { font-size: 0.9rem; font-weight: 700; color: #1e293b; }
+    .level-pct { font-size: 0.75rem; font-weight: 600; color: #64748b; }
+
+    .st-footer {
+        padding: 32px 40px; background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-cancel {
+        padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #fff; color: #64748b; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-cancel:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; text-decoration: none; }
+    
+    .btn-save {
+        padding: 12px 32px; border-radius: 12px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; border: none;
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s; cursor: pointer;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(16, 185, 129, 0.4); }
+
+    /* Hide default checkbox */
+    .level-card input[type="checkbox"] { display: none; }
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block content %}
+<div class="st-wrapper p-4 sm:p-8">
+    <div class="st-card max-w-[1400px] mx-auto">
+        <!-- Header -->
+        <div class="st-header">
+            <div class="st-header-ico">
+                <i data-lucide="map-pin"></i>
+            </div>
+            <div>
+                <h2>{% if object %}Modifier le Site{% else %}Nouveau Site{% endif %}</h2>
+                <p>Définissez les sites physiques et leurs standards de performance.</p>
+            </div>
+        </div>
+
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="st-body">
+                {% if form.non_field_errors %}
+                    <div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl mb-8 font-semibold flex items-center gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="st-section-title">
+                    <span class="st-num">01</span> INFORMATIONS GÉNÉRALES
+                </div>
+
+                <div class="form-grid">
+                    <!-- Nom du Site -->
+                    <div class="input-group">
+                        <label class="input-label" for="{{ form.name.id_for_label }}">
+                            <i data-lucide="tag" class="w-4 h-4 text-emerald-500"></i>
+                            Nom du Site <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="id_name" 
+                               class="modern-input" placeholder="Ex: Entrepôt Principal A1..."
+                               value="{{ form.name.value|default:'' }}" required>
+                        {% if form.name.errors %}
+                            <div class="text-rose-500 text-xs font-bold mt-1 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Section -->
+                    <div class="input-group">
+                        <label class="input-label" for="{{ form.section.id_for_label }}">
+                            <i data-lucide="building-2" class="w-4 h-4 text-emerald-500"></i>
+                            Département / Section
+                        </label>
+                        <select name="section" id="id_section" class="modern-input modern-select">
+                            {% for choice in form.section.field.choices %}
+                                <option value="{{ choice.0 }}" {% if choice.0 == form.section.value %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.section.errors %}
+                            <div class="text-rose-500 text-xs font-bold mt-1 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                                {% for error in form.section.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="st-section-title mt-12">
+                    <span class="st-num">02</span> NIVEAUX D'ÉVALUATION ATTENDUS
+                </div>
+                <p class="text-slate-500 text-sm font-medium mb-6">Sélectionnez les standards de performance applicables à ce site.</p>
+
+                <div class="levels-container">
+                    {% for choice in form.niveau_evaluation %}
+                    <label class="level-card" data-raw-label="{{ choice.choice_label }}">
+                        {{ choice.tag }}
+                        <div class="level-check">
+                            <i data-lucide="check" class="w-3 h-3"></i>
+                        </div>
+                        <div class="level-icon bg-emerald-50 text-emerald-600">
+                            <i data-lucide="target" class="w-5 h-5"></i>
+                        </div>
+                        <div class="level-info">
+                            <div class="level-name">Chargement...</div>
+                            <div class="level-pct text-emerald-600">--%</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.niveau_evaluation.errors %}
+                    <div class="text-rose-500 text-xs font-bold mt-4 flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                        {% for error in form.niveau_evaluation.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="st-footer">
+                <a href="{% url 'site_list' %}" class="btn-cancel">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn-save">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    {% if object %}Mettre à jour le Site{% else %}Enregistrer le Site{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // PARSER logic to split the pipe label from Django
+        document.querySelectorAll('.level-card').forEach(card => {
+            const raw = card.getAttribute('data-raw-label');
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            
+            if (raw && raw.includes('|')) {
+                const parts = raw.split('|');
+                const pct = parseInt(parts[0]);
+                const title = parts[1];
+                
+                card.querySelector('.level-name').textContent = title;
+                card.querySelector('.level-pct').textContent = `${pct}%`;
+                
+                // Visual feedback based on percentage
+                const icoBox = card.querySelector('.level-icon');
+                const pctBox = card.querySelector('.level-pct');
+                
+                if (pct < 50) {
+                    icoBox.className = 'level-icon bg-rose-50 text-rose-600';
+                    pctBox.className = 'level-pct text-rose-600';
+                } else if (pct < 75) {
+                    icoBox.className = 'level-icon bg-amber-50 text-amber-600';
+                    pctBox.className = 'level-pct text-amber-600';
+                } else if (pct < 90) {
+                    icoBox.className = 'level-icon bg-emerald-50 text-emerald-600';
+                    pctBox.className = 'level-pct text-emerald-600';
+                } else {
+                    icoBox.className = 'level-icon bg-indigo-50 text-indigo-600';
+                    pctBox.className = 'level-pct text-indigo-600';
+                }
+            } else {
+                card.querySelector('.level-name').textContent = raw;
+                card.querySelector('.level-pct').style.display = 'none';
+            }
+            
+            // Initial selection state
+            if (checkbox.checked) {
+                card.classList.add('selected');
+            }
+            
+            // Toggle visual state on change
+            checkbox.addEventListener('change', function() {
+                if (this.checked) card.classList.add('selected');
+                else card.classList.remove('selected');
+            });
+            
+            // Allow the browser to handle the label-to-checkbox toggle naturally.
+            // Lucide icons inside might need to ignore pointer events to ensure click hits the label.
+            card.querySelectorAll('i, svg').forEach(el => el.style.pointerEvents = 'none');
+        });
+    });
+</script>
+{% endblock %}
+
+

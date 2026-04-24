@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Détail - {{ resultat.sujet }}{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    .admin-body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F8FAFC;
+    }
+    .col-id { width: 40px; }
+    .col-eval { width: 160px; }
+    .col-score { width: 120px; }
+    .col-proof { width: 100px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-body min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+
+        <!-- 🔝 DASHBOARD HEADER -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-8 md:p-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="space-y-3 text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-200">Management</span>
+                        {% if not readonly %}
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-lg uppercase tracking-widest border border-emerald-200">Mode Édition</span>
+                        {% endif %}
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{{ resultat.sujet }}</h1>
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-500 font-medium text-sm">
+                        <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-4 h-4"></i> {{ resultat.date_audit|date:"d/m/Y" }}</span>
+                        <span class="flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4"></i> {{ resultat.auditeur.username }}</span>
+                        <span class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i> {{ resultat.site|default:"Site de l'audit" }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-8">
+                    <div class="text-center md:text-right">
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Score Performance</div>
+                        <div id="total-score-display" class="text-5xl font-black {% if resultat.score_audit >= 4.0 %}text-emerald-600{% elif resultat.score_audit >= 3.0 %}text-amber-500{% else %}text-rose-600{% endif %}">
+                            {{ resultat.score_audit|floatformat:"-2" }}
+                        </div>
+                        <div class="mt-1 flex items-center justify-center md:justify-end gap-2">
+                             <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md uppercase tracking-tight border border-slate-200">
+                                Niveau Attendu: {{ nb_criteres }}
+                             </span>
+                        </div>
+                    </div>
+                    <div class="no-print space-y-2">
+                        <a href="{% url 'resultat_report' resultat.id %}" class="w-full px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-slate-200">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                            Voir Rapport
+                        </a>
+                        {% if not readonly %}
+                        <a href="{% url 'etape_audit' resultat.id %}" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20">
+                            <i data-lucide="play" class="w-4 h-4 text-white fill-current"></i>
+                            Reprendre Wizard
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 INTEGRATED INTERACTIVE TABLE -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="col-id px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                        <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Catégorie / Point de contrôle</th>
+                        <th class="col-eval px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Evaluation</th>
+                        <th class="col-score px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Points / Max</th>
+                        <th class="col-proof px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Preuves</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in grouped_results %}
+                    <!-- Criteria Group Header Row -->
+                    <tr class="bg-slate-100/50 border-y border-slate-200">
+                        <td class="px-6 py-4 text-slate-400 font-black text-xs text-center">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ group.critere.text_ref }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</span>
+                            </div>
+                        </td>
+                        <td colspan="2" class="px-6 py-4">
+                            <div class="flex items-center gap-4">
+                                <div class="h-1.5 w-32 bg-slate-200 rounded-full overflow-hidden">
+                                    <div id="pb-{{ group.critere.text_ref|slugify }}" class="h-full {% if group.score >= 0.8 %}bg-emerald-500{% elif group.score >= 0.6 %}bg-amber-500{% else %}bg-rose-500{% endif %}" style="width: {% widthratio group.score 1 100 %}%"></div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span id="category-score-{{ group.critere.text_ref|slugify }}" class="text-sm font-black {% if group.score >= 0.8 %}text-emerald-600{% elif group.score >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %}">
+                                        {{ group.score|floatformat:"-2" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4"></td>
+                    </tr>
+
+                    {% for d in group.details %}
+                    <tr class="border-b border-slate-100 group hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-6 text-center">
+                            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+                        </td>
+                        <td class="px-6 py-6 max-w-md">
+                            <div class="font-bold text-slate-700 mb-3 text-sm leading-snug">{{ d.sous_critere }}</div>
+                            {% if not readonly %}
+                                <textarea 
+                                    class="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                                    rows="2"
+                                    placeholder="Ajouter une observation..."
+                                    onchange="updateDetail({{ d.id }}, {commentaire: this.value})">{{ d.commentaire|default:"" }}</textarea>
+                            {% else %}
+                                <p class="text-xs text-slate-500 italic">{{ d.commentaire|default:"Aucun commentaire." }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-6">
+                            {% if not readonly %}
+                                <select 
+                                    class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:ring-4 focus:ring-blue-500/10 outline-none cursor-pointer"
+                                    onchange="updateDetail({{ d.id }}, {cotation: this.value})">
+                                    <option value="" {% if not d.cotation %}selected{% endif %}>À évaluer...</option>
+                                    <option value="Conforme" {% if d.cotation == 'Conforme' %}selected{% endif %}>Conforme</option>
+                                    <option value="Partiel" {% if d.cotation == 'Partiel' %}selected{% endif %}>Partiel</option>
+                                    <option value="Non conforme" {% if d.cotation == 'Non conforme' %}selected{% endif %}>Non conforme</option>
+                                    <option value="NA" {% if d.cotation == 'NA' %}selected{% endif %}>N/A</option>
+                                </select>
+                            {% else %}
+                                <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border
+                                    {% if d.cotation == 'Conforme' %}bg-emerald-50 text-emerald-600 border-emerald-100
+                                    {% elif d.cotation == 'Partiel' %}bg-amber-50 text-amber-600 border-amber-100
+                                    {% elif d.cotation == 'Non conforme' %}bg-rose-50 text-rose-600 border-rose-100
+                                    {% else %}bg-slate-50 text-slate-400 border-slate-100{% endif %}">
+                                    {{ d.cotation|default:"NON EVALUÉ" }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-6">
+                            {% if not readonly %}
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="number" 
+                                        value="{{ d.value|floatformat:"-1" }}" 
+                                        class="w-14 p-2 bg-white border border-slate-200 rounded-lg text-center font-black text-slate-800 text-xs"
+                                        onchange="updateDetail({{ d.id }}, {value: this.value})">
+                                </div>
+                            {% else %}
+                                <div class="font-black text-slate-800 text-sm">{{ d.value|floatformat:"-2" }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex flex-wrap gap-1.5">
+                                    {% if d.justificatif %}
+                                        <a href="{{ d.justificatif.url }}" target="_blank" class="p-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg group shadow-sm transition-all">
+                                            <i data-lucide="image" class="w-3.5 h-3.5 text-blue-500"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if d.justificatif_bis %}
+                                        <a href="{{ d.justificatif_bis.url }}" target="_blank" class="p-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg group shadow-sm transition-all">
+                                            <i data-lucide="image" class="w-3.5 h-3.5 text-purple-500"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                {% if not readonly %}
+                                <form method="post" enctype="multipart/form-data" class="flex flex-col items-center gap-1">
+                                    {% csrf_token %}
+                                    <label class="cursor-pointer p-1.5 bg-slate-50 hover:bg-blue-50 border border-slate-100 rounded-lg text-slate-400 hover:text-blue-500 transition-all">
+                                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                                        <input type="file" name="justificatif" accept="image/*" capture="camera" class="hidden" onchange="uploadFile({{ d.id }}, this)">
+                                    </label>
+                                    <span class="text-[8px] font-black text-slate-300 uppercase leading-none">Preuve</span>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 🏁 PAGE FOOTER -->
+        <div class="pt-8 border-t border-slate-200 pb-12 text-center">
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Audit Lifecycle Management • Workspace v4.3</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    async function updateDetail(detailId, data) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        Object.keys(data).forEach(key => formData.append(key, data[key]));
+
+        try {
+            const response = await fetch(`/audit/resultat/${detailId}/update-detail/`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.status === 'saved') {
+                // Update total score
+                const totalDisplay = document.getElementById('total-score-display');
+                totalDisplay.innerHTML = result.score.toFixed(2);
+                
+                if (result.score >= 0.8) totalDisplay.className = 'text-5xl font-black text-emerald-600';
+                else if (result.score >= 0.6) totalDisplay.className = 'text-5xl font-black text-amber-500';
+                else totalDisplay.className = 'text-5xl font-black text-rose-600';
+
+                // Update category score & progress bar
+                const catDisplay = document.getElementById(`category-score-${result.category_id}`);
+                const pb = document.getElementById(`pb-${result.category_id}`);
+                if (catDisplay) {
+                    catDisplay.innerHTML = result.category_score.toFixed(2);
+                    if (result.category_score >= 0.8) {
+                        catDisplay.className = 'text-sm font-black text-emerald-600';
+                        if(pb) pb.className = 'h-full bg-emerald-500';
+                        if(pb) pb.style.width = (result.category_score * 100) + '%';
+                    } else if (result.category_score >= 0.6) {
+                        catDisplay.className = 'text-sm font-black text-amber-500';
+                        if(pb) pb.className = 'h-full bg-amber-500';
+                        if(pb) pb.style.width = (result.category_score * 100) + '%';
+                    } else {
+                        catDisplay.className = 'text-sm font-black text-rose-600';
+                        if(pb) pb.className = 'h-full bg-rose-500';
+                        if(pb) pb.style.width = (result.category_score * 100) + '%';
+                    }
+                    if(pb) pb.style.width = result.category_score + '%';
+                }
+            }
+        } catch (err) {
+            console.error("Update error:", err);
+        }
+    }
+
+    async function uploadFile(detailId, input) {
+        if (!input.files[0]) return;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('justificatif', input.files[0]);
+
+        Swal.fire({
+            title: 'Envoi en cours...',
+            didOpen: () => { Swal.showLoading() }
+        });
+
+        try {
+            const response = await fetch(`/audit/resultat/${detailId}/update-detail/`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.status === 'saved') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Fichier envoyé !',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            }
+        } catch (err) {
+            Swal.fire('Erreur', 'Échec de l\'envoi du fichier.', 'error');
+        }
+    }
+</script>
+{% endblock %}
+
+

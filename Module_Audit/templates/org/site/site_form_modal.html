@@ -1,0 +1,101 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
+            <i data-lucide="building" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Site{% else %}Nouveau Site{% endif %}</h4>
+            <p class="  mb-0">Définissez les sites physiques et leurs standards.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="siteModalForm" method="post" action="{% if object %}{% url 'site_update' object.id %}{% else %}{% url 'site_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <label class="font-weight-bold  text-uppercase  tracking-wider mb-2 d-block">Informations Générales</label>
+                <div class="form-group mb-3">
+                    <label class=" font-weight-bold text-dark" for="id_name">Nom du Site <span class="text-danger">*</span></label>
+                    <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i data-lucide="tag" class="text-emerald-500" ></i>
+                            </span>
+                        </div>
+                        <input type="text" name="name" id="id_name" class="form-control border-0 py-2" placeholder="Ex: Entrepôt Principal A1..." value="{{ form.name.value|default:'' }}" required>
+                    </div>
+                    {% if form.name.errors %}
+                        <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-0">
+                    <label class=" font-weight-bold text-dark" for="id_section">Département / Section</label>
+                    <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i data-lucide="building-2" class="text-emerald-500" ></i>
+                            </span>
+                        </div>
+                        <select name="section" id="id_section" class="form-control border-0 py-2">
+                            {% for choice in form.section.field.choices %}
+                                <option value="{{ choice.0 }}" {% if choice.0|slugify == form.section.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <label class="font-weight-bold  text-uppercase  tracking-wider mb-2 d-block">Standards de Performance</label>
+                <div class="levels-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto;">
+                    {% for choice in form.niveau_evaluation %}
+                    <label class="level-item p-3 rounded-xl border d-flex align-items-center gap-3 cursor-pointer transition-all hover-bg-light" style="position: relative;">
+                        <input type="checkbox" name="niveau_evaluation" value="{{ choice.data.value }}" class="mr-2" {% if choice.data.selected %}checked{% endif %} >
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold text-dark text-sm">{{ choice.choice_label }}</div>
+                            <div class="text-emerald-600 font-weight-bold ">--%</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.niveau_evaluation.errors %}
+                    <small class="text-danger font-weight-bold mt-2 d-block">{% for error in form.niveau_evaluation.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-emerald text-white font-weight-bold rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <i data-lucide="save" class="mr-2" ></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<style>
+    .hover-bg-light:hover { background-color: #f8fafc; border-color: #10b981 !important; }
+    .level-item input:checked + div { color: #10b981; }
+    .level-item:has(input:checked) { border-color: #10b981 !important; background-color: #f0fdf4; }
+</style>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+

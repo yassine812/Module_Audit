@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Résultats des Audits{% endblock %}
+
+{% block page_title %}Résultats des Audits{% endblock %}
+
+{% block breadcrumb %}Résultats des Audits{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  
+  
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Filter & Search Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i data-lucide="search" class="" style="width: 18px;"></i>
+                                    </span>
+                                </div>
+                                <input type="text" id="resultSearchInput" class="form-control border-left-0" placeholder="Rechercher par sujet, auditeur ou site...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-right mt-3 mt-md-0">
+                            <div class="btn-group border rounded-pill shadow-sm p-1 bg-light w-100 w-md-auto justify-content-center" style="overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; flex-wrap: nowrap;">
+                                <button onclick="filterResults('all')" id="tab-all" class="btn btn-sm px-4 filter-btn active-filter" style="border-radius: 20px; white-space: nowrap;">Tout</button>
+                                <button onclick="filterResults('en-cours')" id="tab-en-cours" class="btn btn-sm px-4 filter-btn" style="border-radius: 20px; white-space: nowrap;">En cours</button>
+                                <button onclick="filterResults('termine')" id="tab-termine" class="btn btn-sm px-4 filter-btn" style="border-radius: 20px; white-space: nowrap;">Terminé</button>
+                            </div>
+                            <style>
+                                .btn-group::-webkit-scrollbar { display: none; }
+                            </style>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Card -->
+            <div class="card">
+                <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
+                    <h3 class="card-title fw-bold header-text mb-0">
+                        <i data-lucide="bar-chart-3" class="mr-2 text-primary"></i>
+                        Résultats d'Audit
+                    </h3>
+                    {% if user.is_superuser %}
+                    <div class="ml-auto">
+                        <a href="{% url 'liste_audit_list' %}" class="btn btn-primary shadow-sm rounded-pill px-4 btn-sm-block">
+                            <i data-lucide="plus" class="mr-1"></i>
+                            Nouvel Audit
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover mb-0" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3 col-id">ID</th>
+                                    <th class="col-name">Sujet / Référence</th>
+                                    <th class="col-auditor">Auditeur</th>
+                                    <th class="col-site">Site</th>
+                                    <th class="col-date">Date</th>
+                                    <th class="col-score text-center">Score</th>
+                                    <th class="col-status text-center">Statut</th>
+                                    <th class="text-center col-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                 {% for resultat in resultats %}
+                                <tr class="result-row" 
+                                    data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
+                                    data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
+                                    <td class="col-id ps-3  " data-label="ID">#{{ resultat.id }}</td>
+                                    <td class="col-name" data-label="Sujet">
+                                        <div class="font-weight-bold  text-dark">{{ resultat.sujet }}</div>
+                                        <small class="">{{ resultat.ref_audit }}</small>
+                                    </td>
+                                    <td class="col-auditor" data-label="Auditeur">{{ resultat.auditeur.username }}</td>
+                                    <td class="col-site" data-label="Site">{{ resultat.site|default:"N/A" }}</td>
+                                    <td class="col-date" data-label="Date">{{ resultat.date_audit|date:"d/m/Y" }}</td>
+                                    <td class="col-score text-center" data-label="Score">
+                                        <span class="badge badge-light border text-slate-800">
+                                            {{ resultat.score_audit }}
+                                        </span>
+                                    </td>
+                                    <td class="col-status text-center" data-label="Statut">
+                                        <span class="badge {% if resultat.en_cours %}badge-warning{% else %}badge-success{% endif %} text-uppercase shadow-sm">
+                                            {% if resultat.en_cours %}En cours{% else %}Terminé{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-center col-actions" data-label="Actions">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <a href="{% url 'resultat_detail' resultat.id %}" class="btn btn-link text-info p-1" title="Détails">
+                                                <i data-lucide="eye" ></i>
+                                            </a>
+                                            <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
+                                                <i data-lucide="file-text" ></i>
+                                            </a>
+                                            {% if user.is_superuser and resultat.en_cours %}
+                                            <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
+                                                {% csrf_token %}
+                                                <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                    <i data-lucide="lock" ></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5 ">
+                                        <i data-lucide="search-x" class="mb-3" ></i>
+                                        <h4>Aucun résultat trouvé</h4>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if is_paginated %}
+                <div class="card-footer bg-white border-top-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class=" ">
+                            Page {{ page_obj.number }} sur {{ paginator.num_pages }} ({{ paginator.count }} résultats)
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i data-lucide="chevron-left" style="width: 14px;"></i></a></li>
+                                {% endif %}
+                                
+                                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i data-lucide="chevron-right" style="width: 14px;"></i></a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-btn.active-filter {
+        background-color: #3b82f6;
+        color: white;
+        box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+    }
+    .filter-btn:not(.active-filter):hover {
+        background-color: #f1f5f9;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Initialize Lucide
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
+    const searchInput = document.getElementById('resultSearchInput');
+    const rows = document.querySelectorAll('.result-row');
+    let currentStatusFilter = 'all';
+
+    function filterResults(status) {
+        currentStatusFilter = status;
+        
+        // UI Tabs update
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+        document.getElementById(`tab-${status}`).classList.add('active-filter');
+
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase();
+        
+        rows.forEach(row => {
+            const statusMatch = (currentStatusFilter === 'all' || row.dataset.status === currentStatusFilter);
+            const searchMatch = row.dataset.search.includes(query);
+            
+            if (statusMatch && searchMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+
+    // Close Audit Confirmation
+    document.querySelectorAll('.btn-finish-audit').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            Swal.fire({
+                title: 'Clôturer l\'audit ?',
+                text:"L'audit sera définitivement marqué comme terminé.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, clôturer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+
+
+
+

@@ -1,0 +1,51 @@
+{% load static %}
+
+<div class="modal-header border-bottom py-2 px-3 bg-white">
+    <h5 class="modal-title font-weight-bold d-flex align-items-center">
+        <i data-lucide="tag" class="mr-2 text-primary" ></i>
+        {% if object %}Modifier Type{% else %}Nouveau Type{% endif %}
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<style>
+    .modal-header { padding: 0.75rem 1rem !important; }
+    .modal-body { padding: 1.25rem !important; }
+    .form-group { margin-bottom: 1rem !important; }
+    .modal-title { font-size: 1.1rem !important; }
+</style>
+
+<form id="typeequipementModalForm" method="post" action="{% if object %}{% url 'typeequipement_update' object.id %}{% else %}{% url 'typeequipement_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.name.id_for_label }}">Nom du Type d'Équipement <span class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <small class="text-danger d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary px-4">
+            <i data-lucide="save" class="mr-2"></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    $(document).ready(function() {
+        $('#typeequipementModalForm input').addClass('form-control');
+    });
+</script>
