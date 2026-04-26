@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sections{% endblock %}
+
+{% block page_title %}Sections{% endblock %}
+
+{% block breadcrumb %}Sections{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  
+  
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Sections
+            </h3>
+          </div>
+          {% if sections %}
+          <div class="ml-auto">
+            <button onclick="openSectionModal('{% url 'section_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4">
+              <i data-lucide="plus" class="mr-1"></i>
+              Ajouter une Nouvelle Section
+              
+            </button>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="card-body px-0 pb-0">
+          {% if sections %}
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+              <thead class="bg-light shadow-none">
+                <tr>
+                  <th class="text-center col-id">ID</th>
+                  <th class="col-name">Nom</th>
+                  <th class="text-center col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                 {% for section in page_obj %}
+                <tr>
+                  <td class="text-center col-id  ">#{{ section.id }}</td>
+                  <td class="col-name">
+                    <strong class="text-dark ">{{ section.name }}</strong>
+                  </td>
+                  <td class="text-center col-actions">
+                    <div class="d-flex justify-content-center align-items-center">
+                      <button onclick="openSectionModal('{% url 'section_update' section.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                        <i data-lucide="edit" ></i>
+                      </button>
+                      <button onclick="openDeleteModal('{% url 'section_delete' section.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                        <i data-lucide="trash-2" ></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i data-lucide="folder" class="w-12 h-12  mb-3 opacity-25"></i>
+            <h4 class=" font-weight-bold">Aucune section trouvée</h4>
+            <p class=" ">Commencez par créer votre première division organisationnelle.</p>
+            <button onclick="openSectionModal('{% url 'section_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
+              <i data-lucide="plus" class="mr-2"></i>
+              Créer une Section
+            </button>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 pt-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="  px-2">
+              Page {{ page_obj.number }} sur {{ paginator.num_pages }} (Total: {{ paginator.count }} sections)
+            </div>
+            <nav aria-label="Page navigation" class="px-2">
+              <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
+                      <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
+
+                {% if page_obj.has_next %}
+                   <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                      <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
+        </div>
+        {% elif page_obj %}
+        <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
+           <small class="">Affichage de <span class="fw-bold">{{ page_obj|length }}</span> section{{ page_obj|length|pluralize }}</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Forms Modal -->
+<div class="modal fade" id="sectionModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div id="modalBodyContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2  ">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deletion Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div id="deleteModalBodyContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-danger" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openSectionModal(url) {
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#sectionModal').modal('show');
+        $.ajax({
+            url: url,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                $('#modalBodyContent').html(data);
+                initModalBehaviors();
+            },
+            error: function() {
+                $('#modalBodyContent').html('<div class="alert alert-danger m-3">Erreur lors du chargement du formulaire.</div>');
+            }
+        });
+    }
+
+    function initModalBehaviors() {
+        $('#sectionModalForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            $.ajax({
+                type:"POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        $('#sectionModal').modal('hide');
+                        location.reload(); 
+                    } else {
+                        $('#modalBodyContent').html(response);
+                        initModalBehaviors();
+                    }
+                },
+                error: function() {
+                    alert("Une erreur est survenue lors de l'enregistrement.");
+                }
+            });
+        });
+    }
+
+    function openDeleteModal(url) {
+        $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
+        $('#deleteModal').modal('show');
+        $.ajax({
+            url: url,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                $('#deleteModalBodyContent').html(data);
+                initDeleteBehaviors();
+            },
+            error: function() {
+                $('#deleteModalBodyContent').html('<div class="alert alert-danger m-3">Erreur lors du chargement.</div>');
+            }
+        });
+    }
+
+    function initDeleteBehaviors() {
+        $('#deleteForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            $.ajax({
+                type:"POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        $('#deleteModal').modal('hide');
+                        location.reload(); 
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    if (response && response.message) {
+                        $('#deleteErrorMessage').text(response.message).fadeIn();
+                        // Gold Standard UI: Hide the delete button if deletion is blocked
+                        form.find('button[type="submit"]').fadeOut();
+                    } else {
+                        alert("Une erreur imprévue est survenue.");
+                    }
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
+
+
+
+
+

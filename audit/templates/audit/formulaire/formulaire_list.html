@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Formulaires d'Audit{% endblock %}
+
+{% block page_title %}Liste des Formulaires d'Audit{% endblock %}
+
+{% block breadcrumb %}Formulaires d'Audit{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  
+  
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Formulaires
+            </h3>
+          </div>
+          {% if formulaires %}
+          <div class="ml-auto">
+            <a href="{% url 'formulaire_create' %}" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
+              <i data-lucide="plus" class="mr-1"></i>
+              Nouveau Formulaire
+            </a>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="card-body px-0 pb-0">
+          {% if formulaires %}
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+              <thead class="bg-light shadow-none">
+                <tr>
+                  <th class="text-center col-id">ID</th>
+                  <th class="col-name">Nom</th>
+                  <th class="col-type">Type</th>
+                  <th class="col-stats d-none d-md-table-cell">Critères</th>
+                  <th class="col-date d-none d-lg-table-cell">Date</th>
+                  <th class="text-center col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for formulaire in formulaires %}
+                <tr>
+                  <td class="text-center col-id  ">#{{ formulaire.id }}</td>
+                  <td class="col-name">
+                    <strong class="text-dark ">{{ formulaire.name }}</strong>
+                  </td>
+                  <td class="col-type">
+                    {% if formulaire.type_audit %}
+                    <span class="badge badge-info">{{ formulaire.type_audit.name|truncatechars:10 }}</span>
+                    {% else %}
+                    <span class=" ">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td class="col-stats d-none d-md-table-cell">
+                    {% with sous_criteres_count=formulaire.get_sous_criteres_ordonne|length %}
+                    {% if sous_criteres_count > 0 %}
+                    <span class="badge badge-success">{{ sous_criteres_count }} SC</span>
+                    {% else %}
+                    <span class="badge badge-warning">Sync</span>
+                    {% endif %}
+                    {% endwith %}
+                  </td>
+                  <td class="col-date d-none d-lg-table-cell  ">{{ formulaire.date_creation|date:"d/m/Y" }}</td>
+                  <td class="text-center col-actions">
+                    <div class="d-flex justify-content-center align-items-center">
+                      <a href="{% url 'formulaire_detail' formulaire.pk %}" class="btn btn-info p-1" title="Voir">
+                        <i data-lucide="eye" ></i>
+                      </a>
+                      <a href="{% url 'formulaire_update' formulaire.pk %}" class="btn btn-warning p-1" title="Modifier">
+                        <i data-lucide="edit" ></i>
+                      </a>
+                      <button type="button" class="btn btn-secondary p-1 btn-copy-form" 
+                              data-url="{% url 'formulaire_copy' formulaire.pk %}" 
+                              data-name="{{ formulaire.name }}"
+                              title="Copier">
+                        <i data-lucide="copy" ></i>
+                      </button>
+                      <button type="button" class="btn btn-danger p-1 btn-delete-form" 
+                              data-url="{% url 'formulaire_delete' formulaire.pk %}" 
+                              data-name="{{ formulaire.name }}"
+                              title="Supprimer">
+                        <i data-lucide="trash-2" ></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i data-lucide="file-text" class="w-12 h-12  mb-3 opacity-25"></i>
+            <h4 class=" font-weight-bold">Aucun formulaire trouvé</h4>
+            <p class="">Commencez par créer votre premier formulaire d'audit.</p>
+            <a href="{% url 'formulaire_create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+              <i data-lucide="plus" class="mr-2"></i>
+              Créer un Formulaire
+            </a>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if formulaires %}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-6">
+              <small class="">
+                Affichage de {{ formulaires|length }} formulaire{{ formulaires|length|pluralize }}
+              </small>
+            </div>
+            <div class="col-md-6 text-right">
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+  // --- Copy Form Logic ---
+  $('.btn-copy-form').on('click', function() {
+    const url = $(this).data('url');
+    const name = $(this).data('name');
+    
+    Swal.fire({
+      title: 'Copier le formulaire ?',
+      text: `Voulez-vous créer une copie du formulaire"${name}" ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#6c757d',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, copier',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-4 shadow-lg border-0',
+        confirmButton: 'rounded-3 px-4 py-2',
+        cancelButton: 'rounded-3 px-4 py-2'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading state
+        Swal.fire({
+          title: 'Copie en cours...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+          url: url,
+          type: 'POST',
+          headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+          success: function(response) {
+            if (response.status === 'success') {
+              Swal.fire({
+                title: 'Copie réussie !',
+                text: response.message,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'rounded-4 shadow-lg border-0',
+                    confirmButton: 'rounded-3 px-4 py-2'
+                }
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire('Erreur', response.message, 'error');
+            }
+          },
+          error: function(xhr) {
+            let msg ="Une erreur est survenue lors de la copie.";
+            if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+            Swal.fire('Erreur', msg, 'error');
+          }
+        });
+      }
+    });
+  });
+
+  // --- Delete Form Logic ---
+  $('.btn-delete-form').on('click', function() {
+    const url = $(this).data('url');
+    const name = $(this).data('name');
+    
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: `Vous allez supprimer le formulaire"${name}". Cette action est irréversible !`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer !',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-4 shadow-lg border-0',
+        confirmButton: 'rounded-3 px-4 py-2',
+        cancelButton: 'rounded-3 px-4 py-2'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Perform the deletion via a POST request to handle Django's default delete protection
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        
+        form.appendChild(csrfToken);
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+
+
+
+
+

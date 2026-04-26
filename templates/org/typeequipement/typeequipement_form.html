@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Modifier Type d'Équipement{% else %}Nouveau Type d'Équipement{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<style>
+    .te-wrapper { width: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    .te-card {
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    .te-header {
+        padding: 40px;
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        display: flex; align-items: center; gap: 20px;
+    }
+    .te-header-ico {
+        width: 56px; height: 56px; border-radius: 16px;
+        background: rgba(255,255,255,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.5rem; flex-shrink: 0;
+        backdrop-filter: blur(8px);
+    }
+    .te-header h2 { margin: 0; color: #fff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.025em; }
+    .te-header p { margin: 4px 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; font-weight: 500; }
+    
+    .te-body { padding: 40px; }
+    
+    .te-section-title {
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 800; font-size: 0.9rem; text-transform: uppercase;
+        letter-spacing: 0.05em; color: #64748b; margin-bottom: 24px;
+    }
+    .te-num {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: #f43f5e; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 900;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+    }
+    @media (max-width: 1024px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-group {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .input-label {
+        font-size: 0.875rem; font-weight: 700; color: #1e293b;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .modern-input {
+        width: 100%; padding: 12px 16px;
+        border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #f8fafc; font-size: 0.95rem; font-weight: 500;
+        transition: all 0.2s ease;
+        color: #1e293b;
+    }
+    .modern-input:focus {
+        border-color: #f43f5e; background: #fff; outline: none;
+        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.1);
+    }
+
+    .info-panel {
+        background: #fff1f2; border: 1px solid #ffe4e6;
+        border-radius: 20px; padding: 24px;
+    }
+    .info-panel h4 { margin: 0 0 12px; font-size: 0.9rem; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .info-item { display: flex; align-items: flex-start; gap: 8px; color: #881337; font-size: 0.85rem; font-weight: 500; }
+    .info-item i { margin-top: 3px; }
+
+    .te-footer {
+        padding: 32px 40px; background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-cancel {
+        padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #fff; color: #64748b; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-cancel:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; text-decoration: none; }
+    
+    .btn-save {
+        padding: 12px 32px; border-radius: 12px;
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        color: #fff; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; border: none;
+        box-shadow: 0 10px 20px -5px rgba(244, 63, 94, 0.3);
+        transition: all 0.2s; cursor: pointer;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(244, 63, 94, 0.4); }
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block content %}
+<div class="te-wrapper p-4 sm:p-8">
+    <div class="te-card max-w-[1400px] mx-auto">
+        <!-- Header -->
+        <div class="te-header">
+            <a href="{% url 'typeequipement_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <div class="te-header-ico">
+                <i data-lucide="wrench"></i>
+            </div>
+            <div>
+                <h2>{% if object %}Modifier Type d'Équipement{% else %}Nouveau Type d'Équipement{% endif %}</h2>
+                <p>Classifiez vos actifs et outils pour une meilleure gestion d'audit.</p>
+            </div>
+        </div>
+
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="te-body">
+                {% if form.non_field_errors %}
+                    <div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl mb-8 font-semibold flex items-center gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="te-section-title">
+                    <span class="te-num">01</span> DÉFINITION DU TYPE
+                </div>
+
+                <div class="form-grid">
+                    <div class="space-y-6">
+                        <!-- Nom du Type -->
+                        <div class="input-group">
+                            <label class="input-label" for="{{ form.name.id_for_label }}">
+                                <i data-lucide="tag" class="w-4 h-4 text-rose-500"></i>
+                                Nom du Type <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" name="name" id="id_name" 
+                                   class="modern-input" placeholder="Ex: Chariot Elévateur, PC Portable..."
+                                   value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                                <div class="text-rose-500 text-xs font-bold mt-1 flex items-center gap-1">
+                                    <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="text-slate-400 text-xs font-medium italic mt-1">Utilisez des noms génériques pour regrouper vos équipements.</p>
+                        </div>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div class="info-panel">
+                        <h4><i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i> Guide de gestion</h4>
+                        <ul class="info-list">
+                            <li class="info-item">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-rose-500 flex-shrink-0"></i>
+                                <span>Le nom doit être clair et représentatif.</span>
+                            </li>
+                            <li class="info-item">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-rose-500 flex-shrink-0"></i>
+                                <span>Permet de filtrer vos équipements par catégorie.</span>
+                            </li>
+                            <li class="info-item">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-rose-500 flex-shrink-0"></i>
+                                <span>Impacte directement l'organisation des rapports.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="te-footer">
+                <a href="{% url 'typeequipement_list' %}" class="btn-cancel">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn-save">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    {% if object %}Mettre à jour le type{% else %}Créer le type d'équipement{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    document.getElementById('id_name').focus();
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,723 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rapport d'Audit - {{ resultat.sujet }}{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+    .content-wrapper {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    .report-body {
+        font-family: 'Inter', sans-serif;
+        background-color: #fcfcfc;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .print-shadow-none {
+            box-shadow: none !important;
+            border: 1px solid #eee !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .no-break-inside {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        #report-container {
+            display: none !important;
+        }
+
+        #pdf-content {
+            display: block !important;
+            position: static !important;
+            width: 100% !important;
+            left: auto !important;
+            top: auto !important;
+        }
+
+        .no-break-inside {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+    }
+
+    .table-fixed-layout {
+        table-layout: fixed;
+    }
+
+    .col-id {
+        width: 50px;
+    }
+
+    .col-eval {
+        width: 140px;
+    }
+
+    .col-score {
+        width: 100px;
+    }
+
+    .col-obs {
+        width: 250px;
+    }
+
+    /* Custom scrollbar for mobile tables */
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* PDF HIDDEN CONTAINER */
+    #pdf-content {
+        display: none; /* Hidden on screen by default */
+        background: white;
+        width: 794px !important; /* Force EXACT A4 pixel width */
+        height: 1123px !important; /* Force EXACT A4 pixel height */
+        max-width: 794px !important;
+        overflow: hidden !important;
+        margin: 0;
+    }
+
+    .pdf-inner {
+        width: 91%; /* Compensated for scale(1.1): 100% / 1.1 ≈ 91% */
+        margin: 0 auto;
+        transform: scale(1.1);
+        transform-origin: top center;
+        display: flex;
+        flex-direction: column;
+        height: 1020px; /* 1123px / 1.1 = 1021px */
+        justify-content: space-between;
+        line-height: 1.6;
+    }
+
+    .pdf-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Inter', sans-serif;
+        color: black;
+    }
+    .pdf-table th, .pdf-table td {
+        border: 1px solid black;
+        padding: 12px 16px; /* Generous padding */
+        font-size: 16px;
+        line-height: 1.3;
+    }
+    .pdf-table th {
+        background-color: #f1f5f9;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 18px;
+    }
+    .pdf-page-break-avoid {
+        page-break-inside: avoid;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-body py-10 px-1 md:px-2">
+    
+    <!-- ============================================== -->
+    <!-- 📄 HIDDEN PDF SPECIFIC STRUCTURE               -->
+    <!-- ============================================== -->
+    <div id="pdf-content">
+        <div class="pdf-inner">
+            <!-- Top Section -->
+            <div>
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 3px solid black;">
+                <div>
+                    <div style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; margin-bottom: 6px;">Document Officiel</div>
+                    <div style="font-size: 26px; font-weight: 900; color: black; line-height: 1.1;">Rapport d'Évaluation</div>
+                </div>
+                <div style="font-size: 28px; font-weight: 900; color: black;">{{ resultat.sujet }}</div>
+            </div>
+
+            <!-- General Info Form Style -->
+            <div style="display: flex; flex-wrap: wrap; margin-bottom: 20px; font-size: 16px; color: black; background: #f8fafc; padding: 20px 24px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <!-- Row 1 -->
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Auditeur(s)</span>
+                    <span style="font-weight: 900; font-size: 18px; line-height: 1.3;">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
+                </div>
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Site Audité</span>
+                    <span style="font-weight: 900; font-size: 18px; line-height: 1.3;">{{ resultat.site|default:"NON SPÉCIFIÉ" }}</span>
+                </div>
+
+                <!-- Row 2 -->
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Référence d'Audit</span>
+                    <span style="font-weight: 900; font-size: 18px; line-height: 1.3;">#{{ resultat.id }}</span>
+                </div>
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Date</span>
+                    <span style="font-weight: 900; font-size: 18px; line-height: 1.3;">{{ resultat.date_audit|date:"F j, Y" }}</span>
+                </div>
+
+                <!-- Row 3 -->
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Programme / Norme</span>
+                    <span style="font-weight: 900; font-size: 18px; line-height: 1.3;">{{ resultat.audit.type_audit|default:"Standard Qualité" }}</span>
+                </div>
+                <div style="width: 50%; display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Performance Globale</span>
+                    <span style="font-weight: 900; font-size: 24px; color: #0f172a; line-height: 1.3;">{{ resultat.score_audit|floatformat:"-2" }}</span>
+                </div>
+            </div>
+            </div> <!-- End Top Section -->
+
+            <!-- Vertical Criteria Blocks (Expands to fill remaining height) -->
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px; justify-content: space-between;">
+                {% for group in grouped_results %}
+                <!-- 📁 CRITERIA CARD -->
+                <div style="border: 2px solid black; background: white; page-break-inside: avoid;">
+                    
+                    <!-- Group Header -->
+                    <div style="background-color: #f1f5f9; padding: 18px 24px; border-bottom: 2px solid black; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 20px; font-weight: 900; text-transform: uppercase; color: black; letter-spacing: 1px;">{{ group.critere.text_ref }}</div>
+                            <div style="font-size: 14px; color: #475569; margin-top: 4px; font-weight: bold;">Chapitre: {{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
+                        </div>
+                        <div style="text-align: right; font-weight: 900; font-size: 20px; color: black;">
+                            Performance: {{ group.score|floatformat:"-2" }}
+                        </div>
+                    </div>
+
+                    <!-- Sub-criteria List -->
+                    <div style="padding: 22px 26px; display: flex; flex-direction: column; gap: 22px;">
+                        {% for d in group.details %}
+                        <div style="display: flex; flex-direction: column; gap: 10px; {% if not forloop.last %}border-bottom: 1px solid #e2e8f0; padding-bottom: 22px;{% endif %} page-break-inside: avoid;">
+                            
+                            <div style="font-size: 17px; font-weight: 900; color: black;">&#9656; {{ d.sous_critere }}</div>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 30px; font-size: 16px; color: #334155; line-height: 1.6;">
+                                {% if d.norme %}
+                                <div><span style="font-weight: 900; color: black;">Norme:</span> {{ d.norme }}</div>
+                                {% endif %}
+                                <div><span style="font-weight: 900; color: black;">Évaluation:</span> <span style="text-transform: uppercase; font-weight: bold;">{{ d.cotation|default:"NON EVALUÉ" }}</span></div>
+                                <div><span style="font-weight: 900; color: black;">Score:</span> <span style="font-weight: bold;">{% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}</span></div>
+                            </div>
+
+                            {% if d.commentaire %}
+                            <div style="font-size: 15px; color: #475569; background: #f8fafc; padding: 14px 18px; border-left: 4px solid #475569; margin-top: 6px; line-height: 1.6;">
+                                <span style="font-weight: 900; color: black;">Observations:</span> {{ d.commentaire }}
+                            </div>
+                            {% endif %}
+                            
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div> <!-- End Vertical Blocks -->
+            
+            <!-- Footer -->
+            <div style="margin-top: auto; text-align: center; font-size: 11px; color: #94a3b8; text-transform: uppercase; border-top: 1px solid #cbd5e1; padding-top: 12px; padding-bottom: 10px;">
+                Document généré le {% now "d/m/Y H:i" %} • Confidentiel
+            </div>
+        </div>
+    </div>
+    <!-- ============================================== -->
+
+    <!-- ORIGINAL UI LAYOUT (UNMODIFIED BUT HIDDEN IN PRINT) -->
+    <div id="report-container" class="max-w-full space-y-6">
+
+        <!-- 📄 ACADEMIC COVER PAGE -->
+        <div class="bg-white border border-slate-200 shadow-lg min-h-0 w-full p-3 md:p-4 flex flex-col relative no-break-inside print-shadow-none mb-6 md:mb-10">
+            <!-- Floating Print Buttons (Hidden in print) -->
+            <div class="flex justify-end w-full mb-4 md:mb-0 md:absolute md:top-6 md:right-6 no-print" data-html2canvas-ignore="true">
+                <div class="flex items-center gap-3 bg-white/80 backdrop-blur p-2 rounded-xl border border-slate-200 shadow-sm">
+                    <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Envoyer par Email">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                    </button>
+                    <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Télécharger PDF">
+                        <i data-lucide="file-down" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Imprimer">
+                        <i data-lucide="printer" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top Logos placeholder -->
+            <div class="flex justify-center items-center gap-6 md:gap-8 mb-4 md:mb-12 mt-0">
+                <div class="flex items-center gap-5 text-slate-800">
+                    <i data-lucide="landmark" class="w-12 h-12 text-slate-700 stroke-[1.5]"></i>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Document Officiel</span>
+                        <span class="font-black text-xl leading-tight tracking-wide">Rapport d'Évaluation</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Section -->
+            <div class="text-center mb-8 md:mb-16 mt-8 md:mt-16 px-2 md:px-4 flex flex-col justify-center">
+                <h1 class="text-4xl md:text-5xl font-black text-black leading-tight tracking-tight">
+                    {{ resultat.sujet }}
+                </h1>
+            </div>
+
+            <!-- Metadata Section -->
+            <div class="space-y-3 md:space-y-6 text-base md:text-lg text-black max-w-4xl mx-auto w-full pb-4 md:pb-8 px-4">
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Auditeur(s) :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
+                </div>
+                
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Référence d'Audit :</div>
+                    <div class="font-medium text-slate-800">#{{ resultat.id }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Programme / Norme :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.audit.type_audit|default:"Standard Qualité" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Site Audité :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.site|default:"NON SPÉCIFIÉ" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Date :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.date_audit|date:"F j, Y" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 pt-6 mt-6 border-t-2 border-slate-900/10">
+                    <div class="font-bold tracking-tight mt-1">Performance Globale :</div>
+                    <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl">
+                        {{ resultat.score_audit|floatformat:"-2" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 PROFESSIONAL AUDIT TABLE -->
+        <div class="bg-white border-2 border-solid border-black print-shadow-none page-break mt-10">
+            <!-- DESKTOP TABLE -->
+            <table class="hidden md:table w-full border-collapse text-black">
+                <thead>
+                    <tr class="bg-white border-b-2 border-solid border-black">
+                        <th class="border-r border-solid border-black px-2 py-4 text-center text-xs font-black uppercase tracking-widest w-12">#</th>
+                        <th class="border-r border-solid border-black px-4 py-4 text-left text-xs font-black uppercase tracking-widest">Catégorie / Point de contrôle</th>
+                        <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-32">Évaluation</th>
+                        <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-24">Score</th>
+                        <th class="px-4 py-4 text-left text-xs font-black uppercase tracking-widest w-72">Observations & Preuves</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in grouped_results %}
+                    <!-- 📁 CRITERIA GROUP HEADER -->
+                    <tr class="bg-white border-b-2 border-solid border-black bg-slate-50">
+                        <td class="border-r border-solid border-black px-2 py-4 text-center font-black text-sm align-middle">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-4 align-middle">
+                            <div class="font-black uppercase tracking-tight text-base leading-none">{{ group.critere.text_ref }}</div>
+                            <div class="text-xs font-bold text-black uppercase tracking-widest mt-1">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
+                        </td>
+                        <td colspan="2" class="border-r border-solid border-black px-4 py-4 align-middle bg-slate-50">
+                            <div class="flex items-center justify-between gap-4 w-full">
+                                <div class="flex-grow h-3 bg-white rounded-full overflow-hidden border-2 border-black">
+                                    <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
+                                </div>
+                                <span class="text-base font-black tabular-nums">{{ group.score|floatformat:"-2" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 align-middle bg-slate-50">
+                            <!-- Group Summary -->
+                        </td>
+                    </tr>
+
+                    <!-- 📝 SUB-CRITERIA ROWS -->
+                    {% for d in group.details %}
+                    <tr class="border-b border-solid border-black bg-white">
+                        <td class="border-r border-solid border-black px-2 py-4 text-center align-middle">
+                            <div class="w-2 h-2 rounded-full bg-black mx-auto"></div>
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-4 align-middle">
+                            <div class="text-sm font-bold">{{ d.sous_critere }}</div>
+                            {% if d.norme %}
+                                <div class="mt-1 text-[11px] font-bold text-slate-700 uppercase">{{ d.norme }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-4 text-center align-middle">
+                            <span class="inline-block border-2 border-solid border-black px-2 py-1.5 text-[11px] font-black uppercase tracking-widest">
+                                {{ d.cotation|default:"NON EVALUÉ" }}
+                            </span>
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-4 text-center align-middle bg-white">
+                            <div class="font-black text-base tabular-nums">
+                                {% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 align-middle">
+                            <div class="text-xs leading-relaxed">{{ d.commentaire|default:"" }}</div>
+                            {% if d.justificatif or d.justificatif_bis %}
+                                <div class="flex flex-wrap gap-2 mt-3 no-print">
+                                    {% if d.justificatif %}
+                                    <a href="{{ d.justificatif.url }}" target="_blank"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-black rounded text-[11px] font-bold text-black hover:bg-slate-100 transition-all">
+                                        <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Preuve #1
+                                    </a>
+                                    {% endif %}
+                                    {% if d.justificatif_bis %}
+                                    <a href="{{ d.justificatif_bis.url }}" target="_blank"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-black rounded text-[11px] font-bold text-black hover:bg-slate-100 transition-all">
+                                        <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Preuve #2
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- MOBILE STACKED LIST -->
+            <div class="md:hidden flex flex-col border-solid border-black">
+                {% for group in grouped_results %}
+                <!-- 📁 CRITERIA GROUP HEADER MOBILE -->
+                <div class="flex flex-col border-b-4 border-solid border-black">
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col">
+                        <div class="font-black uppercase tracking-tight text-sm leading-none">{{ group.critere.text_ref }}</div>
+                        <div class="text-[10px] font-bold text-black uppercase tracking-widest mt-1">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col justify-center bg-white">
+                        <div class="flex justify-between items-center w-full mb-2">
+                            <span class="text-[10px] font-black text-black uppercase tracking-widest">Performance</span>
+                            <span class="text-sm font-black tabular-nums">{{ group.score|floatformat:"-2" }}</span>
+                        </div>
+                        <div class="w-full h-2 bg-white rounded-full overflow-hidden border-2 border-solid border-black">
+                            <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📝 SUB-CRITERIA ROWS MOBILE -->
+                {% for d in group.details %}
+                <div class="flex flex-col border-b-2 border-black">
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest mb-1">Point de contrôle</div>
+                        <div class="text-xs font-bold">{{ d.sous_critere }}</div>
+                        {% if d.norme %}
+                            <div class="mt-1 text-[9px] font-bold text-black uppercase">{{ d.norme }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex justify-between items-center">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest">Évaluation</div>
+                        <span class="inline-block border-2 border-black px-2 py-1 text-[9px] font-black uppercase tracking-widest">
+                            {{ d.cotation|default:"NON EVALUÉ" }}
+                        </span>
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex justify-between items-center bg-white">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest">Score</div>
+                        <div class="font-black text-sm tabular-nums">
+                            {% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}
+                        </div>
+                    </div>
+                    <div class="px-4 py-4 flex flex-col border-solid border-black">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest mb-1">Observations & Preuves</div>
+                        <div class="text-[10px] leading-snug">{{ d.commentaire|default:"" }}</div>
+                        {% if d.justificatif or d.justificatif_bis %}
+                            <div class="flex flex-wrap gap-2 mt-2 no-print">
+                                {% if d.justificatif %}
+                                <a href="{{ d.justificatif.url }}" target="_blank"
+                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #1
+                                </a>
+                                {% endif %}
+                                {% if d.justificatif_bis %}
+                                <a href="{{ d.justificatif_bis.url }}" target="_blank"
+                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #2
+                                </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 🏁 FINAL FOOTER -->
+        <div class="pt-8 border-t border-slate-200 text-center pb-0">
+            <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-2">{{ resultat.audit.type_audit|default:"Module Audit" }} • Rapport Généré le {% now "d/m/Y H:i" %}</div>
+            <p class="text-[9px] text-slate-300 font-bold uppercase italic opacity-70">Document confidentiel à usage
+                interne uniquement • Toute reproduction interdite sans autorisation.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- EMAIL MODAL -->
+<div id="emailModal" class="fixed inset-0 z-[100] hidden no-print overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-slate-900/60 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeEmailModal()"></div>
+
+        <!-- Modal panel -->
+        <div class="relative inline-block align-middle bg-white rounded-2xl text-left shadow-2xl transform transition-all sm:max-w-md w-full border border-slate-100 flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="bg-white px-4 py-3 sm:px-5 sm:py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-50 text-blue-600">
+                        <i data-lucide="mail" class="h-4 w-4"></i>
+                    </div>
+                    <h3 class="text-[15px] sm:text-base font-black text-slate-900 tracking-tight" id="modal-title">
+                        Envoyer le rapport
+                    </h3>
+                </div>
+                <button type="button" onclick="closeEmailModal()" class="text-slate-400 hover:text-slate-600 transition-colors rounded-full p-1 hover:bg-slate-100 focus:outline-none">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="bg-white px-4 py-4 sm:px-5 sm:py-5">
+                <div class="space-y-4">
+                    <!-- Email Form -->
+                    <div>
+                        <label for="email_to" class="block text-[12px] sm:text-[13px] font-bold text-slate-700 mb-1">Destinataire</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="at-sign" class="h-4 w-4 text-slate-400"></i>
+                            </div>
+                            <input type="email" id="email_to" name="email_to" value="" class="w-full pl-9 pr-3 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all placeholder:text-slate-400 font-medium text-slate-900" placeholder="Entrez l'adresse email...">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="email_message" class="block text-[12px] sm:text-[13px] font-bold text-slate-700 mb-1">Message</label>
+                        <textarea id="email_message" name="email_message" rows="5" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all text-slate-700 leading-snug resize-y font-medium">Bonjour,
+
+Veuillez trouver ci-joint le rapport d'évaluation pour l'audit "{{ resultat.sujet }}".
+
+Cordialement.</textarea>
+                    </div>
+
+                    <!-- Attachment Visual -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center gap-3">
+                        <div class="p-2 bg-white border border-slate-200 text-red-500 rounded-md shadow-sm">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[13px] font-black text-slate-900 truncate tracking-tight">Rapport_Audit_{{ resultat.id }}.pdf</p>
+                            <p class="text-[11px] text-slate-500 font-medium mt-0.5">Document PDF joint automatiquement</p>
+                        </div>
+                        <div class="bg-emerald-50 text-emerald-600 p-1 rounded-full flex-shrink-0">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-4 py-3 sm:px-5 sm:py-4 flex items-center justify-end gap-3 border-t border-slate-100 flex-shrink-0 rounded-b-2xl">
+                <button type="button" onclick="closeEmailModal()" class="inline-flex justify-center rounded-lg border border-slate-200 shadow-sm px-4 py-2 bg-white text-[13px] sm:text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:outline-none transition-all">
+                    Annuler
+                </button>
+                <button type="button" id="sendEmailBtn" onclick="sendEmail()" class="inline-flex justify-center items-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-[13px] sm:text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all">
+                    <i data-lucide="send" class="w-4 h-4 mr-2"></i> Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEmailModal() {
+        document.getElementById('emailModal').classList.remove('hidden');
+    }
+
+    function closeEmailModal() {
+        document.getElementById('emailModal').classList.add('hidden');
+    }
+
+    function sendEmail() {
+        const btn = document.getElementById('sendEmailBtn');
+        const originalText = btn.innerHTML;
+        
+        const emailTo = document.getElementById('email_to').value;
+        const emailMessage = document.getElementById('email_message').value;
+
+        if (!emailTo) {
+            alert("Veuillez saisir une adresse email valide.");
+            return;
+        }
+
+        // Visual feedback
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Envoi...';
+        lucide.createIcons();
+
+        // Target the hidden structured PDF layout
+        const element = document.getElementById('pdf-content');
+        const uiContainer = document.getElementById('report-container');
+
+        // Temporarily swap visibility so html2canvas can render perfectly
+        uiContainer.style.display = 'none';
+        element.style.display = 'block';
+
+        const opt = {
+            margin: [5, 5, 5, 5],
+            filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: {
+                scale: 1,
+                useCORS: true,
+                logging: false,
+                letterRendering: true,
+                windowWidth: 794
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfBase64) {
+                // Restore visibility
+                element.style.display = 'none';
+                uiContainer.style.display = '';
+
+                // Send to backend
+                fetch('{% url "resultat_send_email" resultat.id %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email_to: emailTo,
+                        email_message: emailMessage,
+                        pdf_data: pdfBase64
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    lucide.createIcons();
+
+                    if (data.status === 'success') {
+                        closeEmailModal();
+                        alert("L'email a été envoyé avec succès !");
+                    } else {
+                        alert("Erreur lors de l'envoi de l'email: " + (data.message || "Erreur inconnue"));
+                    }
+                })
+                .catch(error => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    lucide.createIcons();
+                    alert("Erreur réseau: Impossible d'envoyer l'email.");
+                });
+            }).catch(err => {
+                element.style.display = 'none';
+                uiContainer.style.display = '';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+                alert("Erreur lors de la génération du PDF.");
+            });
+        }, 300);
+    }
+
+    function generatePDF() {
+        // Target the hidden structured PDF layout
+        const element = document.getElementById('pdf-content');
+        const uiContainer = document.getElementById('report-container');
+        const btn = document.getElementById('downloadPdfBtn');
+        const originalContent = btn.innerHTML;
+
+        // Minimalist loading feedback
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 text-white animate-spin"></i>';
+        lucide.createIcons();
+
+        // Temporarily swap visibility so html2canvas can render the hidden container perfectly
+        uiContainer.style.display = 'none';
+        element.style.display = 'block';
+
+        const opt = {
+            margin: [5, 5, 5, 5], // Small margin (5mm)
+            filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: {
+                scale: 1, // EXACTLY 1. Prevents over-scaling that shrinks the final visual output
+                useCORS: true,
+                logging: false,
+                letterRendering: true,
+                windowWidth: 794 // 794px exactly maps 1:1 to A4 at 96dpi. No automatic shrinking.
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        // Delay slightly to ensure UI update is rendered
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore visibility
+                element.style.display = 'none';
+                uiContainer.style.display = '';
+                
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            }).catch(err => {
+                // Restore visibility on error
+                element.style.display = 'none';
+                uiContainer.style.display = '';
+                
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            });
+        }, 300);
+    }
+
+    lucide.createIcons();
+</script>
+{% endblock %}
+
+

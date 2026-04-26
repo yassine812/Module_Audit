@@ -1,0 +1,191 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pb-0 pt-0.5 px-1 bg-white">
+    <div class="d-flex align-items-center gap-1">
+        <div class="bg-indigo-100 text-indigo-600 p-0.5 rounded-md">
+            <i data-lucide="star" class="w-2.2 h-2.2"></i>
+        </div>
+        <div>
+            <h6 class="modal-title font-weight-bold mb-0" style="font-size: 0.72rem;">{% if object %}Modifier la Cotation{% else %}Nouvelle Cotation{% endif %}</h6>
+            <p class="mb-0 text-muted" style="font-size: 0.58rem;">Définissez les détails de la cotation pour vos audits.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+        style="font-size: 1rem; padding: 0.4rem 0.8rem; margin: 0;">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="cotationModalForm" method="post" action="{% if object %}{% url 'cotation_update' object.id %}{% else %}{% url 'cotation_create' %}{% endif %}" autocomplete="off" class="bg-white">
+    <style>
+        input[list]::-webkit-calendar-picker-indicator {
+            display: none !important;
+        }
+    </style>
+    {% csrf_token %}
+    <div class="modal-body pt-1 pb-0 custom-scrollbar modal-body-responsive bg-white" style="padding: 4px 8px 0 8px !important;">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_valeur">Valeur Numérique <span class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="hash" class="w-2.2 h-2.2 text-indigo-500"></i>
+                        </span>
+                    </div>
+                    <input type="number" name="valeur" id="id_valeur" step="0.01" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: 5" required value="{{ form.valeur.value|default:'' }}">
+                </div>
+                {% if form.valeur.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.valeur.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_code">Code court</label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="code" class="w-2.2 h-2.2 text-indigo-500"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="code" id="id_code" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: C, NC, O..." value="{{ form.code.value|default:'' }}">
+                </div>
+                {% if form.code.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.code.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_content">Description / Libellé <span class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="type" class="w-2.2 h-2.2 text-indigo-500"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="content" id="id_content" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: Conforme, Non Conforme..." value="{{ form.content.value|default:'' }}" required>
+                </div>
+                {% if form.content.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.content.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="type_cotation_input">Type de Cotation associé <span class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="layers" class="w-2.2 h-2.2 text-indigo-500"></i>
+                        </span>
+                    </div>
+                    <input type="text" id="type_cotation_input" list="type-cotation-list" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Tapez pour rechercher..." required autocomplete="off">
+                    <datalist id="type-cotation-list">
+                        {% for choice in form.type_cotation.field.choices %}
+                            {% if choice.0 %}
+                                <option data-value="{{ choice.0 }}" value="{{ choice.1 }}"></option>
+                            {% endif %}
+                        {% endfor %}
+                    </datalist>
+                    <input type="hidden" name="type_cotation" id="id_type_cotation" value="{{ form.type_cotation.value|default:'' }}">
+                </div>
+                {% if form.type_cotation.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.type_cotation.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 p-1 d-flex justify-content-between bg-light mt-0">
+        <button type="button" class="btn btn-white btn-xs font-weight-bold rounded-pill px-3" style="font-size: 0.62rem;" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-indigo btn-xs text-white font-weight-bold rounded-pill px-3 shadow-sm" style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%); font-size: 0.62rem;">
+            <i data-lucide="save" class="w-2.2 h-2.2 mr-0.5"></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    // Initialize input text if modifying an object
+    {% if form.type_cotation.value %}
+        {% for choice in form.type_cotation.field.choices %}
+            {% if choice.0|slugify == form.type_cotation.value|slugify %}
+                document.getElementById('type_cotation_input').value ="{{ choice.1|escapejs }}";
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    // Update hidden id input when text changes and matches a suggestion
+    document.getElementById('type_cotation_input').addEventListener('input', function(e) {
+        var input = e.target;
+        var options = document.getElementById('type-cotation-list').options;
+        var hiddenInput = document.getElementById('id_type_cotation');
+        var found = false;
+        
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === input.value) {
+                hiddenInput.value = options[i].getAttribute('data-value');
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            hiddenInput.value = '';
+        }
+    });
+
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+
+<style>
+    /* Modal Size & Centering */
+    #cotationModal .modal-dialog {
+        max-width: 420px;
+    }
+
+    #cotationModal .modal-content {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        background-color: #fff !important;
+        border: none !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .text-xs { font-size: 0.68rem; }
+
+    /* Natural body: no calc, no forced height */
+    #cotationModal .modal-body-responsive {
+        flex: 0 0 auto !important;          /* ❗ no stretching */
+        overflow: visible !important;       /* ❗ no forced scroll */
+        padding-bottom: 4px !important;
+        min-height: 0 !important;
+        background-color: #fff !important;
+    }
+
+    /* Force kill any persisting gap from children */
+    #cotationModal .modal-body-responsive > *:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Only activate scroll WHEN needed */
+    @media (max-height: 700px) {
+        #cotationModal .modal-body-responsive {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+        }
+    }
+
+    #cotationModal .modal-footer {
+        padding: 8px 15px !important;
+        background-color: #f8fafc !important;
+    }
+</style>

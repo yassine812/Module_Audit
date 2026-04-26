@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer un Critère{% endblock %}
+
+{% block page_title %}Supprimer un Critère{% endblock %}
+
+{% block breadcrumb %}Critères / Supprimer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i data-lucide="alert-triangle" class="mr-2 text-danger"></i>
+            Confirmation de Suppression
+          </h3>
+        </div>
+        
+        <div class="card-body">
+          <div class="alert alert-warning" role="alert">
+            <h5 class="alert-heading">
+              <i data-lucide="alert-triangle" class="mr-2"></i>
+              Êtes-vous sûr de vouloir supprimer ce critère ?
+            </h5>
+            <hr>
+            <p class="mb-0">Cette action est irréversible et supprimera définitivement les données suivantes :</p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-outline card-danger">
+                <div class="card-header">
+                  <h4 class="card-title">Détails du Critère</h4>
+                </div>
+                <div class="card-body">
+                  <table class="table table-borderless">
+                    <tr>
+                      <td style="width: 150px;"><strong>ID:</strong></td>
+                      <td>{{ object.id }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Nom du Critère:</strong></td>
+                      <td>{{ object.name }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Chapitre Norme:</strong></td>
+                      <td>
+                        {% if object.chapitre_norme %}
+                          <span class="badge badge-info">
+                            <i data-lucide="book" class="mr-1"></i>
+                            {{ object.chapitre_norme.name }}
+                          </span>
+                        {% else %}
+                          <span class="">Aucun chapitre</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'critere_list' %}" class="btn btn-secondary">
+                  <i data-lucide="x" class="mr-2"></i>
+                  Annuler
+                </a>
+              </div>
+              <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-link text-danger p-1">
+                  <i data-lucide="trash-2" class="mr-2"></i>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un Sous Critère{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sc-card {
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .rounded-lg {
+        border-radius: 12px;
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .modern-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .modern-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0px;
+    }
+
+    .input-box {
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        transition: all 0.2s;
+        overflow: hidden;
+    }
+
+    .input-box:focus-within {
+        border-color: #0d9488;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    }
+
+    .input-icon {
+        padding: 0 10px 0 12px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-control-modern, select.form-control-modern {
+        border: none !important;
+        background: transparent !important;
+        padding: 8px 12px !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        color: #1e293b !important;
+        width: 100% !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        cursor: pointer;
+    }
+
+    select.form-control-modern {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+        padding-right: 40px !important;
+    }
+
+    textarea.form-control-modern {
+        min-height: 100px;
+    }
+
+    .btn-teal {
+        color: #fff !important;
+        background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+    }
+
+    .btn-teal:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+        background-color: #f0fdfa !important;
+        border: 1px solid #99f6e4 !important;
+        color: #0d9488 !important;
+        border-radius: 4px !important;
+        padding: 0px 6px !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc-wrapper p-0 p-sm-4">
+    <div class="sc-card mx-auto bg-white border-0" style="max-width: 1000px;">
+
+        <!-- Compact Modal Header style -->
+        <div class="modal-header border-bottom-0 pt-3 px-4 pb-0 justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'souscritere_list' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                    <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+                </a>
+                <div class="rounded-lg d-flex align-items-center justify-content-center"
+                    style="width: 36px; height: 36px; background-color: #ccfbf1; color: #0d9488;">
+                    <i data-lucide="{% if form.instance.pk %}edit-3{% else %}plus-circle{% endif %}"
+                        ></i>
+                </div>
+                <div>
+                    <h5 class="modal-title font-weight-bold mb-0 text-dark" style="font-weight: 800 !important;">{% if
+                        form.instance.pk %}Modifier le Sous-Critère{% else %}Nouveau Sous-Critère{% endif %}</h5>
+                    <p class=" mb-0" style="font-size: 0.75rem;">Définissez les détails d'évaluation et les
+                        preuves attendues.</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" autocomplete="off" novalidate id="souscritereModalForm" data-modern-form="true">
+            {% csrf_token %}
+
+            <div class="modal-body p-4 pt-3">
+                {% if form.non_field_errors %}
+                <div
+                    class="alert alert-danger py-2 px-3 rounded-lg mb-3 text-xs font-weight-bold shadow-sm d-flex align-items-center">
+                    <i data-lucide="alert-circle" class="mr-2" style="width:14px;"></i>
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Row 1: Association & Type -->
+                <div class="form-grid mb-3">
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_critere">Critère Parent <span
+                                class="text-danger">*</span></label>
+                        <div class="input-box">
+                            <div class="input-icon"><i data-lucide="link" ></i></div>
+                            {{ form.critere }}
+                        </div>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_type_cotation">Type de Cotation</label>
+                        <div class="input-box">
+                            <div class="input-icon"><i data-lucide="layers" ></i>
+                            </div>
+                            {{ form.type_cotation }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Content & Reaction (Side-by-Side) -->
+                <div class="form-grid mb-3">
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_content">Libellé du Sous-Critère <span
+                                class="text-danger">*</span></label>
+                        <div class="input-box">
+                            <textarea name="content" id="id_content" class="form-control-modern" rows="3"
+                                placeholder="Description de l'audit..."
+                                required>{{ form.content.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_reaction">Réaction / Plan d'action</label>
+                        <div class="input-box">
+                            <textarea name="reaction" id="id_reaction" class="form-control-modern" rows="3"
+                                placeholder="Action corrective recommandée...">{{ form.reaction.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Ciblage & Preuves -->
+                <div class="form-grid">
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_type_audit">Types d'Audit</label>
+                        {{ form.type_audit }}
+                    </div>
+
+                    <div class="modern-input-group">
+                        <label class="modern-label" for="id_preuve_attendu">Preuves Attendues</label>
+                        {{ form.preuve_attendu }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Footer -->
+            <div class="modal-footer border-top-0 px-4 pb-3 pt-0 bg-transparent">
+                <button type="button"
+                    class="btn btn-white  font-weight-bold rounded-pill px-3 py-1 text-sm border"
+                    data-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-teal text-white font-weight-bold rounded-pill px-4 shadow-sm"
+                    id="ajaxSubmitBtn" style="min-height: 40px; font-size: 0.85rem;">
+                    <i data-lucide="save" class="mr-2" ></i>
+                    {% if form.instance.pk %}Mettre à jour{% else %}Enregistrer{% endif %}
+                </button>
+            </div>
+            <script>
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                $(document).ready(function () {
+                    if ($.fn.select2) {
+                        $('.select2-multiple').each(function () {
+                            $(this).select2({
+                                theme: 'bootstrap4',
+                                width: '100%',
+                                placeholder:"Sélectionnez...",
+                                allowClear: true,
+                                dropdownParent: $(this).closest('.modal').length ? $(this).closest('.modal') : null
+                            });
+                        });
+                    }
+                });
+            </script>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+
+

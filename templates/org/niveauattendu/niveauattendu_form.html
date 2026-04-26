@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {% if object %}Modifier Niveau Attendu{% else %}Créer Niveau Attendu{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<style>
+    .na-wrapper { width: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    .na-card {
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    .na-header {
+        padding: 40px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        display: flex; align-items: center; gap: 20px;
+    }
+    .na-header-ico {
+        width: 56px; height: 56px; border-radius: 16px;
+        background: rgba(255,255,255,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.5rem; flex-shrink: 0;
+        backdrop-filter: blur(8px);
+    }
+    .na-header h2 { margin: 0; color: #fff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.025em; }
+    .na-header p { margin: 4px 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; font-weight: 500; }
+    
+    .na-body { padding: 40px; }
+    
+    .na-section-title {
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 800; font-size: 0.9rem; text-transform: uppercase;
+        letter-spacing: 0.05em; color: #64748b; margin-bottom: 24px;
+    }
+    .na-num {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: #8b5cf6; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 900;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 32px;
+    }
+    @media (max-width: 1024px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-group {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .input-label {
+        font-size: 0.875rem; font-weight: 700; color: #1e293b;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .modern-input {
+        width: 100%; padding: 12px 16px;
+        border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #f8fafc; font-size: 0.95rem; font-weight: 500;
+        transition: all 0.2s ease;
+        color: #1e293b;
+    }
+    .modern-input:focus {
+        border-color: #8b5cf6; background: #fff; outline: none;
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+    }
+
+    .info-panel {
+        background: #f5f3ff; border: 1px solid #ede9fe;
+        border-radius: 20px; padding: 24px; margin-top: 32px;
+    }
+    .info-panel h4 { margin: 0 0 12px; font-size: 0.9rem; font-weight: 800; color: #5b21b6; text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-item { display: flex; align-items: flex-start; gap: 12px; color: #4c1d95; font-size: 0.85rem; font-weight: 500; }
+
+    .na-footer {
+        padding: 32px 40px; background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-cancel {
+        padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #fff; color: #64748b; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-cancel:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; text-decoration: none; }
+    
+    .btn-save {
+        padding: 12px 32px; border-radius: 12px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        color: #fff; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; border: none;
+        box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.3);
+        transition: all 0.2s; cursor: pointer;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(139, 92, 246, 0.4); }
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block content %}
+<div class="na-wrapper p-4 sm:p-8">
+    <div class="na-card max-w-[1400px] mx-auto">
+        <!-- Header -->
+        <div class="na-header">
+            <a href="{% url 'niveauattendu_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <div class="na-header-ico">
+                <i data-lucide="award"></i>
+            </div>
+            <div>
+                <h2>{% if object %}Modifier Niveau Attendu{% else %}Nouveau Niveau Attendu{% endif %}</h2>
+                <p>Définissez les seuils de performance pour l'évaluation de vos audits.</p>
+            </div>
+        </div>
+
+        <form method="post" id="niveau-form" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="na-body">
+                {% if form.non_field_errors %}
+                    <div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl mb-8 font-semibold flex items-center gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="na-section-title">
+                    <span class="na-num">01</span> CONFIGURATION DU SEUIL
+                </div>
+
+                <div class="form-grid">
+                    <!-- Valeur du Seuil -->
+                    <div class="input-group">
+                        <label class="input-label" for="{{ form.valeur.id_for_label }}">
+                            <i data-lucide="percent" class="w-4 h-4 text-violet-500"></i>
+                            Valeur du seuil (%) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" name="valeur" id="id_valeur" 
+                               class="modern-input" placeholder="Ex: 80" step="any" min="0" max="100"
+                               value="{{ form.valeur.value|default:'' }}" required>
+                        {% if form.valeur.errors %}
+                            <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.valeur.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <p class="text-slate-400 text-xs font-medium italic mt-1">Indiquez le pourcentage minimal à atteindre.</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="input-group">
+                        <label class="input-label" for="{{ form.commentaire.id_for_label }}">
+                            <i data-lucide="type" class="w-4 h-4 text-violet-500"></i>
+                            Désignation du Niveau <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="commentaire" id="id_commentaire" 
+                               class="modern-input" placeholder="Ex: Très Satisfaisant, Conforme, etc..."
+                               value="{{ form.commentaire.value|default:'' }}" required>
+                        {% if form.commentaire.errors %}
+                            <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.commentaire.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <p class="text-slate-400 text-xs font-medium italic mt-1">Nommez ce niveau de performance.</p>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="info-panel">
+                    <h4><i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i> Logique de scoring</h4>
+                    <div class="info-item">
+                        <i data-lucide="help-circle" class="w-5 h-5 text-violet-500 flex-shrink-0"></i>
+                        <p class="mb-0">
+                            Un audit est considéré comme ayant atteint ce niveau si son score final est <strong>supérieur ou égal</strong> à la valeur configurée. 
+                            Ces niveaux permettent de générer des indicateurs de performance clairs dans vos rapports d'audit.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="na-footer">
+                <a href="{% url 'niveauattendu_list' %}" class="btn-cancel">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn-save">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    {% if object %}Enregistrer les modifications{% else %}Créer le niveau{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    
+    const form = document.getElementById('niveau-form');
+    const valInput = document.getElementById('id_valeur');
+    const commInput = document.getElementById('id_commentaire');
+
+    form.addEventListener('submit', function(e) {
+        const val = parseFloat(valInput.value);
+        const comm = commInput.value.trim();
+        
+        if (isNaN(val) || val < 0 || val > 100) {
+            alert('Veuillez saisir une valeur de seuil valide entre 0 et 100.');
+            valInput.focus();
+            e.preventDefault();
+            return;
+        }
+        
+        if (!comm) {
+            alert('La désignation est obligatoire.');
+            commInput.focus();
+            e.preventDefault();
+            return;
+        }
+    });
+
+    valInput.focus();
+</script>
+{% endblock %}
+
+

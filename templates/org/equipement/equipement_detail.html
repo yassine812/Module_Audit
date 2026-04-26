@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails de l'Équipement : {{ equipement.name }}{% endblock %}
+{% block page_title %}Fiche Technique Équipement{% endblock %}
+{% block breadcrumb %}
+    Organisation > <a href="{% url 'equipement_list' %}">Équipements</a> > <strong>{{ equipement.name }}</strong>
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1.25rem; overflow: hidden; }
+  .info-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; font-weight: 700; }
+  .info-value { font-size: 1.1rem; color: #212529; font-weight: 500; }
+  .btn-action { border-radius: 0.75rem; padding: 0.6rem 1.2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Informations Générales</h5>
+                    <div class="btn-group">
+                        <a href="{% url 'equipement_update' equipement.id %}" class="btn btn-sm btn-outline-warning">
+                            <i data-lucide="edit" class="me-1"></i>Modifier
+                        </a>
+                        <a href="{% url 'equipement_delete' equipement.id %}" class="btn btn-sm btn-outline-danger">
+                            <i data-lucide="trash-2" class="me-1"></i>Supprimer
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light">
+                                <span class="info-label d-block mb-1">Désignation</span>
+                                <span class="info-value">{{ equipement.name }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light">
+                                <span class="info-label d-block mb-1">Numéro de Série</span>
+                                <span class="info-value font-monospace">{{ equipement.serial_number|default:"Non renseigné" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light">
+                                <span class="info-label d-block mb-1">Type d'Équipement</span>
+                                <span class="info-value">
+                                    <i data-lucide="wrench" class="text-warning me-2"></i>{{ equipement.type_equipement.name }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light">
+                                <span class="info-label d-block mb-1">Site / Localisation</span>
+                                <span class="info-value">
+                                    <i data-lucide="map-pin" class="text-primary me-2"></i>{{ equipement.site.name }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <span class="info-label d-block mb-2">Commentaires / Notes</span>
+                        <div class="p-4 rounded-4 border bg-white shadow-sm italic  min-vh-25">
+                            {{ equipement.commentaire|linebreaks|default:"Aucun commentaire pour cet équipement." }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white p-4 mb-4 border-0">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white text-primary rounded-circle p-3 me-3">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Statistiques Audits</h6>
+                        <small class="opacity-75">Historique des contrôles</small>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">Coming Soon</h3>
+                <p class=" opacity-75 mt-2">Le module de suivi des résultats par équipement sera bientôt disponible.</p>
+            </div>
+
+            <div class="d-grid">
+                <a href="{% url 'equipement_list' %}" class="btn btn-light btn-action shadow-sm border">
+                    <i data-lucide="arrow-left" class="me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-vh-25 { min-height: 150px; }
+</style>
+{% endblock %}
+
+
+

@@ -1,0 +1,127 @@
+{% load static %}
+
+<div class="modal-header border-bottom py-3 px-4 bg-white">
+    <h5 class="modal-title font-weight-bold d-flex align-items-center">
+        <i data-lucide="monitor" class="mr-2 text-primary" ></i>
+        {% if object %}Modifier l'Équipement{% else %}Nouvel Équipement{% endif %}
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<style>
+    .modal-header { padding: 0.5rem 0.75rem !important; background-color: #fff !important; }
+    .modal-body { padding: 0.75rem !important; }
+    .form-group { margin-bottom: 0.4rem !important; }
+    .modal-title { font-size: 0.9rem !important; }
+    .modal-footer { padding: 0.5rem 0.75rem !important; background-color: #f8f9fa !important; border-top: 1px solid #dee2e6 !important; }
+
+    @media (max-width: 768px) {
+    .card-header { padding: 1rem !important; flex-direction: column !important; align-items: stretch !important; gap: 0.8rem !important; }
+    .card-header .ml-auto { margin-left: 0 !important; width: 100%; display: flex; }
+    .card-header .btn { width: 100%; justify-content: center; }
+    .header-text h3 { font-size: 1.25rem !important; text-align: left; }
+    
+    /* Responsive Horizontal Scroll for all Data */
+    .table th, 
+    .table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; border: 0 !important; }
+    .table { width: 100% !important; min-width: 800px; /* Force scroll */ table-layout: auto !important; }
+    
+    .btn-group .btn { padding: 0.25rem 0.5rem; }
+    .badge { font-size: 0.75rem !important; }
+  }
+</style>
+
+<form id="equipementModalForm" method="post" action="{% if object %}{% url 'equipement_update' object.id %}{% else %}{% url 'equipement_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12 form-group mb-3">
+                <label class="font-weight-bold text-dark" for="{{ form.name.id_for_label }}">Désignation de l'équipement <span class="text-danger">*</span></label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <small class="text-danger d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" for="{{ form.type_equipement.id_for_label }}">Type <span class="text-danger">*</span></label>
+                {{ form.type_equipement }}
+                {% if form.type_equipement.errors %}
+                <small class="text-danger d-block">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" for="{{ form.site.id_for_label }}">Site (Localisation) <span class="text-danger">*</span></label>
+                {{ form.site }}
+                {% if form.site.errors %}
+                <small class="text-danger d-block">{% for error in form.site.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.serial_number.id_for_label }}">Numéro de série</label>
+            {{ form.serial_number }}
+            {% if form.serial_number.errors %}
+            <small class="text-danger d-block">{% for error in form.serial_number.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.commentaire.id_for_label }}">Commentaires</label>
+            {{ form.commentaire }}
+            {% if form.commentaire.errors %}
+            <small class="text-danger d-block">{% for error in form.commentaire.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer bg-light border-top-0">
+        <button type="button" class="btn btn-secondary px-4 shadow-sm" data-dismiss="modal">
+            <i data-lucide="x" class="mr-1" ></i>
+            Annuler
+        </button>
+        <button type="submit" class="btn btn-success px-4 shadow-sm">
+            <i data-lucide="save" class="mr-1" ></i>
+            {% if object %}Confirmer{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    
+    $(document).ready(function() {
+        // Initialisation de Select2 pour les clés étrangères
+        $('#id_type_equipement').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Sélectionner un type...',
+            allowClear: true,
+            dropdownParent: $('#equipementModal')
+        });
+        
+        $('#id_site').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Sélectionner un site...',
+            allowClear: true,
+            dropdownParent: $('#equipementModal')
+        });
+
+        // Formater les champs standard
+        $('#equipementModalForm input, #equipementModalForm textarea').addClass('form-control');
+        $('#equipementModalForm textarea').attr('rows', 3);
+    });
+</script>
+
+

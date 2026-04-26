@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier Type Cotation{% else %}Ajouter Type Cotation{% endif %}{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Modifier Type Cotation{% else %}Ajouter Type Cotation{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'typecotation_list' %}">Types de Cotation</a></li>
+  <li class="breadcrumb-item active">{% if form.instance.pk %}Modifier{% else %}Ajouter{% endif %}</li>
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+/* ── Wrapper ───────────────────────────────── */
+.tc-wrapper { width: 100%; margin: 0; }
+.tc-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 28px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────── */
+.tc-header {
+  padding: 24px 30px;
+  background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+  display: flex; align-items: center; gap: 14px;
+}
+.tc-header-ico {
+  width: 46px; height: 46px; border-radius: 13px;
+  background: rgba(255,255,255,.22);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.15rem; flex-shrink: 0;
+}
+.tc-header h4 { margin: 0; color: #fff; font-weight: 700; font-size: 1.05rem; }
+.tc-header p  { margin: 2px 0 0; color: rgba(255,255,255,.78); font-size: .82rem; }
+
+/* ── Body ──────────────────────────────────── */
+.tc-body { padding: 30px 32px; }
+.tc-section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: .82rem; text-transform: uppercase;
+  letter-spacing: .6px; color: #374151; margin-bottom: 14px;
+}
+.tc-num {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg,#f093fb,#f5576c);
+  color: #fff; font-size: .68rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Cards grid ────────────────────────────── */
+.tc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 0;
+}
+@media(max-width:520px){ .tc-grid { grid-template-columns: 1fr; } }
+
+.tc-type-card {
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  padding: 15px 16px;
+  border: 2px solid #f0e8f8;
+  border-radius: 14px; cursor: pointer;
+  background: #fdf7ff; margin: 0;
+  transition: all .22s ease;
+}
+.tc-type-card:hover {
+  border-color: #e879f9;
+  background: #fdf2ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(240,147,251,.18);
+}
+.tc-type-card.selected {
+  border-color: #f093fb;
+  background: #fce8ff;
+  box-shadow: 0 6px 18px rgba(240,147,251,.28);
+}
+.tc-type-card input[type="radio"] { display: none; }
+
+.tc-ico {
+  width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1rem;
+}
+.tc-type-body { flex: 1; min-width: 0; }
+.tc-type-name { font-weight: 700; font-size: .88rem; color: #1e2a45; margin-bottom: 2px; }
+.tc-type-desc { font-size: .74rem; color: #94a3b8; line-height: 1.4; }
+
+.tc-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex; align-items: center; justify-content: center;
+  color: transparent; flex-shrink: 0; transition: all .2s;
+}
+.tc-type-card.selected .tc-check {
+  background: linear-gradient(135deg,#f093fb,#f5576c);
+  border-color: transparent; color: #fff;
+}
+
+.tc-type-card--custom { border-style: dashed; }
+.tc-type-card--custom.selected { border-style: solid; }
+
+/* ── Custom box ────────────────────────────── */
+.tc-custom-box {
+  margin-top: 12px;
+  background: #fdf7ff;
+  border: 1.5px solid #e879f9;
+  border-radius: 12px;
+  padding: 16px 18px;
+  animation: tcSlide .2s ease;
+}
+@keyframes tcSlide { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.tc-custom-label {
+  font-size: .73rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: #c026d3; margin-bottom: 8px;
+}
+.tc-custom-input {
+  width: 100%; border: 1.5px solid #e879f9;
+  border-radius: 10px; padding: 10px 14px;
+  font-size: .9rem; outline: none; transition: .2s;
+  background: #fff; color: #1e293b;
+}
+.tc-custom-input:focus {
+  border-color: #c026d3;
+  box-shadow: 0 0 0 3px rgba(192,38,211,.15);
+}
+
+/* error */
+.tc-error { font-size: .8rem; color: #ef4444; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+
+/* hide Django field */
+#id_name { display: none !important; }
+
+/* ── Footer ────────────────────────────────── */
+.tc-footer {
+  padding: 18px 32px;
+  border-top: 1px solid #fce7f3;
+  background: #fdf9ff;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tc-btn-cancel {
+  background: #f1f5f9; color: #64748b; border: none;
+  border-radius: 10px; padding: 9px 22px; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  transition: .2s;
+}
+.tc-btn-cancel:hover { background: #e2e8f0; color: #334155; text-decoration: none; }
+.tc-btn-save {
+  background: linear-gradient(135deg,#f093fb,#f5576c);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px 26px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 14px rgba(245,87,108,.38);
+  transition: .2s; cursor: pointer;
+}
+.tc-btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(245,87,108,.48); color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="tc-wrapper">
+    <div class="tc-card">
+
+      <!-- Header -->
+      <div class="tc-header">
+        <a href="{% url 'typecotation_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+          <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+        </a>
+        <div class="tc-header-ico"><i data-lucide="star-half-alt"></i></div>
+        <div>
+          <h4>{% if form.instance.pk %}Modifier le type de cotation{% else %}Nouveau type de cotation{% endif %}</h4>
+          <p>Choisissez comment les critères seront évalués</p>
+        </div>
+      </div>
+
+      <form method="post" novalidate id="tcForm">
+        {% csrf_token %}
+
+        <div class="tc-body">
+          {% if form.non_field_errors %}<div class="alert alert-danger rounded-3 mb-4">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+
+          <!-- ── Type selection ────────────────────── -->
+          <div class="mb-4">
+            <div class="tc-section-label">
+              <span class="tc-num">01</span> Type de cotation <span class="text-danger ml-1">*</span>
+            </div>
+
+            <div class="tc-grid" id="tcGrid">
+
+              <!-- Cotation numérique -->
+              <label class="tc-type-card" id="card-num" for="r-num">
+                <input type="radio" id="r-num" name="__tcc" value="Cotation numérique">
+                <div class="tc-ico" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                  <i data-lucide="sort-numeric-up"></i>
+                </div>
+                <div class="tc-type-body">
+                  <div class="tc-type-name">Cotation numérique</div>
+                  <div class="tc-type-desc">Score entre 1 et 5 points</div>
+                </div>
+                <div class="tc-check"><i class="fas fa-check" style="font-size:.65rem;"></i></div>
+              </label>
+
+              <!-- Personnalisé -->
+              <label class="tc-type-card tc-type-card--custom" id="card-custom" for="r-custom">
+                <input type="radio" id="r-custom" name="__tcc" value="__custom__">
+                <div class="tc-ico" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+                  <i data-lucide="pen-nib"></i>
+                </div>
+                <div class="tc-type-body">
+                  <div class="tc-type-name">Personnalisé</div>
+                  <div class="tc-type-desc">Définir un type de cotation sur mesure</div>
+                </div>
+                <div class="tc-check"><i class="fas fa-check" style="font-size:.65rem;"></i></div>
+              </label>
+
+            </div>
+
+            <!-- Custom input -->
+            <div id="customBox" class="tc-custom-box d-none">
+              <div class="tc-custom-label"><i data-lucide="keyboard" class="mr-1"></i> Nom personnalisé</div>
+              <input type="text" id="customInput" class="tc-custom-input"
+                     placeholder="Ex : Cotation A/B/C, Cotation par étoiles…">
+            </div>
+
+            <!-- Error -->
+            <div id="tcErr" class="tc-error d-none">
+              <i data-lucide="alert-circle"></i> Veuillez sélectionner un type de cotation.
+            </div>
+
+            <!-- Hidden Django field -->
+            {{ form.name }}
+            {% if form.name.errors %}<div class="tc-error mt-1">{% for e in form.name.errors %}<span>{{ e }}</span>{% endfor %}</div>{% endif %}
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="tc-footer">
+          <a href="{% url 'typecotation_list' %}" class="tc-btn-cancel">
+            <i data-lucide="arrow-left"></i> Annuler
+          </a>
+          <button type="submit" class="tc-btn-save">
+            <i data-lucide="save"></i> Enregistrer
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var cards      = document.querySelectorAll('.tc-type-card');
+  var hiddenFld  = document.getElementById('id_name');
+  var customBox  = document.getElementById('customBox');
+  var customInp  = document.getElementById('customInput');
+  var tcErr      = document.getElementById('tcErr');
+
+  var PREDEFINED = { 'Cotation numérique': 'card-num' };
+
+  function pick(cardId, customVal) {
+    cards.forEach(function(c){ c.classList.remove('selected'); });
+    var t = document.getElementById(cardId);
+    if (t) { t.classList.add('selected'); t.querySelector('input').checked = true; }
+    if (cardId === 'card-custom') {
+      customBox.classList.remove('d-none');
+      customInp.value = customVal || '';
+      hiddenFld.value = customVal || '';
+    } else {
+      customBox.classList.add('d-none');
+      hiddenFld.value = t ? t.querySelector('input').value : '';
+    }
+    tcErr.classList.add('d-none');
+  }
+
+  /* init (edit mode) */
+  var existing = hiddenFld ? hiddenFld.value.trim() : '';
+  if (existing) {
+    PREDEFINED[existing] ? pick(PREDEFINED[existing]) : pick('card-custom', existing);
+  }
+
+  /* click */
+  cards.forEach(function(card){
+    card.addEventListener('click', function(){
+      var val = this.querySelector('input').value;
+      if (val === '__custom__') { pick('card-custom', customInp.value); setTimeout(function(){ customInp.focus(); }, 50); }
+      else { pick(this.id); }
+    });
+  });
+
+  /* sync custom */
+  customInp.addEventListener('input', function(){ hiddenFld.value = this.value.trim(); });
+
+  /* submit guard */
+  document.getElementById('tcForm').addEventListener('submit', function(e){
+    if (!hiddenFld.value.trim()) {
+      e.preventDefault();
+      tcErr.classList.remove('d-none');
+      document.getElementById('tcGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+});
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Modifier l'utilisateur{% else %}Ajouter un utilisateur{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-7">
+        <div class="card premium-card overflow-hidden">
+            <div class="card-header premium-header d-flex align-items-center py-2 px-3">
+                <a href="{% url 'user_list' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0 mr-2" style="width: 32px !important; height: 32px !important; text-decoration: none; flex-shrink: 0;">
+                    <i class="fas fa-arrow-left" style="font-size: 0.85rem;"></i>
+                </a>
+                <div class="header-icon-container mr-2" style="width: 32px; height: 32px; min-width: 32px;">
+                    <i class="fas {% if object %}fa-user-cog{% else %}fa-user-plus{% endif %} text-primary "></i>
+                </div>
+                <div class="header-text">
+                    <h3 class="h6 font-weight-bold mb-0">
+                        {% if object %}Modifier Utilisateur{% else %}Nouvel Utilisateur{% endif %}
+                    </h3>
+                    <p class="" style="font-size: 0.65rem; margin: 0;">{% if object %}{{ object.username }}{% else %}Accès système{% endif %}</p>
+                </div>
+            </div>
+            
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="card-body px-3 py-3">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger-soft mb-2 py-2">
+                        <small>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</small>
+                    </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                    <div class="form-group-premium mb-2">
+                        <label class="premium-label mb-1" for="{{ field.id_for_label }}" style="">
+                            {{ field.label }}
+                        </label>
+                        
+                        {% if field.name == 'password' and object %}
+                            <div class="alert alert-info-soft py-2 px-3 mb-1">
+                                <span class=" font-weight-medium" style="">Mot de passe non modifiable ici.</span>
+                            </div>
+                        {% else %}
+                            <div class="input-container-premium">
+                                {{ field }}
+                                <div class="focus-border"></div>
+                            </div>
+                        {% endif %}
+
+                        {% if field.errors %}
+                            <div class="error-feedback" style="font-size: 0.65rem;">
+                                {{ field.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card-footer premium-footer py-2 px-3 bg-white border-top d-flex justify-content-between align-items-center gap-2">
+                    <a href="{% url 'user_list' %}" class="btn btn-outline-secondary px-3 py-1 font-weight-bold" style="font-size: 0.75rem; flex: 1; text-align: center;">
+                         Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary-premium px-3 py-1 font-weight-bold shadow-sm" style="font-size: 0.75rem; flex: 1;">
+                         {% if object %}Enregistrer{% else %}Confirmer{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --premium-primary: #0061f2;
+        --premium-success: #00ac69;
+        --premium-info: #00cfd5;
+        --premium-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15);
+    }
+
+    .premium-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--premium-shadow);
+        background: #fff;
+    }
+
+    .premium-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+    .header-icon-container {
+        width: 48px;
+        height: 48px;
+        background: rgba(0, 97, 242, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-body { padding: 2.5rem !important; }
+
+    .form-group-premium { position: relative; }
+
+    .premium-label {
+        font-weight: 700;
+        color: #4e73df;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        display: block;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .label-icon { width: 24px; display: inline-block; margin-right: 8px; }
+
+    .input-container-premium { position: relative; }
+
+    .input-container-premium input, .input-container-premium select {
+        display: block;
+        width: 100%;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        color: #6e707e;
+        border: 1px solid #d1d3e2;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        background-color: #f8f9fc;
+        height: 32px;
+    }
+
+    .input-container-premium input:focus, .input-container-premium select:focus {
+        background-color: #fff;
+        border-color: var(--premium-primary);
+        box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.1);
+        outline: none;
+    }
+
+    .alert-info-soft {
+        background-color: #e3effd;
+        color: #0061f2;
+        border: none;
+        border-radius: 8px;
+    }
+
+    .alert-danger-soft {
+        background-color: #fdf2f2;
+        color: #e74a3b;
+        border: none;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .error-feedback { color: #e74a3b;  font-weight: 600; }
+    .help-text-premium { color: #858796; font-size: 0.75rem; margin-top: 0.25rem; }
+
+    /* Custom Toggle Switch */
+    .custom-toggle-container { display: flex; align-items: center; }
+
+    .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+        margin-bottom: 0;
+    }
+
+    .custom-switch input { opacity: 0; width: 0; height: 0; }
+
+    .custom-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #d1d3e2;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .custom-slider:before {
+        position: absolute;
+        content:"";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .custom-slider { background-color: var(--premium-primary); }
+    input:checked + .custom-slider:before { transform: translateX(24px); }
+
+    .btn-primary-premium {
+        background-color: var(--premium-primary);
+        border: none;
+        color: white;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-primary-premium:hover {
+        background-color: #0051cc;
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 97, 242, 0.25);
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #d1d3e2;
+        color: #858796;
+        border-radius: 8px;
+    }
+
+    .btn-outline-secondary:hover { background-color: #eaecf4; color: #6e707e; border-color: #d1d3e2; }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+    .card-header { padding: 1rem !important; flex-direction: column !important; align-items: stretch !important; gap: 0.8rem !important; }
+    .card-header .ml-auto { margin-left: 0 !important; width: 100%; display: flex; }
+    .card-header .btn { width: 100%; justify-content: center; }
+    .header-text h3 { font-size: 1.25rem !important; text-align: left; }
+    
+    /* Responsive Horizontal Scroll for all Data */
+    .table th, 
+    .table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; border: 0 !important; }
+    .table { width: 100% !important; min-width: 800px; /* Force scroll */ table-layout: auto !important; }
+    
+    .btn-group .btn { padding: 0.25rem 0.5rem; }
+    .badge { font-size: 0.75rem !important; }
+  }
+        .premium-header {
+            padding: 1.5rem !important;
+        }
+        .header-icon-container {
+            width: 40px;
+            height: 40px;
+        }
+        .premium-card h3 {
+            font-size: 1.1rem;
+        }
+        .btn-primary-premium, .btn-outline-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+        .card-footer {
+            padding: 1.5rem !important;
+        }
+    }
+
+    /* Support for Gap in Flexbox on older browsers */
+    .gap-3 { gap: 1rem; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.querySelector('select[name="role"]');
+        const helpTexts = {
+            'admin': document.getElementById('role-help-admin'),
+            'auditeur': document.getElementById('role-help-auditeur'),
+            'participant': document.getElementById('role-help-participant')
+        };
+
+        function updateRoleHelp() {
+            // Hide all
+            Object.values(helpTexts).forEach(el => {
+                if (el) el.classList.add('d-none');
+            });
+            
+            // Show selected
+            const selectedRole = roleSelect.value;
+            if (helpTexts[selectedRole]) {
+                helpTexts[selectedRole].classList.remove('d-none');
+                
+                // Trigger Lucide icons refresh for the newly shown element
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+        }
+
+        if (roleSelect) {
+            roleSelect.addEventListener('change', updateRoleHelp);
+            updateRoleHelp();
+        }
+    });
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,54 @@
+{% load static %}
+
+<div class="modal-header border-bottom">
+    <h5 class="modal-title font-weight-bold">
+        <i data-lucide="check-square" class="mr-2 text-primary"></i>
+        {% if object %}Modifier Preuve Attendue{% else %}Nouvelle Preuve Attendue{% endif %}
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="preuveAttenduModalForm" method="post"
+    action="{% if object %}{% url 'preuveattendu_update' object.id %}{% else %}{% url 'preuveattendu_create' %}{% endif %}"
+    autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.name.id_for_label }}">Désignation de la preuve <span
+                    class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <small class="text-danger">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold text-dark" for="{{ form.type_preuve.id_for_label }}">Type de preuve</label>
+            {{ form.type_preuve }}
+            {% if form.type_preuve.errors %}
+            <small class="text-danger">{% for error in form.type_preuve.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary px-4">
+            <i data-lucide="save" class="mr-2"></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    // Add bootstrap form classes
+    $('#preuveAttenduModalForm input, #preuveAttenduModalForm textarea, #preuveAttenduModalForm select').addClass('form-control');
+</script>

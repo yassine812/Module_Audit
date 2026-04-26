@@ -1,0 +1,226 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pb-0 pt-0.5 px-1 bg-white">
+    <div class="d-flex align-items-center gap-1">
+        <div class="bg-teal-100 text-teal-600 p-0.5 rounded-md">
+            <i data-lucide="list" class="w-2.2 h-2.2"></i>
+        </div>
+        <div>
+            <h6 class="modal-title font-weight-bold mb-0" style="font-size: 0.72rem;">{% if object %}Modifier Sous-Critère{% else %}Nouveau
+                Sous-Critère{% endif %}</h6>
+            <p class="mb-0 text-muted" style="font-size: 0.58rem;">Détails d'évaluation et cotation.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+        style="font-size: 1rem; padding: 0.4rem 0.8rem; margin: 0;">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="souscritereModalForm" method="post" data-modern-form="true" class="bg-white"
+    action="{% if object %}{% url 'souscritere_update' object.id %}{% else %}{% url 'souscritere_create' %}{% endif %}"
+    autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body pt-1 pb-0 custom-scrollbar modal-body-responsive bg-white" style="padding: 4px 8px 0 8px !important;">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_critere">Critère Parent <span
+                        class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="link" class="w-2.2 h-2.2 text-muted"></i>
+                        </span>
+                    </div>
+                    <select name="critere" id="id_critere" class="form-control border-0 py-0 text-xs" style="height: 30px;">
+                        {% for choice in form.critere.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0|slugify == form.critere.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_type_cotation">Type de Cotation</label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 py-0 px-2">
+                            <i data-lucide="layers" class="w-2.2 h-2.2 text-muted"></i>
+                        </span>
+                    </div>
+                    <select name="type_cotation" id="id_type_cotation" class="form-control border-0 py-0 text-xs" style="height: 30px;">
+                        {% for choice in form.type_cotation.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0|slugify == form.type_cotation.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-12 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_content">Libellé du Sous-Critère <span
+                        class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <textarea name="content" id="id_content" class="form-control border-0 px-3 py-1.5" rows="2"
+                        placeholder="Détaillez ici ce qui doit être audité..."
+                        style="font-size: 0.72rem; min-height: 50px;"
+                        required>{{ form.content.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="col-md-12 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_reaction">Réaction attendue / Plan
+                    d'action</label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <textarea name="reaction" id="id_reaction" class="form-control border-0 px-3 py-1.5" rows="2"
+                        style="font-size: 0.72rem; min-height: 50px;"
+                        placeholder="Indiquez la réaction souhaitée en cas de non-conformité...">{{ form.reaction.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="col-md-12 mb-1.5">
+                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_preuve_attendu">Preuves Attendues</label>
+                <div class="select2-xs">
+                    {{ form.preuve_attendu }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 p-1 d-flex justify-content-between bg-light mt-0">
+        <button type="button" class="btn btn-white btn-xs font-weight-bold rounded-pill px-3"
+            style="font-size: 0.62rem;" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-teal btn-xs text-white font-weight-bold rounded-pill px-3 shadow-sm"
+            style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); font-size: 0.62rem;">
+            <i data-lucide="save" class="w-2.2 h-2.2 mr-0.5"></i>
+            {% if object %}Enregistrer{% else %}Créer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
+    function initSelect2Fields() {
+        if ($.fn.select2) {
+            $('.select2-multiple').each(function () {
+                var placeholderText = $(this).attr('data-placeholder') || 'Sélectionner...';
+                $(this).select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $('#souscritereModal'),
+                    placeholder: placeholderText,
+                    allowClear: true,
+                    minimumResultsForSearch: Infinity // Disables any internal lookup search
+                });
+            });
+
+            // Prevent typing but allow clicking by making the input readonly
+            $('.select2-search__field').prop('readonly', true);
+            // Hide the blinking cursor
+            $('.select2-search__field').css('cursor', 'pointer');
+
+        } else {
+            console.warn("Select2 is not loaded.");
+        }
+    }
+
+    // Initialize immediately
+    initSelect2Fields();
+
+    // Re-initialize once the modal animation finishes. 
+    $('#souscritereModal').on('shown.bs.modal', function () {
+        initSelect2Fields();
+    });
+
+    // Auto-fill Type d'Audit based on chosen Critere Parent
+    $('#id_critere').on('change', function () {
+        var critereId = $(this).val();
+        if (critereId) {
+            $.ajax({
+                url: '/audit/api/critere/' + critereId + '/type-audits/',
+                method: 'GET',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Pre-select the returned type audits
+                        $('#id_type_audit').val(response.type_audits).trigger('change');
+                    }
+                },
+                error: function (err) {
+                    console.error("Erreur de récupération des types d'audit:", err);
+                }
+            });
+        } else {
+            $('#id_type_audit').val(null).trigger('change');
+        }
+    });
+
+    // Run once on load just in case a critere is pre-selected and we need to inherit
+    $(document).ready(function () {
+        if ($('#id_critere').val() && !$('#id_type_audit').val().length) {
+            $('#id_critere').trigger('change');
+        }
+    });
+</script>
+
+<style>
+    /* Modal Size & Centering */
+    #souscritereModal .modal-dialog {
+        max-width: 420px;
+    }
+
+    #souscritereModal .modal-content {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        border: none !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .text-xs { font-size: 0.68rem; }
+
+    /* Natural body: no calc, no forced height */
+    #souscritereModal .modal-body-responsive {
+        flex: 0 0 auto !important;          /* ❗ no stretching */
+        overflow: visible !important;       /* ❗ no forced scroll */
+        padding-bottom: 4px !important;
+        min-height: 0 !important;
+    }
+
+    /* Force kill any persisting gap from children */
+    #souscritereModal .modal-body-responsive > *:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Only activate scroll WHEN needed */
+    @media (max-height: 700px) {
+        #souscritereModal .modal-body-responsive {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+        }
+    }
+
+    #souscritereModal .modal-footer {
+        padding: 8px 15px !important;
+        background-color: #f8fafc !important;
+    }
+
+    /* Select2 refinements */
+    .select2-xs .select2-container--bootstrap4 .select2-selection {
+        min-height: 30px !important;
+        font-size: 0.72rem !important;
+        border-radius: 8px !important;
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
