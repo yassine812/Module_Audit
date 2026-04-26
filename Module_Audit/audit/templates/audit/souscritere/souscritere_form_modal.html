@@ -1,0 +1,180 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-teal-100 text-teal-600 p-2 rounded-lg">
+            <i data-lucide="list" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Sous-Critère{% else %}Nouveau
+                Sous-Critère{% endif %}</h4>
+            <p class="  mb-0">Définissez les détails d'évaluation et de cotation.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="souscritereModalForm" method="post" data-modern-form="true"
+    action="{% if object %}{% url 'souscritere_update' object.id %}{% else %}{% url 'souscritere_create' %}{% endif %}"
+    autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_critere">Critère Parent <span
+                        class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 ps-3">
+                            <i data-lucide="link" class="text-teal-500" ></i>
+                        </span>
+                    </div>
+                    {{ form.critere }}
+                </div>
+                {% if form.critere.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.critere.errors %}{{ error
+                    }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_type_cotation">Type de Cotation</label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 ps-3">
+                            <i data-lucide="layers" class="text-teal-500" ></i>
+                        </span>
+                    </div>
+                    {{ form.type_cotation }}
+                </div>
+                {% if form.type_cotation.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.type_cotation.errors %}{{
+                    error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_content">Libellé du Sous-Critère <span
+                        class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <textarea name="content" id="id_content" class="form-control border-0 px-3 py-2" rows="2"
+                        placeholder="Détaillez ici ce qui doit être audité..."
+                        required>{{ form.content.value|default:'' }}</textarea>
+                </div>
+                {% if form.content.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.content.errors %}{{ error
+                    }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_reaction">Réaction attendue / Plan
+                    d'action</label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <textarea name="reaction" id="id_reaction" class="form-control border-0 px-3 py-2" rows="2"
+                        placeholder="Indiquez la réaction souhaitée en cas de non-conformité...">{{ form.reaction.value|default:'' }}</textarea>
+                </div>
+                {% if form.reaction.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.reaction.errors %}{{ error
+                    }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mb-4 d-none">
+                <label class=" font-weight-bold text-dark" for="id_type_audit">Ciblage Types d'Audit</label>
+                {{ form.type_audit }}
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_preuve_attendu">Preuves Attendues</label>
+                {{ form.preuve_attendu }}
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4"
+            data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-teal text-white font-weight-bold rounded-pill px-4 shadow-sm"
+            style="background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);">
+            <i data-lucide="save" class="mr-2" ></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
+    function initSelect2Fields() {
+        if ($.fn.select2) {
+            $('.select2-multiple').each(function () {
+                var placeholderText = $(this).attr('data-placeholder') || 'Sélectionner...';
+                $(this).select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $('#souscritereModal'),
+                    placeholder: placeholderText,
+                    allowClear: true,
+                    minimumResultsForSearch: Infinity // Disables any internal lookup search
+                });
+            });
+
+            // Prevent typing but allow clicking by making the input readonly
+            $('.select2-search__field').prop('readonly', true);
+            // Hide the blinking cursor
+            $('.select2-search__field').css('cursor', 'pointer');
+
+        } else {
+            console.warn("Select2 is not loaded.");
+        }
+    }
+
+    // Initialize immediately
+    initSelect2Fields();
+
+    // Re-initialize once the modal animation finishes. 
+    $('#souscritereModal').on('shown.bs.modal', function () {
+        initSelect2Fields();
+    });
+
+    // Auto-fill Type d'Audit based on chosen Critere Parent
+    $('#id_critere').on('change', function () {
+        var critereId = $(this).val();
+        if (critereId) {
+            $.ajax({
+                url: '/audit/api/critere/' + critereId + '/type-audits/',
+                method: 'GET',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Pre-select the returned type audits
+                        $('#id_type_audit').val(response.type_audits).trigger('change');
+                    }
+                },
+                error: function (err) {
+                    console.error("Erreur de récupération des types d'audit:", err);
+                }
+            });
+        } else {
+            $('#id_type_audit').val(null).trigger('change');
+        }
+    });
+
+    // Run once on load just in case a critere is pre-selected and we need to inherit
+    $(document).ready(function () {
+        if ($('#id_critere').val() && !$('#id_type_audit').val().length) {
+            $('#id_critere').trigger('change');
+        }
+    });
+</script>
+

@@ -1,0 +1,584 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Liste des Audits{% endblock %}
+
+{% block extra_css %}
+
+<style>
+    .container-fluid {
+        max-width: 1400px;
+        margin: auto;
+    }
+
+    /* Professional Audit Table Styling */
+    .audit-table-container {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        overflow: visible; /* Changed from hidden to allow inner scrolling */
+        padding: 1.5rem;
+        border: 1px solid #f8f9fa;
+    }
+
+    .btn-demarrer {
+        background-color: #ffffff;
+        color: #2563eb;
+        border: 1px solid #e2e8f0;
+        font-weight: 800;
+        transition: all 0.2s;
+    }
+
+    .btn-demarrer:hover {
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+    }
+
+    .btn-continuer {
+        background-color: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s;
+    }
+
+    .btn-continuer:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 15px;
+    }
+
+    .table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        color: #2d3436;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .audit-row {
+        transition: background-color 0.2s ease;
+    }
+
+    .audit-row:hover {
+        background-color: #f1f7ff !important;
+    }
+
+    .badge-auditeur {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+        padding: 4px 8px;
+        font-weight: 500;
+    }
+
+    .status-badge {
+        min-width: 85px;
+        font-weight: 600;
+    }
+
+    /* Modern Filter & Search Bar */
+    .filter-search-container {
+        background: #fff;
+        padding: 0.75rem;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .filter-search-container {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .custom-input-group {
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-input-group i,
+    .custom-input-group svg {
+        position: absolute;
+        left: 1rem;
+        color: #94a3b8;
+        z-index: 10;
+        pointer-events: none;
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .custom-search-input {
+        padding-left: 2.75rem !important;
+        border: 1px solid #e2e8f0 !important;
+        height: 44px !important;
+        background: #f8fafc !important;
+        border-radius: 12px !important;
+        font-size: 0.95rem !important;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .custom-search-input:focus {
+        background: #fff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+        outline: none;
+    }
+
+    .filter-pill-group {
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    .filter-pill-group::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .filter-pill {
+        border: none !important;
+        padding: 0.5rem 1.25rem !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        border-radius: 9px !important;
+        transition: all 0.2s ease;
+        color: #64748b !important;
+        background: transparent !important;
+        text-decoration: none !important;
+        white-space: nowrap;
+    }
+
+    .filter-pill:hover {
+        color: #1e293b !important;
+        background: rgba(255,255,255,0.5) !important;
+    }
+
+    .filter-pill.active {
+        background: #fff !important;
+        color: #2563eb !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 767.98px) {
+        /* Professional Stacked Card Layout for Mobile */
+        .audit-table-container {
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        table#auditTable {
+            display: block !important;
+            border: none !important;
+            min-width: 100% !important;
+        }
+
+        table#auditTable thead {
+            display: none !important; /* Hide headers */
+        }
+
+        table#auditTable tbody {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        table#auditTable tr.audit-row {
+            display: block !important;
+            background: #fff !important;
+            border-radius: 16px !important;
+            margin-bottom: 1rem !important;
+            padding: 1rem !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            border: 1px solid #eef2f7 !important;
+            position: relative !important;
+        }
+
+        table#auditTable td {
+            display: flex !important;
+            justify-content: justify !important;
+            align-items: center !important;
+            padding: 0.4rem 0 !important;
+            border: none !important;
+            font-size: 0.85rem !important;
+            text-align: left !important;
+            width: 100% !important;
+        }
+
+        table#auditTable td:before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #64748b;
+            min-width: 100px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        /* Adjust specific fields */
+        table#auditTable td.col-actions {
+            margin-top: 0.5rem;
+            padding-top: 0.75rem !important;
+            border-top: 1px dashed #e2e8f0 !important;
+            justify-content: flex-end !important;
+        }
+        
+        table#auditTable td.col-actions:before {
+            display: none !important;
+        }
+
+        table#auditTable td.col-id {
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            width: auto !important;
+            background: #f1f5f9;
+            padding: 2px 8px !important;
+            border-radius: 20px;
+            font-size: 0.7rem !important;
+        }
+        table#auditTable td.col-id:before { display: none; }
+
+        table#auditTable td.col-name {
+            font-weight: 800 !important;
+            font-size: 1rem !important;
+            color: #1e293b !important;
+            padding-bottom: 0.5rem !important;
+        }
+        table#auditTable td.col-name:before { display: none; }
+        
+        .badge-auditeur { margin-bottom: 2px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <h2 class="mb-0">Liste de mes audits</h2>
+        {% if user.is_superuser %}
+        {% if audits %}
+        <div class="ml-auto">
+            <a href="{% url 'liste_audit_create' %}" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
+                <i data-lucide="plus" class="mr-2"></i>
+                Planifier Audit
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Modern Search + Filters -->
+    <div class="filter-search-container mb-4 shadow-sm">
+        <div class="custom-input-group">
+            <i data-lucide="search"></i>
+            <input type="text" class="custom-search-input" placeholder="Rechercher un audit, site, auditeur..." id="searchInput">
+        </div>
+
+        <div class="filter-pill-group">
+            <a href="?status=all"
+                class="filter-pill {% if current_filter == 'all' %}active{% endif %}">Tous</a>
+            <a href="?status=planifie"
+                class="filter-pill {% if current_filter == 'planifie' %}active{% endif %}">Planifiés</a>
+            <a href="?status=en_cours"
+                class="filter-pill {% if current_filter == 'en_cours' %}active{% endif %}">En cours</a>
+            <a href="?status=termine"
+                class="filter-pill {% if current_filter == 'termine' %}active{% endif %}">Terminés</a>
+        </div>
+    </div> <!-- Table Desktop -->
+    {% if audits %}
+    <div class="audit-table-container p-0 p-md-3">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="auditTable">
+                <thead>
+                    <tr>
+                        <th scope="col" class="col-id ps-2">N°</th>
+                        <th scope="col" class="col-name">Nom Audit</th>
+                        <th scope="col" class="col-dep">Département</th>
+                        <th scope="col" class="col-date">Date</th>
+                        <th scope="col" class="col-auditores">Auditeurs</th>
+                        <th scope="col" class="col-form">Formulaire</th>
+                        <th scope="col" class="col-status text-center">Statut</th>
+                        <th scope="col" class="text-center col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr class="audit-row">
+                        <td class="fw-bold  col-id ps-2 " data-label="N°">#{{ audit.number_audit }}</td>
+                        <td class="col-name" data-label="Audit">
+                            <div class="fw-bold ">{{ audit.desc|default:"Sans description" }}</div>
+                        </td>
+                        <td class="col-dep" data-label="Département">
+                            <span class="">{{ audit.section|default:"-" }}</span>
+                        </td>
+                        <td class="text-nowrap col-date" data-label="Date">
+                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="col-auditores" data-label="Auditeurs">
+                            {% if audit.affectation.all %}
+                            {% for user in audit.affectation.all %}
+                            <span class="badge badge-auditeur rounded-pill me-1">{{ user.username }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <span class=" italic">Non assigné</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-form" data-label="Formulaire">
+                            <span class="text-truncate d-inline-block" style="max-width: 100px;">
+                                {{ audit.formulaire_audit|default:"-" }}
+                            </span>
+                        </td>
+                        <td class="col-status text-center" data-label="Statut">
+                            <span class="badge status-badge rounded-pill
+                                    {% if audit.get_audit_status == 'en_cours' %}bg-warning text-dark
+                                    {% elif audit.get_audit_status == 'planifie' %}bg-primary
+                                    {% elif audit.get_audit_status == 'termine' %}bg-success
+                                    {% else %}bg-secondary{% endif %}">
+                                {{ audit.get_audit_status_display|default:audit.get_audit_status|capfirst }}
+                            </span>
+                        </td>
+                        <td class="text-center col-actions" data-label="Actions">
+                            <div class="d-flex justify-content-end align-items-center gap-1">
+                                <!-- Main Actions based on Status -->
+                                {% if audit.get_audit_status == 'planifie' %}
+                                <form method="POST" action="{% url 'start_audit' audit.pk %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        class="btn btn-sm btn-demarrer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1" title="Démarrer">
+                                        <span>Démarrer</span> <i data-lucide="play-circle" ></i>
+                                    </button>
+                                </form>
+                                {% elif audit.get_audit_status == 'en_cours' %}
+                                {% if audit.resultataudit_set.first %}
+                                <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}"
+                                    class="btn btn-sm btn-continuer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1" title="Continuer">
+                                    <span>Continuer</span> <i data-lucide="chevron-right" ></i>
+                                </a>
+                                {% endif %}
+                                {% elif audit.get_audit_status == 'termine' %}
+                                {% if audit.resultataudit_set.first %}
+                                <a href="{% url 'resultat_report' audit.resultataudit_set.first.id %}"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1" title="Rapport">
+                                    <span>Rapport</span> <i data-lucide="file-text" ></i>
+                                </a>
+                                {% endif %}
+                                {% endif %}
+
+                                <!-- Secondary Actions (Admin only) -->
+                                {% if user.is_superuser %}
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-slate-400 p-0" type="button"
+                                        data-bs-toggle="dropdown">
+                                        <i data-lucide="more-horizontal" ></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2">
+                                        <li>
+                                            <a class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2"
+                                                href="{% url 'liste_audit_update' audit.id %}">
+                                                <i data-lucide="edit-3" 
+                                                    class="text-orange-500"></i> Modifier
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button
+                                                class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-danger btn-delete-audit"
+                                                data-id="{{ audit.id }}" data-desc="{{ audit.desc }}">
+                                                <i data-lucide="trash-2" ></i>
+                                                Supprimer
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Pagination des audits" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- Previous -->
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="Première">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédente">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;&laquo;</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
+            </li>
+            {% endif %}
+
+            <!-- Page numbers -->
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivante">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Dernière">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;&raquo;</span>
+                </li>
+                {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Info pagination -->
+    <div class="text-center mt-2">
+        <small class="">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+            ({{ page_obj.paginator.count }} audit{{ page_obj.paginator.count|pluralize }})
+        </small>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4" style="background-color: #fcfdfe; border: 1px dashed #e2e8f0 !important;">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-white shadow-sm rounded-circle" style="width: 80px; height: 80px;">
+                    <i data-lucide="calendar-check" class="text-primary" style="width: 32px; height: 32px;"></i>
+                </div>
+            </div>
+            <h4 class="font-weight-bold text-dark">Aucun audit planifié</h4>
+            <p class="text-muted mx-auto mb-4" style="max-width: 400px;">
+                {% if user.is_superuser %}
+                La liste de planification est actuellement vide. Commencez par planifier votre premier audit pour suivre les performances.
+                {% else %}
+                Vous n'avez aucun audit assigné dans votre calendrier pour le moment.
+                {% endif %}
+            </p>
+            {% if user.is_superuser %}
+            <a href="{% url 'liste_audit_create' %}" class="btn btn-primary rounded-pill px-5 py-2 shadow-sm font-weight-bold">
+              <i data-lucide="plus" class="mr-2"></i>
+              Planifier un Audit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const auditRows = document.querySelectorAll('.audit-row');
+
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+
+            auditRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        // Delete Audit Confirmation
+        const deleteButtons = document.querySelectorAll('.btn-delete-audit');
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const auditId = this.getAttribute('data-id');
+                const auditDesc = this.getAttribute('data-desc') || 'cet audit';
+
+                Swal.fire({
+                    title: 'Supprimer l\'audit ?',
+                    text: `Êtes-vous sûr de vouloir supprimer"${auditDesc}" ? Cette action est irréversible.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Oui, supprimer',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/audit/liste-audit/${auditId}/delete/`;
+
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrfmiddlewaretoken';
+                        csrfInput.value = '{{ csrf_token }}';
+
+                        form.appendChild(csrfInput);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
+
+
+
+

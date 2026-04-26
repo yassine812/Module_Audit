@@ -1,0 +1,102 @@
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title">
+        <i class="fas {% if object %}fa-user-cog{% else %}fa-user-plus{% endif %} mr-2"></i>
+        {% if object %}Modifier Utilisateur{% else %}Nouvel Utilisateur{% endif %}
+    </h5>
+    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="userModalForm" method="post" action="{% if object %}{% url 'user_update' object.id %}{% else %}{% url 'user_create' %}{% endif %}" novalidate>
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger-soft mb-3">
+            <small>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</small>
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="form-group-premium mb-3">
+            <label class="premium-label mb-1" for="{{ field.id_for_label }}">
+                {{ field.label }}
+            </label>
+            
+            {% if field.help_text %}
+                <small class="form-text text-muted mb-1">{{ field.help_text }}</small>
+            {% endif %}
+
+            <div class="input-container-premium">
+                {{ field }}
+            </div>
+
+            {% if field.errors %}
+                <div class="error-feedback text-danger mt-1 small">
+                    {{ field.errors|striptags }}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="modal-footer bg-light d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+            {% if object %}Enregistrer{% else %}Créer l'utilisateur{% endif %}
+        </button>
+    </div>
+</form>
+
+<style>
+    .premium-label {
+        font-weight: 700;
+        color: #4e73df;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        display: block;
+    }
+    .input-container-premium input, 
+    .input-container-premium select {
+        display: block;
+        width: 100%;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.9rem;
+        color: #6e707e;
+        border: 1px solid #d1d3e2;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        background-color: #f8f9fc;
+    }
+    .input-container-premium input:focus, 
+    .input-container-premium select:focus {
+        background-color: #fff;
+        border-color: #0061f2;
+        box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.1);
+        outline: none;
+    }
+    .alert-info-soft {
+        background-color: #e3effd;
+        color: #0061f2;
+        border: none;
+        border-radius: 6px;
+    }
+    .alert-danger-soft {
+        background-color: #fdf2f2;
+        color: #e74a3b;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem;
+    }
+</style>
+
+<script>
+    // Initialize role help text if needed
+    (function() {
+        const roleSelect = document.querySelector('#userModalForm select[name="role"]');
+        if (roleSelect && window.lucide) {
+            lucide.createIcons();
+        }
+    })();
+</script>
