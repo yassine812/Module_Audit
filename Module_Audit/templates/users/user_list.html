@@ -40,11 +40,15 @@
 {% block content %}
 <div class="card premium-card border-0 shadow-sm">
     <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex align-items-center justify-content-between">
-        <div class="header-text">
-            <h3 class="card-title fw-bold text-dark mb-1 d-flex align-items-center">
-                <i data-lucide="users-cog" class="text-primary mr-2"></i> Gestion des Utilisateurs
-            </h3>
-            <p class="text-muted mb-0 d-none d-md-block">Rôles et accès de votre équipe</p>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <div class="header-text">
+                <h3 class="card-title fw-bold text-dark mb-0 d-flex align-items-center" style="font-size: 1rem !important;">
+                    Gestion des Utilisateurs
+                </h3>
+            </div>
         </div>
         <div class="ml-auto">
             <button onclick="openUserModal('{% url 'user_create' %}')" class="btn btn-primary shadow-sm rounded-pill px-4">

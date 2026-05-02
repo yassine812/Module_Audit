@@ -22,11 +22,15 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
-          <h3 class="card-title fw-bold">
-            <i data-lucide="building" class="mr-2 text-primary"></i>
-            Gestion des Sites
-          </h3>
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Sites
+            </h3>
+          </div>
           {% if object_list %}
           <div class="ml-auto">
             <button onclick="openSiteModal('{% url 'site_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
@@ -154,12 +158,12 @@
 
 <!-- Main Forms Modal -->
 <div class="modal fade" id="siteModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 350px; margin: 1.75rem auto;" role="document">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
             <div id="modalBodyContent">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2  ">Chargement...</p>
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-emerald-600" role="status"></div>
+                    <p class="mt-2 mb-0 text-xs font-weight-bold text-muted">Chargement...</p>
                 </div>
             </div>
         </div>
@@ -184,7 +188,7 @@
 {% block extra_js %}
 <script>
     function openSiteModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#modalBodyContent').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-emerald-600" role="status"></div><p class="mt-2 mb-0 text-xs font-weight-bold text-muted">Chargement...</p></div>');
         $('#siteModal').modal('show');
         $.ajax({
             url: url,
@@ -192,24 +196,16 @@
             success: function(data) {
                 $('#modalBodyContent').html(data);
                 initModalBehaviors();
+            },
+            error: function() {
+                $('#modalBodyContent').html('<div class="text-center py-3"><i data-lucide="alert-circle" class="text-danger w-8 h-8 mb-2"></i><p class="text-xs font-weight-bold text-danger">Erreur de chargement</p><button class="btn btn-sm btn-light rounded-pill mt-2" onclick="location.reload()">Actualiser</button></div>');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         });
     }
 
     function initModalBehaviors() {
-        document.querySelectorAll('.level-item').forEach(card => {
-            const labelEl = card.querySelector('div.font-weight-bold.text-dark');
-            const pctEl = card.querySelector('div.text-emerald-600');
-            if (labelEl && pctEl) {
-                const raw = labelEl.textContent.trim();
-                if (raw.includes('|')) {
-                    const parts = raw.split('|');
-                    labelEl.textContent = parts[1];
-                    pctEl.textContent = parts[0] + '%';
-                }
-            }
-        });
-
+        // Form submission logic remains here, but label parsing is now handled by the modal's internal script
         $('#siteModalForm').off('submit').on('submit', function(e) {
             e.preventDefault();
             const form = $(this);
@@ -275,8 +271,3 @@
 
     </script>
 {% endblock %}
-
-
-
-
-

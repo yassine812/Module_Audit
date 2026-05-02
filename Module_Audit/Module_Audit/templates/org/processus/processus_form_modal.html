@@ -1,0 +1,57 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg" style="background-color: #e0e7ff; color: #4338ca;">
+            <i data-lucide="layers" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Processus{% else %}Nouveau Processus{% endif %}</h4>
+            <p class="  mb-0">Structurez vos audits avec des processus clairs.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="processusModalForm" method="post" action="{% if object %}{% url 'processus_update' object.id %}{% else %}{% url 'processus_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group mb-0">
+            <label class=" font-weight-bold text-dark mb-2" for="id_name">Nom du Processus <span class="text-danger">*</span></label>
+            <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-0 ps-3">
+                        <i data-lucide="activity" class="text-indigo-500" ></i>
+                    </span>
+                </div>
+                <input type="text" name="name" id="id_name" class="form-control border-0 py-2" placeholder="Ex: Maintenance Préventive, Contrôle Qualité..." value="{{ form.name.value|default:'' }}" required>
+            </div>
+            {% if form.name.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+            <p class="  mt-2 mb-0">Identifiez clairement ce processus pour les rapports d'audit.</p>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-indigo text-white font-weight-bold rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); border: none;">
+            <i data-lucide="save" class="mr-2" ></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+

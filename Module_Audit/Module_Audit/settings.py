@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vp#*)ll5^9ai8npp64n%ukxxc+7m6))-kwk$f__l+t^tsbbkee
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'audit.cors_middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -144,3 +145,12 @@ STATICFILES_DIRS = [
 # Media files (uploaded documents)
 MEDIA_URL = '/processus_docs/'
 MEDIA_ROOT = BASE_DIR / "processus_docs"
+
+# Configuration Email SMTP (Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'zerniyassine21@gmail.com'  # <-- METTEZ VOTRE EMAIL GMAIL ICI
+EMAIL_HOST_PASSWORD = 'rurr vmuf jcyq iosf'  # <-- METTEZ VOTRE MOT DE PASSE D'APPLICATION ICI
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

@@ -1,6 +1,12 @@
 {
+<<<<<<< HEAD
     "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
     "python.analysis.extraPaths": [
         "${workspaceFolder}/venv/Lib/site-packages"
+=======
+    "python.defaultInterpreterPath": "${workspaceFolder}/Module_Audit/venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/Module_Audit/venv/Lib/site-packages"
+>>>>>>> f689168d5fec820fefa9dd0d7d958190286b2b3d
     ]
 }

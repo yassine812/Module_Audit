@@ -2,6 +2,42 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+  /* Fix Select2 placeholder positioning - ensure it's inside the field */
+  .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d !important;
+    line-height: 1.5 !important;
+    display: inline-block !important;
+    padding-left: 0 !important;
+  }
+  .select2-container--bootstrap4 .select2-selection--single {
+    height: calc(1.5em + 0.75rem + 2px) !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+    line-height: 1.5 !important;
+    padding-left: 0.75rem !important;
+    color: #495057 !important;
+  }
+  /* Mobile fixes */
+  @media (max-width: 768px) {
+    .select2-container--bootstrap4 .select2-selection--single {
+      height: 38px !important;
+    }
+    /* Fix Structure du Formulaire layout */
+    #inlineStructureContainer .section-title {
+      flex-direction: row !important;
+      align-items: center !important;
+    }
+    #inlineStructureContent {
+      transition: all 0.3s ease;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block title %}
 {% if object %}
 Modifier un Audit
@@ -19,13 +55,18 @@ Créer un Audit
 <div class="container py-5">
     <!-- Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
-        <h2 class="h3 mb-0 text-gray-800">
-            {% if object %}
-            <i data-lucide="edit" class="me-2 text-primary"></i>Modifier l'Audit
-            {% else %}
-            <i data-lucide="plus" class="me-2 text-success"></i>Nouvel Audit
-            {% endif %}
-        </h2>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'liste_audit_list' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h2 class="h3 mb-0 text-gray-800">
+                {% if object %}
+                Modifier l'Audit
+                {% else %}
+                Nouvel Audit
+                {% endif %}
+            </h2>
+        </div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 bg-transparent p-0">
                 <li class="breadcrumb-item"><a href="{% url 'liste_audit_list' %}">Audits</a></li>
@@ -243,8 +284,8 @@ Créer un Audit
                         <div class="col-md-6">
                             <label class="form-label fw-bold   text-uppercase mb-2">Processus</label>
                             <select id="new_processus" name="new_processus"
-                                class="form-select custom-input select2-inline">
-                                <option value="">Sélectionnez un processus...</option>
+                                class="form-control custom-input select2-inline">
+                                <option value="">Sélectionnez un Processus...</option>
                                 {% for p in processus_list %}
                                 <option value="{{ p.id }}">{{ p.name }}</option>
                                 {% endfor %}
@@ -257,8 +298,8 @@ Créer un Audit
                             <div class="d-flex gap-2">
                                 <div class="flex-grow-1">
                                     <select id="new_type_audit" name="new_type_audit"
-                                        class="form-select custom-input select2-inline">
-                                        <option value="">Sélectionnez un type...</option>
+                                        class="form-control custom-input select2-inline">
+                                        <option value="">Sélectionnez un Type d'Audit...</option>
                                         {% for t in types_audit_list %}
                                         <option value="{{ t.id }}">{{ t.name }}</option>
                                         {% endfor %}
@@ -267,7 +308,7 @@ Créer un Audit
                                 <button type="button" class="btn btn-outline-primary px-3 rounded-3" id="syncInlineBtn"
                                     title="Synchroniser la structure"
                                     style="height: 52px; border-radius: 12px !important;">
-                                    <i data-lucide="sync-alt"></i>
+                                    <i data-lucide="refresh-cw"></i>
                                 </button>
                             </div>
                         </div>
@@ -277,8 +318,8 @@ Créer un Audit
                             <label class="form-label fw-bold   text-uppercase mb-2">Type
                                 d'Équipement</label>
                             <select id="new_type_equipement" name="new_type_equipement"
-                                class="form-select custom-input select2-inline">
-                                <option value="">Sélectionnez un équipement...</option>
+                                class="form-control custom-input select2-inline">
+                                <option value="">Sélectionnez un Type d'Équipement...</option>
                                 {% for e in types_equipement_list %}
                                 <option value="{{ e.id }}">{{ e.name }}</option>
                                 {% endfor %}
@@ -290,7 +331,7 @@ Créer un Audit
                             <label class="form-label fw-bold   text-uppercase mb-2">Section / Département
                                 (Multiple)</label>
                             <select id="new_section" name="new_sections[]"
-                                class="form-select custom-input select2-inline" multiple>
+                                class="form-control custom-input select2-inline" multiple>
                                 {% for s in sections_list %}
                                 <option value="{{ s.id }}">{{ s.name }}</option>
                                 {% endfor %}
@@ -299,42 +340,28 @@ Créer un Audit
                     </div>
 
                     <!-- Structure Preview Container -->
-                    <div id="inlineStructureContainer"
-                        class="mt-4 d-none p-4 border rounded-4 bg-light bg-opacity-50 shadow-xs"
-                        style="position: relative; z-index: 10;">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex align-items-center pt-1">
-                                <i data-lucide="layers" class=" me-2"></i>
-                                <h6 class="fw-bold mb-0  text-uppercase " style="letter-spacing: 0.5px;">
-                                    Structure du formulaire</h6>
-                            </div>
-
-                            <!-- 🔥 REFINED HEADER: Actions on top, Button below -->
-                            <div class="structure-header d-flex flex-column align-items-end">
-                                <div class="top-actions mb-2">
-                                    <button type="button"
-                                        class="btn btn-link btn-sm text-decoration-none p-0 text-primary  fw-semibold"
-                                        id="selectAllInline">Tout cocher</button>
-                                    <span class=" opacity-25 mx-1">|</span>
-                                    <button type="button"
-                                        class="btn btn-link btn-sm text-decoration-none p-0  "
-                                        id="deselectAllInline">Tout décocher</button>
+                    <div id="inlineStructureContainer" class="mt-5 d-none">
+                        <div class="section-title mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                            <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0">
+                                <i data-lucide="layers" class="me-2 text-primary"></i>STRUCTURE DU FORMULAIRE
+                            </h5>
+                            
+                            <div class="d-flex align-items-center gap-3 ms-auto">
+                                <div class="d-none d-md-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-link btn-sm text-decoration-none text-primary fw-bold p-0" id="selectAllInline">Tout cocher</button>
+                                    <span class="text-muted opacity-25">|</span>
+                                    <button type="button" class="btn btn-link btn-sm text-decoration-none text-secondary p-0" id="deselectAllInline">Tout décocher</button>
                                 </div>
-
-                                <!-- 🔥 BUTTON: CRITÈRE (Inline Form) -->
-                                <button type="button"
-                                    class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm shadow-hover"
-                                    id="btnAddCritere"
-                                    style="position: relative; z-index: 101; cursor: pointer !important; min-width: 120px; pointer-events: auto !important;">
+                                <button type="button" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm" id="btnAddCritere">
                                     <i data-lucide="plus" class="me-1"></i> Critère
                                 </button>
                             </div>
                         </div>
-                        <div id="inlineStructureContent">
+
+                        <div id="inlineStructureContent" class="bg-white rounded-4 border p-4 shadow-xs">
                             <!-- Dynamic content injected here -->
                             {{ critere_formset.management_form }}
                         </div>
-
 
                         <!-- ✅ INLINE CRITÈRE FORM CONTAINER (INSIDE STRUCTURE) -->
                         <div id="inlineCritereContainer" class="mt-3 d-none">
@@ -386,8 +413,8 @@ Créer un Audit
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="modal-title fw-bold d-flex align-items-center">
-                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
-                        <i data-lucide="plus-circle" class="text-primary"></i>
+                    <div class="p-2 rounded-3 me-3" style="background-color: rgba(78, 115, 223, 0.1);">
+                        <i class="fas fa-plus-circle text-primary"></i>
                     </div>
                     Nouveau Sous-Critère
                 </h5>
@@ -1229,6 +1256,7 @@ Créer un Audit
                 form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 if (input) setTimeout(() => input.focus(), 600);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             } else {
                 form.classList.add('d-none');
                 if (saveBtn) saveBtn.style.display = 'none';
@@ -1272,7 +1300,8 @@ Créer un Audit
                     content.innerHTML = '';
 
                     if (data.length === 0) {
-                        content.innerHTML = '<div class="text-center py-3   italic">Aucune structure trouvée.</div>';
+                        content.innerHTML = '<div class="text-center py-5 text-muted"><i data-lucide="inbox" class="d-block mb-2 w-8 h-8 mx-auto opacity-50"></i>Aucune structure trouvée.</div>';
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
                     } else {
                         let listHtml = '<div class="critere-list">';
 
@@ -1280,52 +1309,54 @@ Créer un Audit
                             let scHtml = '';
                             crit.sous_criteres.forEach((sc, scIdx) => {
                                 scHtml += `
-                                <div class="sous-item ps-4 mb-1 d-flex justify-content-between align-items-center">
-                                    <label class="  mb-0 cursor-pointer flex-grow-1" for="inline-sc-${sc.id}">
+                                <div class="sous-item d-flex justify-content-between align-items-center py-2 border-bottom border-light">
+                                    <label class="mb-0 cursor-pointer flex-grow-1 fw-500 text-dark" for="inline-sc-${sc.id}" style="font-size: 0.9rem;">
                                         ${sc.nom}
                                     </label>
-                                    <div class="d-flex align-items-center justify-content-end ms-2" style="min-width: 60px;">
-                                        <button type="button" class="btn btn-link btn-sm text-danger p-0 me-2" 
-                                                onclick="deleteSousCritere(${sc.id})" title="Supprimer ce sous-critère">
-                                            <i class="fas fa-trash" style=""></i>
+                                    <div class="d-flex align-items-center gap-3 ms-2">
+                                        <button type="button" class="btn btn-link btn-sm text-danger p-0 opacity-75 hover-opacity-100" 
+                                                onclick="deleteSousCritere(${sc.id})" title="Supprimer">
+                                            <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
                                         </button>
-                                        <input type="checkbox" class="form-check-input inline-sc-checkbox sous-checkbox m-0" 
-                                               value="${sc.id}" id="inline-sc-${sc.id}" checked 
-                                               data-critere="${crit.critere_id}">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="form-check-input inline-sc-checkbox sous-checkbox m-0" 
+                                                   value="${sc.id}" id="inline-sc-${sc.id}" checked 
+                                                   data-critere="${crit.critere_id}">
+                                        </div>
                                     </div>
                                 </div>
                             `;
                             });
 
                             listHtml += `
-                            <div class="critere-item mb-2" id="crit-item-${crit.critere_id}">
-                                <div class="critere-header d-flex align-items-center p-2 rounded-3" style="transition: 0.2s;">
-                                    <i class="fas fa-chevron-right me-2 arrow opacity-50" id="arrow-${crit.critere_id}" 
-                                       style="font-size: 10px; transition: transform 0.2s; cursor: pointer;" 
-                                       onclick="toggleSousCritere(${crit.critere_id})"></i>
+                            <div class="critere-item mb-3 border rounded-3 overflow-hidden shadow-sm bg-white" id="crit-item-${crit.critere_id}" style="transition: all 0.3s ease;">
+                                <div class="critere-header d-flex align-items-center p-3 bg-light border-bottom" style="cursor: pointer;" onclick="toggleSousCritere(${crit.critere_id})">
+                                    <i class="fas fa-chevron-right me-3 arrow text-muted" id="arrow-${crit.critere_id}" 
+                                       style="font-size: 0.8rem; transition: transform 0.3s;"></i>
                                     
-                                    <span class="critere-title fw-bold  text-dark flex-grow-1"
-                                          onclick="toggleSousCritere(${crit.critere_id})" style="cursor: pointer;">
-                                        ${idx + 1}. ${crit.critere_nom}
-                                    </span>
+                                    <div class="flex-grow-1">
+                                        <span class="critere-title fw-bold text-dark" style="font-size: 1rem;">
+                                            ${idx + 1}. ${crit.critere_nom}
+                                        </span>
+                                    </div>
 
-                                    <!-- ➕ Add sous-critère -->
-                                    <button type="button" class="btn btn-link btn-sm text-primary p-0 ms-2" 
-                                            onclick="openSousModal(${crit.critere_id})" title="Ajouter un sous-critère"
-                                            data-toggle="modal" data-target="#addSousCritereModal">
-                                        <i data-lucide="plus-circle"></i>
-                                    </button>
-                                    
-                                    <!-- 🗑️ Delete critère -->
-                                    <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-2" 
-                                            onclick="deleteCritere(${crit.critere_id})" title="Supprimer ce critère">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
+                                    <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
+                                        <button type="button" class="btn btn-outline-primary btn-xs rounded-circle" 
+                                                onclick="openSousModal(${crit.critere_id})" title="Ajouter un sous-critère"
+                                                style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-xs rounded-circle" 
+                                                onclick="deleteCritere(${crit.critere_id})" title="Supprimer ce critère"
+                                                style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="sous-critere-list d-none pt-2 ms-4 border-start ps-3" id="sous-${crit.critere_id}">
+                                <div class="sous-critere-list d-none bg-white p-3 pt-2" id="sous-${crit.critere_id}">
                                     <div id="sc-container-${crit.critere_id}">
-                                        ${scHtml}
+                                        ${scHtml || '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>'}
                                     </div>
                                 </div>
                             </div>
@@ -1334,6 +1365,7 @@ Créer un Audit
 
                         listHtml += '</div>';
                         content.innerHTML = listHtml;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
 
                         // 🧠 Smart Logic: Highlight parent if any child is checked
                         const attachSmartLogic = () => {
@@ -1368,7 +1400,8 @@ Créer un Audit
                     alert("Erreur lors de la synchronisation.");
                 } finally {
                     syncBtn.disabled = false;
-                    syncBtn.innerHTML = '<i data-lucide="sync-alt"></i>';
+                    syncBtn.innerHTML = '<i data-lucide="refresh-cw"></i>';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             });
         }
@@ -1504,8 +1537,8 @@ Créer un Audit
                     let scHtml = '';
                     data.sous_criteres.forEach(sc => {
                         scHtml += `
-                            <div class="sous-item ps-4 mb-1 d-flex justify-content-between align-items-center">
-                                <label class="  mb-0 cursor-pointer" for="inline-sc-${sc.id}">
+                            <div class="sous-item d-flex justify-content-between align-items-center py-2 border-bottom border-light">
+                                <label class="mb-0 cursor-pointer flex-grow-1 fw-500 text-dark" for="inline-sc-${sc.id}" style="font-size: 0.9rem;">
                                     ${sc.nom}
                                 </label>
                                 <input type="checkbox" class="form-check-input inline-sc-checkbox sous-checkbox ms-3" 
@@ -1516,26 +1549,28 @@ Créer un Audit
                     });
 
                     const html = `
-                        <div class="critere-item mb-2 active-critere" id="crit-item-${critId}">
-                            <div class="critere-header d-flex align-items-center p-2 rounded-3" style="transition: 0.2s;">
-                                <i class="fas fa-chevron-down me-2 arrow" id="arrow-${critId}" 
-                                   style="font-size: 10px; transition: transform 0.2s; cursor: pointer;" 
-                                   onclick="toggleSousCritere(${critId})"></i>
+                        <div class="critere-item mb-3 border rounded-3 overflow-hidden shadow-sm bg-white active-critere" id="crit-item-${critId}" style="transition: all 0.3s ease;">
+                            <div class="critere-header d-flex align-items-center p-3 bg-light border-bottom" style="cursor: pointer;" onclick="toggleSousCritere(${critId})">
+                                <i class="fas fa-chevron-down me-3 arrow text-primary" id="arrow-${critId}" 
+                                   style="font-size: 0.8rem; transition: transform 0.3s;"></i>
                                 
-                                <span class="critere-title fw-bold  text-dark flex-grow-1"
-                                      onclick="toggleSousCritere(${critId})" style="cursor: pointer;">
-                                    <i data-lucide="check-circle" class="text-success me-1 "></i>${data.critere_name}
-                                    ${chapitreName ? `<span class="badge bg-light  border ms-2 px-2" style="font-size: 10px; font-weight: 500;">${chapitreName}</span>` : ''}
-                                </span>
+                                <div class="flex-grow-1">
+                                    <span class="critere-title fw-bold text-primary" style="font-size: 1rem;">
+                                        <i data-lucide="check-circle" class="text-success me-1 " style="width: 16px;"></i>${data.critere_name}
+                                        ${chapitreName ? `<span class="badge bg-white text-primary border ms-2 px-2" style="font-size: 10px; font-weight: 600;">${chapitreName}</span>` : ''}
+                                    </span>
+                                </div>
 
-                                <button type="button" class="btn btn-link btn-sm text-primary p-0 ms-2" 
-                                        onclick="openSousModal(${critId})" title="Ajouter un sous-critère"
-                                        data-toggle="modal" data-target="#addSousCritereModal">
-                                    <i data-lucide="plus-circle"></i>
-                                </button>
+                                <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
+                                    <button type="button" class="btn btn-outline-primary btn-xs rounded-circle" 
+                                            onclick="openSousModal(${critId})" title="Ajouter un sous-critère"
+                                            style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="sous-critere-list pt-2 ms-4 border-start ps-3" id="sous-${critId}">
+                            <div class="sous-critere-list bg-white p-3 pt-2" id="sous-${critId}">
                                 <div id="sc-container-${critId}">
                                     ${scHtml}
                                 </div>
@@ -1544,6 +1579,7 @@ Créer un Audit
                     `;
 
                     listContainer.insertAdjacentHTML('beforeend', html);
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
 
                     // Show structure container if it was hidden
                     document.getElementById('inlineStructureContainer').classList.remove('d-none');
@@ -1862,7 +1898,7 @@ Créer un Audit
                         }
                         return $(
                             '<span class="select2-result">' +
-                            '<i data-lucide="book" class="me-2 "></i>' +
+                            '<i class="fas fa-book me-2"></i>' +
                             data.text.replace('📘 ', '') +
                             '</span>'
                         );
@@ -1873,7 +1909,7 @@ Créer un Audit
                         }
                         return $(
                             '<span class="select2-selection">' +
-                            '<i data-lucide="book" class="me-2 "></i>' +
+                            '<i class="fas fa-book me-2"></i>' +
                             data.text.replace('📘 ', '') +
                             '</span>'
                         );
@@ -2302,43 +2338,49 @@ Créer un Audit
         transition: all 0.3s ease;
     }
 
-    /* Minimal Expandable List hierarchy */
-    .critere-header:hover {
-        background: #f8faff !important;
+    .critere-item {
+        border: 1.5px solid #edf2f7 !important;
+        border-radius: 12px !important;
     }
-
-    .active-critere .critere-title {
-        color: #1a56db !important;
-        /* Professional Blue highlight */
+    .critere-item:hover {
+        border-color: #4e73df !important;
+        box-shadow: 0 4px 12px rgba(78, 115, 223, 0.1) !important;
     }
-
+    .active-critere {
+        border-color: rgba(78, 115, 223, 0.3) !important;
+    }
+    .active-critere .critere-header {
+        background-color: rgba(78, 115, 223, 0.03) !important;
+    }
     .critere-header .arrow {
         color: #adb5bd;
+        transition: transform 0.3s ease;
     }
-
-    .active-critere .arrow {
-        color: #1a56db;
+    .active-critere .critere-title {
+        color: #4e73df !important;
     }
-
     .sous-item {
-        padding: 6px 0;
-        transition: 0.2s;
-        border-bottom: 1px dashed transparent;
+        padding: 10px 0;
+        transition: all 0.2s;
+        border-bottom: 1px solid #f1f5f9;
     }
-
+    .sous-item:last-child {
+        border-bottom: none;
+    }
     .sous-item:hover {
-        color: #000 !important;
-        background-color: rgba(0, 0, 0, 0.01);
+        background-color: #f8fafc;
+        padding-left: 5px;
     }
-
     .sous-checkbox {
-        width: 1rem !important;
-        height: 1rem !important;
+        width: 1.15rem !important;
+        height: 1.15rem !important;
         cursor: pointer;
+        border-radius: 4px !important;
     }
-
-    .shadow-xs {
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    .btn-xs {
+        padding: 1px 5px;
+        font-size: 0.7rem;
+        line-height: 1.5;
     }
 
     /* Inline Critère Container Styling */
@@ -2386,8 +2428,8 @@ Créer un Audit
     }
 
     .select2-container--bootstrap4 .select2-selection--single {
-        height: 48px !important;
-        border-radius: 10px !important;
+        height: 52px !important;
+        border-radius: 12px !important;
         border: 1.5px solid #e9ecef !important;
         padding-left: 15px !important;
         padding-right: 15px !important;
@@ -2403,8 +2445,47 @@ Créer un Audit
     }
 
     .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
-        height: 46px !important;
-        right: 10px !important;
+        height: 100% !important;
+        width: 34px !important;
+        right: 4px !important;
+        top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b {
+        display: none !important; /* 🔥 Hide the buggy default triangle */
+    }
+
+    /* ✨ Create a clean, centered arrow using pseudo-element */
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow::after {
+        content: '';
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid #6c757d;
+        display: block;
+    }
+
+    /* Hide default bootstrap/browser arrows when select2 is used */
+    .select2-hidden-accessible {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        position: absolute !important;
+        pointer-events: none !important;
+    }
+
+    /* Global suppression of browser default select arrows */
+    select {
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        background-image: none !important;
     }
 
     .select2-container--bootstrap4.select2-container--focus .select2-selection--single {

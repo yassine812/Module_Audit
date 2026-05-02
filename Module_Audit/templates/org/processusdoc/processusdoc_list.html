@@ -22,11 +22,15 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between bg-white border-bottom-0 pb-0 pt-3">
-          <h3 class="card-title fw-bold mb-0">
-            <i data-lucide="file-text" class="mr-2 text-primary"></i>
-            Gestion des Documents Processus
-          </h3>
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Documents Processus
+            </h3>
+          </div>
           {% if documents %}
           <div class="ml-auto">
             <button onclick="openProcessusDocModal('{% url 'processusdoc_create' %}')"
@@ -45,9 +49,9 @@
               <thead class="bg-light shadow-none">
                 <tr>
                   <th class="text-center col-id">ID</th>
-                  <th class="text-center col-type">T</th>
+                  <th class="text-center col-type">Type</th>
                   <th class="col-doc">Document</th>
-                  <th class="col-proc">Proc.</th>
+                  <th class="col-proc">Processus</th>
                   <th class="text-center col-view">Vue</th>
                   <th class="text-center col-actions">Actions</th>
                 </tr>

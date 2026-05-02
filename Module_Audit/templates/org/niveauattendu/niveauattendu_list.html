@@ -22,12 +22,15 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
-          <h3 class="card-title fw-bold header-text mb-0">
-            <i data-lucide="bar-chart" class="mr-2 text-primary"></i>
-            Gestion des Niveaux Attendus
-            
-          </h3>
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Niveaux Attendus
+            </h3>
+          </div>
           {% if page_obj %}
           <div class="ml-auto mt-0">
             <button onclick="openNiveauModal('{% url 'niveauattendu_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4">
@@ -151,7 +154,7 @@
 <!-- Modal Containers -->
 <div class="modal fade" id="niveauModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: visible;">
             <div id="modalBodyContent">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
@@ -275,8 +278,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-
-

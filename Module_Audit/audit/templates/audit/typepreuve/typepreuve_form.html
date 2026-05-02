@@ -19,7 +19,10 @@ Référentiel > <a href="{% url 'typepreuve_list' %}">Types de Preuves</a> > <st
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4 d-flex align-items-center gap-3">
+                    <a href="{% url 'typepreuve_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                        <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+                    </a>
                     <h5 class="mb-0">
                         <i class="fas {% if object %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
                         {% if object %}Modifier le type : {{ object.name }}{% else %}Nouveau Type de Preuve{% endif %}

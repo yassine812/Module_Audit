@@ -51,11 +51,15 @@
 
             <!-- List Card -->
             <div class="card">
-                <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
-                    <h3 class="card-title fw-bold header-text mb-0">
-                        <i data-lucide="bar-chart-3" class="mr-2 text-primary"></i>
-                        Résultats d'Audit
-                    </h3>
+                <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                            <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+                        </a>
+                        <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+                            Résultats d'Audit
+                        </h3>
+                    </div>
                     {% if user.is_superuser %}
                     <div class="ml-auto">
                         <a href="{% url 'liste_audit_list' %}" class="btn btn-primary shadow-sm rounded-pill px-4 btn-sm-block">
@@ -67,72 +71,151 @@
                 </div>
                 
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover mb-0" id="resultsTable">
-                            <thead>
-                                <tr>
-                                    <th class="ps-3 col-id">ID</th>
-                                    <th class="col-name">Sujet / Référence</th>
-                                    <th class="col-auditor">Auditeur</th>
-                                    <th class="col-site">Site</th>
-                                    <th class="col-date">Date</th>
-                                    <th class="col-score text-center">Score</th>
-                                    <th class="col-status text-center">Statut</th>
-                                    <th class="text-center col-actions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                 {% for resultat in resultats %}
-                                <tr class="result-row" 
-                                    data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
-                                    data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
-                                    <td class="col-id ps-3  " data-label="ID">#{{ resultat.id }}</td>
-                                    <td class="col-name" data-label="Sujet">
-                                        <div class="font-weight-bold  text-dark">{{ resultat.sujet }}</div>
-                                        <small class="">{{ resultat.ref_audit }}</small>
-                                    </td>
-                                    <td class="col-auditor" data-label="Auditeur">{{ resultat.auditeur.username }}</td>
-                                    <td class="col-site" data-label="Site">{{ resultat.site|default:"N/A" }}</td>
-                                    <td class="col-date" data-label="Date">{{ resultat.date_audit|date:"d/m/Y" }}</td>
-                                    <td class="col-score text-center" data-label="Score">
-                                        <span class="badge badge-light border text-slate-800">
-                                            {{ resultat.score_audit }}
-                                        </span>
-                                    </td>
-                                    <td class="col-status text-center" data-label="Statut">
-                                        <span class="badge {% if resultat.en_cours %}badge-warning{% else %}badge-success{% endif %} text-uppercase shadow-sm">
-                                            {% if resultat.en_cours %}En cours{% else %}Terminé{% endif %}
-                                        </span>
-                                    </td>
-                                    <td class="text-center col-actions" data-label="Actions">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <a href="{% url 'resultat_detail' resultat.id %}" class="btn btn-link text-info p-1" title="Détails">
-                                                <i data-lucide="eye" ></i>
+                    <!-- Mobile Cards View -->
+                    <div class="mobile-cards-container">
+                        {% for resultat in resultats %}
+                        <div class="resultat-card result-row"
+                             data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
+                             data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
+                            <div class="card-header-row">
+                                <h4 class="card-title">{{ resultat.sujet }}</h4>
+                                <span class="card-id-badge">#{{ resultat.id }}</span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Référence</span>
+                                <span class="card-field-value">{{ resultat.ref_audit|default:"-" }}</span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Auditeur</span>
+                                <span class="card-field-value">{{ resultat.auditeur.username }}</span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Site</span>
+                                <span class="card-field-value">{{ resultat.site|default:"N/A" }}</span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Date</span>
+                                <span class="card-field-value">{{ resultat.date_audit|date:"d/m/Y" }}</span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Score</span>
+                                <span class="card-field-value">
+                                    <span class="badge badge-light border text-slate-800">{{ resultat.score_audit }}</span>
+                                </span>
+                            </div>
+
+                            <div class="card-field">
+                                <span class="card-field-label">Statut</span>
+                                <span class="card-field-value">
+                                    <span class="card-status {% if resultat.en_cours %}card-status-active{% else %}card-status-completed{% endif %}">
+                                        {% if resultat.en_cours %}En cours{% else %}Terminé{% endif %}
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div class="card-actions-row">
+                                <a href="{% url 'resultat_detail' resultat.id %}" class="card-btn card-btn-primary" title="Détails">
+                                    <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                <a href="{% url 'resultat_report' resultat.id %}" class="card-btn card-btn-primary" title="Rapport PDF">
+                                    <i data-lucide="file-text" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                {% if user.is_superuser and resultat.en_cours %}
+                                <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
+                                    {% csrf_token %}
+                                    <button type="button" class="card-btn card-btn-danger btn-finish-audit" title="Clôturer">
+                                        <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i data-lucide="search-x" class="mb-3" style="width: 48px; height: 48px; color: #9ca3af;"></i>
+                            <h4>Aucun résultat trouvé</h4>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="desktop-table-container">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover mb-0" id="resultsTable">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3 col-id">
+                                            <a href="?sort=id&order={% if sort == 'id' and order == 'asc' %}desc{% else %}asc{% endif %}" class="text-dark text-decoration-none">
+                                                ID {% if sort == 'id' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% else %}▲{% endif %}
                                             </a>
-                                            <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
-                                                <i data-lucide="file-text" ></i>
-                                            </a>
-                                            {% if user.is_superuser and resultat.en_cours %}
-                                            <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
-                                                {% csrf_token %}
-                                                <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                                    <i data-lucide="lock" ></i>
-                                                </button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-5 ">
-                                        <i data-lucide="search-x" class="mb-3" ></i>
-                                        <h4>Aucun résultat trouvé</h4>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                        </th>
+                                        <th class="col-name">Sujet / Référence</th>
+                                        <th class="col-auditor">Auditeur</th>
+                                        <th class="col-site">Site</th>
+                                        <th class="col-date">Date</th>
+                                        <th class="col-score text-center">Score</th>
+                                        <th class="col-status text-center">Statut</th>
+                                        <th class="text-center col-actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                     {% for resultat in resultats %}
+                                    <tr class="result-row"
+                                        data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
+                                        data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
+                                        <td class="col-id ps-3  " data-label="ID">#{{ resultat.id }}</td>
+                                        <td class="col-name" data-label="Sujet">
+                                            <div class="font-weight-bold  text-dark">{{ resultat.sujet }}</div>
+                                            <small class="">{{ resultat.ref_audit }}</small>
+                                        </td>
+                                        <td class="col-auditor" data-label="Auditeur">{{ resultat.auditeur.username }}</td>
+                                        <td class="col-site" data-label="Site">{{ resultat.site|default:"N/A" }}</td>
+                                        <td class="col-date" data-label="Date">{{ resultat.date_audit|date:"d/m/Y" }}</td>
+                                        <td class="col-score text-center" data-label="Score">
+                                            <span class="badge badge-light border text-slate-800">
+                                                {{ resultat.score_audit }}
+                                            </span>
+                                        </td>
+                                        <td class="col-status text-center" data-label="Statut">
+                                            <span class="badge {% if resultat.en_cours %}badge-warning{% else %}badge-success{% endif %} text-uppercase shadow-sm">
+                                                {% if resultat.en_cours %}En cours{% else %}Terminé{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="text-center col-actions" data-label="Actions">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <a href="{% url 'resultat_detail' resultat.id %}" class="btn btn-link text-info p-1" title="Détails">
+                                                    <i data-lucide="eye" ></i>
+                                                </a>
+                                                <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
+                                                    <i data-lucide="file-text" ></i>
+                                                </a>
+                                                {% if user.is_superuser and resultat.en_cours %}
+                                                <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
+                                                    {% csrf_token %}
+                                                    <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                        <i data-lucide="lock" ></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5 ">
+                                            <i data-lucide="search-x" class="mb-3" ></i>
+                                            <h4>Aucun résultat trouvé</h4>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -171,6 +254,143 @@
     }
     .filter-btn:not(.active-filter):hover {
         background-color: #f1f5f9;
+    }
+
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: none;
+    }
+
+    .resultat-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      margin-bottom: 16px;
+      padding: 20px;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .resultat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0;
+      flex: 1;
+      padding-right: 12px;
+    }
+
+    .card-id-badge {
+      background: #f3f4f6;
+      color: #6b7280;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .card-field {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .card-field-label {
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      min-width: 100px;
+      margin-right: 12px;
+    }
+
+    .card-field-value {
+      color: #374151;
+      flex: 1;
+    }
+
+    .card-status {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .card-status-active {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .card-status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .card-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e5e7eb;
+    }
+
+    .card-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .card-btn-primary {
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    .card-btn-danger {
+      background: #fef2f2;
+      color: #ef4444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .mobile-cards-container {
+        display: block !important;
+        padding: 16px;
+      }
+
+      .desktop-table-container {
+        display: none !important;
+      }
+
+      .card-field {
+        flex-wrap: wrap;
+      }
+
+      .card-field-label {
+        margin-bottom: 4px;
+      }
     }
 </style>
 

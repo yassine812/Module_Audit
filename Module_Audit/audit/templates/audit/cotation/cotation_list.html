@@ -11,9 +11,82 @@
 
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-  
-  
 
+  /* Mobile Responsive Modal for Cotation */
+  @media (max-width: 768px) {
+    #cotationModal.modal {
+      padding: 0 !important;
+    }
+
+    #cotationModal .modal-dialog {
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    #cotationModal .modal-content {
+      height: 100vh !important;
+      border-radius: 0 !important;
+    }
+
+    #cotationModal .modal-header {
+      padding: 8px 12px !important;
+    }
+
+    #cotationModal .modal-title {
+      font-size: 1rem !important;
+    }
+
+    /* Compact form fields - minimal spacing */
+    #cotationModal .form-group,
+    #cotationModal .input-group {
+      margin-bottom: 0 !important;
+    }
+
+    #cotationModal label {
+      margin-bottom: 0 !important;
+      font-size: 0.8rem !important;
+      line-height: 1 !important;
+    }
+
+    #cotationModal .form-control,
+    #cotationModal select {
+      padding: 4px 8px !important;
+      font-size: 13px !important;
+      height: 32px !important;
+      min-height: 32px !important;
+    }
+
+    /* Compact modal body - taller to fit all fields */
+    #cotationModal .modal-body-responsive {
+      max-height: calc(100vh - 80px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 6px 12px 40px 12px !important;
+    }
+
+    /* Fixed footer with buttons */
+    #cotationModal .modal-footer {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: white !important;
+      border-top: 1px solid #e5e7eb !important;
+      padding: 8px 16px !important;
+      display: flex !important;
+      gap: 8px;
+      z-index: 1050 !important;
+    }
+
+    #cotationModal .modal-footer .btn {
+      flex: 1;
+      padding: 8px 12px !important;
+      font-size: 0.85rem !important;
+      border-radius: 20px !important;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -22,11 +95,15 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
-          <h3 class="card-title fw-bold header-text mb-0">
-            <i data-lucide="star" class="mr-2 text-primary"></i>
-            Gestion des Cotations
-          </h3>
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+              Gestion des Cotations
+            </h3>
+          </div>
           {% if page_obj %}
           <div class="ml-auto">
             <button onclick="openCotationModal('{% url 'cotation_create' %}')"
@@ -157,8 +234,8 @@
 
 <!-- Modal Containers -->
 <div class="modal fade" id="cotationModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: visible;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
@@ -282,8 +359,3 @@
   }
 </script>
 {% endblock %}
-
-
-
-
-

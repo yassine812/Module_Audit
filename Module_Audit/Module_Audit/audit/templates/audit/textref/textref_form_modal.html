@@ -1,0 +1,114 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-indigo-100 text-indigo-700 p-2 rounded-lg" style="background-color: #e0e7ff; color: #4338ca;">
+            <i data-lucide="book-open" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier Texte de Référence{% else %}Nouveau Texte{% endif %}</h4>
+            <p class="  mb-0">Configurez les normes et documents source.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="textRefModalForm" method="post" action="{% if object %}{% url 'textref_update' object.id %}{% else %}{% url 'textref_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Norme -->
+        <div class="form-group mb-4">
+            <label class=" font-weight-bold text-dark mb-2" for="id_norme">Norme / Référence <span class="text-danger">*</span></label>
+            <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-0 ps-3">
+                        <i data-lucide="award" class="text-indigo-600" ></i>
+                    </span>
+                </div>
+                <input type="text" name="norme" id="id_norme" class="form-control border-0 py-2" placeholder="Ex: ISO 9001, IATF 16949..." value="{{ form.norme.value|default:'' }}" required>
+            </div>
+            {% if form.norme.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.norme.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <!-- Document Source -->
+        <div class="form-group mb-2">
+            <label class=" font-weight-bold text-dark mb-2" for="id_text_ref">Document Source (Bibliothèque)</label>
+            <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-0 ps-3">
+                        <i data-lucide="search" class="text-indigo-600" ></i>
+                    </span>
+                </div>
+                <select name="text_ref" id="id_text_ref_modal" class="form-control border-0">
+                    {% for choice in form.text_ref.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.text_ref.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if form.text_ref.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.text_ref.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-indigo text-white font-weight-bold rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); border: none;">
+            <i data-lucide="check" class="mr-2" ></i>
+            {% if object %}Enregistrer{% else %}Créer{% endif %}
+        </button>
+    </div>
+</form>
+
+<style>
+    /* Fix Select2 inside input-group */
+    .input-group .select2-container {
+        flex: 1 1 auto !important;
+        width: auto !important;
+    }
+    .input-group .select2-container--default .select2-selection--single {
+        border: none !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        background-color: transparent !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 0 !important;
+        line-height: normal !important;
+        color: #1e293b !important;
+        font-weight: 500 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        top: 0 !important;
+    }
+</style>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    // Initialize Select2 for the modal
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('#id_text_ref_modal').select2({
+            placeholder:"Rechercher un document...",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#textRefModal') 
+        });
+    }
+</script>
+

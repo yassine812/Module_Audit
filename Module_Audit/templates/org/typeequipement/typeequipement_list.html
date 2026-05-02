@@ -26,11 +26,14 @@
     <div class="col-12">
       <div class="card shadow-sm">
         <div class="card-header d-flex flex-column flex-sm-row align-items-center justify-content-between bg-white border-bottom-0 pb-0 pt-3 gap-3">
-          <h3 class="card-title mb-0 fw-bold header-text">
-            <i data-lucide="layers" class="mr-2 text-primary"></i>
-            Gestion des Types d'Équipement
-            
-          </h3>
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h3 class="card-title mb-0 fw-bold header-text" style="font-size: 1rem !important;">
+              Gestion des Types d'Équipement
+            </h3>
+          </div>
           {% if page_obj %}
           <div class="ml-auto mt-0">
             <button onclick="openTypeEquipementModal('{% url 'typeequipement_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4">

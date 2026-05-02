@@ -1,0 +1,34 @@
+<div class="modal-header border-bottom-0">
+    <h5 class="modal-title font-weight-bold text-danger">
+        <i data-lucide="alert-triangle" class="mr-2"></i>Confirmer la suppression
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="deleteForm" method="post" action="{% url 'equipement_delete' object.id %}">
+    {% csrf_token %}
+    <div class="modal-body text-center py-4">
+        <div class="mb-3">
+            <div class="rounded-circle bg-light d-inline-flex p-3">
+                <i data-lucide="trash-2" class="text-danger w-8 h-8"></i>
+            </div>
+        </div>
+        <h6 class="font-weight-bold">Êtes-vous sûr de vouloir supprimer cet équipement ?</h6>
+        <p class=" mb-0">"{{ object.name }}"</p>
+        <p class="  mt-2">Cette action est irréversible.</p>
+        <div id="deleteErrorMessage" class="alert alert-danger mt-3" style="display:none;font-size:0.85rem;"></div>
+    </div>
+    <div class="modal-footer bg-light border-top-0 d-flex justify-content-center">
+        <button type="button" class="btn btn-secondary px-4 rounded-pill" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-danger px-4 rounded-pill">
+            <i data-lucide="trash-2" class="mr-2"></i>Supprimer définitivement
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+</script>
+

@@ -1,38 +1,41 @@
 {% load static %}
 
-<div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+<div class="modal-header border-bottom-0 p-3 px-4">
     <div class="d-flex align-items-center gap-3">
         <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
-            <i data-lucide="check-square" ></i>
+            <i data-lucide="check-square" class="w-6 h-6"></i>
         </div>
         <div>
-            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h4>
-            <p class="  mb-0">Géneralités et configuration des sous-niveaux.</p>
+            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.1rem;">{% if object %}Modifier Critère{%
+                else %}Nouveau Critère{% endif %}</h5>
         </div>
     </div>
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+        style="font-size: 1.5rem; padding: 0.8rem 1.2rem; margin: 0;">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
 
-<!-- Premium Tabs Header -->
-<div class="px-4 mt-3">
-    <ul class="nav nav-pills bg-light p-1 rounded-pill shadow-inner d-flex" id="critereTabs" role="tablist">
+<!-- Compact Tabs Header -->
+<div class="px-4 mt-0">
+    <ul class="nav nav-pills bg-light p-1 rounded-pill d-flex" id="critereTabs" role="tablist">
         <li class="nav-item flex-fill" role="presentation">
             <a class="nav-link active rounded-pill text-center py-2 font-weight-bold d-flex align-items-center justify-content-center gap-2"
-                id="general-tab" data-toggle="pill" href="#general" role="tab" aria-controls="general"
-                aria-selected="true">
-                <i data-lucide="info" ></i>
-                Infos Générales
+                style="font-size: 0.9rem; padding: 8px 16px !important;" id="general-tab" data-toggle="pill"
+                href="#general" role="tab" aria-controls="general" aria-selected="true">
+                <i data-lucide="info" class="w-5 h-5"></i>
+                Général
             </a>
         </li>
         <li class="nav-item flex-fill" role="presentation">
             <a class="nav-link rounded-pill text-center py-2 font-weight-bold d-flex align-items-center justify-content-center gap-2"
-                id="souscritere-tab" data-toggle="pill" href="#souscritere" role="tab" aria-controls="souscritere"
-                aria-selected="false">
-                <i data-lucide="layers" ></i>
+                style="font-size: 0.9rem; padding: 8px 16px !important;" id="souscritere-tab" data-toggle="pill"
+                href="#souscritere" role="tab" aria-controls="souscritere" aria-selected="false">
+                <i data-lucide="layers" class="w-5 h-5"></i>
                 Sous-Critères
-                <span class="badge badge-indigo border ml-1 row-count-badge">{% if sous_criteres.total_form_count %}{{ sous_criteres.total_form_count }}{% else %}0{% endif %}</span>
+                <span class="badge badge-indigo border ml-2 row-count-badge"
+                    style="font-size: 0.75rem; padding: 3px 8px;">{% if sous_criteres.total_form_count %}{{
+                    sous_criteres.total_form_count }}{% else %}0{% endif %}</span>
             </a>
         </li>
     </ul>
@@ -42,7 +45,7 @@
     action="{% if object %}{% url 'critere_update' object.id %}{% else %}{% url 'critere_create' %}{% endif %}"
     autocomplete="off">
     {% csrf_token %}
-    <div class="modal-body p-4 pt-4 custom-scrollbar" style="max-height: 70vh; overflow-y: auto;">
+    <div class="p-4 custom-scrollbar modal-body-responsive" style="padding: 10px 30px 0 30px !important;">
         {% if form.non_field_errors %}
         <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
@@ -51,91 +54,72 @@
 
         <div class="tab-content" id="critereTabsContent">
             <!-- Tab 1: General Info -->
-            <div class="tab-pane fade show active animated fadeIn" id="general" role="tabpanel"
+            <div class="tab-pane active" id="general" role="tabpanel"
                 aria-labelledby="general-tab">
                 <div class="row">
-                    <div class="col-md-12 mb-4">
-                        <label class=" font-weight-bold text-dark" for="id_name">Désignation du Critère <span
-                                class="text-danger">*</span></label>
+                    <div class="col-md-12 mb-3">
+                        <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;"
+                            for="id_name">Désignation <span class="text-danger">*</span></label>
                         <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-0 ps-3">
-                                    <i data-lucide="tag" class="text-indigo-500" ></i>
-                                </span>
-                            </div>
-                            <input type="text" name="name" id="id_name" class="form-control border-0 py-3"
-                                placeholder="Ex: Maintenance Préventive..." value="{{ form.name.value|default:'' }}"
-                                required>
+                            <input type="text" name="name" id="id_name"
+                                class="form-control border-0 py-2 px-3 text-sm" placeholder="..."
+                                value="{{ form.name.value|default:'' }}" required style="height: 42px;">
                         </div>
                     </div>
-                    <div class="col-md-6 mb-4" id="chapitre-norme-container">
-                        <label class=" font-weight-bold text-dark" for="id_chapitre_norme">Chapitre de
-                            Norme</label>
+                    <div class="col-md-12 mb-3">
+                        <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Norme</label>
                         <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-0 ps-3">
-                                    <i data-lucide="bookmark" class="text-indigo-500"
-                                        ></i>
-                                </span>
-                            </div>
-                            <select name="chapitre_norme" id="id_chapitre_norme" class="form-control border-0 py-2">
+                            <select name="chapitre_norme" id="id_chapitre_norme"
+                                class="form-control border-0 py-0 text-sm" style="height: 42px;">
                                 {% for choice in form.chapitre_norme.field.choices %}
                                 <option value="{{ choice.0 }}" {% if choice.0|slugify == form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-4">
-                        <label class=" font-weight-bold text-dark" for="id_formulaire">Formulaire Audit</label>
+                    <div class="col-md-12 mb-3">
+                        <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Formulaire</label>
                         <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-0 ps-3">
-                                    <i data-lucide="file-text" class="text-indigo-500"
-                                        ></i>
-                                </span>
-                            </div>
-                            <select name="formulaire" id="id_formulaire" class="form-control border-0 py-2">
+                            <select name="formulaire" id="id_formulaire" class="form-control border-0 py-0 text-sm"
+                                style="height: 42px;">
                                 {% for choice in form.formulaire.field.choices %}
                                 <option value="{{ choice.0 }}" {% if choice.0|slugify == form.formulaire.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-12 mb-4">
-                        <label class=" font-weight-bold text-dark" for="id_type_audit">Ciblage Types
-                            d'Audit</label>
-                        {{ form.type_audit }}
+                    <div class="col-md-12 mb-3">
+                        <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Ciblage</label>
+                        <div class="select2-normal">
+                            {{ form.type_audit }}
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tab 2: Sous-Critères -->
-            <div class="tab-pane fade animated fadeIn" id="souscritere" role="tabpanel"
+            <div class="tab-pane" id="souscritere" role="tabpanel"
                 aria-labelledby="souscritere-tab">
-                <div class="d-flex align-items-center justify-content-between mb-4 px-1">
-                    <div>
-                        <h6 class="font-weight-bold text-dark mb-1">Configuration des Sous-Critères</h6>
-                        <p class="  mb-0">Définissez les points de contrôle et preuves attendues pour ce
-                            critère.</p>
-                    </div>
+                <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                    <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Sous-Critères</h6>
                     <button type="button" id="add-sous-critere"
-                        class="btn btn-indigo rounded-pill px-4 py-2 shadow-sm border-0 flex-shrink-0"
-                        style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%);">
-                        <i data-lucide="plus-circle" class="mr-2" ></i>
-                        Ajouter un Sous-Critère
+                        class="btn btn-indigo text-white rounded-pill px-4 py-2 shadow-sm border-0"
+                        style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%); font-size: 0.85rem;">
+                        <i data-lucide="plus" class="w-5 h-5 mr-1"></i>
+                        Ajouter
                     </button>
                 </div>
 
                 <!-- Empty State -->
-                <div id="empty-state-sous-critere" class="text-center py-5 border rounded-xl bg-light-gray d-none">
-                    <div class="empty-state-icon text-indigo-500">
-                        <i data-lucide="list-checks" ></i>
+                <div id="empty-state-sous-critere" class="text-center py-3 border rounded-xl bg-light-gray d-none">
+                    <div class="empty-state-icon text-indigo-500 mb-1">
+                        <i data-lucide="list-checks" class="w-6 h-6"></i>
                     </div>
-                    <h5 class="text-dark font-weight-bold">Aucun sous-critère</h5>
-                    <p class=" px-5">Définissez les sous-critères spécifiques pour affiner votre évaluation
-                        d'audit.</p>
+                    <h6 class="text-dark font-weight-bold mb-0.5" style="font-size: 0.75rem;">Aucun sous-critère</h6>
+                    <p class="px-5 mb-1" style="font-size: 0.65rem;">Définissez les sous-critères spécifiques pour
+                        affiner votre évaluation d'audit.</p>
                     <button type="button" onclick="$('#add-sous-critere').click()"
-                        class="btn btn-link text-indigo-600 font-weight-bold">
+                        class="btn btn-link text-indigo-600 font-weight-bold p-0" style="font-size: 0.65rem;">
                         Ajouter un Sous-Critère
                     </button>
                 </div>
@@ -152,31 +136,33 @@
                             <!-- Remove Button at top right -->
                             <button type="button"
                                 class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border p-1"
-                                style="top: 12px; right: 12px; z-index: 10;" title="Retirer">
-                                <i data-lucide="x" ></i>
+                                style="top: 10px; right: 10px; z-index: 10;" title="Retirer">
+                                <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
 
                             <div class="row align-items-end pe-4">
-                                <div class="col-md-5 mb-3">
-                                    <label
-                                        class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Description
+                                <div class="col-md-5 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Description
                                         détaillée <span class="text-danger">*</span></label>
                                     {{ sc_form.content }}
                                 </div>
-                                <div class="col-md-3 mb-3">
-                                    <label
-                                        class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Cotation</label>
+                                <div class="col-md-3 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Cotation</label>
                                     {{ sc_form.type_cotation }}
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Preuves
+                                <div class="col-md-4 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Preuves
                                         Attendues</label>
                                     {{ sc_form.preuve_attendu }}
                                 </div>
                             </div>
                             <div class="row pe-4">
                                 <div class="col-md-12 mb-1">
-                                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Réaction
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Réaction
                                         attendue (En cas de déviation)</label>
                                     {{ sc_form.reaction }}
                                 </div>
@@ -198,28 +184,32 @@
 
             <button type="button"
                 class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border p-1"
-                style="top: 12px; right: 12px; z-index: 10;" title="Retirer">
-                <i data-lucide="x" ></i>
+                style="top: 10px; right: 10px; z-index: 10;" title="Retirer">
+                <i data-lucide="x" class="w-4 h-4"></i>
             </button>
 
             <div class="row align-items-end pe-4">
-                <div class="col-md-5 mb-3">
-                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Description détaillée
+                <div class="col-md-5 mb-2">
+                    <label class="text-uppercase mb-1 d-block"
+                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Description détaillée
                         <span class="text-danger">*</span></label>
                     {{ sous_criteres.empty_form.content }}
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Cotation</label>
+                <div class="col-md-3 mb-2">
+                    <label class="text-uppercase mb-1 d-block"
+                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Cotation</label>
                     {{ sous_criteres.empty_form.type_cotation }}
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Preuves Attendues</label>
+                <div class="col-md-4 mb-2">
+                    <label class="text-uppercase mb-1 d-block"
+                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Preuves Attendues</label>
                     {{ sous_criteres.empty_form.preuve_attendu }}
                 </div>
             </div>
             <div class="row pe-4">
                 <div class="col-md-12 mb-1">
-                    <label class="text-xs font-weight-bold text-slate-500 text-uppercase mb-1">Réaction attendue (En cas
+                    <label class="text-uppercase mb-1 d-block"
+                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Réaction attendue (En cas
                         de déviation)</label>
                     {{ sous_criteres.empty_form.reaction }}
                 </div>
@@ -227,32 +217,57 @@
         </div>
     </div>
 
-    <div class="modal-footer border-top-0 px-4 pb-4">
-        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4"
-            data-dismiss="modal">Annuler</button>
-        <button type="submit" class="btn btn-indigo text-white font-weight-bold rounded-pill px-4 shadow-sm ml-2"
-            style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%);">
-            <i data-lucide="save" class="mr-2" ></i>
-            Enregistrer les modifications
+    <div class="modal-footer border-top-0 p-3 px-4 d-flex justify-content-between bg-light mt-0">
+        <button type="button" class="btn btn-link text-muted font-weight-bold text-decoration-none py-2" style="font-size: 0.95rem;" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-indigo px-5 py-2 rounded-pill font-weight-bold shadow-sm d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+            <i data-lucide="save" class="w-5 h-5"></i> Enregistrer
         </button>
     </div>
 </form>
 
 <style>
+    /* Modal Size & Centering */
+    #critereModal .modal-dialog {
+        margin: 1.75rem auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #critereModal .modal-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start !important;
+        max-height: 90vh;
+        border-radius: 16px;
+        overflow: hidden;
+        background-color: #fff;
+    }
+
+    #critereModalForm {
+        display: flex;
+        flex-direction: column;
+        flex: 0 1 auto;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
     /* Flat SC Block CSS */
     #critereModal .sc-block {
-        border-radius: 12px;
+        border-radius: 10px;
         transition: all 0.2s ease-in-out;
     }
 
     #critereModal .sc-block:hover {
         border-color: #cbd5e1 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
         transform: translateY(-1px);
     }
 
     .text-xs {
-        font-size: 0.70rem;
+        font-size: 0.85rem;
     }
 
     .text-slate-500 {
@@ -261,23 +276,23 @@
 
     /* Select2 refinements */
     #critereModal .select2-container--bootstrap4 .select2-selection--multiple {
-        min-height: 42px !important;
-        max-height: 120px !important;
+        min-height: 32px !important;
+        max-height: 100px !important;
         overflow-y: auto !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         border: 1px solid #e2e8f0 !important;
         background-color: #f8fafc !important;
-        padding: 2px 6px !important;
+        padding: 0px 4px !important;
     }
 
     #critereModal .select2-container--bootstrap4 .select2-selection__choice {
         background: #f1f5f9 !important;
         border: 1px solid #cbd5e1 !important;
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         color: #334155 !important;
-        font-size: 0.75rem !important;
+        font-size: 0.8rem !important;
         font-weight: 600 !important;
-        padding: 4px 8px !important;
+        padding: 2px 8px !important;
         margin-top: 4px !important;
         margin-right: 4px !important;
     }
@@ -287,9 +302,9 @@
         border-radius: 10px !important;
         background-color: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
-        padding: 10px 12px !important;
+        padding: 10px 15px !important;
         min-height: 42px;
-        font-size: 0.875rem;
+        font-size: 0.9rem;
         color: #1e293b;
         resize: vertical;
     }
@@ -304,10 +319,10 @@
         border-radius: 8px !important;
         background-color: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
-        font-size: 0.825rem;
+        font-size: 0.9rem;
         color: #1e293b;
-        height: 38px;
-        padding: 4px 8px;
+        height: 42px;
+        padding: 5px 12px;
     }
 
     #critereModal .custom-select-compact:focus {
@@ -327,7 +342,7 @@
     }
 
     .rounded-xl {
-        border-radius: 0.75rem !important;
+        border-radius: 0.6rem !important;
     }
 
     #critereModal .btn-indigo {
@@ -335,8 +350,68 @@
     }
 
     #critereModal .btn-indigo:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(67, 56, 202, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(67, 56, 202, 0.2);
+    }
+
+    #critereModal .modal-content {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        background-color: #fff !important;
+        border: none !important;
+    }
+
+    /* Natural body: no calc, no forced height */
+    #critereModal .modal-body-responsive {
+        flex: 0 0 auto !important;          /* ❗ no stretching */
+        overflow: visible !important;       /* ❗ no forced scroll */
+        padding-bottom: 4px !important;
+        min-height: 0 !important;
+        background-color: #fff !important;
+    }
+
+    /* Force kill any persisting gap from children */
+    #critereModal .modal-body-responsive > *:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Only activate scroll WHEN needed */
+    @media (max-height: 700px) {
+        #critereModal .modal-body-responsive {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+        }
+    }
+
+    #critereModal .tab-content,
+    #critereModal .tab-pane {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    #critereModal .modal-footer {
+        padding: 8px 15px !important;
+        background-color: #f8fafc !important;
+    }
+
+    /* Custom scrollbar for modal body */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 </style>
 
@@ -345,19 +420,19 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         function initSelect2ForElement(el) {
+            var $modal = $(el).closest('.modal');
             $(el).select2({
                 theme: 'bootstrap4',
                 width: '100%',
-                dropdownParent: $('#critereModal'),
-                placeholder:"...",
+                dropdownParent: $modal.length ? $modal : $('body'),
+                placeholder: "Sélectionnez...",
                 allowClear: true,
                 minimumResultsForSearch: Infinity
             });
         }
 
-        function initSelect2Fields() {
+        function initSelect2Fields($container) {
             if ($.fn.select2) {
-                // Header fields
                 $('#general').find('.select2-modal, .select2-multiple').each(function () {
                     initSelect2ForElement(this);
                 });
@@ -376,7 +451,7 @@
         initSelect2Fields();
 
         // Re-initialize once the modal is shown
-        $('#critereModal').on('shown.bs.modal', function () {
+        $('.modal').on('shown.bs.modal', function () {
             initSelect2Fields();
         });
 
@@ -462,19 +537,22 @@
         });
 
         $('#critereModalForm').off('submit').on('submit', function (e) {
+            // Only handle submission here if NOT in AJAX modal (where formulaire_form.html handles it)
+            if ($(this).closest('#ajaxFormModal').length) return;
+
             e.preventDefault();
             const form = $(this);
             const btn = form.find('button[type="submit"]');
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Enregistrement...');
 
             $.ajax({
-                type:"POST",
+                type: "POST",
                 url: form.attr('action'),
                 data: form.serialize(),
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 success: function (res) {
                     if (res.success) {
-                        $('#critereModal').modal('hide');
+                        $('.modal').modal('hide');
                         Swal.fire({
                             icon: 'success',
                             title: 'Succès',
@@ -483,16 +561,19 @@
                             showConfirmButton: false
                         }).then(() => location.reload());
                     } else {
-                        $('#modalBodyContent').html(res);
-                        lucide.createIcons();
+                        // Handle form errors
+                        const body = form.closest('.modal-body');
+                        if (body.length) {
+                             body.html(res);
+                             if (typeof lucide !== 'undefined') lucide.createIcons();
+                        }
                     }
                 },
                 error: function () {
                     btn.prop('disabled', false).html('<i data-lucide="save" class="mr-2"></i>Enregistrer');
-                    Swal.fire({ icon: 'error', title: 'Erreur', text:"Erreur serveur" });
+                    Swal.fire({ icon: 'error', title: 'Erreur', text: "Erreur serveur" });
                 }
             });
         });
     });
 </script>
-
