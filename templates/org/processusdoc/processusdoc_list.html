@@ -49,9 +49,9 @@
               <thead class="bg-light shadow-none">
                 <tr>
                   <th class="text-center col-id">ID</th>
-                  <th class="text-center col-type">T</th>
+                  <th class="text-center col-type">Type</th>
                   <th class="col-doc">Document</th>
-                  <th class="col-proc">Proc.</th>
+                  <th class="col-proc">Processus</th>
                   <th class="text-center col-view">Vue</th>
                   <th class="text-center col-actions">Actions</th>
                 </tr>
@@ -59,7 +59,7 @@
               <tbody>
                 {% for doc in documents %}
                 <tr>
-                  <td class="text-center col-id " data-label="ID">#{{ doc.id }}</td>
+                  <td class="text-center col-id " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                   <td class="text-center col-type" data-label="Type">
                     {% if ".pdf" in doc.content.name|lower %}<i data-lucide="file-text" class="text-danger"></i>
                     {% elif ".doc" in doc.content.name|lower %}<i data-lucide="file-word" class="text-primary"></i>
@@ -202,6 +202,23 @@
 
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
   function openProcessusDocModal(url) {
     $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');

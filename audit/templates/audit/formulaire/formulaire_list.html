@@ -12,8 +12,204 @@
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
   
-  
+  /* Mobile Cards View */
+  .mobile-cards-container {
+    display: none;
+  }
 
+  .formulaire-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 16px;
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .formulaire-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+    padding-right: 12px;
+  }
+
+  .card-id-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .card-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  .card-field-label {
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    min-width: 100px;
+    margin-right: 12px;
+  }
+
+  .card-field-value {
+    color: #374151;
+    flex: 1;
+  }
+
+  .card-actions-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #e5e7eb;
+  }
+
+  .card-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .card-btn-primary {
+    background: #eff6ff;
+    color: #3b82f6;
+  }
+
+  .card-btn-warning {
+    background: #fffbeb;
+    color: #f59e0b;
+  }
+  
+  .card-btn-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .card-btn-danger {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-cards-container {
+      display: block !important;
+    }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .card-field {
+      flex-wrap: wrap;
+    }
+    .card-field-label {
+      margin-bottom: 4px;
+    }
+  }
+  /* Condensed Table Layout */
+  .table td:nth-child(1) { width: 60px; }   /* ID */
+  .table td:nth-child(2) { width: auto; }   /* Infos */
+  .table td:nth-child(3) { width: 110px; }  /* Date */
+  .table td:nth-child(4) { width: 140px; }  /* Actions */
+
+  .table td {
+    white-space: normal !important; /* allow text wrap */
+    word-break: break-word;
+    padding: 12px !important;
+  }
+  .table th {
+    padding: 12px !important;
+  }
+
+  .info-main {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+  }
+  
+  .info-sub {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .info-sub .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font-weight: 600;
+  }
+
+  .type-badge {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    max-width: 100%;
+    word-break: break-word;
+    text-align: left;
+    line-height: 1.2;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  
+  .pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .pagination-info {
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+
+  @media (max-width: 768px) {
+    .pagination-container {
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -43,61 +239,124 @@
 
         <div class="card-body px-0 pb-0">
           {% if formulaires %}
-          <div class="table-responsive">
+          
+          <!-- Mobile Cards View -->
+          <div class="mobile-cards-container px-3 pt-3">
+            {% for formulaire in formulaires %}
+            <div class="formulaire-card">
+              <div class="card-header-row">
+                <h4 class="card-title">{{ formulaire.name }}</h4>
+                <span class="card-id-badge">N° {{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+              </div>
+
+              <div class="card-field">
+                <span class="card-field-label">Type</span>
+                <span class="card-field-value">
+                  {% if formulaire.type_audit %}
+                  <span class="badge bg-info text-white type-badge"><i data-lucide="tag" style="width:12px; height:12px; flex-shrink: 0;"></i>{{ formulaire.type_audit.name }}</span>
+                  {% else %}
+                  <span class="text-muted type-badge"><i data-lucide="tag" style="width:12px; height:12px; flex-shrink: 0;"></i>N/A</span>
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="card-field">
+                <span class="card-field-label">Critères</span>
+                <span class="card-field-value">
+                  {% with sous_criteres_count=formulaire.get_sous_criteres_ordonne|length %}
+                  {% if sous_criteres_count > 0 %}
+                  <span class="badge bg-success text-white"><i data-lucide="list-checks" style="width:12px; height:12px;"></i>{{ sous_criteres_count }} SC</span>
+                  {% else %}
+                  <span class="badge bg-warning text-dark"><i data-lucide="alert-circle" style="width:12px; height:12px;"></i>Vide</span>
+                  {% endif %}
+                  {% endwith %}
+                </span>
+              </div>
+
+              <div class="card-field">
+                <span class="card-field-label">Date</span>
+                <span class="card-field-value">{{ formulaire.date_creation|date:"d/m/Y" }}</span>
+              </div>
+
+              <div class="card-actions-row">
+                <a href="{% url 'formulaire_detail' formulaire.pk %}" class="card-btn card-btn-primary" title="Voir">
+                  <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                </a>
+                <a href="{% url 'formulaire_update' formulaire.pk %}" class="card-btn card-btn-warning" title="Modifier">
+                  <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
+                </a>
+                <button type="button" class="card-btn card-btn-secondary btn-copy-form" 
+                        data-url="{% url 'formulaire_copy' formulaire.pk %}" 
+                        data-name="{{ formulaire.name }}"
+                        title="Copier">
+                  <i data-lucide="copy" style="width: 18px; height: 18px;"></i>
+                </button>
+                <button type="button" class="card-btn card-btn-danger btn-delete-form" 
+                        data-url="{% url 'formulaire_delete' formulaire.pk %}" 
+                        data-name="{{ formulaire.name }}"
+                        title="Supprimer">
+                  <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Desktop Table View -->
+          <div class="desktop-table-container table-responsive">
             <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
               <thead class="bg-light shadow-none">
                 <tr>
-                  <th class="text-center col-id">ID</th>
-                  <th class="col-name">Nom</th>
-                  <th class="col-type">Type</th>
-                  <th class="col-stats d-none d-md-table-cell">Critères</th>
-                  <th class="col-date d-none d-lg-table-cell">Date</th>
+                  <th class="text-center col-id">N°</th>
+                  <th class="col-infos">Informations</th>
+                  <th class="col-date">Date</th>
                   <th class="text-center col-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {% for formulaire in formulaires %}
                 <tr>
-                  <td class="text-center col-id  ">#{{ formulaire.id }}</td>
-                  <td class="col-name">
-                    <strong class="text-dark ">{{ formulaire.name }}</strong>
+                  <td class="text-center col-id align-middle">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                  <td class="col-infos align-middle">
+                    <div class="info-main">{{ formulaire.name }}</div>
+                    <div class="info-sub">
+                      {% if formulaire.type_audit %}
+                      <span class="badge bg-info text-white type-badge"><i data-lucide="tag" style="width:12px; height:12px; flex-shrink: 0;"></i>{{ formulaire.type_audit.name }}</span>
+                      {% else %}
+                      <span class="text-muted d-inline-flex align-items-center gap-1 type-badge"><i data-lucide="tag" style="width:12px; height:12px; flex-shrink: 0;"></i>N/A</span>
+                      {% endif %}
+                      
+                      <span class="text-muted">•</span>
+                      
+                      {% with sous_criteres_count=formulaire.get_sous_criteres_ordonne|length %}
+                      {% if sous_criteres_count > 0 %}
+                      <span class="badge bg-success text-white"><i data-lucide="list-checks" style="width:12px; height:12px;"></i>{{ sous_criteres_count }} SC</span>
+                      {% else %}
+                      <span class="badge bg-warning text-dark"><i data-lucide="alert-circle" style="width:12px; height:12px;"></i>Vide</span>
+                      {% endif %}
+                      {% endwith %}
+                    </div>
                   </td>
-                  <td class="col-type">
-                    {% if formulaire.type_audit %}
-                    <span class="badge badge-info">{{ formulaire.type_audit.name|truncatechars:10 }}</span>
-                    {% else %}
-                    <span class=" ">N/A</span>
-                    {% endif %}
-                  </td>
-                  <td class="col-stats d-none d-md-table-cell">
-                    {% with sous_criteres_count=formulaire.get_sous_criteres_ordonne|length %}
-                    {% if sous_criteres_count > 0 %}
-                    <span class="badge badge-success">{{ sous_criteres_count }} SC</span>
-                    {% else %}
-                    <span class="badge badge-warning">Sync</span>
-                    {% endif %}
-                    {% endwith %}
-                  </td>
-                  <td class="col-date d-none d-lg-table-cell  ">{{ formulaire.date_creation|date:"d/m/Y" }}</td>
-                  <td class="text-center col-actions">
-                    <div class="d-flex justify-content-center align-items-center">
-                      <a href="{% url 'formulaire_detail' formulaire.pk %}" class="btn btn-info p-1" title="Voir">
-                        <i data-lucide="eye" ></i>
+                  <td class="col-date align-middle text-muted">{{ formulaire.date_creation|date:"d/m/Y" }}</td>
+                  <td class="col-actions align-middle">
+                    <div class="actions-cell">
+                      <a href="{% url 'formulaire_detail' formulaire.pk %}" class="btn btn-info btn-sm p-1 text-white shadow-sm" title="Voir">
+                        <i data-lucide="eye" style="width:16px; height:16px;"></i>
                       </a>
-                      <a href="{% url 'formulaire_update' formulaire.pk %}" class="btn btn-warning p-1" title="Modifier">
-                        <i data-lucide="edit" ></i>
+                      <a href="{% url 'formulaire_update' formulaire.pk %}" class="btn btn-warning btn-sm p-1 shadow-sm" title="Modifier">
+                        <i data-lucide="edit" style="width:16px; height:16px;"></i>
                       </a>
-                      <button type="button" class="btn btn-secondary p-1 btn-copy-form" 
+                      <button type="button" class="btn btn-secondary btn-sm p-1 btn-copy-form shadow-sm" 
                               data-url="{% url 'formulaire_copy' formulaire.pk %}" 
                               data-name="{{ formulaire.name }}"
                               title="Copier">
-                        <i data-lucide="copy" ></i>
+                        <i data-lucide="copy" style="width:16px; height:16px;"></i>
                       </button>
-                      <button type="button" class="btn btn-danger p-1 btn-delete-form" 
+                      <button type="button" class="btn btn-danger btn-sm p-1 btn-delete-form shadow-sm" 
                               data-url="{% url 'formulaire_delete' formulaire.pk %}" 
                               data-name="{{ formulaire.name }}"
                               title="Supprimer">
-                        <i data-lucide="trash-2" ></i>
+                        <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
                       </button>
                     </div>
                   </td>
@@ -119,27 +378,105 @@
           {% endif %}
         </div>
 
-        {% if formulaires %}
-        <div class="card-footer">
-          <div class="row">
-            <div class="col-md-6">
-              <small class="">
-                Affichage de {{ formulaires|length }} formulaire{{ formulaires|length|pluralize }}
-              </small>
-            </div>
-            <div class="col-md-6 text-right">
+          {% if is_paginated %}
+          <div class="card-footer bg-white border-top-0 pt-3 pb-3">
+            <div class="pagination-container">
+              <div class="pagination-info px-2">
+                <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
+              </div>
+              <nav aria-label="Page navigation" class="px-2">
+                <ul class="pagination pagination-sm mb-0">
+                  {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
+                      <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                  {% endif %}
+
+                  <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
+
+                  {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                      <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                  {% endif %}
+                </ul>
+              </nav>
             </div>
           </div>
+          {% elif page_obj %}
+          <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
+            <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> formulaire{{ page_obj|length|pluralize }}</small>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
       </div>
-    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
+<script>
+  // Responsive Pagination Logic
+  $(window).on('resize', function() {
+      clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(checkResponsivePagination, 250);
+  });
+  
+  $(document).ready(function() {
+      checkResponsivePagination();
+  });
+
+  function checkResponsivePagination() {
+      const isResponsive = window.innerWidth <= 768;
+      const desiredPageSize = isResponsive ? '4' : '7';
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentPageSize = urlParams.get('page_size');
+      
+      if (currentPageSize !== desiredPageSize) {
+          if (!currentPageSize && !isResponsive) return;
+          
+          urlParams.set('page_size', desiredPageSize);
+          urlParams.set('page', '1');
+          window.location.search = urlParams.toString();
+      }
+  }
+
 $(function() {
   // --- Copy Form Logic ---
   $('.btn-copy-form').on('click', function() {

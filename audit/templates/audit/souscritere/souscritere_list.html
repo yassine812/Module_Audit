@@ -218,84 +218,30 @@
       margin-bottom: 4px;
     }
 
-    /* Mobile Responsive Modal for Sous-Critere */
-    #souscritereModal.modal {
-      padding: 0 !important;
-    }
 
-    #souscritereModal .modal-dialog {
-      margin: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
 
-    #souscritereModal .modal-content {
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
-
-    #souscritereModal .modal-header {
-      padding: 8px 12px !important;
-    }
-
-    #souscritereModal .modal-title {
-      font-size: 1rem !important;
-    }
-
-    /* Compact form fields - minimal spacing */
-    #souscritereModal .form-group,
-    #souscritereModal .input-group {
-      margin-bottom: 0 !important;
-    }
-
-    #souscritereModal label {
-      margin-bottom: 0 !important;
-      font-size: 0.8rem !important;
-      line-height: 1 !important;
-    }
-
-    #souscritereModal .form-control,
-    #souscritereModal select {
-      padding: 4px 8px !important;
-      font-size: 13px !important;
-      height: 32px !important;
-      min-height: 32px !important;
-    }
-
-    #souscritereModal textarea.form-control {
-      height: auto !important;
-      min-height: 45px !important;
-    }
-
-    /* Compact modal body - taller to fit all fields */
-    #souscritereModal .modal-body-responsive {
-      max-height: calc(100vh - 80px) !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 6px 12px 40px 12px !important;
-    }
-
-    /* Fixed footer with buttons */
-    #souscritereModal .modal-footer {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      background: white !important;
-      border-top: 1px solid #e5e7eb !important;
-      padding: 8px 16px !important;
-      display: flex !important;
-      gap: 8px;
-      z-index: 1050 !important;
-    }
-
-    #souscritereModal .modal-footer .btn {
-      flex: 1;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-      border-radius: 20px !important;
-    }
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
   }
 </style>
 {% endblock %}
@@ -333,7 +279,7 @@
             <div class="souscritere-card">
               <div class="card-header-row">
                 <h4 class="card-title">{{ souscritere.critere.name|default:"Sans Critère" }}</h4>
-                <span class="card-id-badge">#{{ souscritere.id }}</span>
+                <span class="card-id-badge">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
               </div>
 
               <div class="card-field">
@@ -409,7 +355,7 @@
                 <tbody>
                   {% for souscritere in page_obj %}
                   <tr>
-                    <td class="text-center col-id" data-label="ID">#{{ souscritere.id }}</td>
+                    <td class="text-center col-id" data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                     <td class="col-critere" data-label="Critère">
                       {% if souscritere.critere %}
                       <span class="badge rounded-pill bg-teal-50 text-teal-700 px-3 py-1 border border-teal-100 shadow-sm">
@@ -499,10 +445,10 @@
         </div>
 
         {% if is_paginated %}
-        <div class="card-footer bg-white border-top-0 pt-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="px-2">
-              Page <span class="fw-bold">{{ page_obj.number }}</span> sur {{ paginator.num_pages }} (Total: {{ paginator.count }} sous-critères)
+        <div class="card-footer bg-white border-top-0 pt-3 pb-3">
+          <div class="pagination-container">
+            <div class="pagination-info px-2">
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
@@ -554,7 +500,7 @@
 <!-- Main Forms Modal -->
 <div class="modal fade" id="souscritereModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-teal" role="status"></div>
@@ -581,6 +527,23 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
   function openSousCritereModal(url) {
     $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-teal" role="status"></div><p class="mt-2">Chargement...</p></div>');
@@ -656,6 +619,34 @@
         }
       });
     });
+  }
+  
+  // Responsive Pagination Logic
+  $(window).on('resize', function() {
+      clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(checkResponsivePagination, 250);
+  });
+  
+  $(document).ready(function() {
+      checkResponsivePagination();
+  });
+
+  function checkResponsivePagination() {
+      const isSmallScreen = window.innerWidth <= 480;
+      const desiredPageSize = isSmallScreen ? '3' : '7';
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentPageSize = urlParams.get('page_size');
+      
+      // Prevent infinite reloading by only setting params if they differ from the ideal state
+      if (currentPageSize !== desiredPageSize) {
+          // If no page_size is set and we're on a large screen, the backend defaults to 7 anyway
+          if (!currentPageSize && !isSmallScreen) return;
+          
+          urlParams.set('page_size', desiredPageSize);
+          urlParams.set('page', '1'); // Reset page to 1 on layout change
+          window.location.search = urlParams.toString();
+      }
   }
 </script>
 {% endblock %}

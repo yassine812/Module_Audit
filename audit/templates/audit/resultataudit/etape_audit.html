@@ -321,14 +321,10 @@
             padding: 0.3rem 0.5rem !important;
             border-radius: 10px !important;
             backdrop-filter: blur(4px) !important;
-        }
-        .mb-4.bg-indigo-50\/50 {
             background: rgba(238, 242, 255, 0.4) !important;
             border: 1px solid rgba(255, 255, 255, 0.6) !important;
         }
         #preuve-attendu-container {
-            background: rgba(248, 250, 252, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
             gap: 0.3rem !important;
         }
         
@@ -575,12 +571,12 @@
                     {% endif %}
 
                     <!-- Preuves Attendues (Dynamic JS Injection) -->
-                    <div id="preuve-attendu-container" class="hidden mb-4 bg-slate-50/50 border border-slate-200 p-3 rounded-xl flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                    <div id="preuve-attendu-container" class="hidden mb-4 bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                             <i data-lucide="file-check-2" class="w-4 h-4"></i>
                         </div>
                         <div class="w-full">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Preuve(s) attendue(s)</p>
+                            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Preuve(s) attendue(s)</p>
                             <div id="preuve-attendu-list" class="flex flex-wrap gap-1.5 mt-0.5">
                             </div>
                         </div>

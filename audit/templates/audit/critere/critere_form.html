@@ -123,8 +123,7 @@
                             placeholder="Nom du critère..." value="{{ form.name.value|default:'' }}" required>
                     </div>
                     {% if form.name.errors %}
-                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors
-                        %}{{ error }}{% endfor %}</small>
+                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
                     {% endif %}
                 </div>
 

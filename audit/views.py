@@ -14,6 +14,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseForbidden
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from .models import (
     TypeAudit,
     TextRef,
@@ -135,7 +137,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
         return context
 
-class ChartDataAPIView(LoginRequiredMixin, View):
+@method_decorator(csrf_exempt, name='dispatch')
+class ChartDataAPIView(View):
     def get(self, request, *args, **kwargs):
         from django.db.models.functions import TruncMonth, TruncDay
         from django.db.models import Count
@@ -589,9 +592,13 @@ class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
+        page_size = self.request.GET.get('page_size')
+        if page_size and page_size.isdigit():
+            return int(page_size)
+            
         user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
         if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
-            return 5
+            return 3
         return self.paginate_by
 
     def paginate_queryset(self, queryset, page_size):
@@ -1069,7 +1076,18 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["-id"]
+    ordering = ["id"]
+    paginate_by = 7
+
+    def get_paginate_by(self, queryset):
+        page_size = self.request.GET.get("page_size")
+        if page_size and page_size.isdigit():
+            return int(page_size)
+            
+        user_agent = self.request.META.get("HTTP_USER_AGENT", "").lower()
+        is_mobile = any(x in user_agent for x in ["mobi", "android", "iphone"])
+        return 4 if is_mobile else 7
+
 
 
 class FormulaireAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):
@@ -2104,35 +2122,42 @@ def get_formulaire_structure(request):
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # Group sous-critères by their parent critère
+    # 1. Get ALL Critères linked to this formulaire
+    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    
+    # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
         FormulaireSousCritere.objects
         .filter(formulaire=formulaire)
-        .select_related('sous_critere__critere__chapitre_norme__text_ref')
-        .order_by('sous_critere__critere__name', 'ordre')
+        .select_related('sous_critere')
+        .order_by('ordre')
     )
-
-    grouped = {}
+    
+    # Map sous-critères by critère ID
+    sc_by_critere = {}
     for fsc in fsc_qs:
-        sc = fsc.sous_critere
-        crit = sc.critere
-        key = crit.id
-        if key not in grouped:
-            grouped[key] = {
-                "critere_id": crit.id,
-                "critere_nom": crit.name,
-                "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
-                "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
-                "sous_criteres": []
-            }
-        grouped[key]["sous_criteres"].append({
-            "id": sc.id,
-            "nom": sc.content,
+        crit_id = fsc.sous_critere.critere_id
+        if crit_id not in sc_by_critere:
+            sc_by_critere[crit_id] = []
+        sc_by_critere[crit_id].append({
+            "id": fsc.sous_critere.id,
+            "nom": fsc.sous_critere.content,
+        })
+
+    # 3. Build the grouped structure
+    grouped = []
+    for crit in criteres:
+        grouped.append({
+            "critere_id": crit.id,
+            "critere_nom": crit.name,
+            "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
+            "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
     return JsonResponse({
         "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
-        "criteres": list(grouped.values())
+        "criteres": grouped
     }, safe=False)
 
 @transaction.atomic
@@ -2248,7 +2273,6 @@ def quick_create_formulaire(request):
             })
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    
     return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
 
 @transaction.atomic
@@ -2259,14 +2283,16 @@ def save_sous_critere_inline(request):
 
     if request.method == "POST":
         critere_id = request.POST.get("critere_id") or request.POST.get("critere")
-        content = request.POST.get("content")
+        content = request.POST.get("content") or request.POST.get("nom") or request.POST.get("libelle")
         type_cotation_id = request.POST.get("type_cotation")
         reaction = request.POST.get("reaction")
         type_audit_ids = request.POST.getlist("types_audit[]") or request.POST.getlist("type_audit")
         preuve_ids = request.POST.getlist("preuves[]") or request.POST.getlist("preuve_attendu")
 
-        if not critere_id or not content:
-            return JsonResponse({"status": "error", "message": "Données manquantes"}, status=400)
+        if not critere_id:
+            return JsonResponse({"status": "error", "message": "ID Critère manquant (critere_id)"}, status=400)
+        if not content:
+            return JsonResponse({"status": "error", "message": "Libellé manquant (content)"}, status=400)
 
         try:
             
@@ -2303,7 +2329,8 @@ def save_critere_inline(request):
     if request.method == "POST":
         name = request.POST.get("name")
         chapitre_id = request.POST.get("chapitre_id") or request.POST.get("chapitre_norme")
-        type_audit_id = request.POST.get("type_audit_id")
+        type_audit_id = request.POST.get("type_audit_id") or request.POST.get("type_audit")
+        formulaire_id = request.POST.get("formulaire")
         sous_criteres_json = request.POST.get("sous_criteres")
 
         if not name:
@@ -2315,8 +2342,15 @@ def save_critere_inline(request):
             # 1. Create the Critere
             critere = Critere.objects.create(
                 name=name,
-                chapitre_norme_id=chapitre_id if chapitre_id else None
+                chapitre_norme_id=chapitre_id if chapitre_id else None,
+                formulaire_id=formulaire_id if formulaire_id else None
             )
+
+            type_audits = request.POST.getlist("type_audit")
+            if type_audits:
+                critere.type_audit.set(type_audits)
+            elif type_audit_id:
+                critere.type_audit.add(type_audit_id)
 
             created_sc = []
             # 2. Add Sub-criteria
@@ -2364,11 +2398,19 @@ def update_critere_inline(request, pk):
             critere = Critere.objects.get(pk=pk)
             name = request.POST.get("name")
             chapitre_id = request.POST.get("chapitre_id") or request.POST.get("chapitre_norme")
+            formulaire_id = request.POST.get("formulaire")
+            
             if name:
                 critere.name = name
             if chapitre_id:
                 critere.chapitre_norme_id = chapitre_id
+            if formulaire_id:
+                critere.formulaire_id = formulaire_id
             critere.save()
+
+            type_audits = request.POST.getlist("type_audit")
+            if type_audits:
+                critere.type_audit.set(type_audits)
             return JsonResponse({"status": "success", "id": critere.id, "name": critere.name})
         except Critere.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Critère not found"}, status=404)
@@ -2588,3 +2630,10 @@ def send_audit_report_email(request, pk):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+def get_formulaire_type_audit(request, formulaire_id):
+    formulaire = get_object_or_404(FormulaireAudit, pk=formulaire_id)
+    return JsonResponse({
+        'type_audit_id': formulaire.type_audit.id if formulaire.type_audit else None,
+        'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
+    })

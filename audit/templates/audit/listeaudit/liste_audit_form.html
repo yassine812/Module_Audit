@@ -22,17 +22,175 @@
     color: #495057 !important;
   }
   /* Mobile fixes */
-  @media (max-width: 768px) {
-    .select2-container--bootstrap4 .select2-selection--single {
+  /* Mobile fixes - FIT ENTIRE PAGE WITHOUT SCROLLING (OPTIMIZED) */
+  @media (max-width: 576px) {
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 100% !important;
+      padding: 0 !important;
+    }
+    .form-container {
+      height: 100vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+    }
+    .p-2 {
+      padding: 8px !important;
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    #auditForm {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .scrollable-form-content {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      padding-right: 2px !important;
+    }
+    
+    .section-title {
+      margin-bottom: 0.75rem !important;
+    }
+    .section-title h5 {
+      font-size: 0.9rem !important;
+    }
+    
+    .form-group, .mb-4, .mb-5 {
+      margin-bottom: 0.6rem !important;
+    }
+    .form-label {
+      font-size: 0.75rem !important;
+      margin-bottom: 4px !important;
+    }
+    
+    .input-group-text, .form-control, .form-select, .custom-input, .select2-container--bootstrap4 .select2-selection--single {
+      height: 38px !important;
+      min-height: 38px !important;
+      font-size: 0.85rem !important;
+      padding: 6px 10px !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+      line-height: 36px !important;
+    }
+    
+    .status-toggle-wrapper {
+      padding: 4px 10px !important;
+    }
+    
+    #previewFormulaireBtn, #copyFormulaireBtn, #addFormulaireBtn {
+      width: 38px !important;
       height: 38px !important;
     }
-    /* Fix Structure du Formulaire layout */
-    #inlineStructureContainer .section-title {
-      flex-direction: row !important;
+    
+    /* Fixed footer — always visible at bottom on mobile */
+    #auditFormFooter {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 500 !important;
+      padding: 10px 16px !important;
+      background: #fff !important;
+      border-top: 2px solid #e2e8f0 !important;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.12) !important;
+      display: flex !important;
+      justify-content: space-between !important;
       align-items: center !important;
     }
-    #inlineStructureContent {
-      transition: all 0.3s ease;
+    /* Prevent content hiding behind fixed footer */
+    .scrollable-form-content {
+      padding-bottom: 70px !important;
+    }
+    .btn-sm {
+      height: 36px !important;
+      padding: 0 15px !important;
+      font-size: 0.85rem !important;
+    }
+    /* Hide non-essential decorative elements */
+    .breadcrumb, .container.py-5 > .d-flex.flex-column {
+      display: none !important;
+    }
+    .container.py-5 {
+      padding: 0 !important;
+    }
+  }
+
+  /* Premium Structure Styling (from formulaire_form) */
+  .critere-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+  }
+  .critere-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #e2e8f0;
+  }
+  .card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+  .badge-chapitre {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .card-body-flex {
+    margin-bottom: 12px;
+  }
+  .sous-criteres-list {
+    margin-top: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #edf2f7;
+  }
+  .card-actions-flex {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #f8fafc;
+  }
+  .sous-item {
+    transition: all 0.2s;
+  }
+  .sous-item:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  .accordion-icon {
+    transition: transform 0.3s ease;
+  }
+  .accordion-icon.rotated {
+    transform: rotate(90deg);
+  }
+    /* SweetAlert z-index fix */
+    .swal2-container {
+        z-index: 200000 !important;
     }
   }
 </style>
@@ -168,7 +326,7 @@ Créer un Audit
                             <label for="{{ form.formulaire_audit.id_for_label }}"
                                 class="form-label fw-bold  text-uppercase  mb-2">Modèle de
                                 Formulaire</label>
-                            <div class="d-flex align-items-center gap-2" style="position: relative; z-index: 999;">
+                            <div class="d-flex align-items-center gap-2" style="position: relative; z-index: 1000 !important;">
                                 <div class="flex-grow-1">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0"><i data-lucide="list-check"
@@ -295,7 +453,7 @@ Créer un Audit
                         <!-- Type Audit -->
                         <div class="col-md-6">
                             <label class="form-label fw-bold   text-uppercase mb-2">Type d'Audit</label>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2" style="position: relative; z-index: 1000 !important;">
                                 <div class="flex-grow-1">
                                     <select id="new_type_audit" name="new_type_audit"
                                         class="form-control custom-input select2-inline">
@@ -307,7 +465,7 @@ Créer un Audit
                                 </div>
                                 <button type="button" class="btn btn-outline-primary px-3 rounded-3" id="syncInlineBtn"
                                     title="Synchroniser la structure"
-                                    style="height: 52px; border-radius: 12px !important;">
+                                    style="height: 52px; border-radius: 12px !important; position: relative; z-index: 1001 !important; pointer-events: auto !important;">
                                     <i data-lucide="refresh-cw"></i>
                                 </button>
                             </div>
@@ -384,15 +542,13 @@ Créer un Audit
                 </div> <!-- End scrollable-form-content -->
 
                 <!-- Action Footer -->
-                <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="auditFormFooter" class="d-flex justify-content-between align-items-center mt-3">
                     <a href="{% url 'liste_audit_list' %}"
                         class="btn btn-light border btn-sm px-3 shadow-sm hover-elevate">
                         <i data-lucide="arrow-left" class="me-1"></i> Annuler
                     </a>
 
                     <div class="d-flex gap-2">
-
-
                         <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm hover-elevate fw-bold">
                             <i data-lucide="check" class="me-1"></i>
                             {% if object %}Confirmer{% else %}Créer{% endif %}
@@ -403,9 +559,6 @@ Créer un Audit
         </div>
     </div>
 </div> <!-- Closing form-container -->
-</div> <!-- Closing col-12 -->
-</div> <!-- Closing row -->
-</div> <!-- Closing container-fluid -->
 
 <!-- 📦 MODALS (Relocated to Body Level for Stacking Context & Bootstrap 4 Compatibility) -->
 <div class="modal fade" id="addSousCritereModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
@@ -505,24 +658,8 @@ Créer un Audit
                     </div>
                 </div>
 
-                <!-- Table Content -->
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered mb-0 bg-white" id="structureTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 35%">Critère & Chapitre</th>
-                                <th style="width: 65%">Sous-critères</th>
-                            </tr>
-                        </thead>
-                        <tbody id="formulaireModalContent">
-                            <tr>
-                                <td colspan="2" class="text-center  py-4">
-                                    <i data-lucide="spin" class="me-2"></i> Chargement de la structure...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Accordion Content -->
+                <div id="formulaireModalContent" class="px-2 py-2"></div>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
@@ -532,25 +669,240 @@ Créer un Audit
 </div>
 
 <!-- Generic AJAX Form Modal -->
-<div class="modal fade" id="ajaxFormModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content shadow border-0">
+<div class="modal fade" id="ajaxFormModal" aria-hidden="true" style="z-index: 99999 !important;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" style="z-index: 100000 !important;">
+        <div class="modal-content shadow border-0" style="position: relative; z-index: 100001 !important; pointer-events: auto !important;">
             <div class="modal-header border-bottom-0 pb-0 bg-light">
                 <h5 class="modal-title fw-bold text-dark" id="ajaxFormModalTitle">...</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position: relative; z-index: 100002 !important;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body bg-light" id="ajaxFormModalBody" style="min-height: 200px;">
+            <div class="modal-body bg-light" id="ajaxFormModalBody" style="min-height: 200px; position: relative; z-index: 100001 !important; pointer-events: auto !important;">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
                     <div class="mt-2  fw-semibold">Chargement du formulaire...</div>
                 </div>
             </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-end gap-2" id="ajaxFormModalFooter">
+                <!-- Buttons injected here -->
+            </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* 🔥 FORCED INTERACTIVITY FIX */
+    #ajaxFormModalBody *, 
+    #ajaxFormModalBody button, 
+    #ajaxFormModalBody input, 
+    #ajaxFormModalBody select, 
+    #ajaxFormModalBody .btn {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+
+    #ajaxFormModalBody .form-control {
+        cursor: text !important;
+    }
+
+    /* Backdrop (dark background) */
+    .modal-backdrop {
+        z-index: 1040 !important;
+        background-color: rgba(0, 0, 0, 0.4) !important; /* lighter */
+    }
+
+    .modal-backdrop.show {
+        opacity: 0.4 !important; /* instead of 0.8 */
+    }
+
+    /* Modal container */
+    .modal {
+        z-index: 1050 !important;
+    }
+
+    /* Modal content */
+    .modal-dialog,
+    .modal-content {
+        z-index: 1060 !important;
+        opacity: 1 !important;
+    }
+
+    .modal * {
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    /* ✅ 2-Column Grid Layout for Modifier la Copie modal form */
+    #ajaxFormModalBody .row.g-4,
+    #ajaxFormModalBody .row.g-3 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px !important;
+        margin: 0 !important;
+    }
+
+    #ajaxFormModalBody .row.g-4 > *,
+    #ajaxFormModalBody .row.g-3 > * {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        flex: none !important;
+    }
+
+    /* Full-width fields (col-md-12) */
+    #ajaxFormModalBody .col-md-12,
+    #ajaxFormModalBody .col-12 {
+        grid-column: 1 / -1 !important;
+    }
+
+    /* 📱 Responsive: 1 column on mobile */
+    @media (max-width: 768px) {
+        #ajaxFormModalBody .row.g-4,
+        #ajaxFormModalBody .row.g-3 {
+            grid-template-columns: 1fr !important;
+        }
+        #ajaxFormModalBody .col-md-12,
+        #ajaxFormModalBody .col-12 {
+            grid-column: 1 !important;
+        }
+    }
+
+    /* Ensure Select2 containers fill their grid cell */
+    #ajaxFormModalBody .select2-container {
+        width: 100% !important;
+    }
+
+    /* 📱 Structure Modal Table Responsive */
+    @media (max-width: 768px) {
+        .table-responsive {
+            overflow: visible !important;
+        }
+        .modal-body {
+            padding-bottom: 3rem !important; /* Prevent overlap with footer */
+        }
+        .table-mobile-responsive thead {
+            display: none !important;
+        }
+        .table-mobile-responsive tbody tr {
+            display: flex !important;
+            flex-direction: column !important;
+            margin-bottom: 0.5rem !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 0.5rem !important;
+            background-color: #fff !important;
+            overflow: hidden;
+        }
+        .table-mobile-responsive tbody td {
+            display: block !important;
+            width: 100% !important;
+            border: none !important;
+            border-bottom: 1px solid #dee2e6 !important;
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.85rem !important;
+        }
+        .table-mobile-responsive tbody td:last-child {
+            border-bottom: none !important;
+            background-color: #f8f9fa !important;
+        }
+        .table-mobile-responsive tbody td .p-2.text-end {
+            text-align: center !important;
+            padding: 0.5rem !important;
+        }
+        .table-mobile-responsive tbody td .btn-sm {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.75rem !important;
+        }
+    }
+
+    /* 📱 Extra compact on very small phones (≤ 576px) */
+    @media (max-width: 576px) {
+        /* Modal sizing */
+        #formulaireStructureModal .modal-dialog {
+            margin: 0.25rem !important;
+            max-height: calc(100dvh - 0.5rem) !important;
+        }
+        #formulaireStructureModal .modal-content {
+            max-height: calc(100dvh - 0.5rem) !important;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Header: more compact */
+        #formulaireStructureModal .modal-header {
+            padding: 0.5rem 0.75rem !important;
+        }
+        #formulaireStructureModal .modal-title {
+            font-size: 0.88rem !important;
+        }
+        #formulaireStructureModal #modalFormulaireTotalCount {
+            font-size: 0.7rem !important;
+            padding: 0.2rem 0.4rem !important;
+        }
+
+        /* Action bar */
+        #formulaireStructureModal .modal-body .p-3 {
+            padding: 0.4rem 0.6rem !important;
+        }
+        #formulaireStructureModal #modalFormulaireName {
+            font-size: 0.8rem !important;
+        }
+        #formulaireStructureModal .btn-primary {
+            font-size: 0.72rem !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+
+        /* Card rows */
+        #formulaireStructureModal .table-mobile-responsive tbody td {
+            padding: 0.35rem 0.55rem !important;
+            font-size: 0.78rem !important;
+        }
+
+        /* Icons: shrink lucide icons */
+        #formulaireStructureModal [data-lucide] {
+            width: 14px !important;
+            height: 14px !important;
+        }
+
+        /* Footer */
+        #formulaireStructureModal .modal-footer {
+            padding: 0.4rem 0.75rem !important;
+        }
+        #formulaireStructureModal .modal-footer .btn {
+            font-size: 0.78rem !important;
+            padding: 0.25rem 0.75rem !important;
+        }
+
+        /* Sous-critère bullet items */
+        #formulaireStructureModal .list-group-item {
+            padding: 0.3rem 0.5rem !important;
+            font-size: 0.78rem !important;
+        }
+    }
+</style>
+
+<!-- Debug Section HTML (Moved inside content block) -->
+<div class="container mt-4">
+    <div class="card" id="debugSection" style="display: none;">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">🐛 Debug - Form Submission Data</h6>
+        </div>
+        <div class="card-body">
+            <p class="">This section shows the data that will be submitted to Django.</p>
+            <pre id="debugOutput" class="bg-light p-3 rounded"
+                style="font-size: 12px; max-height: 300px; overflow-y: auto;"></pre>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="debugFormData()">
+                📋 Show Current Form Data
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Debug Toggle Button -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm" onclick="toggleDebug()">
+        🐛 Debug
+    </button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -605,13 +957,13 @@ Créer un Audit
         // Load Formulaire Structure in Modal Table
         window.loadFormulaireStructureData = async function () {
             const formulaireId = formulaireSelect ? formulaireSelect.value : null;
-            const tbody = document.getElementById('formulaireModalContent');
+            const container = document.getElementById('formulaireModalContent');
             const titleCount = document.getElementById('modalFormulaireTotalCount');
             const titleName = document.getElementById('modalFormulaireName');
 
             if (!formulaireId) return;
 
-            tbody.innerHTML = '<tr><td colspan="2" class="text-center  py-5"><i data-lucide="spin" class="w-6 h-6 mb-3 d-block text-primary"></i> Chargement de la structure du formulaire...</td></tr>';
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Chargement...</div></div>';
             titleCount.textContent = '...';
             if (formulaireSelect.options && formulaireSelect.options[formulaireSelect.selectedIndex]) {
                 titleName.textContent = formulaireSelect.options[formulaireSelect.selectedIndex].text;
@@ -621,14 +973,16 @@ Créer un Audit
                 const response = await fetch(`/audit/get-formulaire-structure/?formulaire_id=${formulaireId}`);
                 const dataRaw = await response.json();
 
-                // New backend format returns {type_audit_id: X, criteres: [...]}
                 const data = Array.isArray(dataRaw) ? dataRaw : dataRaw.criteres;
                 window.currentFormulaireTypeAuditId = dataRaw.type_audit_id || null;
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="2" class="text-center  py-5">
-                        <i data-lucide="inbox" class="w-6 h-6 mb-3 d-block "></i>Aucun critère trouvé pour ce formulaire.</td></tr>`;
+                    container.innerHTML = `<div class="text-center py-5 text-muted">
+                        <i data-lucide="inbox" class="w-10 h-10 mb-3 d-block mx-auto opacity-50"></i>
+                        Aucun critère trouvé pour ce formulaire.
+                    </div>`;
                     titleCount.textContent = '0 élément';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                     return;
                 }
 
@@ -636,57 +990,102 @@ Créer un Audit
                 let totalSousCriteres = data.reduce((sum, c) => sum + (c.sous_criteres ? c.sous_criteres.length : 0), 0);
                 titleCount.textContent = `${totalCriteres} critères · ${totalSousCriteres} sous-critères`;
 
-                let html = '';
-                data.forEach(critere => {
-                    html += `
-                        <tr id="modal-critere-${critere.critere_id}">
-                            <td class="align-middle bg-light" style="border-right: 2px solid #fff;">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">${critere.critere_nom}</div>
-                                        <div class=" "><i data-lucide="book" class="me-1"></i>${critere.chapitre !== 'N/A' ? critere.chapitre : 'Sans chapitre'}</div>
-                                    </div>
-                                    <div class="d-flex align-items-center flex-shrink-0">
-                                        <button class="btn btn-sm btn-link text-info p-0 ms-2" title="Modifier le critère" onclick="editCritere(${critere.critere_id}, '${critere.critere_nom.replace(/'/g,"\\'")}', '${critere.chapitre !== 'N/A' ? critere.chapitre.replace(/'/g,"\\'") : ''}')">
-                                            <i class="fas fa-pen  mt-1" style="font-size:0.9rem;"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-link text-danger p-0 ms-2" title="Supprimer le critère" onclick="deleteCritere(${critere.critere_id})">
-                                            <i class="fas fa-trash mt-1" style="font-size:0.9rem;"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="align-middle p-0">
-                                <ul class="list-group list-group-flush mb-0" id="modal-sous-criteres-list-${critere.critere_id}">`;
+                let html = '<div class="accordion" id="criteresAccordion">';
+                data.forEach((critere, idx) => {
+                    const collapseId = `collapse-crit-${critere.critere_id}`;
+                    const headingId = `heading-crit-${critere.critere_id}`;
+                    const isFirst = idx === 0;
+
+                    let scHtml = '';
                     if (critere.sous_criteres && critere.sous_criteres.length > 0) {
                         critere.sous_criteres.forEach(sc => {
-                            html += `<li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-0 border-bottom" style="background: transparent;">
-                                        <span class="  fw-semibold" style="font-size: 0.85rem;"><i class="fas fa-circle text-primary me-2" style="font-size: 0.4rem;"></i>${sc.nom}</span>
-                                        <div class="d-flex align-items-center flex-shrink-0">
-                                            <button class="btn btn-sm btn-link text-warning p-0 ms-2" title="Modifier le sous-critère" onclick="editSousCritere(${sc.id}, '${sc.nom.replace(/'/g,"\\'")}')">
-                                                <i class="fas fa-pen  mt-1" style=""></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-link text-danger p-0 ms-2" title="Supprimer le sous-critère" onclick="deleteSousCritere(${sc.id})">
-                                                <i class="fas fa-trash mt-1" style=""></i>
-                                            </button>
-                                        </div>
-                                     </li>`;
+                            scHtml += `
+                                <div class="d-flex justify-content-between align-items-center py-2 px-3 border-bottom" id="sc-row-${sc.id}">
+                                    <span style="font-size:0.83rem;">
+                                        <i class="fas fa-circle text-primary me-2" style="font-size:0.35rem;vertical-align:middle;"></i>
+                                        ${sc.nom}
+                                    </span>
+                                    <div class="d-flex gap-1 flex-shrink-0">
+                                        <button class="btn btn-sm btn-link text-warning p-0 px-1" title="Modifier" onclick="editSousCritere(${sc.id}, '${sc.nom.replace(/'/g, "\\'")}')">
+                                            <i class="fas fa-pen" style="font-size:0.75rem;"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-link text-danger p-0 px-1" title="Supprimer" onclick="deleteSousCritere(${sc.id})">
+                                            <i class="fas fa-trash" style="font-size:0.75rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>`;
                         });
                     } else {
-                        html += `<li class="list-group-item  font-italic  py-2 border-0" style="background: transparent;">Aucun sous-critère</li>`;
+                        scHtml = `<div class="px-3 py-2 text-muted fst-italic" style="font-size:0.82rem;">Aucun sous-critère</div>`;
                     }
-                    html += `   </ul>
-                                <div class="p-2 border-top bg-white text-end">
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill border-0 fw-semibold" style="font-size: 0.75rem;" onclick="openAddSousCritereModal(${critere.critere_id})"><i data-lucide="plus" class="me-1"></i> Ajouter Sous-critère</button>
+
+                    html += `
+                    <div class="accordion-item border mb-2 rounded shadow-sm" id="modal-critere-${critere.critere_id}" style="overflow:hidden;">
+                        <div class="accordion-header" id="${headingId}">
+                            <button class="accordion-button ${isFirst ? '' : 'collapsed'} d-flex align-items-center justify-content-between w-100 px-3 py-2 bg-white border-0 text-dark"
+                                type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+                                data-toggle="collapse" data-target="#${collapseId}"
+                                aria-expanded="${isFirst ? 'true' : 'false'}" aria-controls="${collapseId}"
+                                style="font-size:0.88rem; gap:0.5rem; box-shadow:none; background: linear-gradient(90deg,#f8f9fa 0%,#fff 100%);">
+                                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                                    <i class="fas fa-chevron-right text-muted crit-chevron" style="font-size:0.7rem;transition:transform 0.2s;"></i>
+                                    <div class="min-w-0">
+                                        <div class="fw-bold text-dark text-truncate" style="font-size:0.88rem;">${critere.critere_nom}</div>
+                                        <div class="text-muted" style="font-size:0.72rem;">
+                                            <i class="fas fa-book me-1"></i>${critere.chapitre !== 'N/A' ? critere.chapitre : 'Sans chapitre'}
+                                        </div>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>`;
+                                <div class="d-flex gap-1 flex-shrink-0 ms-2" onclick="event.stopPropagation()">
+                                    <button class="btn btn-sm btn-link text-info p-0 px-1" title="Modifier" onclick="editCritere(${critere.critere_id})">
+                                        <i class="fas fa-pen" style="font-size:0.75rem;"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-link text-danger p-0 px-1" title="Supprimer" onclick="deleteCritere(${critere.critere_id})">
+                                        <i class="fas fa-trash" style="font-size:0.75rem;"></i>
+                                    </button>
+                                </div>
+                            </button>
+                        </div>
+                        <div id="${collapseId}" class="collapse ${isFirst ? 'show' : ''}" aria-labelledby="${headingId}" data-bs-parent="#criteresAccordion" data-parent="#criteresAccordion">
+                            <div class="bg-white" id="modal-sous-criteres-list-${critere.critere_id}">
+                                ${scHtml}
+                                <div class="p-2 text-center border-top">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill fw-semibold" style="font-size:0.72rem;" onclick="openAddSousCritereModal(${critere.critere_id})">
+                                        <i class="fas fa-plus-circle me-1"></i> Ajouter Sous-critère
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
-                tbody.innerHTML = html;
+                html += '</div>';
+
+                container.innerHTML = html;
+
+                // Rotate chevron on collapse toggle
+                container.querySelectorAll('[data-toggle="collapse"], [data-bs-toggle="collapse"]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const chevron = this.querySelector('.crit-chevron');
+                        const targetId = this.getAttribute('data-target') || this.getAttribute('data-bs-target');
+                        const collapseEl = document.querySelector(targetId);
+                        if (!chevron || !collapseEl) return;
+                        const isShown = collapseEl.classList.contains('show');
+                        chevron.style.transform = isShown ? 'rotate(0deg)' : 'rotate(90deg)';
+                    });
+                });
+                // Set initial chevron state
+                container.querySelectorAll('.collapse.show').forEach(el => {
+                    const btn = container.querySelector(`[data-target="#${el.id}"], [data-bs-target="#${el.id}"]`);
+                    if (btn) { const ch = btn.querySelector('.crit-chevron'); if (ch) ch.style.transform = 'rotate(90deg)'; }
+                });
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
 
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="2" class="text-center text-danger py-4"><i data-lucide="alert-triangle" class="me-2"></i>Erreur de chargement. Veuillez réessayer.</td></tr>';
+                container.innerHTML = '<div class="text-center text-danger py-4"><i data-lucide="alert-triangle" class="me-2"></i>Erreur de chargement. Veuillez réessayer.</div>';
                 console.error('Preview load error:', err);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         };
 
@@ -713,7 +1112,14 @@ Créer un Audit
             body.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-2  fw-semibold">Chargement du formulaire...</div></div>';
             $modal.modal('show');
 
-            fetch(fetchUrl)
+            fetch(fetchUrl, {
+                    headers: {
+                        // ✅ Required: tells Django views to return the modal template
+                        // (critere_form_modal.html etc.) instead of the full-page template.
+                        // All views check: request.headers.get('x-requested-with') == 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
                 .then(res => res.text())
                 .then(html => {
                     const parser = new DOMParser();
@@ -743,21 +1149,24 @@ Créer un Audit
                         formNode.querySelectorAll(`[aria-controls="${oldId}"]`).forEach(ctrl => ctrl.setAttribute('aria-controls', newId));
                     });
 
-                    // Add simple sleek modal footer inside form AFTER prefixing so its IDs remain intact
-                    formNode.insertAdjacentHTML('beforeend', `
-                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                        <button type="button" class="btn btn-light fw-bold  rounded-pill px-4" data-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" id="ajaxSubmitBtn">
+                    // 🚀 Inject buttons into the explicit modal-footer
+                    const modalFooter = document.getElementById('ajaxFormModalFooter');
+                    modalFooter.innerHTML = `
+                        <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" id="ajaxSubmitBtn">
                             <i data-lucide="save" class="me-2"></i> Enregistrer
                         </button>
-                    </div>
-                    `);
+                    `;
 
                     body.innerHTML = '';
                     body.appendChild(formNode);
 
-                    // 🚀 Execute scripts found in the fetched HTML
+                    // ✅ FIX: Execute only non-formulaire scripts.
+                    // formulaire_form.html auto-calls initFormulaireForm() which inits Select2
+                    // immediately — if we also run our Select2 init below, we get duplicates.
+                    // Skip any script block containing 'initFormulaireForm' to avoid the conflict.
                     doc.querySelectorAll('script').forEach(oldScript => {
+                        if (oldScript.innerHTML.includes('initFormulaireForm')) return;
                         const newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
                         newScript.appendChild(document.createTextNode(oldScript.innerHTML));
@@ -774,10 +1183,132 @@ Créer un Audit
 
                     // Only add form-control if not already styled by the specific form template
                     formNode.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select').forEach(el => {
-                        if (!el.classList.contains('custom-input')) {
+                        if (!el.classList.contains('custom-input') && !el.classList.contains('select2-hidden-accessible')) {
                             el.classList.add('form-control');
                         }
                     });
+
+                    // ✅ Wire up the "Synchroniser la structure" button manually.
+                    // initFormulaireForm() is skipped (to prevent Select2 double-init), so we
+                    // attach the sync click handler ourselves — identical behavior to the standalone page.
+                    const syncBtnEl = body.querySelector('[id$="btn-sync"]') || body.querySelector('#btn-sync');
+                    const step2El   = body.querySelector('[id$="step-2"]')   || body.querySelector('#step-2');
+                    const step2ContainerEl = body.querySelector('[id$="step-2-container"]') || body.querySelector('#step-2-container');
+
+                    if (syncBtnEl && !syncBtnEl.dataset.modalInitialized) {
+                        syncBtnEl.dataset.modalInitialized = 'true';
+                        syncBtnEl.addEventListener('click', async function(e) {
+                            e.preventDefault();
+                            // Get the type_audit select — ID was prefixed with 'modal-' on load
+                            const typeAuditSel = body.querySelector('select[name="type_audit"]');
+                            const typeId = typeAuditSel ? typeAuditSel.value : '';
+                            if (!typeId) {
+                                Swal.fire('Champ requis', "Veuillez sélectionner un Type d'Audit.", 'warning');
+                                return;
+                            }
+
+                            const originalHtml = syncBtnEl.innerHTML;
+                            syncBtnEl.disabled = true;
+                            syncBtnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Chargement...';
+
+                            try {
+                                const response = await fetch(`/audit/get-structure/?type_audit_id=${typeId}`);
+                                const data = await response.json();
+
+                                if (!step2ContainerEl) return;
+                                step2ContainerEl.innerHTML = '';
+
+                                if (!Array.isArray(data) || data.length === 0) {
+                                    step2ContainerEl.innerHTML = '<div class="text-center py-5 text-muted"><i data-lucide="inbox" class="d-block mb-2 mx-auto opacity-50" style="width:32px;height:32px;"></i>Aucune structure trouvée.</div>';
+                                } else {
+                                    // Build criterion cards identical to formulaire_form.html
+                                    const buildCard = (crit, idx) => {
+                                        let scHtml = crit.sous_criteres && crit.sous_criteres.length > 0
+                                            ? crit.sous_criteres.map((sc, si) => `
+                                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" id="sc-item-${sc.id}">
+                                                    <label class="d-flex align-items-center cursor-pointer mb-0 w-100" for="sc-${sc.id}">
+                                                        <input class="custom-checkbox sc-checkbox sc-crit-${crit.critere_id} me-3" type="checkbox"
+                                                               name="sous_criteres" value="${sc.id}" id="sc-${sc.id}" checked
+                                                               data-crit-id="${crit.critere_id}" style="width:1.2rem;height:1.2rem;">
+                                                        <span class="fw-bold me-2 opacity-50 d-none d-sm-inline">${idx+1}.${si+1}</span>
+                                                        <span class="fw-medium text-dark" style="font-size:0.9rem;">${sc.nom}</span>
+                                                    </label>
+                                                    <div class="d-flex gap-1 ms-2">
+                                                        <button type="button" class="btn btn-sm btn-link text-info p-1" onclick="window.editSousCritere(${sc.id})"><i data-lucide="edit" style="width:14px;height:14px;"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-link text-danger p-1" onclick="window.deleteSousCritere(${sc.id})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                                                    </div>
+                                                </div>`).join('')
+                                            : '<div class="text-center py-2 opacity-50 font-italic">Aucun sous-critère</div>';
+
+                                        return `
+                                        <div class="critere-card shadow-xs mb-3" id="crit-item-${crit.critere_id}">
+                                            <div class="card-header-flex" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fas fa-chevron-right accordion-icon text-muted rotated" style="font-size:0.8rem;"></i>
+                                                    <span class="fw-bold text-dark" style="font-size:1rem;">Critère ${idx+1}: ${crit.critere_nom}</span>
+                                                </div>
+                                                <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
+                                            </div>
+                                            <div class="card-body-flex">
+                                                <div class="sous-criteres-list">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="fw-bold text-uppercase text-muted" style="font-size:0.7rem;letter-spacing:0.5px;">Sous-critères</span>
+                                                        <button type="button" class="btn btn-xs btn-primary rounded-pill px-2 py-0 fw-bold shadow-sm" style="font-size:10px;" onclick="window.openAddSousCritereModal(${crit.critere_id})"><i class="fas fa-plus-circle me-1"></i> Ajouter</button>
+                                                    </div>
+                                                    <div class="sous-criteres-container">${scHtml}</div>
+                                                </div>
+                                            </div>
+                                            <div class="card-actions-flex">
+                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill me-auto px-3" onclick="window.toggleAllInCrit(${crit.critere_id})">Tout Cocher</button>
+                                                <button type="button" class="btn btn-sm btn-light text-info p-2 rounded-circle shadow-xs" onclick="window.editCritere(${crit.critere_id})"><i data-lucide="edit" style="width:16px;height:16px;"></i></button>
+                                                <button type="button" class="btn btn-sm btn-light text-danger p-2 rounded-circle shadow-xs" onclick="window.deleteCritere(${crit.critere_id})"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                                            </div>
+                                        </div>`;
+                                    };
+
+                                    step2ContainerEl.innerHTML = data.map((c, i) => buildCard(c, i)).join('');
+                                }
+
+                                if (step2El) step2El.style.display = '';
+                                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                            } catch(err) {
+                                console.error('Sync error:', err);
+                                Swal.fire('Erreur', 'Impossible de charger la structure.', 'error');
+                            } finally {
+                                syncBtnEl.disabled = false;
+                                syncBtnEl.innerHTML = originalHtml;
+                                if (typeof lucide !== 'undefined') lucide.createIcons();
+                            }
+                        });
+                    }
+
+                    // ✅ FIX: Single clean Select2 initialization.
+                    // Since initFormulaireForm is now skipped, we are the ONLY Select2 init.
+                    // Still do defensive cleanup: remove orphaned .select2-container DOM nodes
+                    // (siblings inserted by a previous Select2 init) before reinitializing.
+                    setTimeout(() => {
+                        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                            const $selects = $(body).find('select');
+                            console.log('fields rendered:', $selects.length, $selects.toArray().map(s => s.name || s.id));
+                            $selects.each(function() {
+                                // 1. Remove any orphaned Select2 container DOM nodes
+                                //    (destroy() doesn't always remove these)
+                                $(this).siblings('.select2-container').remove();
+                                $(this).parent().find('.select2-container').not($(this).next()).remove();
+                                // 2. Destroy the Select2 plugin instance
+                                try { $(this).select2('destroy'); } catch(e) {}
+                                // 3. Reinitialize cleanly — single instance per select
+                                $(this).select2({
+                                    theme: 'bootstrap4',
+                                    width: '100%',
+                                    dropdownParent: $('#ajaxFormModal'),
+                                    placeholder: $(this).attr('placeholder') || "Sélectionner...",
+                                    allowClear: true
+                                });
+                            });
+                        }
+                    }, 400);
 
                     // CSS ... moved to head or kept here ...
 
@@ -849,15 +1380,24 @@ Créer un Audit
                         background-color: #fff !important;
                         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25) !important;
                     }
+                    /* ✅ Select2 Dropdown Z-Index — scoped fix.
+                       ONLY the open dropdown panel needs high z-index (it is appended to
+                       #ajaxFormModal via dropdownParent, so it lives inside the modal).
+                       DO NOT set z-index on .select2-container globally — that would push
+                       the main-page participants / auditeurs Select2 widgets ABOVE the modal. */
+                    .select2-dropdown {
+                        z-index: 200005 !important;
+                        border: 1px solid #e2e8f0 !important;
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+                    }
                 </style>`;
                     formNode.insertAdjacentHTML('afterbegin', customStyle);
 
 
                     // Handle Submissions directly via AJAX
-                    formNode.addEventListener('submit', async function (e) {
-                        e.preventDefault();
-
-                        const btn = document.getElementById('ajaxSubmitBtn');
+                    const ajaxSubmitBtn = document.getElementById('ajaxSubmitBtn');
+                    ajaxSubmitBtn.addEventListener('click', async function () {
+                        const btn = ajaxSubmitBtn;
                         const originalHtml = btn.innerHTML;
                         btn.innerHTML = '<i data-lucide="spin" class="me-2"></i>...';
                         btn.disabled = true;
@@ -886,6 +1426,7 @@ Créer un Audit
                             btn.disabled = false;
                         }
                     });
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 })
                 .catch(err => {
                     body.innerHTML = '<div class="alert alert-danger m-3">Erreur réseau lors du chargement.</div>';
@@ -930,16 +1471,14 @@ Créer un Audit
                         const option = new Option(res.new_name, res.new_id, true, true);
                         $(formulaireSelect).append(option).trigger('change');
 
-                        // 2. Open edit modal for the copy
-                        await Swal.close();
-                        openAjaxFormModal(
-                            `/audit/formulaire/${res.new_id}/edit/`,
-                            `<i class='fas fa-edit me-2'></i>Modifier la Copie : ${res.new_name}`,
-                            `/audit/formulaire/${res.new_id}/edit/`,
-                            () => {
-                                return Promise.resolve();
-                            }
-                        );
+                        // 2. Show success prompt
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: `Le formulaire a été copié avec succès : ${res.new_name}`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                     } else {
                         throw new Error(res.message);
                     }
@@ -949,16 +1488,11 @@ Créer un Audit
             }
         };
 
+
         window.openAddCritereModal = function () {
             window.openAjaxFormModal("{% url 'critere_create' %}","<i class='fas fa-plus-circle me-2'></i>Nouveau Critère","/audit/critere/save-inline/",
                 async (res) => {
-                    // Manually append empty critere row because it has no sub-criteria
-                    // so it wouldn't show up in loadFormulaireStructureData() automatically yet.
                     const tbody = document.getElementById('formulaireModalContent');
-                    if (tbody.innerHTML.includes('Aucun critère trouvé') || tbody.innerHTML.includes('Chargement')) tbody.innerHTML = '';
-
-                    // We need a way to read the selected chapter's text to display it locally
-                    // But if it's tricky, we can just say 'Mis à jour' and let it be added.
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr id="modal-critere-${res.critere_id}">
                             <td class="align-middle bg-light" style="border-right: 2px solid #fff;">
@@ -982,6 +1516,34 @@ Créer un Audit
                             </td>
                         </tr>
                     `);
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                },
+                (formNode) => {
+                    const formulaireId = formulaireSelect ? formulaireSelect.value : null;
+                    const formSelect = formNode.querySelector('select[name="formulaire"]');
+                    if (formSelect && formulaireId) {
+                        formSelect.value = formulaireId;
+                        const wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || formSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
+                    } else if (formulaireId) {
+                        formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="formulaire" value="${formulaireId}">`);
+                    }
+
+                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    if (typeAuditSelect) {
+                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
+                        if (window.currentFormulaireTypeAuditId) {
+                            const option = Array.from(typeAuditSelect.options).find(o => o.value == window.currentFormulaireTypeAuditId);
+                            if (option) {
+                                option.selected = true;
+                            } else {
+                                typeAuditSelect.insertAdjacentHTML('beforeend', `<option value="${window.currentFormulaireTypeAuditId}" selected></option>`);
+                            }
+                        }
+                    } else if (window.currentFormulaireTypeAuditId) {
+                        formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
+                    }
                 }
             );
         };
@@ -990,7 +1552,20 @@ Créer un Audit
             window.openAjaxFormModal(
                 `/audit/critere/${id}/edit/`,"<i class='fas fa-pen me-2'></i>Modifier le Critère",
                 `/audit/critere/${id}/update-inline/`,
-                async () => window.loadFormulaireStructureData()
+                async () => window.loadFormulaireStructureData(),
+                (formNode) => {
+                    const formSelect = formNode.querySelector('select[name="formulaire"]');
+                    if (formSelect) {
+                        const wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || formSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
+                    }
+
+                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    if (typeAuditSelect) {
+                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
+                    }
+                }
             );
         };
 
@@ -1023,7 +1598,8 @@ Créer un Audit
                     const critereSelect = formNode.querySelector('select[name="critere"]');
                     if (critereSelect) {
                         critereSelect.value = critereId;
-                        critereSelect.closest('.form-group').style.display = 'none';
+                        const wrapper = critereSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || critereSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
                     } else {
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="critere_id" value="${critereId}">`);
                     }
@@ -1031,7 +1607,8 @@ Créer un Audit
                     // Pre-select Type Audit automatically and hide the field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        typeAuditSelect.closest('.form-group').style.display = 'none';
+                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
                         if (window.currentFormulaireTypeAuditId) {
                             formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                         }
@@ -1049,13 +1626,15 @@ Créer un Audit
                     // Pre-select Critere and hide it
                     const critereSelect = formNode.querySelector('select[name="critere"]');
                     if (critereSelect) {
-                        critereSelect.closest('.form-group').style.display = 'none';
+                        const wrapper = critereSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || critereSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
                     }
 
                     // Hide Type Audit field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        typeAuditSelect.closest('.form-group').style.display = 'none';
+                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        if (wrapper) wrapper.style.display = 'none';
                     }
                 }
             );
@@ -1081,8 +1660,17 @@ Créer un Audit
                         const res = await response.json();
                         if (res.status === 'success') {
                             Swal.fire('Supprimé !', 'Le critère a été supprimé.', 'success');
+                            
+                            // 🚀 REMOVE FROM DOM IMMEDIATELY
+                            const card = document.getElementById(`crit-item-${id}`);
+                            if (card) {
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.9)';
+                                setTimeout(() => card.remove(), 300);
+                            }
+
                             if (document.getElementById('inlineStructureContainer') && !document.getElementById('inlineStructureContainer').classList.contains('d-none')) {
-                                document.getElementById('syncInlineBtn')?.click();
+                                // Optional: document.getElementById('syncInlineBtn')?.click();
                             } else {
                                 window.loadFormulaireStructureData();
                             }
@@ -1116,8 +1704,16 @@ Créer un Audit
                         const res = await response.json();
                         if (res.status === 'success') {
                             Swal.fire('Supprimé !', 'Le sous-critère a été supprimé.', 'success');
+                            
+                            // 🚀 REMOVE FROM DOM IMMEDIATELY
+                            const item = document.getElementById(`sc-item-${id}`);
+                            if (item) {
+                                item.style.opacity = '0';
+                                setTimeout(() => item.remove(), 300);
+                            }
+
                             if (document.getElementById('inlineStructureContainer') && !document.getElementById('inlineStructureContainer').classList.contains('d-none')) {
-                                document.getElementById('syncInlineBtn')?.click();
+                                // Optional: document.getElementById('syncInlineBtn')?.click();
                             } else {
                                 window.loadFormulaireStructureData();
                             }
@@ -1281,7 +1877,8 @@ Créer un Audit
         // 🔄 Inline Structure Synchronization Logic
         const syncBtn = document.querySelector('#syncInlineBtn');
         if (syncBtn) {
-            syncBtn.addEventListener('click', async function () {
+            syncBtn.addEventListener('click', async function (e) {
+                if (e) e.preventDefault();
                 const typeId = document.querySelector('#new_type_audit').value;
                 if (!typeId) {
                     alert("Veuillez sélectionner un Type d'Audit.");
@@ -1289,6 +1886,7 @@ Créer un Audit
                 }
 
                 syncBtn.disabled = true;
+                const originalHtml = syncBtn.innerHTML;
                 syncBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
                 try {
@@ -1303,68 +1901,77 @@ Créer un Audit
                         content.innerHTML = '<div class="text-center py-5 text-muted"><i data-lucide="inbox" class="d-block mb-2 w-8 h-8 mx-auto opacity-50"></i>Aucune structure trouvée.</div>';
                         if (typeof lucide !== 'undefined') lucide.createIcons();
                     } else {
-                        let listHtml = '<div class="critere-list">';
-
-                        data.forEach((crit, idx) => {
+                        // 🏗️ Helper to build cards like in formulaire_form
+                        const createCriterionCard = (crit, idx) => {
                             let scHtml = '';
                             crit.sous_criteres.forEach((sc, scIdx) => {
                                 scHtml += `
-                                <div class="sous-item d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                    <label class="mb-0 cursor-pointer flex-grow-1 fw-500 text-dark" for="inline-sc-${sc.id}" style="font-size: 0.9rem;">
-                                        ${sc.nom}
-                                    </label>
-                                    <div class="d-flex align-items-center gap-3 ms-2">
-                                        <button type="button" class="btn btn-link btn-sm text-danger p-0 opacity-75 hover-opacity-100" 
-                                                onclick="deleteSousCritere(${sc.id})" title="Supprimer">
-                                            <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
-                                        </button>
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="form-check-input inline-sc-checkbox sous-checkbox m-0" 
+                                    <div class="sous-item d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light" id="sc-item-${sc.id}">
+                                        <label class="d-flex align-items-center cursor-pointer mb-0 w-100" for="inline-sc-${sc.id}">
+                                            <input class="form-check-input inline-sc-checkbox sous-checkbox me-3" type="checkbox" 
                                                    value="${sc.id}" id="inline-sc-${sc.id}" checked 
-                                                   data-critere="${crit.critere_id}">
+                                                   data-critere="${crit.critere_id}" style="width: 1.1rem; height: 1.1rem;">
+                                            <span class="fw-medium text-dark" style="font-size: 0.9rem;">${sc.nom}</span>
+                                        </label>
+                                        <div class="d-flex gap-1 ms-2">
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-1" onclick="deleteSousCritere(${sc.id})" title="Supprimer">
+                                                <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
+                                            </button>
                                         </div>
-                                    </div>
-                                </div>
-                            `;
+                                    </div>`;
                             });
 
-                            listHtml += `
-                            <div class="critere-item mb-3 border rounded-3 overflow-hidden shadow-sm bg-white" id="crit-item-${crit.critere_id}" style="transition: all 0.3s ease;">
-                                <div class="critere-header d-flex align-items-center p-3 bg-light border-bottom" style="cursor: pointer;" onclick="toggleSousCritere(${crit.critere_id})">
-                                    <i class="fas fa-chevron-right me-3 arrow text-muted" id="arrow-${crit.critere_id}" 
-                                       style="font-size: 0.8rem; transition: transform 0.3s;"></i>
-                                    
-                                    <div class="flex-grow-1">
-                                        <span class="critere-title fw-bold text-dark" style="font-size: 1rem;">
-                                            ${idx + 1}. ${crit.critere_nom}
-                                        </span>
+                            return `
+                                <div class="critere-card shadow-xs mb-3" id="crit-item-${crit.critere_id}">
+                                    <div class="card-header-flex" data-toggle="collapse" data-target="#crit-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-chevron-right accordion-icon text-muted rotated" style="font-size: 0.8rem;"></i>
+                                            <span class="fw-bold text-dark" style="font-size: 1rem;">Critère ${idx + 1}: ${crit.critere_nom}</span>
+                                        </div>
+                                        <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
                                     </div>
 
-                                    <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
-                                        <button type="button" class="btn btn-outline-primary btn-xs rounded-circle" 
-                                                onclick="openSousModal(${crit.critere_id})" title="Ajouter un sous-critère"
-                                                style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger btn-xs rounded-circle" 
-                                                onclick="deleteCritere(${crit.critere_id})" title="Supprimer ce critère"
-                                                style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
-                                        </button>
+                                    <div id="crit-collapse-${crit.critere_id}" class="collapse show">
+                                        <div class="card-body-flex">
+                                            <div class="sous-criteres-list">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="fw-bold text-uppercase text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">Sous-critères</span>
+                                                    <button type="button" class="btn btn-xs btn-outline-primary rounded-pill py-0 px-2" style="font-size: 10px;" onclick="openSousModal(${crit.critere_id})">
+                                                        <i class="fas fa-plus-circle me-1"></i> Ajouter
+                                                    </button>
+                                                </div>
+                                                <div id="sc-container-${crit.critere_id}">
+                                                    ${scHtml || '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>'}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="sous-critere-list d-none bg-white p-3 pt-2" id="sous-${crit.critere_id}">
-                                    <div id="sc-container-${crit.critere_id}">
-                                        ${scHtml || '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>'}
+                                    <div class="card-actions-flex">
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill me-auto px-3" onclick="toggleAllInCrit(${crit.critere_id})">Tout Cocher</button>
+                                        <button type="button" class="btn btn-sm btn-light text-info p-2 rounded-circle shadow-xs" title="Modifier" onclick="editCritere(${crit.critere_id})">
+                                            <i class="fas fa-pen" style="width:14px; height:14px;"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-light text-danger p-2 rounded-circle shadow-xs" title="Supprimer" onclick="deleteCritere(${crit.critere_id})">
+                                            <i class="fas fa-trash" style="width:14px; height:14px;"></i>
+                                        </button>
                                     </div>
-                                </div>
-                            </div>
-                        `;
+                                </div>`;
+                        };
+
+                        let listHtml = '<div class="critere-list">';
+                        data.forEach((crit, idx) => {
+                            listHtml += createCriterionCard(crit, idx);
                         });
 
                         listHtml += '</div>';
                         content.innerHTML = listHtml;
+                        
+                        // 🔄 Chevron rotation fix for dynamically added content
+                        $('[data-toggle="collapse"]').on('click', function() {
+                           $(this).find('.accordion-icon').toggleClass('rotated');
+                        });
+
                         if (typeof lucide !== 'undefined') lucide.createIcons();
 
                         // 🧠 Smart Logic: Highlight parent if any child is checked
@@ -1393,14 +2000,14 @@ Créer un Audit
                     }
 
                     container.classList.remove('d-none');
-                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 } catch (error) {
                     console.error('Error:', error);
                     alert("Erreur lors de la synchronisation.");
                 } finally {
                     syncBtn.disabled = false;
-                    syncBtn.innerHTML = '<i data-lucide="refresh-cw"></i>';
+                    syncBtn.innerHTML = originalHtml;
                     if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             });
@@ -1420,14 +2027,17 @@ Créer un Audit
             });
         });
 
-        // 🏷️ Toggle Sous-Critère Expand/Collapse
-        window.toggleSousCritere = function (id) {
-            const list = document.getElementById('sous-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-            if (!list || !arrow) return;
-
-            list.classList.toggle('d-none');
-            arrow.style.transform = list.classList.contains('d-none') ? 'rotate(0deg)' : 'rotate(90deg)';
+        // 🏷️ Toggle All Sous-Critères in a specific Criterion
+        window.toggleAllInCrit = function (critId) {
+            const parent = document.getElementById('crit-item-' + critId);
+            if (!parent) return;
+            const checkboxes = parent.querySelectorAll('.sous-checkbox');
+            const anyUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = anyUnchecked;
+                cb.dispatchEvent(new Event('change'));
+            });
         };
 
         // 📦 Open Full Modal for Sous-Critère
@@ -1549,34 +2159,41 @@ Créer un Audit
                     });
 
                     const html = `
-                        <div class="critere-item mb-3 border rounded-3 overflow-hidden shadow-sm bg-white active-critere" id="crit-item-${critId}" style="transition: all 0.3s ease;">
-                            <div class="critere-header d-flex align-items-center p-3 bg-light border-bottom" style="cursor: pointer;" onclick="toggleSousCritere(${critId})">
-                                <i class="fas fa-chevron-down me-3 arrow text-primary" id="arrow-${critId}" 
-                                   style="font-size: 0.8rem; transition: transform 0.3s;"></i>
-                                
-                                <div class="flex-grow-1">
-                                    <span class="critere-title fw-bold text-primary" style="font-size: 1rem;">
-                                        <i data-lucide="check-circle" class="text-success me-1 " style="width: 16px;"></i>${data.critere_name}
-                                        ${chapitreName ? `<span class="badge bg-white text-primary border ms-2 px-2" style="font-size: 10px; font-weight: 600;">${chapitreName}</span>` : ''}
-                                    </span>
+                        <div class="critere-card shadow-xs mb-3" id="crit-item-${critId}">
+                            <div class="card-header-flex" data-toggle="collapse" data-target="#sc-collapse-${critId}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-chevron-right accordion-icon text-muted rotated" style="font-size: 0.8rem;"></i>
+                                    <span class="fw-bold text-dark" style="font-size: 1rem;">${data.critere_name}</span>
                                 </div>
+                                <span class="badge-chapitre">${chapitreName || 'N/A'}</span>
+                            </div>
 
-                                <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
-                                    <button type="button" class="btn btn-outline-primary btn-xs rounded-circle" 
-                                            onclick="openSousModal(${critId})" title="Ajouter un sous-critère"
-                                            style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
-                                    </button>
+                            <div id="sc-collapse-${critId}" class="collapse show">
+                                <div class="card-body-flex">
+                                    <div class="sous-criteres-list">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-uppercase text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">Sous-critères</span>
+                                            <button type="button" class="btn btn-xs btn-outline-primary rounded-pill py-0 px-2" style="font-size: 10px;" onclick="openSousModal(${critId})">
+                                                <i class="fas fa-plus-circle me-1"></i> Ajouter
+                                            </button>
+                                        </div>
+                                        <div id="sc-container-${critId}">
+                                            ${scHtml || '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>'}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="sous-critere-list bg-white p-3 pt-2" id="sous-${critId}">
-                                <div id="sc-container-${critId}">
-                                    ${scHtml}
-                                </div>
+                            <div class="card-actions-flex">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill me-auto px-3" onclick="toggleAllInCrit(${critId})">Tout Cocher</button>
+                                <button type="button" class="btn btn-sm btn-light text-info p-2 rounded-circle shadow-xs" title="Modifier" onclick="editCritere(${critId})">
+                                    <i class="fas fa-pen" style="width:14px; height:14px;"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light text-danger p-2 rounded-circle shadow-xs" title="Supprimer" onclick="deleteCritere(${critId})">
+                                    <i class="fas fa-trash" style="width:14px; height:14px;"></i>
+                                </button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
 
                     listContainer.insertAdjacentHTML('beforeend', html);
                     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1685,13 +2302,18 @@ Créer un Audit
                     if (data.status === 'success') {
                         const container = document.getElementById('sc-container-' + critId);
                         const html = `
-                            <div class="sous-item ps-4 mb-1 d-flex justify-content-between align-items-center">
-                                <label class="  mb-0 cursor-pointer" for="inline-sc-${data.id}">
-                                    ${data.nom}
+                            <div class="sous-item d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
+                                <label class="d-flex align-items-center cursor-pointer mb-0 w-100" for="inline-sc-${data.id}">
+                                    <input class="form-check-input inline-sc-checkbox sous-checkbox me-3" type="checkbox" 
+                                           value="${data.id}" id="inline-sc-${data.id}" checked 
+                                           data-critere="${critId}" style="width: 1.1rem; height: 1.1rem;">
+                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">${data.nom}</span>
                                 </label>
-                                <input type="checkbox" class="form-check-input inline-sc-checkbox sous-checkbox ms-3" 
-                                       value="${data.id}" id="inline-sc-${data.id}" checked 
-                                       data-critere="${critId}">
+                                <div class="d-flex gap-1 ms-2">
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-1" onclick="deleteSousCritere(${data.id})" title="Supprimer">
+                                        <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
+                                    </button>
+                                </div>
                             </div>
                         `;
                         container.insertAdjacentHTML('beforeend', html);
@@ -2324,7 +2946,6 @@ Créer un Audit
         height: 52px !important;
         width: 100%;
     }
-
     .custom-input:focus {
         background-color: #fff !important;
         border-color: #4e73df !important;
@@ -2338,45 +2959,6 @@ Créer un Audit
         transition: all 0.3s ease;
     }
 
-    .critere-item {
-        border: 1.5px solid #edf2f7 !important;
-        border-radius: 12px !important;
-    }
-    .critere-item:hover {
-        border-color: #4e73df !important;
-        box-shadow: 0 4px 12px rgba(78, 115, 223, 0.1) !important;
-    }
-    .active-critere {
-        border-color: rgba(78, 115, 223, 0.3) !important;
-    }
-    .active-critere .critere-header {
-        background-color: rgba(78, 115, 223, 0.03) !important;
-    }
-    .critere-header .arrow {
-        color: #adb5bd;
-        transition: transform 0.3s ease;
-    }
-    .active-critere .critere-title {
-        color: #4e73df !important;
-    }
-    .sous-item {
-        padding: 10px 0;
-        transition: all 0.2s;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .sous-item:last-child {
-        border-bottom: none;
-    }
-    .sous-item:hover {
-        background-color: #f8fafc;
-        padding-left: 5px;
-    }
-    .sous-checkbox {
-        width: 1.15rem !important;
-        height: 1.15rem !important;
-        cursor: pointer;
-        border-radius: 4px !important;
-    }
     .btn-xs {
         padding: 1px 5px;
         font-size: 0.7rem;
@@ -2870,40 +3452,4 @@ Créer un Audit
     }
 </script>
 {% endblock extra_js %}
-
-<!-- Debug Section HTML -->
-<div class="container mt-4">
-    <div class="card" id="debugSection" style="display: none;">
-        <div class="card-header bg-info text-white">
-            <h6 class="mb-0">🐛 Debug - Form Submission Data</h6>
-        </div>
-        <div class="card-body">
-            <p class="">This section shows the data that will be submitted to Django.</p>
-            <pre id="debugOutput" class="bg-light p-3 rounded"
-                style="font-size: 12px; max-height: 300px; overflow-y: auto;"></pre>
-            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="debugFormData()">
-                📋 Show Current Form Data
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Debug Toggle Button -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
-    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleDebug()">
-        🐛 Debug
-    </button>
-</div> <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="debugFormData()">
-    📋 Show Current Form Data
-</button>
-</div>
-</div>
-</div>
-
-<!-- Debug Toggle Button -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
-    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleDebug()">
-        🐛 Debug
-    </button>
-</div>
 

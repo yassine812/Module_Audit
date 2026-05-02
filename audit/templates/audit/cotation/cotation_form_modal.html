@@ -1,17 +1,17 @@
 {% load static %}
 
-<div class="modal-header border-bottom-0 pb-0 pt-0.5 px-1 bg-white">
-    <div class="d-flex align-items-center gap-1">
-        <div class="bg-indigo-100 text-indigo-600 p-0.5 rounded-md">
-            <i data-lucide="star" class="w-2.2 h-2.2"></i>
+<div class="modal-header border-bottom-0 p-3 px-4 bg-white">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+            <i data-lucide="star" class="w-6 h-6"></i>
         </div>
         <div>
-            <h6 class="modal-title font-weight-bold mb-0" style="font-size: 0.72rem;">{% if object %}Modifier la Cotation{% else %}Nouvelle Cotation{% endif %}</h6>
-            <p class="mb-0 text-muted" style="font-size: 0.58rem;">Définissez les détails de la cotation pour vos audits.</p>
+            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.1rem;">{% if object %}Modifier la Cotation{% else %}Nouvelle Cotation{% endif %}</h5>
+            <p class="mb-0 text-muted" style="font-size: 0.85rem;">Définissez les détails de la cotation pour vos audits.</p>
         </div>
     </div>
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-        style="font-size: 1rem; padding: 0.4rem 0.8rem; margin: 0;">
+        style="font-size: 1.5rem; padding: 0.8rem 1.2rem; margin: 0;">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
@@ -23,7 +23,7 @@
         }
     </style>
     {% csrf_token %}
-    <div class="modal-body pt-1 pb-0 custom-scrollbar modal-body-responsive bg-white" style="padding: 4px 8px 0 8px !important;">
+    <div class="modal-body pt-2 pb-0 custom-scrollbar modal-body-responsive bg-white" style="padding: 15px 30px 0 30px !important;">
         {% if form.non_field_errors %}
         <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
@@ -31,60 +31,43 @@
         {% endif %}
 
         <div class="row">
-            <div class="col-md-6 mb-1.5">
-                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_valeur">Valeur Numérique <span class="text-danger">*</span></label>
+            <!-- Row 1: Valeur + Code side by side on all screens -->
+            <div class="col-6 mb-2">
+                <label class="font-weight-bold text-dark" style="font-size: 0.82rem; display:block; margin-bottom:3px;" for="id_valeur">Valeur <span class="text-danger">*</span></label>
                 <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-0 py-0 px-2">
-                            <i data-lucide="hash" class="w-2.2 h-2.2 text-indigo-500"></i>
-                        </span>
-                    </div>
-                    <input type="number" name="valeur" id="id_valeur" step="0.01" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: 5" required value="{{ form.valeur.value|default:'' }}">
+                    <input type="number" name="valeur" id="id_valeur" step="0.01" class="form-control border-0 py-0 text-sm" style="height: 38px;" placeholder="Ex: 5" required value="{{ form.valeur.value|default:'' }}">
                 </div>
                 {% if form.valeur.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.valeur.errors %}{{ error }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.75rem;">{% for error in form.valeur.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
-            <div class="col-md-6 mb-1.5">
-                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_code">Code court</label>
+            <div class="col-6 mb-2">
+                <label class="font-weight-bold text-dark" style="font-size: 0.82rem; display:block; margin-bottom:3px;" for="id_code">Code</label>
                 <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-0 py-0 px-2">
-                            <i data-lucide="code" class="w-2.2 h-2.2 text-indigo-500"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="code" id="id_code" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: C, NC, O..." value="{{ form.code.value|default:'' }}">
+                    <input type="text" name="code" id="id_code" class="form-control border-0 py-0 text-sm" style="height: 38px;" placeholder="C, NC, O..." value="{{ form.code.value|default:'' }}">
                 </div>
                 {% if form.code.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.code.errors %}{{ error }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.75rem;">{% for error in form.code.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
-            <div class="col-md-12 mb-1.5">
-                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="id_content">Description / Libellé <span class="text-danger">*</span></label>
+            <!-- Row 2: Description full width -->
+            <div class="col-md-12 mb-2">
+                <label class="font-weight-bold text-dark" style="font-size: 0.82rem; display:block; margin-bottom:3px;" for="id_content">Description <span class="text-danger">*</span></label>
                 <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-0 py-0 px-2">
-                            <i data-lucide="type" class="w-2.2 h-2.2 text-indigo-500"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="content" id="id_content" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Ex: Conforme, Non Conforme..." value="{{ form.content.value|default:'' }}" required>
+                    <input type="text" name="content" id="id_content" class="form-control border-0 py-0 text-sm" style="height: 38px;" placeholder="Ex: Conforme, Non Conforme..." value="{{ form.content.value|default:'' }}" required>
                 </div>
                 {% if form.content.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.content.errors %}{{ error }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.75rem;">{% for error in form.content.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
-            <div class="col-md-12 mb-1.5">
-                <label class="font-weight-bold text-dark mb-0.5" style="font-size: 0.62rem;" for="type_cotation_input">Type de Cotation associé <span class="text-danger">*</span></label>
+            <!-- Row 3: Type de Cotation -->
+            <div class="col-md-12 mb-2">
+                <label class="font-weight-bold text-dark" style="font-size: 0.82rem; display:block; margin-bottom:3px;" for="type_cotation_input">Type de Cotation <span class="text-danger">*</span></label>
                 <div class="input-group shadow-sm rounded-lg overflow-hidden border">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-0 py-0 px-2">
-                            <i data-lucide="layers" class="w-2.2 h-2.2 text-indigo-500"></i>
-                        </span>
-                    </div>
-                    <input type="text" id="type_cotation_input" list="type-cotation-list" class="form-control border-0 py-0 text-xs" style="height: 30px;" placeholder="Tapez pour rechercher..." required autocomplete="off">
+                    <input type="text" id="type_cotation_input" list="type-cotation-list" class="form-control border-0 py-0 text-sm" style="height: 38px;" placeholder="Tapez pour rechercher..." required autocomplete="off">
                     <datalist id="type-cotation-list">
                         {% for choice in form.type_cotation.field.choices %}
                             {% if choice.0 %}
@@ -95,15 +78,15 @@
                     <input type="hidden" name="type_cotation" id="id_type_cotation" value="{{ form.type_cotation.value|default:'' }}">
                 </div>
                 {% if form.type_cotation.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.58rem;">{% for error in form.type_cotation.errors %}{{ error }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block" style="font-size: 0.75rem;">{% for error in form.type_cotation.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
         </div>
     </div>
-    <div class="modal-footer border-top-0 p-1 d-flex justify-content-between bg-light mt-0">
-        <button type="button" class="btn btn-white btn-xs font-weight-bold rounded-pill px-3" style="font-size: 0.62rem;" data-dismiss="modal">Annuler</button>
-        <button type="submit" class="btn btn-indigo btn-xs text-white font-weight-bold rounded-pill px-3 shadow-sm" style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%); font-size: 0.62rem;">
-            <i data-lucide="save" class="w-2.2 h-2.2 mr-0.5"></i>
+    <div class="modal-footer border-top-0 p-3 px-4 d-flex justify-content-between bg-light mt-0">
+        <button type="button" class="btn btn-link text-muted font-weight-bold text-decoration-none py-2" style="font-size: 0.95rem;" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-indigo px-5 py-2 rounded-pill font-weight-bold text-white shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%); font-size: 0.95rem;">
+            <i data-lucide="save" class="w-5 h-5"></i>
             {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
         </button>
     </div>
@@ -147,7 +130,7 @@
 <style>
     /* Modal Size & Centering */
     #cotationModal .modal-dialog {
-        max-width: 420px;
+        /* Removed max-width to allow modal-lg to take effect */
     }
 
     #cotationModal .modal-content {
@@ -160,32 +143,34 @@
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
-    .text-xs { font-size: 0.68rem; }
+    .text-xs { font-size: 0.85rem; }
 
-    /* Natural body: no calc, no forced height */
+        /* Scrollable body - desktop + mobile */
     #cotationModal .modal-body-responsive {
-        flex: 0 0 auto !important;          /* ❗ no stretching */
-        overflow: visible !important;       /* ❗ no forced scroll */
-        padding-bottom: 4px !important;
-        min-height: 0 !important;
+        overflow-y: auto !important;
+        max-height: 65vh !important;
+        padding-bottom: 8px !important;
         background-color: #fff !important;
     }
 
-    /* Force kill any persisting gap from children */
-    #cotationModal .modal-body-responsive > *:last-child {
-        margin-bottom: 0 !important;
-    }
-
-    /* Only activate scroll WHEN needed */
-    @media (max-height: 700px) {
-        #cotationModal .modal-body-responsive {
-            flex: 1 1 auto !important;
-            overflow-y: auto !important;
-        }
-    }
-
     #cotationModal .modal-footer {
-        padding: 8px 15px !important;
+        padding: 12px 20px !important;
         background-color: #f8fafc !important;
+        flex-shrink: 0;
+    }
+
+    /* Mobile Compact Optimization (370x615) */
+    @media (max-width: 480px) {
+        .modal-dialog { width: 96% !important; max-width: 420px !important; margin: 4vh auto !important; height: auto !important; }
+        .modal-content { border-radius: 14px !important; border: none !important; }
+        #cotationModal .modal-body-responsive { max-height: 58vh !important; padding: 8px 12px !important; }
+        .modal-header { padding: 8px 12px !important; }
+        .modal-header h5 { font-size: 15px !important; }
+        .modal-header p  { font-size: 11px !important; margin-bottom: 0 !important; }
+        .form-group, .mb-2, .mb-3 { margin-bottom: 8px !important; }
+        label { font-size: 12px !important; margin-bottom: 2px !important; }
+        input.form-control, select.form-control { height: 34px !important; font-size: 13px !important; padding: 4px 8px !important; }
+        .modal-footer { padding: 6px 12px !important; }
+        .modal-footer button { height: 34px !important; font-size: 13px !important; padding: 0 14px !important; }
     }
 </style>

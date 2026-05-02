@@ -77,6 +77,7 @@
     background: #94a3b8 !important;
   }
 
+<<<<<<< HEAD
   /* Mobile Cards View */
   .mobile-cards-container {
     display: none;
@@ -296,6 +297,30 @@
       font-size: 0.85rem !important;
       border-radius: 20px !important;
     }
+=======
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
+>>>>>>> 603d326 (web fix)
   }
 </style>
 {% endblock %}
@@ -327,6 +352,7 @@
 
         <div class="card-body px-0 pb-0">
           {% if souscriteres %}
+<<<<<<< HEAD
           <!-- Mobile Cards View -->
           <div class="mobile-cards-container px-3 pt-3">
             {% for souscritere in page_obj %}
@@ -371,6 +397,36 @@
                     {% endfor %}
                     {% if souscritere.type_audit.count > 2 %}
                       <span class="badge bg-light text-dark px-2 py-1 rounded-pill" style="font-size: 11px;">+{{ souscritere.type_audit.count|add:"-2" }}</span>
+=======
+          <div class="scroll-wrapper">
+            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+              <thead class="bg-light shadow-none">
+                <tr>
+                  <th class="ps-3 col-id text-center">ID</th>
+                  <th class="col-critere">Critère</th>
+                  <th class="col-contenu">Contenu</th>
+                  <th class="col-type-cotation">Type Cotation</th>
+                  <th class="col-reaction">Réaction</th>
+                  <th class="col-preuves">Preuves Attendues</th>
+                  <th class="col-type-audit">Type Audit</th>
+                  <th class="text-center col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for souscritere in page_obj %}
+                <tr>
+                  <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                  <td class="col-critere" data-label="Critère">
+                    {% if souscritere.critere %}
+                    <span
+                      class="badge rounded-pill bg-teal-50 text-teal-700 px-3 py-1 border border-teal-100 shadow-sm">
+                      <i data-lucide="list" class="mr-1"
+                        style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                      {{ souscritere.critere.name|truncatechars:15 }}
+                    </span>
+                    {% else %}
+                    <span class="  italic">Aucun critère</span>
+>>>>>>> 603d326 (web fix)
                     {% endif %}
                   {% else %}
                     -
@@ -500,9 +556,15 @@
 
         {% if is_paginated %}
         <div class="card-footer bg-white border-top-0 pt-3">
+<<<<<<< HEAD
           <div class="d-flex justify-content-between align-items-center">
             <div class="px-2">
               Page <span class="fw-bold">{{ page_obj.number }}</span> sur {{ paginator.num_pages }} (Total: {{ paginator.count }} sous-critères)
+=======
+          <div class="pagination-container">
+            <div class="pagination-info px-2">
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
+>>>>>>> 603d326 (web fix)
             </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
@@ -581,6 +643,23 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
   function openSousCritereModal(url) {
     $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-teal" role="status"></div><p class="mt-2">Chargement...</p></div>');

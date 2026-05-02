@@ -2,8 +2,13 @@ from django.urls import path
 from .views import *
 from .auth import LoginView, LogoutView
 from .api_views import (
-    LoginAPIView, LogoutAPIView, TypeAuditListAPIView, 
-    TypeAuditDetailAPIView, ChapitreNormeListAPIView, CritereListAPIView, TypeCotationListAPIView, SousCritereListAPIView, FormulaireAuditListAPIView, ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView
+    LoginAPIView, LogoutAPIView, UserListAPIView, TypeAuditListAPIView, 
+    TypeAuditDetailAPIView, ChapitreNormeListAPIView, ChapitreNormeDetailAPIView, CritereListAPIView, 
+    CritereDetailAPIView, TypeCotationListAPIView, TypeCotationDetailAPIView, SousCritereListAPIView, 
+    SousCritereDetailAPIView, FormulaireAuditListAPIView, FormulaireAuditDetailAPIView, 
+    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
+    SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView, TextRefDetailAPIView, 
+    ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView
 )
 from .views import (
     UserListView, UserCreateView, 
@@ -152,19 +157,42 @@ urlpatterns = [
     path("api/chart-data/", ChartDataAPIView.as_view(), name="chart_data"),
     path("api/login/", LoginAPIView.as_view(), name="api_login"),
     path("api/logout/", LogoutAPIView.as_view(), name="api_logout"),
+    path("api/users/", UserListAPIView.as_view(), name="api_user_list"),
+    path("api/activities/", ActivityAPIView.as_view(), name="api_activities"),
+    path("api/dashboard-stats/", DashboardStatsAPIView.as_view(), name="api_dashboard_stats"),
     path("api/type-audit/", TypeAuditListAPIView.as_view(), name="api_typeaudit_list"),
     path("api/type-audit/<int:pk>/", TypeAuditDetailAPIView.as_view(), name="api_typeaudit_detail"),
     path("api/textref/", TextRefListAPIView.as_view(), name="api_textref_list"),
+    path("api/textref/<int:pk>/", TextRefDetailAPIView.as_view(), name="api_textref_detail"),
     path("api/chapitre-norme/", ChapitreNormeListAPIView.as_view(), name="api_chapitre_norme_list"),
+    path("api/chapitre-norme/<int:pk>/", ChapitreNormeDetailAPIView.as_view(), name="api_chapitre_norme_detail"),
     path("api/criteres/", CritereListAPIView.as_view(), name="api_critere_list"),
+    path("api/criteres/<int:pk>/", CritereDetailAPIView.as_view(), name="api_critere_detail"),
+    
     path("api/type-cotation/", TypeCotationListAPIView.as_view(), name="api_type_cotation_list"),
+    path("api/type-cotation/<int:pk>/", TypeCotationDetailAPIView.as_view(), name="api_type_cotation_detail"),
+    
     path("api/sous-criteres/", SousCritereListAPIView.as_view(), name="api_sous_critere_list"),
+    path("api/sous-criteres/<int:pk>/", SousCritereDetailAPIView.as_view(), name="api_sous_critere_detail"),
+    
     path("api/formulaire-audit/", FormulaireAuditListAPIView.as_view(), name="api_formulaire_audit_list"),
+    path("api/formulaire-audit/<int:pk>/", FormulaireAuditDetailAPIView.as_view(), name="api_formulaire_audit_detail"),
+    
     path("api/liste-audit/", ListeAuditListAPIView.as_view(), name="api_liste_audit_list"),
+    path("api/liste-audit/<int:pk>/", ListeAuditListAPIView.as_view(), name="api_liste_audit_detail"),
+    
     path("api/resultat-audit/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_list"),
+    path("api/resultat-audit/<int:pk>/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_detail"),
+    
     path("api/type-preuve/", TypePreuveListAPIView.as_view(), name="api_type_preuve_list"),
+    path("api/type-preuve/<int:pk>/", TypePreuveListAPIView.as_view(), name="api_type_preuve_detail"),
+    
     path("api/preuve-attendu/", PreuveAttenduListAPIView.as_view(), name="api_preuve_attendu_list"),
+    path("api/preuve-attendu/<int:pk>/", PreuveAttenduListAPIView.as_view(), name="api_preuve_attendu_detail"),
+    
     path("api/sous-critere-type-audit/", SousCritereTypeAuditListAPIView.as_view(), name="api_sous_critere_type_audit_list"),
+    path("api/cotation/", CotationListAPIView.as_view(), name="api_cotation_list"),
+    path("api/cotation/<int:pk>/", CotationListAPIView.as_view(), name="api_cotation_detail"),
     path("api/formulaire-sous-critere/", FormulaireSousCritereListAPIView.as_view(), name="api_formulaire_sous_critere_list"),
     path("get-sous-criteres/", get_sous_criteres, name="get_sous_criteres"),
     path("get-structure/", get_structure, name="get_structure"),
@@ -177,4 +205,5 @@ urlpatterns = [
     path("critere/<int:pk>/delete-inline/", delete_critere_inline, name="delete_critere_inline"),
     path("sous-critere/<int:pk>/delete-inline/", delete_sous_critere_inline, name="delete_sous_critere_inline"),
     path("api/critere/<int:pk>/type-audits/", get_critere_type_audits, name="api_get_critere_type_audits"),
+    path("get-formulaire-type/<int:formulaire_id>/", get_formulaire_type_audit, name="get_formulaire_type_audit"),
 ]

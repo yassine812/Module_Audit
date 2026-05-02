@@ -12,80 +12,30 @@
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
 
-  /* Mobile Responsive Modal for Cotation */
-  @media (max-width: 768px) {
-    #cotationModal.modal {
-      padding: 0 !important;
-    }
 
-    #cotationModal .modal-dialog {
-      margin: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
 
-    #cotationModal .modal-content {
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
-
-    #cotationModal .modal-header {
-      padding: 8px 12px !important;
-    }
-
-    #cotationModal .modal-title {
-      font-size: 1rem !important;
-    }
-
-    /* Compact form fields - minimal spacing */
-    #cotationModal .form-group,
-    #cotationModal .input-group {
-      margin-bottom: 0 !important;
-    }
-
-    #cotationModal label {
-      margin-bottom: 0 !important;
-      font-size: 0.8rem !important;
-      line-height: 1 !important;
-    }
-
-    #cotationModal .form-control,
-    #cotationModal select {
-      padding: 4px 8px !important;
-      font-size: 13px !important;
-      height: 32px !important;
-      min-height: 32px !important;
-    }
-
-    /* Compact modal body - taller to fit all fields */
-    #cotationModal .modal-body-responsive {
-      max-height: calc(100vh - 80px) !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 6px 12px 40px 12px !important;
-    }
-
-    /* Fixed footer with buttons */
-    #cotationModal .modal-footer {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      background: white !important;
-      border-top: 1px solid #e5e7eb !important;
-      padding: 8px 16px !important;
-      display: flex !important;
-      gap: 8px;
-      z-index: 1050 !important;
-    }
-
-    #cotationModal .modal-footer .btn {
-      flex: 1;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-      border-radius: 20px !important;
-    }
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
   }
 </style>
 {% endblock %}
@@ -131,7 +81,7 @@
             <tbody>
               {% for cotation in page_obj %}
               <tr>
-                <td class="text-center col-id  ">#{{ cotation.id }}</td>
+                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                 <td class="col-libelle text-truncate">
                   <strong class="text-dark ">{{ cotation.content }}</strong>
                   {% if cotation.code %}
@@ -179,9 +129,9 @@
 
         {% if is_paginated %}
         <div class="card-footer bg-white border-top-0 pt-0">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class=" ">
-              Page {{ page_obj.number }} sur {{ paginator.num_pages }} (Total: {{ paginator.count }} cotations)
+          <div class="pagination-container">
+            <div class="pagination-info px-2">
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
             <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0">
@@ -234,8 +184,8 @@
 
 <!-- Modal Containers -->
 <div class="modal fade" id="cotationModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
@@ -261,6 +211,23 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   function openCotationModal(url) {
@@ -359,8 +326,3 @@
   }
 </script>
 {% endblock %}
-
-
-
-
-

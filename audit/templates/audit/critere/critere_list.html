@@ -11,121 +11,97 @@
 
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-
-  /* Mobile Responsive Modal for Critere */
   @media (max-width: 768px) {
-    #critereModal.modal {
-      padding: 0 !important;
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: block !important;
     }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .btn-sm-block {
+      width: 100%;
+      border-radius: 25px !important;
+      font-size: 16px !important;
+    }
+    .card-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .card-header-flex .ml-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+    }
+  }
 
-    #critereModal .modal-dialog {
-      margin: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: 100% !important;
+  .mobile-cards-container { display: none; }
+  
+  .critere-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #f1f5f9;
+  }
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-weight: bold;
+    align-items: center;
+  }
+  .critere-card-body div {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  .critere-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+  }
+  .desktop-table-container table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+  
+  @media (min-width: 768px) {
+    .desktop-table-container table td.col-form {
+      white-space: normal;
+      word-break: break-word;
+      max-width: none;
+      min-width: 200px;
     }
+  }
 
-    #critereModal .modal-content {
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
-
-    /* Compact modal body for mobile */
-    #critereModal .modal-body {
-      max-height: calc(100vh - 120px) !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 12px 16px 70px 16px !important;
-    }
-
-    /* Compact header */
-    #critereModal .modal-header {
-      padding: 12px 16px !important;
-    }
-
-    #critereModal .modal-title {
-      font-size: 1.1rem !important;
-    }
-
-    /* Compact tabs */
-    #critereModal .nav-pills {
-      padding: 4px !important;
-      margin-bottom: 12px !important;
-    }
-
-    #critereModal .nav-link {
-      padding: 6px 10px !important;
-      font-size: 0.8rem !important;
-    }
-
-    /* Compact form fields - minimal spacing */
-    #critereModal .form-group,
-    #critereModal .input-group {
-      margin-bottom: 4px !important;
-    }
-
-    #critereModal label {
-      margin-bottom: 2px !important;
-      font-size: 0.85rem !important;
-      line-height: 1.2 !important;
-    }
-
-    #critereModal .form-control {
-      padding: 6px 10px !important;
-      font-size: 14px !important;
-      height: 36px !important;
-      min-height: 36px !important;
-    }
-
-    #critereModal select.form-control {
-      padding-right: 30px !important;
-    }
-
-    /* Sous-Criteres tab - compact layout */
-    #critereModal #souscritere .d-flex.align-items-center.justify-content-between {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 8px !important;
-      margin-bottom: 12px !important;
-    }
-
-    #critereModal #souscritere h6 {
-      font-size: 0.95rem !important;
-      margin-bottom: 2px !important;
-    }
-
-    #critereModal #souscritere p {
-      font-size: 0.8rem !important;
-      line-height: 1.3 !important;
-      margin-bottom: 0 !important;
-    }
-
-    #critereModal #add-sous-critere {
-      width: 100% !important;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-    }
-
-    /* Ensure footer is visible and compact */
-    #critereModal .modal-footer {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      background: white !important;
-      border-top: 1px solid #e5e7eb !important;
-      padding: 8px 16px !important;
-      display: flex !important;
-      gap: 8px;
-      z-index: 1050 !important;
-    }
-
-    #critereModal .modal-footer .btn {
-      flex: 1;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-      border-radius: 20px !important;
-    }
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
   }
 </style>
 {% endblock %}
@@ -135,7 +111,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
@@ -156,58 +132,86 @@
 
         <div class="card-body px-0 pb-0">
           {% if criteres %}
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-              <thead class="bg-light shadow-none">
-                <tr>
-                  <th class="ps-3 col-id text-center">ID</th>
-                  <th class="col-name">Désignation du Critère</th>
-                  <th class="col-chapitre">Chapitre de Norme</th>
-                  <th class="col-form">Formulaire associé</th>
-                  <th class="text-center col-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for critere in page_obj %}
-                <tr>
-                  <td class="text-center col-id  " data-label="ID">#{{ critere.id }}</td>
-                  <td class="col-name" data-label="Désignation du Critère">
-                    <strong class="text-dark ">{{ critere.name }}</strong>
-                  </td>
-                  <td class="col-chapitre" data-label="Chapitre de Norme">
-                    {% if critere.chapitre_norme %}
-                        <span class="badge rounded-pill bg-indigo-50 text-indigo-700 px-3 py-1 border border-indigo-100 shadow-sm">
-                            <i data-lucide="bookmark" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                            {{ critere.chapitre_norme.name }}
-                        </span>
-                    {% else %}
-                        <span class="  italic">Aucun</span>
-                    {% endif %}
-                  </td>
-                  <td class="col-form" data-label="Formulaire associé">
-                    {% if critere.formulaire %}
-                        <span class="badge rounded-pill bg-light  px-3 py-1 border font-weight-normal">
-                            <i data-lucide="file-text" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                            {{ critere.formulaire.name|truncatechars:10 }}
-                        </span>
-                    {% else %}
-                        <span class="  italic">-</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-center col-actions" data-label="Actions">
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button onclick="openCritereModal('{% url 'critere_update' critere.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
-                        <i data-lucide="edit" ></i>
-                      </button>
-                      <button onclick="openDeleteModal('{% url 'critere_delete' critere.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                        <i data-lucide="trash-2" ></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="mobile-cards-container p-3">
+             {% for critere in page_obj %}
+             <div class="critere-card">
+               <div class="card-header-row">
+                 <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0 }}</span>
+                 {% if critere.chapitre_norme %}
+                 <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-100">{{ critere.chapitre_norme.name|truncatechars:15 }}</span>
+                 {% endif %}
+               </div>
+               
+               <div class="critere-card-body">
+                 <div><strong>Désignation:</strong> {{ critere.name }}</div>
+                 <div><strong>Formulaire:</strong> {{ critere.formulaire.name|default:"-" }}</div>
+               </div>
+
+               <div class="critere-card-actions">
+                 <button onclick="openCritereModal('{% url 'critere_update' critere.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="edit" style="width: 18px;"></i>
+                 </button>
+                 <button onclick="openDeleteModal('{% url 'critere_delete' critere.id %}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="trash-2" style="width: 18px;"></i>
+                 </button>
+               </div>
+             </div>
+             {% endfor %}
+          </div>
+          <div class="desktop-table-container">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+                <thead class="bg-light shadow-none">
+                  <tr>
+                    <th class="ps-3 col-id text-center">ID</th>
+                    <th class="col-name">Désignation du Critère</th>
+                    <th class="col-chapitre">Chapitre de Norme</th>
+                    <th class="col-form">Formulaire associé</th>
+                    <th class="text-center col-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for critere in page_obj %}
+                  <tr>
+                    <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="col-name" data-label="Désignation du Critère">
+                      <strong class="text-dark ">{{ critere.name }}</strong>
+                    </td>
+                    <td class="col-chapitre" data-label="Chapitre de Norme">
+                      {% if critere.chapitre_norme %}
+                          <span class="badge rounded-pill bg-indigo-50 text-indigo-700 px-3 py-1 border border-indigo-100 shadow-sm">
+                              <i data-lucide="bookmark" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                              {{ critere.chapitre_norme.name }}
+                          </span>
+                      {% else %}
+                          <span class="  italic">Aucun</span>
+                      {% endif %}
+                    </td>
+                    <td class="col-form" data-label="Formulaire associé">
+                      {% if critere.formulaire %}
+                          <span class="badge rounded-pill bg-light  px-3 py-1 border font-weight-normal">
+                              <i data-lucide="file-text" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                              {{ critere.formulaire.name }}
+                          </span>
+                      {% else %}
+                          <span class="  italic">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center col-actions" data-label="Actions">
+                      <div class="d-flex justify-content-center align-items-center">
+                        <button onclick="openCritereModal('{% url 'critere_update' critere.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                          <i data-lucide="edit" ></i>
+                        </button>
+                        <button onclick="openDeleteModal('{% url 'critere_delete' critere.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                          <i data-lucide="trash-2" ></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
           {% else %}
           <div class="text-center py-5">
@@ -224,9 +228,9 @@
 
         {% if is_paginated %}
         <div class="card-footer bg-white border-top-0 pt-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="  px-2">
-              Page <span class="fw-bold">{{ page_obj.number }}</span> sur {{ paginator.num_pages }} (Total: {{ paginator.count }} critères)
+          <div class="pagination-container">
+            <div class="pagination-info px-2">
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
@@ -277,8 +281,8 @@
 
 <!-- Main Forms Modal -->
 <div class="modal fade" id="critereModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 260px; margin: 1.75rem auto;" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 850px; margin: 1.75rem auto;" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: visible;">
             <div id="modalBodyContent">
                 <div class="text-center py-3">
                     <div class="spinner-border spinner-border-sm text-indigo-600" role="status"></div>
@@ -305,6 +309,23 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
     function openCritereModal(url) {
         $('#modalBodyContent').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-indigo-600" role="status"></div><p class="mt-2 mb-0 text-xs font-weight-bold text-muted">Chargement...</p></div>');
@@ -387,8 +408,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-
-

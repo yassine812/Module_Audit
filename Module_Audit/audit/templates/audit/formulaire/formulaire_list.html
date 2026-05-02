@@ -58,7 +58,7 @@
               <tbody>
                 {% for formulaire in formulaires %}
                 <tr>
-                  <td class="text-center col-id  ">#{{ formulaire.id }}</td>
+                  <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0 }}</td>
                   <td class="col-name">
                     <strong class="text-dark ">{{ formulaire.name }}</strong>
                   </td>
@@ -139,6 +139,23 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
 $(function() {
   // --- Copy Form Logic ---

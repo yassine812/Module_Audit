@@ -45,7 +45,11 @@
     action="{% if object %}{% url 'critere_update' object.id %}{% else %}{% url 'critere_create' %}{% endif %}"
     autocomplete="off">
     {% csrf_token %}
+<<<<<<< HEAD
     <div class="p-4 custom-scrollbar modal-body-responsive" style="padding: 10px 30px 0 30px !important;">
+=======
+    <div class="modal-body p-0 custom-scrollbar modal-body-responsive" style="padding: 10px 30px 0 30px !important;">
+>>>>>>> 603d326 (web fix)
         {% if form.non_field_errors %}
         <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
@@ -110,6 +114,7 @@
                     </button>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Empty State -->
                 <div id="empty-state-sous-critere" class="text-center py-3 border rounded-xl bg-light-gray d-none">
                     <div class="empty-state-icon text-indigo-500 mb-1">
@@ -122,10 +127,19 @@
                         class="btn btn-link text-indigo-600 font-weight-bold p-0" style="font-size: 0.65rem;">
                         Ajouter un Sous-Critère
                     </button>
+=======
+                <div id="empty-state-sous-critere" class="text-center py-4 border rounded-xl bg-light-gray d-none">
+                    <div class="empty-state-icon text-indigo-500 mb-2">
+                        <i data-lucide="list-checks" class="w-8 h-8"></i>
+                    </div>
+                    <h6 class="text-dark font-weight-bold mb-1" style="font-size: 0.9rem;">Aucun sous-critère</h6>
+                    <p class="px-5 mb-2" style="font-size: 0.75rem;">Définissez les sous-critères spécifiques pour
+                        affiner votre évaluation d'audit.</p>
+>>>>>>> 603d326 (web fix)
                 </div>
 
                 <div id="table-container-sous-critere" class="d-none">
-                    <div id="sous-criteres-list" class="pr-1">
+                    <div id="sous-criteres-list">
                         {{ sous_criteres.management_form }}
                         {% for sc_form in sous_criteres %}
                         <div
@@ -133,7 +147,6 @@
                             {% for hidden in sc_form.hidden_fields %}{{ hidden }}{% endfor %}
                             <div class="d-none">{{ sc_form.DELETE }}</div>
 
-                            <!-- Remove Button at top right -->
                             <button type="button"
                                 class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border p-1"
                                 style="top: 10px; right: 10px; z-index: 10;" title="Retirer">
@@ -141,6 +154,7 @@
                             </button>
 
                             <div class="row align-items-end pe-4">
+<<<<<<< HEAD
                                 <div class="col-md-5 mb-2">
                                     <label class="text-uppercase mb-1 d-block"
                                         style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Description
@@ -155,10 +169,27 @@
                                 <div class="col-md-4 mb-2">
                                     <label class="text-uppercase mb-1 d-block"
                                         style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Preuves
+=======
+                                <div class="col-md-12 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.65rem; font-weight: 700; color: #64748b;">Description
+                                        détaillée <span class="text-danger">*</span></label>
+                                    {{ sc_form.content }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.65rem; font-weight: 700; color: #64748b;">Cotation</label>
+                                    {{ sc_form.type_cotation }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="text-uppercase mb-1 d-block"
+                                        style="font-size: 0.65rem; font-weight: 700; color: #64748b;">Preuves
+>>>>>>> 603d326 (web fix)
                                         Attendues</label>
                                     {{ sc_form.preuve_attendu }}
                                 </div>
                             </div>
+<<<<<<< HEAD
                             <div class="row pe-4">
                                 <div class="col-md-12 mb-1">
                                     <label class="text-uppercase mb-1 d-block"
@@ -167,6 +198,8 @@
                                     {{ sc_form.reaction }}
                                 </div>
                             </div>
+=======
+>>>>>>> 603d326 (web fix)
                         </div>
                         {% endfor %}
                     </div>
@@ -175,6 +208,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Hidden Empty Form Template -->
     <div id="empty-form" class="d-none">
         <div
@@ -217,12 +251,15 @@
         </div>
     </div>
 
+=======
+>>>>>>> 603d326 (web fix)
     <div class="modal-footer border-top-0 p-3 px-4 d-flex justify-content-between bg-light mt-0">
         <button type="button" class="btn btn-link text-muted font-weight-bold text-decoration-none py-2" style="font-size: 0.95rem;" data-dismiss="modal">Annuler</button>
         <button type="submit" class="btn btn-indigo px-5 py-2 rounded-pill font-weight-bold shadow-sm d-flex align-items-center gap-2" style="font-size: 0.95rem;">
             <i data-lucide="save" class="w-5 h-5"></i> Enregistrer
         </button>
     </div>
+<<<<<<< HEAD
 </form>
 
 <style>
@@ -577,3 +614,6 @@
         });
     });
 </script>
+=======
+</form>
+>>>>>>> 603d326 (web fix)
