@@ -766,10 +766,15 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
     template_name = "audit/typepreuve/typepreuve_confirm_delete.html"
     success_url = reverse_lazy("typepreuve_list")
 
-    def delete(self, request, *args, **kwargs):
+    def get_template_names(self):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            self.object = self.get_object()
+            return ["audit/typepreuve/typepreuve_delete_modal.html"]
+        return [self.template_name]
+
+    def form_valid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             try:
+                self.object = self.get_object()
                 self.object.delete()
                 return JsonResponse({'success': True})
             except ProtectedError:
@@ -777,13 +782,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
                     'success': False,
                     'message': "Ce type de preuve ne peut pas être supprimé car il est utilisé ailleurs."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            self.object = self.get_object()
-            return render(self.request, "audit/typepreuve/typepreuve_delete_modal.html", {'object': self.object})
-        return super().get(request, *args, **kwargs)
+        return super().form_valid(form)
 # =====================================================
 # LIST VIEW
 # =====================================================

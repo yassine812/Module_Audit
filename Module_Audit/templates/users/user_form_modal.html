@@ -1,38 +1,58 @@
-<div class="modal-header bg-primary text-white">
-    <h5 class="modal-title">
-        <i class="fas {% if object %}fa-user-cog{% else %}fa-user-plus{% endif %} mr-2"></i>
-        {% if object %}Modifier Utilisateur{% else %}Nouvel Utilisateur{% endif %}
-    </h5>
-    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary-100 text-primary p-2 rounded-lg" style="background-color: #ebf5ff; color: #1e40af;">
+            <i data-lucide="{% if object %}user-cog{% else %}user-plus{% endif %}" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier l'Utilisateur{% else %}Nouvel Utilisateur{% endif %}</h4>
+            <p class="text-muted small mb-0">{% if object %}Mettez à jour les informations du compte.{% else %}Créez un nouveau compte utilisateur pour le système.{% endif %}</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
 
-<form id="userModalForm" method="post" action="{% if object %}{% url 'user_update' object.id %}{% else %}{% url 'user_create' %}{% endif %}" novalidate>
+<form id="userModalForm" method="post" action="{% if object %}{% url 'user_update' object.id %}{% else %}{% url 'user_create' %}{% endif %}" novalidate autocomplete="off">
     {% csrf_token %}
     <div class="modal-body p-4">
         {% if form.non_field_errors %}
-        <div class="alert alert-danger-soft mb-3">
-            <small>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</small>
+        <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
         </div>
         {% endif %}
 
         {% for field in form %}
-        <div class="form-group-premium mb-3">
-            <label class="premium-label mb-1" for="{{ field.id_for_label }}">
-                {{ field.label }}
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark mb-1" for="{{ field.id_for_label }}">
+                {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
             </label>
             
-            {% if field.help_text %}
-                <small class="form-text text-muted mb-1">{{ field.help_text }}</small>
-            {% endif %}
-
-            <div class="input-container-premium">
+            <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-0 ps-3">
+                        {% if field.name == 'username' %}
+                            <i data-lucide="user" class="text-primary" style="width: 18px; height: 18px;"></i>
+                        {% elif field.name == 'email' %}
+                            <i data-lucide="mail" class="text-primary" style="width: 18px; height: 18px;"></i>
+                        {% elif 'password' in field.name %}
+                            <i data-lucide="lock" class="text-primary" style="width: 18px; height: 18px;"></i>
+                        {% elif field.name == 'role' %}
+                            <i data-lucide="shield" class="text-primary" style="width: 18px; height: 18px;"></i>
+                        {% else %}
+                            <i data-lucide="info" class="text-primary" style="width: 18px; height: 18px;"></i>
+                        {% endif %}
+                    </span>
+                </div>
                 {{ field }}
             </div>
 
+            {% if field.help_text %}
+                <small class="form-text text-muted mt-1" style="font-size: 0.75rem;">{{ field.help_text }}</small>
+            {% endif %}
+
             {% if field.errors %}
-                <div class="error-feedback text-danger mt-1 small">
+                <div class="text-danger mt-1 font-weight-bold" style="font-size: 0.75rem;">
                     {{ field.errors|striptags }}
                 </div>
             {% endif %}
@@ -40,63 +60,74 @@
         {% endfor %}
     </div>
     
-    <div class="modal-footer bg-light d-flex justify-content-between">
-        <button type="button" class="btn btn-outline-secondary px-4" data-dismiss="modal">Annuler</button>
-        <button type="submit" class="btn btn-primary px-4 shadow-sm">
-            {% if object %}Enregistrer{% else %}Créer l'utilisateur{% endif %}
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary text-white font-weight-bold rounded-pill px-4 shadow-sm">
+            <i data-lucide="{% if object %}save{% else %}user-plus{% endif %}" class="mr-2" style="width: 18px; height: 18px;"></i>
+            {% if object %}Mettre à jour{% else %}Créer l'utilisateur{% endif %}
         </button>
     </div>
 </form>
 
 <style>
-    .premium-label {
-        font-weight: 700;
-        color: #4e73df;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05rem;
-        display: block;
+    .modal-header { padding: 0.8rem 1rem !important; }
+    .modal-body { padding: 1rem !important; }
+    .form-group { margin-bottom: 0.75rem !important; }
+    .modal-footer { padding: 0.8rem 1rem !important; }
+    
+    .form-control:focus {
+        box-shadow: none !important;
+        background-color: #fff !important;
     }
-    .input-container-premium input, 
-    .input-container-premium select {
-        display: block;
-        width: 100%;
-        padding: 0.4rem 0.75rem;
-        font-size: 0.9rem;
-        color: #6e707e;
-        border: 1px solid #d1d3e2;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-        background-color: #f8f9fc;
+    .input-group.focused {
+        border-color: #4e73df !important;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.1) !important;
     }
-    .input-container-premium input:focus, 
-    .input-container-premium select:focus {
-        background-color: #fff;
-        border-color: #0061f2;
-        box-shadow: 0 0 0 0.2rem rgba(0, 97, 242, 0.1);
-        outline: none;
+    #userModalForm input, #userModalForm select {
+        border: none !important;
+        padding-left: 0.5rem !important;
+        height: 38px !important;
     }
-    .alert-info-soft {
-        background-color: #e3effd;
-        color: #0061f2;
-        border: none;
-        border-radius: 6px;
-    }
-    .alert-danger-soft {
-        background-color: #fdf2f2;
-        color: #e74a3b;
-        border: none;
-        border-radius: 6px;
-        padding: 0.75rem;
+
+    @media (max-width: 576px) {
+        .modal-header { padding: 0.5rem 0.75rem !important; }
+        .modal-header .bg-primary-100 { padding: 0.4rem !important; }
+        .modal-header i { width: 18px; height: 18px; }
+        .modal-title { font-size: 0.9rem !important; }
+        .modal-header p { font-size: 0.7rem !important; }
+        
+        .modal-body { padding: 0.75rem !important; }
+        .form-group { margin-bottom: 0.5rem !important; }
+        label.font-weight-bold { font-size: 0.75rem !important; margin-bottom: 2px !important; }
+        
+        .input-group-text { padding-left: 0.5rem !important; padding-right: 0.25rem !important; }
+        .input-group-text i { width: 16px !important; height: 16px !important; }
+        
+        #userModalForm input, #userModalForm select {
+            height: 32px !important;
+            font-size: 0.82rem !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+        
+        .modal-footer { padding: 0.5rem 0.75rem !important; }
+        .btn { font-size: 0.8rem !important; padding: 0.3rem 1rem !important; }
     }
 </style>
 
 <script>
-    // Initialize role help text if needed
-    (function() {
-        const roleSelect = document.querySelector('#userModalForm select[name="role"]');
-        if (roleSelect && window.lucide) {
-            lucide.createIcons();
-        }
-    })();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    $(document).ready(function() {
+        // Add focus effect to input groups
+        $('#userModalForm .form-control').on('focus', function() {
+            $(this).closest('.input-group').addClass('focused');
+        }).on('blur', function() {
+            $(this).closest('.input-group').removeClass('focused');
+        });
+
+        // Formater les champs standard
+        $('#userModalForm input, #userModalForm select').addClass('form-control');
+    });
 </script>
