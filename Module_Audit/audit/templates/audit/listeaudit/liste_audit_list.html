@@ -296,6 +296,36 @@
             margin-bottom: 2px;
         }
     }
+
+    /* Premium Pagination Styling */
+    .pagination .page-link {
+        border: none !important;
+        margin: 0 4px !important;
+        border-radius: 10px !important;
+        color: #64748b !important;
+        font-weight: 600 !important;
+        background-color: #f8fafc !important;
+        transition: all 0.2s ease;
+        padding: 0.6rem 1rem !important;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background-color: #f1f5f9 !important;
+        color: #94a3b8 !important;
+        opacity: 0.6;
+    }
+
+    .pagination .page-link:hover:not(.disabled) {
+        background-color: #e2e8f0 !important;
+        color: #1e293b !important;
+        transform: translateY(-1px);
+    }
 </style>
 {% endblock %}
 
@@ -312,14 +342,12 @@
             <h2 class="mb-0" style="font-size: 1.25rem !important; font-weight: 700;">Liste de mes audits</h2>
         </div>
         {% if user.is_superuser %}
-        {% if audits %}
         <div class="ml-auto">
-            <a href="{% url 'liste_audit_create' %}" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
-                <i data-lucide="plus" class="mr-2"></i>
+            <a href="{% url 'liste_audit_create' %}" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block font-weight-bold">
+                <i data-lucide="plus" class="mr-1"></i>
                 Planifier Audit
             </a>
         </div>
-        {% endif %}
         {% endif %}
     </div>
 
@@ -463,56 +491,57 @@
             <!-- Previous -->
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="Première">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
+                <a class="page-link d-flex align-items-center" href="?page=1" title="Première page">
+                    <i data-lucide="chevrons-left" style="width: 16px; height: 16px;"></i>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédente">
-                    <span aria-hidden="true">&laquo;</span>
+                <a class="page-link d-flex align-items-center" href="?page={{ page_obj.previous_page_number }}" title="Précédente">
+                    <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
                 </a>
             </li>
             {% else %}
             <li class="page-item disabled">
-                <span class="page-link">&laquo;&laquo;</span>
+                <span class="page-link d-flex align-items-center"><i data-lucide="chevrons-left" style="width: 16px; height: 16px;"></i></span>
             </li>
             <li class="page-item disabled">
-                <span class="page-link">&laquo;</span>
+                <span class="page-link d-flex align-items-center"><i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i></span>
             </li>
             {% endif %}
 
             <!-- Page numbers -->
             {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active">
-                <span class="page-link">{{ num }}</span>
-            </li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
-                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
                 </li>
                 {% endif %}
-                {% endfor %}
+            {% endfor %}
 
-                <!-- Next -->
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivante">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Dernière">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">&raquo;</span>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">&raquo;&raquo;</span>
-                </li>
-                {% endif %}
+            <!-- Next -->
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link d-flex align-items-center" href="?page={{ page_obj.next_page_number }}" title="Suivante">
+                    <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link d-flex align-items-center" href="?page={{ page_obj.paginator.num_pages }}" title="Dernière page">
+                    <i data-lucide="chevrons-right" style="width: 16px; height: 16px;"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link d-flex align-items-center"><i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link d-flex align-items-center"><i data-lucide="chevrons-right" style="width: 16px; height: 16px;"></i></span>
+            </li>
+            {% endif %}
         </ul>
     </nav>
 

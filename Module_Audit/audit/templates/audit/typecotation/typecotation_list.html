@@ -8,12 +8,62 @@
 {% block breadcrumb %}Types de Cotation{% endblock %}
 
 {% block extra_css %}
-
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-  
-  
 
+  @media (max-width: 768px) {
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: block !important;
+    }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .btn-sm-block {
+      width: 100%;
+      border-radius: 25px !important;
+      font-size: 16px !important;
+    }
+    .card-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .card-header-flex .ml-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+    }
+  }
+
+  .mobile-cards-container { display: none; }
+  
+  .typecotation-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #f1f5f9;
+  }
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-weight: bold;
+    align-items: center;
+  }
+  .typecotation-card-body div {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  .typecotation-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+  }
 
   /* Responsive Pagination */
   .pagination-container {
@@ -46,7 +96,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
@@ -57,10 +107,9 @@
           </div>
           {% if page_obj %}
           <div class="ml-auto mt-0">
-            <button onclick="openTypeCotationModal('{% url 'typecotation_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4">
+            <button onclick="openTypeCotationModal('{% url 'typecotation_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
               <i data-lucide="plus" class="mr-1"></i>
               Ajouter un Nouveau Type
-              
             </button>
           </div>
           {% endif %}
@@ -68,45 +117,69 @@
         
         <div class="card-body px-0 pb-0">
           {% if page_obj %}
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-              <thead class="bg-light shadow-none">
-              <tr>
-                <th class="ps-3 col-id text-center">ID</th>
-                <th class="col-name">Nom du Type</th>
-                <th class="text-center col-actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-               {% for typecotation in page_obj %}
-              <tr>
-<<<<<<< HEAD
-                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0 }}</td>
-=======
-                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
->>>>>>> 1d2633d (fix web etape)
-                <td class="col-name text-truncate">
-                  <strong class="text-dark ">{{ typecotation.name }}</strong>
-                </td>
-                <td class="text-center col-actions">
-                  <div class="d-flex justify-content-center align-items-center">
-                    <button onclick="openTypeCotationModal('{% url 'typecotation_update' typecotation.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
-                      <i data-lucide="edit" ></i>
-                    </button>
-                    <button onclick="openDeleteModal('{% url 'typecotation_delete' typecotation.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                      <i data-lucide="trash-2" ></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <!-- Mobile Cards View -->
+          <div class="mobile-cards-container p-3">
+             {% for typecotation in page_obj %}
+             <div class="typecotation-card">
+               <div class="card-header-row">
+                 <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+               </div>
+               
+               <div class="typecotation-card-body">
+                 <div class="fw-bold text-dark" style="font-size: 16px;">{{ typecotation.name }}</div>
+               </div>
+
+               <div class="typecotation-card-actions">
+                 <button onclick="openTypeCotationModal('{% url 'typecotation_update' typecotation.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="edit" style="width: 18px;"></i>
+                 </button>
+                 <button onclick="openDeleteModal('{% url 'typecotation_delete' typecotation.id %}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="trash-2" style="width: 18px;"></i>
+                 </button>
+               </div>
+             </div>
+             {% endfor %}
+          </div>
+
+          <!-- Desktop Table View -->
+          <div class="desktop-table-container">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+                <thead class="bg-light shadow-none">
+                  <tr>
+                    <th class="ps-3 col-id text-center" style="width: 80px;">ID</th>
+                    <th class="col-name">Nom du Type</th>
+                    <th class="text-center col-actions" style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for typecotation in page_obj %}
+                  <tr>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="col-name">
+                      <strong class="text-dark">{{ typecotation.name }}</strong>
+                    </td>
+                    <td class="text-center col-actions">
+                      <div class="d-flex justify-content-center align-items-center">
+                        <button onclick="openTypeCotationModal('{% url 'typecotation_update' typecotation.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                          <i data-lucide="edit"></i>
+                        </button>
+                        <button onclick="openDeleteModal('{% url 'typecotation_delete' typecotation.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                          <i data-lucide="trash-2"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
           {% else %}
           <div class="text-center py-5">
-            <i data-lucide="trending-up" class="w-12 h-12  mb-3 opacity-25"></i>
-            <h4 class=" font-weight-bold">Aucun type de cotation trouvé</h4>
-            <p class=" ">Commencez par créer votre premier type de cotation.</p>
+            <i data-lucide="trending-up" class="w-12 h-12 mb-3 opacity-25"></i>
+            <h4 class="font-weight-bold">Aucun type de cotation trouvé</h4>
+            <p>Commencez par créer votre premier type de cotation.</p>
             <button onclick="openTypeCotationModal('{% url 'typecotation_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
               Créer un Type de Cotation
@@ -116,51 +189,51 @@
         </div>
         
         {% if is_paginated %}
-        <div class="card-footer bg-white border-top-0 pt-0">
+        <div class="card-footer bg-white border-top-0 pt-3">
           <div class="pagination-container">
             <div class="pagination-info px-2">
               <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
-            <nav aria-label="Page navigation">
+            <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
                 {% if page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="Première">
+                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
                       <i data-lucide="chevrons-left" class="w-4 h-4"></i>
                     </a>
                   </li>
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
                       <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </a>
                   </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
                 {% endif %}
 
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
 
                 {% if page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                   <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
                       <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </a>
                   </li>
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
                       <i data-lucide="chevrons-right" class="w-4 h-4"></i>
                     </a>
                   </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
                 {% endif %}
               </ul>
             </nav>
           </div>
         </div>
         {% elif page_obj %}
-        <div class="card-footer bg-light border-top-0">
-           <small class="">Affichage de {{ page_obj|length }} type{{ page_obj|length|pluralize }}</small>
+        <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
+           <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> type{{ page_obj|length|pluralize }}</small>
         </div>
         {% endif %}
       </div>
@@ -175,7 +248,7 @@
             <div id="modalBodyContent">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2  ">Chargement...</p>
+                    <p class="mt-2">Chargement...</p>
                 </div>
             </div>
         </div>
@@ -193,7 +266,6 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -217,7 +289,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function openTypeCotationModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
         $('#typeCotationModal').modal('show');
         $.ajax({
             url: url,

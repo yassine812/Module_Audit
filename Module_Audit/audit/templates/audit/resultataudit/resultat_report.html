@@ -19,13 +19,29 @@
 <style>
     .content-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
     .report-body { font-family: 'Inter', sans-serif; background-color: #fcfcfc; }
+    @page {
+        size: auto;
+        margin: 10mm;
+    }
     @media print {
-        .no-print { display: none !important; }
+        .no-print, nav, footer, header, .sidebar, .navbar { display: none !important; }
         .print-shadow-none { box-shadow: none !important; border: 1px solid #eee !important; }
-        body { background: white !important; }
+        body { background: white !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-size: 14pt !important; }
+        #report-container { display: none !important; }
+        #pdf-content { 
+            display: block !important; 
+            width: 100% !important; 
+            max-width: 100% !important;
+            margin: 0 !important; 
+            padding: 0 !important;
+            position: static !important;
+            visibility: visible !important;
+            zoom: 1.2 !important;
+        }
+        #pdf-content table { width: 100% !important; border-collapse: collapse !important; }
+        #pdf-content td, #pdf-content th { padding: 15px !important; }
         .page-break { page-break-before: always; }
         .no-break-inside { break-inside: avoid; page-break-inside: avoid; }
-        #report-container { display: none !important; }
     }
     #pdf-content, #pdf-content * {
         box-sizing: border-box !important;
@@ -33,7 +49,6 @@
     #pdf-content {
         display: none;
         background: white;
-        width: 650px !important;
         margin: 0 !important;
         padding: 20px;
     }
@@ -65,6 +80,18 @@
                     <td style="padding: 10px; border: 1px solid black; width: 70%;">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</td>
                 </tr>
                 <tr>
+                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Participant(s)</td>
+                    <td style="padding: 10px; border: 1px solid black;">
+                        {% for p in resultat.audit.participants.all %}
+                            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
+                        {% endfor %}
+                        {% if resultat.audit.participants_externes %}
+                            {{ resultat.audit.participants_externes }}
+                        {% endif %}
+                        {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}-{% endif %}
+                    </td>
+                </tr>
+                <tr>
                     <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Site Audité</td>
                     <td style="padding: 10px; border: 1px solid black;">{{ resultat.site|default:"-" }}</td>
                 </tr>
@@ -74,7 +101,7 @@
                 </tr>
                 <tr>
                     <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Performance Globale</td>
-                    <td style="padding: 10px; border: 1px solid black; font-size: 20px; font-weight: bold;">{{ resultat.score_audit|floatformat:"-2" }}</td>
+                    <td style="padding: 10px; border: 1px solid black; font-size: 20px; font-weight: bold;">{{ resultat.score_audit|floatformat:"-3" }} <span style="font-size: 16px; color: #666; margin-left: 10px;">({{ resultat.score_percentage }}%)</span></td>
                 </tr>
             </table>
 
@@ -167,6 +194,18 @@
                     <div class="font-medium text-slate-800">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
                 </div>
                 <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Participant(s) :</div>
+                    <div class="font-medium text-slate-800">
+                        {% for p in resultat.audit.participants.all %}
+                            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
+                        {% endfor %}
+                        {% if resultat.audit.participants_externes %}
+                            {{ resultat.audit.participants_externes }}
+                        {% endif %}
+                        {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}-{% endif %}
+                    </div>
+                </div>
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
                     <div class="font-bold tracking-tight">Référence d'Audit :</div>
                     <div class="font-medium text-slate-800">#{{ resultat.id }}</div>
                 </div>
@@ -183,8 +222,11 @@
                     <div class="font-medium text-slate-800">{{ resultat.date_audit|date:"F j, Y" }}</div>
                 </div>
                 <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 pt-6 mt-6 border-t-2 border-slate-900/10">
-                    <div class="font-bold tracking-tight mt-1">Performance Globale :</div>
-                    <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl">{{ resultat.score_audit|floatformat:"-2" }}</div>
+                    <div class="font-bold tracking-tight mt-1 text-black">Score :</div>
+                    <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl flex items-center gap-3">
+                        {{ resultat.score_audit|floatformat:"-3" }}
+                        <span class="text-slate-400 text-lg font-bold">({{ resultat.score_percentage }}%)</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -212,7 +254,7 @@
                             <div class="flex items-center justify-between gap-4 w-full">
                                 <div class="flex-grow h-3 bg-white rounded-full overflow-hidden border-2 border-black">
                                     <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
-                                </div><span class="text-base font-black tabular-nums">{{ group.score|floatformat:"-2" }}</span>
+                                </div><span class="text-base font-black tabular-nums">{{ group.score|floatformat:"-3" }} <span class="text-slate-400 text-xs font-bold ml-1">({{ group.score_percent }}%)</span></span>
                             </div>
                         </td>
                         <td class="px-4 py-4 align-middle bg-slate-50"></td>
@@ -287,6 +329,7 @@
         // ⚠️ SWITCH VIEWS FOR CAPTURE
         uiContainer.style.display = 'none';
         element.style.display = 'block';
+        element.style.width = '650px';
 
         const opt = {
             margin: [10, 10, 10, 10],
@@ -310,12 +353,14 @@
         setTimeout(() => {
             html2pdf().set(opt).from(element).save().then(() => {
                 element.style.display = 'none';
+                element.style.width = '';
                 uiContainer.style.display = '';
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
                 lucide.createIcons();
             }).catch(() => {
                 element.style.display = 'none';
+                element.style.width = '';
                 uiContainer.style.display = '';
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
@@ -340,6 +385,7 @@
         // ⚠️ SWITCH VIEWS FOR CAPTURE
         uiContainer.style.display = 'none';
         element.style.display = 'block';
+        element.style.width = '650px';
 
         const opt = {
             margin: [10, 10, 10, 10],
@@ -350,6 +396,7 @@
         setTimeout(() => {
             html2pdf().set(opt).from(element).outputPdf('datauristring').then(function (pdfBase64) {
                 element.style.display = 'none';
+                element.style.width = '';
                 uiContainer.style.display = '';
                 fetch('{% url "resultat_send_email" resultat.id %}', {
                     method: 'POST',

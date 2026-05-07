@@ -8,12 +8,86 @@
 {% block breadcrumb %}Documents Processus{% endblock %}
 
 {% block extra_css %}
-
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-  
-  
 
+  @media (max-width: 768px) {
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: block !important;
+    }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .btn-sm-block {
+      width: 100%;
+      border-radius: 25px !important;
+      font-size: 16px !important;
+    }
+    .card-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .card-header-flex .ml-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+    }
+  }
+
+  .mobile-cards-container { display: none; }
+  
+  .doc-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #f1f5f9;
+  }
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-weight: bold;
+    align-items: center;
+  }
+  .doc-card-body div {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  .doc-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
+  }
 </style>
 {% endblock %}
 
@@ -22,7 +96,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
@@ -32,9 +106,9 @@
             </h3>
           </div>
           {% if documents %}
-          <div class="ml-auto">
+          <div class="ml-auto mt-0">
             <button onclick="openProcessusDocModal('{% url 'processusdoc_create' %}')"
-              class="btn btn-success shadow-sm rounded-pill px-4">
+              class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
               <i data-lucide="plus" class="mr-1"></i>
               Télécharger
             </button>
@@ -44,69 +118,118 @@
 
         <div class="card-body px-0 pb-0">
           {% if documents %}
-          <div class="table-responsive table-responsive-stack">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-              <thead class="bg-light shadow-none">
-                <tr>
-                  <th class="text-center col-id">ID</th>
-                  <th class="text-center col-type">Type</th>
-                  <th class="col-doc">Document</th>
-                  <th class="col-proc">Processus</th>
-                  <th class="text-center col-view">Vue</th>
-                  <th class="text-center col-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for doc in documents %}
-                <tr>
-                  <td class="text-center col-id " data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                  <td class="text-center col-type" data-label="Type">
+          <!-- Mobile Cards View -->
+          <div class="mobile-cards-container p-3">
+             {% for doc in documents %}
+             <div class="doc-card">
+               <div class="card-header-row">
+                 <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+                 <div class="file-icon">
                     {% if ".pdf" in doc.content.name|lower %}<i data-lucide="file-text" class="text-danger"></i>
                     {% elif ".doc" in doc.content.name|lower %}<i data-lucide="file-word" class="text-primary"></i>
                     {% elif ".xls" in doc.content.name|lower %}<i data-lucide="file-spreadsheet" class="text-success"></i>
-                    {% else %}<i data-lucide="file" class=""></i>{% endif %}
-                  </td>
-                  <td class="col-doc text-dark" data-label="Document">
-                    <strong>{{ doc.name }}</strong>
-                  </td>
-                  <td class="col-proc" data-label="Processus">
+                    {% else %}<i data-lucide="file" class="text-muted"></i>{% endif %}
+                 </div>
+               </div>
+               
+               <div class="doc-card-body">
+                 <div class="fw-bold text-dark mb-2" style="font-size: 16px;">{{ doc.name }}</div>
+                 <div class="d-flex flex-wrap gap-1 mt-2">
                     {% for p in doc.document_processus.all %}
-                    <span class="badge badge-secondary">{{ p.name }}</span>
+                        <span class="badge bg-light text-primary border px-2 py-1" style="font-size: 0.7rem;">{{ p.name }}</span>
                     {% empty %}
-                    <span class=" ">Aucun processus</span>
+                        <span class="text-muted italic small">Aucun processus</span>
                     {% endfor %}
-                  </td>
-                  <td class="text-center col-view px-1" data-label="Vue">
-                    {% if doc.content %}
-                    <a href="{% url 'processusdoc_open' doc.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank" title="Ouvrir">
-                      <i data-lucide="eye" class="mr-1"></i> <span>Ouvrir</span>
-                    </a>
-                    {% else %}
-                    <span class=" ">-</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-center col-actions" data-label="Actions">
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button onclick="openProcessusDocModal('{% url 'processusdoc_update' doc.id %}')"
-                        class="btn btn-link text-warning p-1" title="Modifier">
-                        <i data-lucide="edit"></i>
-                      </button>
-                      <button onclick="openDeleteModal('{% url 'processusdoc_delete' doc.id %}')" class="btn btn-link text-danger p-1"
-                        title="Supprimer">
-                        <i data-lucide="trash-2"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                 </div>
+               </div>
+
+               <div class="doc-card-actions">
+                 {% if doc.content %}
+                 <a href="{% url 'processusdoc_open' doc.id %}" class="btn btn-light text-primary px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" target="_blank">
+                   <i data-lucide="eye" style="width: 18px;"></i>
+                 </a>
+                 {% endif %}
+                 <button onclick="openProcessusDocModal('{% url 'processusdoc_update' doc.id %}')"
+                   class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="edit" style="width: 18px;"></i>
+                 </button>
+                 <button onclick="openDeleteModal('{% url 'processusdoc_delete' doc.id %}')" 
+                   class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="trash-2" style="width: 18px;"></i>
+                 </button>
+               </div>
+             </div>
+             {% endfor %}
+          </div>
+
+          <!-- Desktop Table View -->
+          <div class="desktop-table-container">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+                <thead class="bg-light shadow-none">
+                  <tr>
+                    <th class="text-center col-id" style="width: 80px;">ID</th>
+                    <th class="text-center col-type" style="width: 80px;">Type</th>
+                    <th class="col-doc">Document</th>
+                    <th class="col-proc">Processus Associés</th>
+                    <th class="text-center col-view" style="width: 120px;">Aperçu</th>
+                    <th class="text-center col-actions" style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for doc in documents %}
+                  <tr>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="text-center col-type">
+                      {% if ".pdf" in doc.content.name|lower %}<i data-lucide="file-text" class="text-danger"></i>
+                      {% elif ".doc" in doc.content.name|lower %}<i data-lucide="file-word" class="text-primary"></i>
+                      {% elif ".xls" in doc.content.name|lower %}<i data-lucide="file-spreadsheet" class="text-success"></i>
+                      {% else %}<i data-lucide="file" class="text-muted"></i>{% endif %}
+                    </td>
+                    <td class="col-doc text-dark">
+                      <strong>{{ doc.name }}</strong>
+                    </td>
+                    <td class="col-proc">
+                      <div class="d-flex flex-wrap gap-1">
+                        {% for p in doc.document_processus.all %}
+                        <span class="badge bg-light text-primary border px-2 py-1 fw-normal">{{ p.name }}</span>
+                        {% empty %}
+                        <span class="text-muted italic small">Aucun processus</span>
+                        {% endfor %}
+                      </div>
+                    </td>
+                    <td class="text-center col-view px-1">
+                      {% if doc.content %}
+                      <a href="{% url 'processusdoc_open' doc.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 d-inline-flex align-items-center" target="_blank">
+                        <i data-lucide="eye" class="mr-1" style="width: 14px;"></i> <span>Ouvrir</span>
+                      </a>
+                      {% else %}
+                      <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center col-actions">
+                      <div class="d-flex justify-content-center align-items-center">
+                        <button onclick="openProcessusDocModal('{% url 'processusdoc_update' doc.id %}')"
+                          class="btn btn-link text-warning p-1" title="Modifier">
+                          <i data-lucide="edit"></i>
+                        </button>
+                        <button onclick="openDeleteModal('{% url 'processusdoc_delete' doc.id %}')" class="btn btn-link text-danger p-1"
+                          title="Supprimer">
+                          <i data-lucide="trash-2"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
           {% else %}
           <div class="text-center py-5">
-            <i data-lucide="file-text" class="w-12 h-12  mb-3 opacity-25"></i>
-            <h4 class=" font-weight-bold">Aucun document trouvé</h4>
-            <p class=" ">Commencez par télécharger votre premier document technique.</p>
+            <i data-lucide="file-text" class="w-12 h-12 mb-3 opacity-25"></i>
+            <h4 class="font-weight-bold">Aucun document trouvé</h4>
+            <p>Commencez par télécharger votre premier document technique.</p>
             <button onclick="openProcessusDocModal('{% url 'processusdoc_create' %}')"
               class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
@@ -117,53 +240,51 @@
         </div>
 
         {% if is_paginated %}
-        <div class="card-footer bg-white border-top-0 pt-0">
-          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
-            <div class="  mb-2 mb-sm-0">
-              Page {{ page_obj.number }} sur {{ paginator.num_pages }} (Total: {{ paginator.count }})
+        <div class="card-footer bg-white border-top-0 pt-3">
+          <div class="pagination-container">
+            <div class="pagination-info px-2">
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
-            <nav aria-label="Page navigation" class="w-100 w-sm-auto overflow-auto">
-              <ul class="pagination pagination-sm mb-0 justify-content-center">
+            <nav aria-label="Page navigation" class="px-2">
+              <ul class="pagination pagination-sm mb-0">
                 {% if page_obj.has_previous %}
-                <li class="page-item">
-                  <a class="page-link" href="?page=1" aria-label="Première">
-                    <i data-lucide="chevrons-left" class="w-4 h-4"></i>
-                  </a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                  </a>
-                </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
+                      <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
                 {% else %}
-                <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-left"
-                      class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
                 {% endif %}
 
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
 
                 {% if page_obj.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                  </a>
-                </li>
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
-                    <i data-lucide="chevrons-right" class="w-4 h-4"></i>
-                  </a>
-                </li>
+                   <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                      <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
                 {% else %}
-                <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-right"
-                      class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
                 {% endif %}
               </ul>
             </nav>
           </div>
         </div>
         {% elif documents %}
-        <div class="card-footer bg-light border-top-0">
-          <small class="">Affichage de {{ documents|length }} document{{ documents|length|pluralize }}</small>
+        <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
+           <small>Affichage de <span class="fw-bold">{{ documents|length }}</span> document{{ documents|length|pluralize }}</small>
         </div>
         {% endif %}
       </div>
@@ -171,21 +292,20 @@
   </div>
 </div>
 
-<!-- Modal Creation/Edition -->
+<!-- Modal Containers -->
 <div class="modal fade" id="processusDocModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2  ">Chargement du formulaire...</p>
+          <p class="mt-2">Chargement du formulaire...</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Deletion -->
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
@@ -198,8 +318,6 @@
   </div>
 </div>
 {% endblock %}
-
-
 
 {% block extra_js %}
 <script>
@@ -221,7 +339,7 @@
 </script>
 <script>
   function openProcessusDocModal(url) {
-    $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+    $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
     $('#processusDocModal').modal('show');
     $.ajax({
       url: url,
@@ -301,8 +419,3 @@
   }
 </script>
 {% endblock %}
-
-
-
-
-

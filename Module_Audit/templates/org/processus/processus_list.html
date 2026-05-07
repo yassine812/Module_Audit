@@ -8,12 +8,62 @@
 {% block breadcrumb %}Processus{% endblock %}
 
 {% block extra_css %}
-
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-  
-  
 
+  @media (max-width: 768px) {
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: block !important;
+    }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .btn-sm-block {
+      width: 100%;
+      border-radius: 25px !important;
+      font-size: 16px !important;
+    }
+    .card-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .card-header-flex .ml-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+    }
+  }
+
+  .mobile-cards-container { display: none; }
+  
+  .processus-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #f1f5f9;
+  }
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-weight: bold;
+    align-items: center;
+  }
+  .processus-card-body div {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  .processus-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+  }
 
   /* Responsive Pagination */
   .pagination-container {
@@ -46,7 +96,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
@@ -56,7 +106,7 @@
             </h3>
           </div>
           {% if processus_list %}
-          <div class="ml-auto">
+          <div class="ml-auto mt-0">
             <button onclick="openProcessusModal('{% url 'processus_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
               <i data-lucide="plus" class="mr-1"></i>
               Nouveau Processus
@@ -67,46 +117,69 @@
 
         <div class="card-body px-0 pb-0">
           {% if processus_list %}
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-              <thead class="bg-light shadow-none">
-                <tr>
-                  <th class="text-center col-id">ID</th>
-                  <th class="col-name">Nom du Processus</th>
-                  <th class="text-center col-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          <!-- Mobile Cards View -->
+          <div class="mobile-cards-container p-3">
+             {% for processus in page_obj %}
+             <div class="processus-card">
+               <div class="card-header-row">
+                 <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+               </div>
+               
+               <div class="processus-card-body">
+                 <div class="fw-bold text-dark" style="font-size: 16px;">{{ processus.name }}</div>
+               </div>
+
+               <div class="processus-card-actions">
+                 <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="edit" style="width: 18px;"></i>
+                 </button>
+                 <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
+                   <i data-lucide="trash-2" style="width: 18px;"></i>
+                 </button>
+               </div>
+             </div>
+             {% endfor %}
+          </div>
+
+          <!-- Desktop Table View -->
+          <div class="desktop-table-container">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+                <thead class="bg-light shadow-none">
+                  <tr>
+                    <th class="text-center col-id" style="width: 80px;">ID</th>
+                    <th class="col-name">Nom du Processus</th>
+                    <th class="text-center col-actions" style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {% for processus in page_obj %}
-                <tr>
-<<<<<<< HEAD
-                  <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0 }}</td>
-=======
-                  <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
->>>>>>> 1d2633d (fix web etape)
-                  <td class="col-name">
-                    <strong class="text-dark ">{{ processus.name }}</strong>
-                  </td>
-                  <td class="text-center col-actions">
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
-                        <i data-lucide="edit" ></i>
-                      </button>
-                      <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                        <i data-lucide="trash-2" ></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                  <tr>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="col-name">
+                      <strong class="text-dark">{{ processus.name }}</strong>
+                    </td>
+                    <td class="text-center col-actions">
+                      <div class="d-flex justify-content-center align-items-center">
+                        <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                          <i data-lucide="edit"></i>
+                        </button>
+                        <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                          <i data-lucide="trash-2"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
           {% else %}
           <div class="text-center py-5">
-            <i data-lucide="layers" class="w-12 h-12  mb-3 opacity-25"></i>
-            <h4 class=" font-weight-bold">Aucun processus trouvé</h4>
-            <p class=" ">Commencez par définir les processus clés pour vos audits.</p>
+            <i data-lucide="layers" class="w-12 h-12 mb-3 opacity-25"></i>
+            <h4 class="font-weight-bold">Aucun processus trouvé</h4>
+            <p>Commencez par définir les processus clés pour vos audits.</p>
             <button onclick="openProcessusModal('{% url 'processus_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
               Créer un Processus
@@ -160,7 +233,7 @@
         </div>
         {% elif page_obj %}
         <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
-           <small class="">Affichage de <span class="fw-bold">{{ page_obj|length }}</span> processus</small>
+           <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> processus</small>
         </div>
         {% endif %}
       </div>
@@ -175,7 +248,7 @@
             <div id="modalBodyContent">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2  ">Chargement...</p>
+                    <p class="mt-2">Chargement...</p>
                 </div>
             </div>
         </div>
@@ -194,7 +267,6 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -217,7 +289,7 @@
 </script>
 <script>
     function openProcessusModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
         $('#processusModal').modal('show');
         $.ajax({
             url: url,
@@ -266,9 +338,6 @@
             success: function(data) {
                 $('#deleteModalBodyContent').html(data);
                 initDeleteBehaviors();
-            },
-            error: function() {
-                $('#deleteModalBodyContent').html('<div class="alert alert-danger m-3">Erreur lors du chargement.</div>');
             }
         });
     }
@@ -292,7 +361,6 @@
                     const response = xhr.responseJSON;
                     if (response && response.message) {
                         $('#deleteErrorMessage').text(response.message).fadeIn();
-                        // Gold Standard UI: Hide the delete button if deletion is blocked
                         form.find('button[type="submit"]').fadeOut();
                     } else {
                         alert("Une erreur imprévue est survenue.");
@@ -303,8 +371,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-
-

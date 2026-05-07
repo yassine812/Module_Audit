@@ -613,7 +613,7 @@
                 <!-- Status Selection -->
                 <div class="space-y-4">
                     <!-- PARTICIPANT DISPLAY -->
-                    {% if resultat.audit.participants.all %}
+                    {% if resultat.audit.participants.all or resultat.audit.participants_externes %}
                     <div class="mb-4 bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -622,8 +622,11 @@
                             <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Participant(s)</p>
                             <p class="text-sm font-bold text-slate-700 leading-tight">
                                 {% for p in resultat.audit.participants.all %}
-                                    {{ p.get_full_name|default:p.username }}{% if not forloop.last %}, {% endif %}
+                                    {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
                                 {% endfor %}
+                                {% if resultat.audit.participants_externes %}
+                                    {{ resultat.audit.participants_externes }}
+                                {% endif %}
                             </p>
                         </div>
                     </div>

@@ -1580,7 +1580,8 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
             grouped_results.append({
                 'critere': {'text_ref': data['name'], 'chapitre_norme': {'text_ref': data['chapitre']}},
                 'details': data['details'],
-                'score': round(category_score, 1)
+                'score': round(category_score, 3),
+                'score_percent': round(category_score * 100, 1)
             })
 
         context["grouped_results"] = grouped_results
@@ -1726,12 +1727,9 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     model = ListeAudit
     template_name = "audit/listeaudit/liste_audit_list.html"
     context_object_name = "audits"
-    paginate_by = 20
+    paginate_by = 8
 
     def get_paginate_by(self, queryset):
-        user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
-        if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
-            return 4
         return self.paginate_by
 
     def get_queryset(self):
@@ -1791,6 +1789,7 @@ class ListeAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         "date",
         "affectation",
         "participants",
+        "participants_externes",
     ]
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
@@ -1944,6 +1943,7 @@ class ListeAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         "date",
         "affectation",
         "participants",
+        "participants_externes",
     ]
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
@@ -2145,29 +2145,39 @@ def get_formulaire_structure(request):
     fsc_qs = (
         FormulaireSousCritere.objects
         .filter(formulaire=formulaire)
-        .select_related('sous_critere__critere', 'sous_critere__type_cotation')
+        .select_related('sous_critere__critere', 'sous_critere__type_cotation', 'sous_critere__critere__chapitre_norme')
         .order_by('sous_critere__critere__name', 'ordre')
     )
     
-    structure = []
+    # Group by Critere for the UI
+    criteres_dict = {}
     for fsc in fsc_qs:
         sc = fsc.sous_critere
-        structure.append({
+        crit = sc.critere
+        if crit.id not in criteres_dict:
+            criteres_dict[crit.id] = {
+                "critere_id": crit.id,
+                "critere_nom": crit.name,
+                "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+                "sous_criteres": []
+            }
+        
+        criteres_dict[crit.id]["sous_criteres"].append({
             "id": sc.id,
-            "critere_nom": sc.critere.name,
-            "sous_critere_nom": sc.content,
+            "nom": sc.content,
             "cotation": sc.type_cotation.name if sc.type_cotation else "Standard"
         })
 
     return JsonResponse({
         "id": formulaire.id,
         "name": formulaire.name,
+        "type_audit_id": formulaire.type_audit_id,
         "processus": formulaire.processus.name if formulaire.processus else "-",
         "type_audit": formulaire.type_audit.name if formulaire.type_audit else "-",
         "type_equipement": formulaire.type_equipement.name if formulaire.type_equipement else "-",
         "sections": list(formulaire.section.values_list('name', flat=True)),
         "date_creation": formulaire.date_creation.strftime("%d/%m/%Y %H:%M") if formulaire.date_creation else "-",
-        "structure": structure
+        "criteres": list(criteres_dict.values())
     }, safe=False)
 
 @transaction.atomic

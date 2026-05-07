@@ -303,16 +303,18 @@ class CritereListAPIView(View):
         try:
             data = json.loads(request.body)
             
-            # Validate foreign key exists
-            try:
-                ChapitreNorme.objects.get(id=data['chapitre_norme'])
-            except ChapitreNorme.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f'ChapitreNorme with id {data["chapitre_norme"]} does not exist'}, status=400)
+            # Validate foreign key exists (only if provided)
+            chapitre_id = data.get('chapitre_norme') or data.get('chapitre_id')
+            if chapitre_id:
+                try:
+                    ChapitreNorme.objects.get(id=chapitre_id)
+                except ChapitreNorme.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'ChapitreNorme with id {chapitre_id} does not exist'}, status=400)
             
             critere = Critere.objects.create(
-                name=data['name'],
-                chapitre_norme_id=data['chapitre_norme'],
-                formulaire_id=data.get('formulaire')
+                name=data.get('name') or data.get('nom'),
+                chapitre_norme_id=chapitre_id,
+                formulaire_id=data.get('formulaire') or data.get('formulaire_id')
             )
             if 'type_audit' in data:
                 critere.type_audit.set(data['type_audit'])
@@ -345,6 +347,35 @@ class CritereDetailAPIView(View):
                     'formulaire': c.formulaire.id if c.formulaire else None
                 }
             })
+        except Critere.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+
+    def put(self, request, pk):
+        try:
+            c = Critere.objects.get(pk=pk)
+            data = json.loads(request.body)
+            c.name = data.get('name') or data.get('nom') or c.name
+            chap_id = data.get('chapitre_norme') or data.get('chapitre_id')
+            if chap_id:
+                c.chapitre_norme_id = chap_id
+            form_id = data.get('formulaire') or data.get('formulaire_id')
+            if form_id:
+                c.formulaire_id = form_id
+            c.save()
+            
+            if 'type_audit' in data:
+                c.type_audit.set(data['type_audit'])
+                
+            return JsonResponse({'status': 'success', 'message': 'Updated successfully'})
+        except Critere.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def delete(self, request, pk):
+        try:
+            Critere.objects.get(pk=pk).delete()
+            return JsonResponse({'status': 'success', 'message': 'Deleted successfully'})
         except Critere.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
 
@@ -421,27 +452,30 @@ class SousCritereListAPIView(View):
         try:
             data = json.loads(request.body)
             
+            crit_id = data.get('critere') or data.get('critere_id') or data.get('crit_id')
             # Validate foreign key exists
             try:
-                Critere.objects.get(id=data['critere'])
+                Critere.objects.get(id=crit_id)
             except Critere.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f'Critere with id {data["critere"]} does not exist'}, status=400)
+                return JsonResponse({'status': 'error', 'message': f'Critere with id {crit_id} does not exist'}, status=400)
             
             # Optional: validate type_cotation if provided
-            if 'type_cotation' in data:
+            cot_id = data.get('type_cotation') or data.get('cotation_id') or data.get('cotation')
+            if cot_id:
                 try:
-                    TypeCotation.objects.get(id=data['type_cotation'])
+                    TypeCotation.objects.get(id=cot_id)
                 except TypeCotation.DoesNotExist:
-                    return JsonResponse({'status': 'error', 'message': f'TypeCotation with id {data["type_cotation"]} does not exist'}, status=400)
+                    return JsonResponse({'status': 'error', 'message': f'TypeCotation with id {cot_id} does not exist'}, status=400)
             
             sous_critere = SousCritere.objects.create(
-                content=data['content'],
-                critere_id=data['critere'],
+                content=data.get('content') or data.get('nom') or data.get('libelle'),
+                critere_id=crit_id,
                 reaction=data.get('reaction', ''),
-                type_cotation_id=data.get('type_cotation')
+                type_cotation_id=cot_id
             )
-            if 'preuves_attendues' in data:
-                sous_critere.preuve_attendu.set(data['preuves_attendues'])
+            if 'preuves_attendues' in data or 'preuve_attendu' in data:
+                preuves = data.get('preuves_attendues') or data.get('preuve_attendu')
+                sous_critere.preuve_attendu.set(preuves)
             if 'type_audit' in data:
                 for ta_id in data['type_audit']:
                     SousCritereTypeAudit.objects.get_or_create(sous_critere=sous_critere, type_audit_id=ta_id)
@@ -482,23 +516,30 @@ class SousCritereDetailAPIView(View):
 
     def put(self, request, pk):
         try:
-            print("HIT SousCritereDetailAPIView PUT pk=", pk)
             sc = SousCritere.objects.get(pk=pk)
             data = json.loads(request.body)
-            print("RECEIVED DATA:", data)
-            sc.content = data.get('content', sc.content)
+            sc.content = data.get('content') or data.get('nom') or data.get('libelle') or sc.content
             sc.reaction = data.get('reaction', sc.reaction)
-            if 'critere' in data: sc.critere_id = data['critere']
-            if 'type_cotation' in data: sc.type_cotation_id = data['type_cotation']
+            
+            crit_id = data.get('critere') or data.get('critere_id') or data.get('crit_id')
+            if crit_id:
+                sc.critere_id = crit_id
+                
+            cot_id = data.get('type_cotation') or data.get('cotation_id') or data.get('cotation')
+            if cot_id:
+                sc.type_cotation_id = cot_id
+                
             sc.save()
             
-            if 'preuves_attendues' in data:
-                sc.preuve_attendu.set(data['preuves_attendues'])
+            preuves = data.get('preuves_attendues') or data.get('preuve_attendu')
+            if preuves is not None:
+                sc.preuve_attendu.set(preuves)
+                
             if 'type_audit' in data:
                 SousCritereTypeAudit.objects.filter(sous_critere=sc).delete()
                 for ta_id in data['type_audit']:
                     SousCritereTypeAudit.objects.create(sous_critere=sc, type_audit_id=ta_id)
-            print("SAVED SousCritere!")
+                    
             return JsonResponse({'status': 'success', 'data': {'id': sc.id, 'content': sc.content}})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -582,7 +623,31 @@ class FormulaireAuditListAPIView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ListeAuditListAPIView(View):
-    def get(self, request):
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site').get(pk=pk)
+                return JsonResponse({
+                    'status': 'success',
+                    'data': {
+                        'id': a.id,
+                        'desc': a.desc,
+                        'status': a.status,
+                        'date_audit': a.date,
+                        'section': a.section.id if a.section else None,
+                        'departement_name': a.section.name if a.section else '-',
+                        'site': a.site.id if a.site else None,
+                        'formulaire_audit': a.formulaire_audit.id if a.formulaire_audit else None,
+                        'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
+                        'en_cours': a.get_audit_status() == 'en_cours',
+                        'statut_label': a.get_audit_status(),
+                        'affectation': list(a.affectation.values_list('id', flat=True)),
+                        'participants': list(a.participants.values_list('id', flat=True))
+                    }
+                })
+            except ListeAudit.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+
         audits = ListeAudit.objects.all().select_related('section', 'formulaire_audit')
         data = []
         for a in audits:
@@ -1187,7 +1252,7 @@ class FormulaireAuditCopyAPIView(View):
                     ordre=assoc.ordre
                 )
                 
-            return JsonResponse({'status': 'success', 'message': 'Copied', 'new_id': new_form.id})
+            return JsonResponse({'status': 'success', 'message': 'Copied', 'new_id': new_form.id, 'new_name': new_form.name})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 

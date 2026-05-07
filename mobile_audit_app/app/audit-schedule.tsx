@@ -115,16 +115,21 @@ const NormalDropdown = ({ label, value, options, onSelect, placeholder, multi = 
 
 const AuditScheduleScreen = () => {
   const router = useRouter();
+  const scrollRef = useRef(null);
+  const quickInputRef = useRef(null);
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
   const [sections, setSections] = useState([]);
+  const [chapitres, setChapitres] = useState([]);
   const [formulaires, setFormulaires] = useState([]);
   const [users, setUsers] = useState([]);
   const [processusList, setProcessusList] = useState([]);
   const [typeAudits, setTypeAudits] = useState([]);
   const [typeEquipements, setTypeEquipements] = useState([]);
+  const [typeCotations, setTypeCotations] = useState([]);
+  const [preuvesAttendues, setPreuvesAttendues] = useState([]);
 
   const [formData, setFormData] = useState({
     desc: '',
@@ -139,6 +144,25 @@ const AuditScheduleScreen = () => {
 
   // Quick Create State
   const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewData, setPreviewData] = useState([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [expandedCriteria, setExpandedCriteria] = useState({});
+
+  const toggleCriterion = (id) => {
+    setExpandedCriteria(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+  
+  useEffect(() => {
+    if (showQuickCreate) {
+      // Small timeout to ensure the view is rendered before scrolling/focusing
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+        quickInputRef.current?.focus();
+      }, 100);
+    }
+  }, [showQuickCreate]);
+
   const [quickFormData, setQuickFormData] = useState({
     name: '',
     processus: '',
@@ -148,25 +172,35 @@ const AuditScheduleScreen = () => {
   const [savingQuick, setSavingQuick] = useState(false);
   const [formStructure, setFormStructure] = useState([]);
   const [loadingStructure, setLoadingStructure] = useState(false);
-  const [expandedCriteria, setExpandedCriteria] = useState({});
   const [showCritereModal, setShowCritereModal] = useState(false);
   const [newCritere, setNewCritere] = useState({ id: null, name: '', chapitre_id: '' });
   const [showSousCritereModal, setShowSousCritereModal] = useState(false);
-  const [newSousCritere, setNewSousCritere] = useState({ id: null, content: '', crit_id: null });
+  const [newSousCritere, setNewSousCritere] = useState({ 
+    id: null, 
+    content: '', 
+    crit_id: null,
+    cotation: '',
+    reaction: '',
+    preuves: [] 
+  });
   const [selectedSousCriteres, setSelectedSousCriteres] = useState([]);
 
   const fetchData = async () => {
     try {
-      const [secRes, formRes, userRes, procRes, typeARes, typeERes] = await Promise.all([
+      const [secRes, chapRes, formRes, userRes, procRes, typeARes, typeERes, cotRes, preuRes] = await Promise.all([
         api.get(getApiUrl(API_PATHS.SECTIONS)),
+        api.get(getApiUrl(API_PATHS.CHAPITRES)),
         api.get(getApiUrl(API_PATHS.FORMULAIRES)),
         api.get(getApiUrl(API_PATHS.USERS)),
         api.get(getApiUrl(API_PATHS.PROCESSUS)),
         api.get(getApiUrl(API_PATHS.TYPES_AUDIT)),
         api.get(getApiUrl(API_PATHS.TYPES_EQUIPEMENTS)),
+        api.get(getApiUrl(API_PATHS.TYPE_COTATION)),
+        api.get(getApiUrl(API_PATHS.PREUVE_ATTENDUE)),
       ]);
 
       setSections(secRes.data.data || []);
+      setChapitres(chapRes.data.data || []);
       setFormulaires(formRes.data.data || []);
       
       const userData = userRes.data.data || userRes.data;
@@ -175,6 +209,8 @@ const AuditScheduleScreen = () => {
       setProcessusList(procRes.data.data || []);
       setTypeAudits(typeARes.data.data || []);
       setTypeEquipements(typeERes.data.data || []);
+      setTypeCotations(cotRes.data.data || cotRes.data || []);
+      setPreuvesAttendues(preuRes.data.data || preuRes.data || []);
 
       if (id) {
         const res = await api.get(getApiUrl(`${API_PATHS.LISTE_AUDIT}${id}/`));
@@ -183,11 +219,11 @@ const AuditScheduleScreen = () => {
           desc: audit.desc || '',
           status: audit.status ?? true,
           date: audit.date_audit || new Date().toISOString().slice(0, 19).replace('T', ' '),
-          section: audit.section_id || '',
-          formulaire_audit: audit.formulaire_audit_id || '',
-          site: audit.site_id || '',
-          affectation: audit.affectation_ids || [],
-          participants: audit.participants_ids || [],
+          section: audit.section || '',
+          formulaire_audit: audit.formulaire_audit || '',
+          site: audit.site || '',
+          affectation: audit.affectation || [],
+          participants: audit.participants || [],
         });
       }
     } catch (error) {
@@ -249,6 +285,51 @@ const AuditScheduleScreen = () => {
     }
   };
 
+  const handlePreviewFormulaire = async () => {
+    if (!formData.formulaire_audit) return;
+    setLoadingPreview(true);
+    setShowPreviewModal(true);
+    try {
+      const res = await api.get(getApiUrl(API_PATHS.GET_FORM_STRUCTURE), {
+        params: { formulaire_id: formData.formulaire_audit }
+      });
+      const data = Array.isArray(res.data) ? res.data : (res.data.criteres || []);
+      setPreviewData(data);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', 'Impossible de charger la structure');
+      setShowPreviewModal(false);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleCopyFormulaire = async () => {
+    if (!formData.formulaire_audit) return;
+    
+    try {
+      const url = `${API_PATHS.FORMULAIRES}${formData.formulaire_audit}/copy/`.replace(/\/+/g, '/');
+      const res = await api.post(url);
+      
+      if (res.data.status === 'success') {
+        const newForm = { 
+          id: res.data.new_id, 
+          name: res.data.new_name
+        };
+        // Add to list and select it immediately
+        setFormulaires(prev => [newForm, ...prev]);
+        setFormData(prev => ({ ...prev, formulaire_audit: newForm.id }));
+        
+        Alert.alert('Succès', `Le modèle a été copié : ${newForm.name}`);
+      } else {
+        throw new Error(res.data.message || 'Erreur lors de la copie');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', 'Échec de la copie du modèle');
+    }
+  };
+
   const handleSaveQuickForm = async () => {
     if (!quickFormData.name) return Alert.alert('Erreur', 'Le nom du formulaire est obligatoire');
     
@@ -284,76 +365,114 @@ const AuditScheduleScreen = () => {
     setFormData({ ...formData, [field]: current });
   };
 
-  const toggleCriterion = (critId) => {
-    setExpandedCriteria(prev => ({
-      ...prev,
-      [critId]: !prev[critId]
-    }));
-  };
-
   const handleAddCritere = async () => {
     if (!newCritere.name) return Alert.alert('Erreur', 'Le nom du critère est obligatoire');
     
-    if (newCritere.id) {
-      // Edit mode
-      const updated = formStructure.map(c => 
-        c.critere_id === newCritere.id ? { ...c, critere_nom: newCritere.name, chapitre_id: newCritere.chapitre_id } : c
-      );
-      setFormStructure(updated);
+    if (showPreviewModal && formData.formulaire_audit) {
+      try {
+        const payload = {
+          name: newCritere.name,
+          chapitre: newCritere.chapitre_id,
+          formulaire: formData.formulaire_audit
+        };
+        
+        if (newCritere.id && !String(newCritere.id).startsWith('temp_')) {
+          await api.put(`${API_PATHS.CRITERES}${newCritere.id}/`, payload);
+        } else {
+          await api.post(API_PATHS.CRITERES, payload);
+        }
+        handlePreviewFormulaire();
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Erreur', 'Échec de l\'enregistrement du critère');
+      }
     } else {
-      // Create mode
-      const tempId = Date.now();
-      const newCritObj = {
-        critere_id: tempId,
-        critere_nom: newCritere.name,
-        chapitre: processusList.find(p => p.id === newCritere.chapitre_id)?.name || 'CHAPITRE',
-        chapitre_id: newCritere.chapitre_id,
-        sous_criteres: [],
-        is_new: true
-      };
-      setFormStructure([newCritObj, ...formStructure]);
+      if (newCritere.id) {
+        const updated = formStructure.map(c => 
+          c.critere_id === newCritere.id ? { ...c, critere_nom: newCritere.name, chapitre_id: newCritere.chapitre_id } : c
+        );
+        setFormStructure(updated);
+      } else {
+        const tempId = `temp_${Date.now()}`;
+        const newCritObj = {
+          critere_id: tempId,
+          critere_nom: newCritere.name,
+          chapitre: chapitres.find(p => p.id === newCritere.chapitre_id)?.name || 'CHAPITRE',
+          chapitre_id: newCritere.chapitre_id,
+          sous_criteres: [],
+          is_new: true
+        };
+        setFormStructure([newCritObj, ...formStructure]);
+      }
     }
     
     setShowCritereModal(false);
     setNewCritere({ id: null, name: '', chapitre_id: '' });
+    
+    if (formData.formulaire_audit && !showQuickCreate) {
+      setTimeout(() => setShowPreviewModal(true), 300);
+    }
   };
 
-  const handleAddSousCritere = () => {
+  const handleAddSousCritere = async () => {
     if (!newSousCritere.content) return Alert.alert('Erreur', 'Le libellé est obligatoire');
     
-    if (newSousCritere.id) {
-      // Edit mode
-      const updated = formStructure.map(crit => {
-        if (crit.critere_id === newSousCritere.crit_id) {
-          return {
-            ...crit,
-            sous_criteres: crit.sous_criteres.map(sc => 
-              sc.id === newSousCritere.id ? { ...sc, nom: newSousCritere.content } : sc
-            )
-          };
+    if (showPreviewModal && formData.formulaire_audit) {
+      try {
+        const payload = {
+          nom: newSousCritere.content,
+          critere: newSousCritere.crit_id,
+          type_cotation: newSousCritere.cotation,
+          reaction: newSousCritere.reaction,
+          preuve_attendu: newSousCritere.preuves
+        };
+        
+        if (newSousCritere.id && !String(newSousCritere.id).startsWith('temp_')) {
+          await api.put(`${API_PATHS.SOUS_CRITERES}${newSousCritere.id}/`, payload);
+        } else {
+          await api.post(API_PATHS.SOUS_CRITERES, payload);
         }
-        return crit;
-      });
-      setFormStructure(updated);
+        handlePreviewFormulaire();
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Erreur', 'Échec de l\'enregistrement du sous-critère');
+      }
     } else {
-      // Create mode
-      const tempId = Date.now();
-      const updatedStructure = formStructure.map(crit => {
-        if (crit.critere_id === newSousCritere.crit_id) {
-          return {
-            ...crit,
-            sous_criteres: [...crit.sous_criteres, { id: tempId, nom: newSousCritere.content }]
-          };
-        }
-        return crit;
-      });
-      setFormStructure(updatedStructure);
-      // Auto-select new sub-criterion
-      setSelectedSousCriteres([...selectedSousCriteres, tempId]);
+      if (newSousCritere.id) {
+        const updated = formStructure.map(crit => {
+          if (crit.critere_id === newSousCritere.crit_id) {
+            return {
+              ...crit,
+              sous_criteres: crit.sous_criteres.map(sc => 
+                sc.id === newSousCritere.id ? { ...sc, nom: newSousCritere.content, type_cotation: newSousCritere.cotation, reaction: newSousCritere.reaction, preuve_attendu: newSousCritere.preuves } : sc
+              )
+            };
+          }
+          return crit;
+        });
+        setFormStructure(updated);
+      } else {
+        const tempId = `temp_${Date.now()}`;
+        const updatedStructure = formStructure.map(crit => {
+          if (crit.critere_id === newSousCritere.crit_id) {
+            return {
+              ...crit,
+              sous_criteres: [...crit.sous_criteres, { id: tempId, nom: newSousCritere.content, type_cotation: newSousCritere.cotation, reaction: newSousCritere.reaction, preuve_attendu: newSousCritere.preuves }]
+            };
+          }
+          return crit;
+        });
+        setFormStructure(updatedStructure);
+        setSelectedSousCriteres([...selectedSousCriteres, tempId]);
+      }
     }
     
     setShowSousCritereModal(false);
-    setNewSousCritere({ id: null, content: '', crit_id: null });
+    setNewSousCritere({ id: null, content: '', crit_id: null, cotation: '', reaction: '', preuves: [] });
+
+    if (formData.formulaire_audit && !showQuickCreate) {
+      setTimeout(() => setShowPreviewModal(true), 300);
+    }
   };
 
   const toggleSousCritereSelection = (id) => {
@@ -390,23 +509,46 @@ const AuditScheduleScreen = () => {
   const handleDeleteCritere = (id) => {
     Alert.alert('Supprimer', 'Voulez-vous supprimer ce critère ?', [
       { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => {
-        setFormStructure(formStructure.filter(c => c.critere_id !== id));
+      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+        if (showPreviewModal && formData.formulaire_audit && !String(id).startsWith('temp_')) {
+          try {
+            await api.delete(`${API_PATHS.CRITERES}${id}/`);
+            handlePreviewFormulaire();
+          } catch (error) {
+            Alert.alert('Erreur', 'Échec de la suppression');
+          }
+        } else {
+          setFormStructure(formStructure.filter(c => c.critere_id !== id));
+        }
       }}
     ]);
   };
 
   const handleDeleteSousCritere = (critId, scId) => {
-    const updatedStructure = formStructure.map(crit => {
-      if (crit.critere_id === critId) {
-        return {
-          ...crit,
-          sous_criteres: crit.sous_criteres.filter(sc => sc.id !== scId)
-        };
-      }
-      return crit;
-    });
-    setFormStructure(updatedStructure);
+    Alert.alert('Supprimer', 'Supprimer ce sous-critère ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+        if (showPreviewModal && formData.formulaire_audit && !String(scId).startsWith('temp_')) {
+          try {
+            await api.delete(`${API_PATHS.SOUS_CRITERES}${scId}/`);
+            handlePreviewFormulaire();
+          } catch (error) {
+            Alert.alert('Erreur', 'Échec de la suppression');
+          }
+        } else {
+          const updatedStructure = formStructure.map(crit => {
+            if (crit.critere_id === critId) {
+              return {
+                ...crit,
+                sous_criteres: crit.sous_criteres.filter(sc => sc.id !== scId)
+              };
+            }
+            return crit;
+          });
+          setFormStructure(updatedStructure);
+        }
+      }}
+    ]);
   };
 
   if (loading) {
@@ -442,8 +584,11 @@ const AuditScheduleScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Informations Générales */}
+      <ScrollView 
+        ref={scrollRef}
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.sectionHeader}>
            <View style={styles.sectionTitleWithIcon}>
               <View style={styles.infoIconBox}>
@@ -478,7 +623,6 @@ const AuditScheduleScreen = () => {
           </View>
         </View>
 
-        {/* Paramètres & Configuration */}
         <View style={styles.sectionHeader}>
            <View style={styles.sectionTitleWithIcon}>
               <View style={styles.settingsIconBox}>
@@ -508,6 +652,22 @@ const AuditScheduleScreen = () => {
               icon={<MaterialCommunityIcons name="format-list-bulleted" size={18} color="#475569" />}
             />
           </View>
+          {formData.formulaire_audit && !showQuickCreate && (
+            <>
+              <TouchableOpacity 
+                style={styles.eyeBtn} 
+                onPress={handlePreviewFormulaire}
+              >
+                <Feather name="eye" size={20} color="#06b6d4" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.copyBtn} 
+                onPress={handleCopyFormulaire}
+              >
+                <Feather name="copy" size={18} color="#f59e0b" />
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity 
             style={[styles.plusBtn, showQuickCreate && styles.plusBtnActive]} 
             onPress={() => setShowQuickCreate(!showQuickCreate)}
@@ -551,7 +711,6 @@ const AuditScheduleScreen = () => {
           icon={<Ionicons name="people-outline" size={18} color="#3b82f6" />}
         />
 
-        {/* Quick Create Sub-form */}
         {showQuickCreate && (
           <View style={styles.quickCreateContainer}>
             <View style={styles.quickCreateHeader}>
@@ -562,6 +721,7 @@ const AuditScheduleScreen = () => {
             <View style={styles.quickField}>
               <Text style={styles.quickLabel}>NOM DU FORMULAIRE</Text>
               <TextInput 
+                ref={quickInputRef}
                 style={styles.quickInput}
                 placeholder="Ex: Audit Interne 2026..."
                 value={quickFormData.name}
@@ -616,7 +776,6 @@ const AuditScheduleScreen = () => {
                 />
             </View>
 
-            {/* Structure Section */}
             {formStructure.length > 0 && (
               <View style={styles.structureContainer}>
                 <View style={styles.structureHeader}>
@@ -639,55 +798,6 @@ const AuditScheduleScreen = () => {
                        </TouchableOpacity>
                    </View>
                 </View>
-
-                {/* New Criterion Modal */}
-                <Modal
-                  visible={showCritereModal}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowCritereModal(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{newCritere.id ? 'Modifier le Critère' : 'Nouveau Critère'}</Text>
-                        <TouchableOpacity onPress={() => setShowCritereModal(false)}>
-                          <Ionicons name="close" size={24} color="#64748b" />
-                        </TouchableOpacity>
-                      </View>
-                      
-                      <View style={styles.modalBody}>
-                        <View style={styles.fieldGroup}>
-                          <Text style={styles.fieldLabel}>DÉSIGNATION DU CRITÈRE *</Text>
-                          <TextInput
-                            style={styles.modalInput}
-                            placeholder="Nom du critère..."
-                            value={newCritere.name}
-                            onChangeText={(val) => setNewCritere({ ...newCritere, name: val })}
-                          />
-                        </View>
-
-                        <NormalDropdown
-                          label="CHAPITRE DE NORME"
-                          value={newCritere.chapitre_id}
-                          options={processusList}
-                          onSelect={(id) => setNewCritere({ ...newCritere, chapitre_id: id })}
-                          placeholder="Sélectionnez un chapitre..."
-                          style={{ marginBottom: 20 }}
-                        />
-
-                        <TouchableOpacity 
-                          style={styles.modalSubmitBtn}
-                          onPress={handleAddCritere}
-                        >
-                          <Text style={styles.modalSubmitBtnText}>
-                            {newCritere.id ? 'Mettre à jour' : 'Ajouter le Critère'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </Modal>
 
                 {formStructure.map((crit, idx) => (
                   <View key={crit.critere_id} style={styles.critereCard}>
@@ -755,7 +865,7 @@ const AuditScheduleScreen = () => {
                              </Text>
                              <View style={styles.scActions}>
                                <TouchableOpacity onPress={() => {
-                                 setNewSousCritere({ id: sc.id, content: sc.nom, crit_id: crit.critere_id });
+                                 setNewSousCritere({ id: sc.id, content: sc.nom, crit_id: crit.critere_id, cotation: sc.type_cotation, reaction: sc.reaction, preuves: sc.preuve_attendu });
                                  setShowSousCritereModal(true);
                                }}>
                                   <Feather name="edit-2" size={14} color="#94a3b8" />
@@ -769,7 +879,7 @@ const AuditScheduleScreen = () => {
                         <TouchableOpacity 
                           style={styles.addSousCritereBtn}
                           onPress={() => {
-                            setNewSousCritere({ content: '', crit_id: crit.critere_id });
+                            setNewSousCritere({ content: '', crit_id: crit.critere_id, cotation: '', reaction: '', preuves: [] });
                             setShowSousCritereModal(true);
                           }}
                         >
@@ -780,48 +890,6 @@ const AuditScheduleScreen = () => {
                     )}
                   </View>
                 ))}
-
-                {/* New Sous-Critère Modal */}
-                <Modal
-                  visible={showSousCritereModal}
-                  transparent={true}
-                  animationType="fade"
-                  onRequestClose={() => setShowSousCritereModal(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{newSousCritere.id ? 'Modifier le Sous-Critère' : 'Nouveau Sous-Critère'}</Text>
-                        <TouchableOpacity onPress={() => setShowSousCritereModal(false)}>
-                          <Ionicons name="close" size={24} color="#64748b" />
-                        </TouchableOpacity>
-                      </View>
-                      
-                      <View style={styles.modalBody}>
-                        <View style={styles.fieldGroup}>
-                          <Text style={styles.fieldLabel}>LIBELLÉ DU SOUS-CRITÈRE *</Text>
-                          <TextInput
-                            style={styles.modalInput}
-                            placeholder="Ex: Vérification des équipements..."
-                            value={newSousCritere.content}
-                            onChangeText={(val) => setNewSousCritere({ ...newSousCritere, content: val })}
-                            multiline
-                            numberOfLines={3}
-                          />
-                        </View>
-
-                        <TouchableOpacity 
-                          style={styles.modalSubmitBtn}
-                          onPress={handleAddSousCritere}
-                        >
-                          <Text style={styles.modalSubmitBtnText}>
-                            {newSousCritere.id ? 'Mettre à jour' : 'Ajouter le Sous-Critère'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </Modal>
               </View>
             )}
 
@@ -846,6 +914,379 @@ const AuditScheduleScreen = () => {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <Modal
+        visible={showPreviewModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPreviewModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle} numberOfLines={1}>Structure du Formulaire</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
+                  <Text style={styles.modalSubtitle}>
+                    {formulaires.find(f => f.id === formData.formulaire_audit)?.name}
+                  </Text>
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>
+                      {previewData.length} critères · {previewData.reduce((acc, c) => acc + (c.sous_criteres?.length || 0), 0)} sous-critères
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowPreviewModal(false)} style={{ padding: 5, marginLeft: 10 }}>
+                <Ionicons name="close" size={26} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={[styles.modalBody, { padding: 0 }]}>
+              <View style={styles.modalActionsRow}>
+                 <TouchableOpacity 
+                   style={styles.modalAddBtn}
+                   onPress={() => {
+                     setNewCritere({ id: null, name: '', chapitre_id: '' });
+                     setShowPreviewModal(false);
+                     setTimeout(() => setShowCritereModal(true), 100);
+                   }}
+                 >
+                    <Ionicons name="add" size={20} color="#fff" />
+                    <Text style={styles.modalAddBtnText}>Nouveau Critère</Text>
+                 </TouchableOpacity>
+              </View>
+
+              {loadingPreview ? (
+                <View style={{ padding: 40, alignItems: 'center' }}>
+                  <ActivityIndicator size="large" color="#3b82f6" />
+                  <Text style={{ marginTop: 10, color: '#64748b' }}>Chargement...</Text>
+                </View>
+              ) : (
+                <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+                  {previewData.length > 0 ? (
+                    previewData.map((crit, idx) => (
+                      <View key={crit.critere_id || idx} style={styles.previewCritCard}>
+                        <View style={styles.previewCritHeader}>
+                          <View style={styles.critereTopRow}>
+                            <TouchableOpacity 
+                              style={styles.critereTitleGroup}
+                              onPress={() => toggleCriterion(crit.critere_id)}
+                              activeOpacity={0.7}
+                            >
+                              <Ionicons 
+                                name={expandedCriteria[crit.critere_id] ? "chevron-down" : "chevron-forward"} 
+                                size={18} 
+                                color="#3b82f6" 
+                              />
+                              <Text style={styles.previewCritTitle} numberOfLines={2}>
+                                {crit.critere_nom}
+                              </Text>
+                            </TouchableOpacity>
+                            <View style={styles.critereQuickActions}>
+                               <TouchableOpacity 
+                                 style={styles.actionIconBtn}
+                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                 onPress={() => {
+                                   setNewCritere({ id: crit.critere_id, name: crit.critere_nom, chapitre_id: crit.chapitre_id });
+                                   setShowPreviewModal(false);
+                                   setTimeout(() => setShowCritereModal(true), 100);
+                                 }}
+                               >
+                                  <Feather name="edit-2" size={14} color="#3b82f6" />
+                               </TouchableOpacity>
+                               <TouchableOpacity 
+                                 style={styles.actionIconBtn}
+                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                 onPress={() => handleDeleteCritere(crit.critere_id)}
+                               >
+                                  <Feather name="trash-2" size={14} color="#ef4444" />
+                               </TouchableOpacity>
+                            </View>
+                          </View>
+                          <TouchableOpacity 
+                            style={styles.chapterBadge}
+                            onPress={() => toggleCriterion(crit.critere_id)}
+                          >
+                             <Text style={styles.chapterBadgeText}>{crit.chapitre || 'CHAPITRE'}</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {expandedCriteria[crit.critere_id] && (
+                          <View style={styles.previewScList}>
+                            {crit.sous_criteres?.map((sc, scIdx) => (
+                              <View key={sc.id || scIdx} style={styles.previewScRow}>
+                                <Ionicons name="ellipse" size={6} color="#3b82f6" style={{ marginRight: 10, marginTop: 6 }} />
+                                 <View style={styles.scMainContent}>
+                                   <Text style={styles.scText}>{sc.nom || sc.content}</Text>
+                                   <View style={styles.scBadgesRow}>
+                                     {sc.cotation_name && (
+                                       <View style={[styles.miniBadge, { backgroundColor: '#eff6ff' }]}>
+                                         <Text style={[styles.miniBadgeText, { color: '#3b82f6' }]}>{sc.cotation_name}</Text>
+                                       </View>
+                                     )}
+                                     {sc.reaction && (
+                                       <View style={[styles.miniBadge, { backgroundColor: '#fff7ed' }]}>
+                                         <MaterialCommunityIcons name="zap" size={10} color="#f97316" />
+                                       </View>
+                                     )}
+                                   </View>
+                                 </View>
+                                <View style={styles.scActions}>
+                                   <TouchableOpacity 
+                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                     onPress={() => {
+                                       setNewSousCritere({ 
+                                         id: sc.id, 
+                                         content: sc.nom, 
+                                         crit_id: crit.critere_id,
+                                         cotation: sc.type_cotation_id || sc.type_cotation || '',
+                                         reaction: sc.reaction || '',
+                                         preuves: sc.preuve_attendu_id || sc.preuve_attendu || []
+                                       });
+                                       setShowPreviewModal(false);
+                                       setTimeout(() => setShowSousCritereModal(true), 100);
+                                     }}
+                                   >
+                                      <Feather name="edit-2" size={12} color="#94a3b8" />
+                                   </TouchableOpacity>
+                                   <TouchableOpacity 
+                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                     onPress={() => handleDeleteSousCritere(crit.critere_id, sc.id)}
+                                   >
+                                      <Feather name="trash-2" size={12} color="#fca5a5" />
+                                   </TouchableOpacity>
+                                </View>
+                              </View>
+                            ))}
+                            <TouchableOpacity 
+                              style={styles.addSousCritereBtn}
+                              onPress={() => {
+                                setNewSousCritere({ content: '', crit_id: crit.critere_id, cotation: '', reaction: '', preuves: [] });
+                                setShowPreviewModal(false);
+                                setTimeout(() => setShowSousCritereModal(true), 100);
+                              }}
+                            >
+                               <Ionicons name="add" size={16} color="#3b82f6" />
+                               <Text style={styles.addSousCritereBtnText}>Ajouter sous-critère</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+                    ))
+                  ) : (
+                    <View style={{ padding: 40, alignItems: 'center' }}>
+                      <Text style={{ color: '#94a3b8' }}>Aucune structure trouvée.</Text>
+                    </View>
+                  )}
+                </ScrollView>
+              )}
+            </View>
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.modalCloseBtn}
+                onPress={() => setShowPreviewModal(false)}
+              >
+                <Text style={styles.modalCloseBtnText}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showCritereModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCritereModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '95%' }]}>
+            <View style={[styles.modalHeader, { paddingVertical: 12, paddingHorizontal: 20 }]}>
+              <View style={styles.modalTitleRow}>
+                <MaterialCommunityIcons name="folder-plus-outline" size={18} color="#1e293b" />
+                <Text style={[styles.modalTitle, { fontSize: 16 }]}>{newCritere.id ? 'Modifier le Critère' : 'Nouveau Critère'}</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowCritereModal(false);
+                  if (formData.formulaire_audit && !showQuickCreate) {
+                    setTimeout(() => setShowPreviewModal(true), 300);
+                  }
+                }} 
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={[styles.modalBody, { padding: 15 }]}>
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <Feather name="align-left" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>NOM DU CRITÈRE *</Text>
+                </View>
+                <TextInput
+                  style={[styles.modalInput, { height: 50, paddingTop: 10, marginBottom: 0 }]}
+                  placeholder="Ex: Hygiène et Sécurité"
+                  placeholderTextColor="#94a3b8"
+                  value={newCritere.name}
+                  onChangeText={(val) => setNewCritere({ ...newCritere, name: val })}
+                />
+              </View>
+
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <Feather name="book" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>CHAPITRE NORME</Text>
+                </View>
+                <NormalDropdown
+                  value={newCritere.chapitre_id}
+                  options={chapitres}
+                  onSelect={(id) => setNewCritere({ ...newCritere, chapitre_id: id })}
+                  placeholder="Sélectionner le chapitre..."
+                  style={{ marginBottom: 0 }}
+                />
+              </View>
+
+              <View style={[styles.modalSeparator, { marginTop: 5, marginBottom: 12 }]} />
+
+              <View style={styles.modalActionsFooter}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowCritereModal(false);
+                    if (formData.formulaire_audit && !showQuickCreate) {
+                      setTimeout(() => setShowPreviewModal(true), 300);
+                    }
+                  }} 
+                  style={styles.modalCancelArea}
+                >
+                  <Text style={styles.cancelBtnText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modernSubmitBtn, { paddingVertical: 10, paddingHorizontal: 20 }]}
+                  onPress={handleAddCritere}
+                >
+                  <Feather name="save" size={16} color="#fff" />
+                  <Text style={styles.modernSubmitBtnText}>Enregistrer</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showSousCritereModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSousCritereModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '95%' }]}>
+            <View style={[styles.modalHeader, { paddingVertical: 12, paddingHorizontal: 20 }]}>
+              <View style={styles.modalTitleRow}>
+                <MaterialCommunityIcons name="plus-circle" size={18} color="#1e293b" />
+                <Text style={[styles.modalTitle, { fontSize: 16 }]}>{newSousCritere.id ? 'Modifier le Sous-Critère' : 'Nouveau Sous-Critère'}</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowSousCritereModal(false);
+                  if (formData.formulaire_audit && !showQuickCreate) {
+                    setTimeout(() => setShowPreviewModal(true), 300);
+                  }
+                }} 
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={[styles.modalBody, { padding: 15 }]} showsVerticalScrollIndicator={false}>
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <MaterialCommunityIcons name="layers-outline" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>COTATION</Text>
+                </View>
+                <NormalDropdown
+                  value={newSousCritere.cotation}
+                  options={typeCotations}
+                  onSelect={(id) => setNewSousCritere({ ...newSousCritere, cotation: id })}
+                  placeholder="Sélectionner..."
+                  style={{ marginBottom: 0 }}
+                />
+              </View>
+
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <Feather name="align-left" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>LIBELLÉ *</Text>
+                </View>
+                <TextInput
+                  style={[styles.modalInput, { height: 60, textAlignVertical: 'top', paddingTop: 8, marginBottom: 0 }]}
+                  placeholder="Détaillez ce qui doit être audité..."
+                  placeholderTextColor="#94a3b8"
+                  value={newSousCritere.content}
+                  onChangeText={(val) => setNewSousCritere({ ...newSousCritere, content: val })}
+                  multiline
+                />
+              </View>
+
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <Feather name="zap" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>RÉACTION</Text>
+                </View>
+                <TextInput
+                  style={[styles.modalInput, { height: 60, textAlignVertical: 'top', paddingTop: 8, marginBottom: 0 }]}
+                  placeholder="Réaction / Plan d'action..."
+                  placeholderTextColor="#94a3b8"
+                  value={newSousCritere.reaction}
+                  onChangeText={(val) => setNewSousCritere({ ...newSousCritere, reaction: val })}
+                  multiline
+                />
+              </View>
+
+              <View style={[styles.fieldGroup, { marginBottom: 12 }]}>
+                <View style={[styles.labelWithIcon, { marginBottom: 4 }]}>
+                  <Feather name="file-text" size={12} color="#3b82f6" />
+                  <Text style={[styles.fieldLabel, { fontSize: 9 }]}>PREUVES ATTENDUES</Text>
+                </View>
+                <NormalDropdown
+                  value={newSousCritere.preuves}
+                  options={preuvesAttendues}
+                  onSelect={(id) => setNewSousCritere({ ...newSousCritere, preuves: id })}
+                  placeholder="Sélectionner..."
+                  style={{ marginBottom: 0 }}
+                />
+              </View>
+
+              <View style={[styles.modalSeparator, { marginTop: 5, marginBottom: 12 }]} />
+
+              <View style={styles.modalActionsFooter}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowSousCritereModal(false);
+                    if (formData.formulaire_audit && !showQuickCreate) {
+                      setTimeout(() => setShowPreviewModal(true), 300);
+                    }
+                  }} 
+                  style={styles.modalCancelArea}
+                >
+                  <Text style={styles.cancelBtnText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modernSubmitBtn, { paddingVertical: 10, paddingHorizontal: 20 }]}
+                  onPress={handleAddSousCritere}
+                >
+                  <Feather name="save" size={16} color="#fff" />
+                  <Text style={styles.modernSubmitBtnText}>Enregistrer</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -894,6 +1335,8 @@ const styles = StyleSheet.create({
 
   plusBtn: { width: 48, height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#3b82f6', alignItems: 'center', justifyContent: 'center', marginLeft: 10, marginTop: 10 },
   plusBtnActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  eyeBtn: { width: 48, height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#06b6d4', alignItems: 'center', justifyContent: 'center', marginLeft: 10, marginTop: 10 },
+  copyBtn: { width: 48, height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#f59e0b', alignItems: 'center', justifyContent: 'center', marginLeft: 10, marginTop: 10 },
   
   rowAlign: { flexDirection: 'row', alignItems: 'center' },
 
@@ -956,7 +1399,32 @@ const styles = StyleSheet.create({
   
   critereBody: { padding: 18, borderTopWidth: 1, borderTopColor: '#f8fafc', backgroundColor: '#fafbfd', borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
   sousCritereRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12, backgroundColor: '#fff', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9' },
-  sousCritereText: { fontSize: 14, color: '#64748b', flex: 1, lineHeight: 20 },
+  
+  scMainContent: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  scBadgesRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+    gap: 6,
+  },
+  miniBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  miniBadgeText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  scText: {
+    fontSize: 14,
+    color: '#1e293b',
+    lineHeight: 20,
+  },
   scActions: { flexDirection: 'row', gap: 12, marginLeft: 10 },
   addSousCritereBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingVertical: 8 },
   addSousCritereBtnText: { fontSize: 13, color: '#3b82f6', fontWeight: '700' },
@@ -970,6 +1438,38 @@ const styles = StyleSheet.create({
   modalInput: { height: 52, backgroundColor: '#f8fafc', borderRadius: 12, paddingHorizontal: 15, fontSize: 15, color: '#1e293b', borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },
   modalSubmitBtn: { backgroundColor: '#4f46e5', height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   modalSubmitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  modalSubtitle: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  modalFooter: { padding: 15, borderTopWidth: 1, borderTopColor: '#f1f5f9', alignItems: 'flex-end' },
+  modalCloseBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: '#f1f5f9' },
+  modalCloseBtnText: { color: '#475569', fontWeight: '700', fontSize: 14 },
+  previewCritCard: { marginBottom: 15, backgroundColor: '#f8fafc', borderRadius: 12, padding: 15, borderWidth: 1, borderColor: '#e2e8f0' },
+  previewCritHeader: { paddingBottom: 5 },
+  previewCritTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b', flex: 1 },
+  previewScList: { paddingLeft: 5, marginTop: 10, borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 10 },
+  previewScRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10, backgroundColor: '#fff', padding: 8, borderRadius: 8 },
+  previewScText: { fontSize: 13, color: '#475569', flex: 1, lineHeight: 18 },
+  countBadge: { backgroundColor: '#3b82f6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  countBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  modalActionsRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#fff' },
+  modalAddBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4f46e5', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, gap: 5 },
+  modalAddBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  
+  critereTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
+  critereTitleGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 5 },
+  critereQuickActions: { flexDirection: 'row', gap: 8, marginLeft: 10 },
+  actionIconBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  scActions: { flexDirection: 'row', gap: 10, marginLeft: 10 },
+  addSousCritereBtn: { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingVertical: 5, gap: 5 },
+  addSousCritereBtnText: { color: '#3b82f6', fontSize: 12, fontWeight: '600' },
+  
+  modalTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  labelWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  modalSeparator: { height: 1, backgroundColor: '#f1f5f9', marginHorizontal: -20, marginTop: 10, marginBottom: 20 },
+  modalActionsFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 25 },
+  modalCancelArea: { paddingVertical: 10, paddingHorizontal: 5 },
+  cancelBtnText: { fontSize: 15, color: '#64748b', fontWeight: '500' },
+  modernSubmitBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#4f46e5', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 30, shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  modernSubmitBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });
 
 export default AuditScheduleScreen;
