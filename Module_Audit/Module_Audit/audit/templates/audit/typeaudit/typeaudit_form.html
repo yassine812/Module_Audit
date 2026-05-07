@@ -229,6 +229,9 @@
 
       <!-- ── Header ─────────────────────────────── -->
       <div class="ta-header">
+        <a href="{% url 'typeaudit_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+          <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+        </a>
         <div class="ta-header-ico"><i data-lucide="tags"></i></div>
         <div>
           <h4>{% if form.instance.pk %}Modifier le type d'audit{% else %}Nouveau type d'audit{% endif %}</h4>

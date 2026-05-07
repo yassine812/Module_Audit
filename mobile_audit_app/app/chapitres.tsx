@@ -89,14 +89,14 @@ const ChapitreManagementScreen = () => {
     ]);
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.row}>
-      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 2 }]}><Text style={[styles.cellText, styles.mainText]} numberOfLines={1}>{item.name}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}><Text style={styles.cellText} numberOfLines={1}>{item.text_ref_norme || 'N/A'}</Text></View>
       <View style={[styles.cell, { width: 45, alignItems: 'center' }]}><Text style={styles.cellText}>{item.page || '-'}</Text></View>
       <View style={[styles.cell, { width: 55, flexDirection: 'row', justifyContent: 'center' }]}>
-        <TouchableOpacity onPress={() => { setIsEditing(true); setCurrentId(item.id); setFormData({ name: item.name, text_ref: item.text_ref || '', page: item.page ? item.page.toString() : '' }); setIsSelectingRef(false); setModalVisible(true); }} style={styles.miniActionBtn}>
+        <TouchableOpacity onPress={() => { setIsEditing(true); setCurrentId(item.id); setFormData({ name: item.name, text_ref: item.text_ref_id || '', page: item.page ? item.page.toString() : '' }); setIsSelectingRef(false); setModalVisible(true); }} style={styles.miniActionBtn}>
             <Feather name="edit-2" size={13} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniActionBtn}>

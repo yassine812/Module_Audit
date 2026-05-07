@@ -1,0 +1,130 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-amber-100 text-amber-700 p-2 rounded-lg" style="background-color: #fef3c7; color: #b45309;">
+            <i data-lucide="book" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Chapitre{% else %}Nouveau Chapitre{% endif %}</h4>
+            <p class="  mb-0">Définissez la structure de votre référentiel.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="chapitreModalForm" method="post" action="{% if object %}{% url 'chapitre_update' object.id %}{% else %}{% url 'chapitre_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Nom du Chapitre -->
+        <div class="form-group mb-4">
+            <label class=" font-weight-bold text-dark mb-2" for="id_name">Titre du Chapitre <span class="text-danger">*</span></label>
+            <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-0 ps-3">
+                        <i data-lucide="tag" class="text-amber-600" ></i>
+                    </span>
+                </div>
+                <input type="text" name="name" id="id_name" class="form-control border-0 py-2" placeholder="Ex: Chapitre 4 - Contexte..." value="{{ form.name.value|default:'' }}" required>
+            </div>
+            {% if form.name.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <!-- Page -->
+            <div class="col-md-4">
+                <div class="form-group mb-4">
+                    <label class=" font-weight-bold text-dark mb-2" for="id_page">Page</label>
+                    <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i data-lucide="hash" class="text-amber-600" ></i>
+                            </span>
+                        </div>
+                        <input type="number" name="page" id="id_page" class="form-control border-0 py-2" placeholder="0" value="{{ form.page.value|default:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Texte de Référence -->
+            <div class="col-md-8">
+                <div class="form-group mb-4">
+                    <label class=" font-weight-bold text-dark mb-2" for="id_text_ref">Texte de Référence</label>
+                    <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i data-lucide="link" class="text-amber-600" ></i>
+                            </span>
+                        </div>
+                        <select name="text_ref" id="id_text_ref_modal" class="form-control border-0">
+                            {% for choice in form.text_ref.field.choices %}
+                                <option value="{{ choice.0 }}" {% if choice.0 == form.text_ref.value %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-amber text-white font-weight-bold rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #d97706 0%, #ea580c 100%); border: none;">
+            <i data-lucide="save" class="mr-2" ></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<style>
+    /* Fix Select2 inside input-group */
+    .input-group .select2-container {
+        flex: 1 1 auto !important;
+        width: auto !important;
+    }
+    .input-group .select2-container--default .select2-selection--single {
+        border: none !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        background-color: transparent !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 0 !important;
+        line-height: normal !important;
+        color: #1e293b !important;
+        font-weight: 500 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        top: 0 !important;
+    }
+</style>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    // Initialize Select2 for the modal
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('#id_text_ref_modal').select2({
+            placeholder:"Choisir une norme...",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#chapitreModal') 
+        });
+    }
+</script>
+

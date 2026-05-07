@@ -168,6 +168,9 @@
 
       <!-- Header -->
       <div class="tc-header">
+        <a href="{% url 'typecotation_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+          <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+        </a>
         <div class="tc-header-ico"><i data-lucide="star-half-alt"></i></div>
         <div>
           <h4>{% if form.instance.pk %}Modifier le type de cotation{% else %}Nouveau type de cotation{% endif %}</h4>

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Modifier Preuve Attendue{% else %}Nouvelle Preuve Attendue{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<style>
+    .pa-wrapper { width: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    .pa-card {
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    .pa-header {
+        padding: 40px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        display: flex; align-items: center; gap: 20px;
+    }
+    .pa-header-ico {
+        width: 56px; height: 56px; border-radius: 16px;
+        background: rgba(255,255,255,0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.5rem; flex-shrink: 0;
+        backdrop-filter: blur(8px);
+    }
+    .pa-header h2 { margin: 0; color: #fff; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.025em; }
+    .pa-header p { margin: 4px 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; font-weight: 500; }
+    
+    .pa-body { padding: 40px; }
+    
+    .pa-section-title {
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 800; font-size: 0.9rem; text-transform: uppercase;
+        letter-spacing: 0.05em; color: #64748b; margin-bottom: 24px;
+    }
+    .pa-num {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: #10b981; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 900;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+    }
+    @media (max-width: 1024px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-group {
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .input-label {
+        font-size: 0.875rem; font-weight: 700; color: #1e293b;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .modern-input {
+        width: 100%; padding: 12px 16px;
+        border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #f8fafc; font-size: 0.95rem; font-weight: 500;
+        transition: all 0.2s ease;
+        color: #1e293b;
+    }
+    .modern-input:focus {
+        border-color: #10b981; background: #fff; outline: none;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    .modern-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.25rem;
+    }
+
+    .info-panel {
+        background: #f0fdf4; border: 1px solid #dcfce7;
+        border-radius: 20px; padding: 24px;
+    }
+    .info-panel h4 { margin: 0 0 12px; font-size: 0.9rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .info-item { display: flex; align-items: flex-start; gap: 8px; color: #14532d; font-size: 0.85rem; font-weight: 500; }
+    .info-item i { margin-top: 3px; }
+
+    .pa-footer {
+        padding: 32px 40px; background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-cancel {
+        padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0;
+        background: #fff; color: #64748b; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-cancel:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; text-decoration: none; }
+    
+    .btn-save {
+        padding: 12px 32px; border-radius: 12px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px; border: none;
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s; cursor: pointer;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(16, 185, 129, 0.4); }
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block content %}
+<div class="pa-wrapper p-4 sm:p-8">
+    <div class="pa-card max-w-[1400px] mx-auto">
+        <!-- Header -->
+        <div class="pa-header">
+            <div class="pa-header-ico">
+                <i data-lucide="shield-check"></i>
+            </div>
+            <div>
+                <h2>{% if object %}Modifier Preuve Attendue{% else %}Nouvelle Preuve Attendue{% endif %}</h2>
+                <p>Définissez les éléments de preuve requis pour valider la conformité d'un audit.</p>
+            </div>
+        </div>
+
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="pa-body">
+                {% if form.non_field_errors %}
+                    <div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl mb-8 font-semibold flex items-center gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="pa-section-title">
+                    <span class="pa-num">01</span> DÉFINITION DE LA PREUVE
+                </div>
+
+                <div class="form-grid">
+                    <div class="space-y-6">
+                        <!-- Description -->
+                        <div class="input-group">
+                            <label class="input-label" for="{{ form.name.id_for_label }}">
+                                <i data-lucide="info" class="w-4 h-4 text-emerald-500"></i>
+                                Description de l'attendu <span class="text-rose-500">*</span>
+                            </label>
+                            <textarea name="name" id="id_name" class="modern-input" rows="4" 
+                                      placeholder="Décrivez ce que l'auditeur doit vérifier ou collecter..." required>{{ form.name.value|default:'' }}</textarea>
+                            {% if form.name.errors %}
+                                <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                            <p class="text-slate-400 text-xs font-medium italic mt-1">Utilisez des verbes d'action (Vérifier, Consulter, Photographier...).</p>
+                        </div>
+
+                        <!-- Type -->
+                        <div class="input-group">
+                            <label class="input-label" for="{{ form.type_preuve.id_for_label }}">
+                                <i data-lucide="tag" class="w-4 h-4 text-emerald-500"></i>
+                                Type de Preuve
+                            </label>
+                            <select name="type_preuve" id="id_type_preuve" class="modern-input modern-select">
+                                {% for choice in form.type_preuve.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == form.type_preuve.value %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.type_preuve.errors %}
+                                <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.type_preuve.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div class="info-panel">
+                        <h4><i data-lucide="lightbulb" class="w-4 h-4 inline-block mr-1"></i> Conseil d'utilisation</h4>
+                        <ul class="info-list">
+                            <li class="info-item">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                                <span>Soyez spécifique sur l'élément attendu pour éviter les ambiguïtés.</span>
+                            </li>
+                            <li class="info-item">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                                <span>La preuve peut être documentaire, visuelle ou testimoniale.</span>
+                            </li>
+                            <li class="info-item">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+                                <span>Standardiser les preuves garantit l'équité entre les différents sites.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pa-footer">
+                <a href="{% url 'preuveattendu_list' %}" class="btn-cancel">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn-save">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    {% if object %}Enregistrer les modifications{% else %}Créer la preuve attendue{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    document.getElementById('id_name').focus();
+</script>
+{% endblock %}
+
+

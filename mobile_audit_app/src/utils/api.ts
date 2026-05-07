@@ -1,5 +1,6 @@
-export const TUNNEL_URL = 'https://bids-deborah-florists-carefully.trycloudflare.com'; // Public Localtunnel (Permanent name)
+// export const TUNNEL_URL = 'https://bids-deborah-florists-carefully.trycloudflare.com'; // Public Localtunnel (Permanent name)
 // export const TUNNEL_URL = 'http://10.0.2.2:8000'; // emulator
+export const TUNNEL_URL = 'http://192.168.1.17:8000'; // Physical device or local network
 // export const TUNNEL_URL = 'https://0a69-105-159-204-58.ngrok-free.app'; // ngrok
 
 export const getApiUrl = (path: string) => {
@@ -41,10 +42,13 @@ export const API_PATHS = {
     PROCESSUS_DOCS: '/Organisation/api/processus-docs/',
     TYPE_PREUVE: '/audit/api/type-preuve/',
     PREUVE_ATTENDUE: '/audit/api/preuve-attendu/',
+    PREUVES_ATTENDUES: '/audit/api/preuve-attendu/',
     DASHBOARD_STATS: '/audit/api/dashboard-stats/',
     STATS: '/audit/api/dashboard-stats/',
     CHART_DATA: '/audit/api/chart-data/',
     ACTIVITIES: '/audit/api/activities/',
     TEXT_REFS: '/audit/api/textref/',
     FORMULAIRES: '/audit/api/formulaire-audit/',
+    GET_STRUCTURE: '/audit/get-structure/',
+    GET_FORM_STRUCTURE: '/audit/get-formulaire-structure/',
 };

@@ -1,0 +1,58 @@
+{% load static %}
+
+<form id="deleteForm" method="post" action="{% url 'souscritere_delete' object.id %}">
+    {% csrf_token %}
+    <div class="modal-header border-bottom-0 pt-4 px-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-red-100 text-red-600 p-2 rounded-lg">
+                <i data-lucide="alert-triangle" ></i>
+            </div>
+            <div>
+                <h4 class="modal-title font-weight-bold mb-0">Supprimer le Sous-Critère</h4>
+                <p class="  mb-0 text-truncate" style="max-width: 300px;">ID #{{ object.id }}</p>
+            </div>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="text-center mb-4">
+            <p class="text-dark font-weight-bold">Êtes-vous sûr de vouloir supprimer ce sous-critère ?</p>
+            <p class=" ">Cette action est irréversible et supprimera définitivement le sous-critère et ses associations aux formulaires d'audit.</p>
+        </div>
+
+        <div id="deleteErrorMessage" class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold" style="display: none;">
+            <!-- Dynamic error message -->
+        </div>
+
+        <div class="bg-light p-3 rounded-xl border border-dashed">
+            {% if object.critere %}
+            <div class="d-flex justify-content-between mb-2">
+                <span class=" ">Critère Parent:</span>
+                <span class="badge badge-info shadow-none border-0">{{ object.critere.name }}</span>
+            </div>
+            {% endif %}
+            <div class="mt-2 text-left">
+                <span class="  d-block mb-1">Contenu:</span>
+                <span class="font-weight-bold  text-dark d-block p-2 bg-white rounded border">{{ object.content|truncatewords:20 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-danger text-white font-weight-bold rounded-pill px-4 shadow-sm">
+            <i data-lucide="trash-2" class="mr-2" ></i>
+            Supprimer définitivement
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+

@@ -237,6 +237,23 @@
                                 <span style="font-weight: 900; color: black;">Observations:</span> {{ d.commentaire }}
                             </div>
                             {% endif %}
+
+                            {% if d.justificatif or d.justificatif_bis %}
+                            <div style="margin-top: 12px; display: flex; gap: 15px; flex-wrap: wrap;">
+                                {% if d.justificatif %}
+                                <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
+                                    <img src="{{ d.justificatif.url }}" style="max-width: 280px; max-height: 350px; object-fit: contain; border: 1.5px solid black; border-radius: 2px; background: #fff;">
+                                    <span style="font-size: 11px; font-weight: 900; color: black; text-transform: uppercase;">Preuve #1</span>
+                                </div>
+                                {% endif %}
+                                {% if d.justificatif_bis %}
+                                <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
+                                    <img src="{{ d.justificatif_bis.url }}" style="max-width: 280px; max-height: 350px; object-fit: contain; border: 1.5px solid black; border-radius: 2px; background: #fff;">
+                                    <span style="font-size: 11px; font-weight: 900; color: black; text-transform: uppercase;">Preuve #2</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             
                         </div>
                         {% endfor %}
@@ -337,7 +354,7 @@
                         <th class="border-r border-solid border-black px-4 py-4 text-left text-xs font-black uppercase tracking-widest">Catégorie / Point de contrôle</th>
                         <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-32">Évaluation</th>
                         <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-24">Score</th>
-                        <th class="px-4 py-4 text-left text-xs font-black uppercase tracking-widest w-72">Observations & Preuves</th>
+                        <th class="px-4 py-4 text-left text-xs font-black uppercase tracking-widest w-[450px]">Observations & Preuves</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -389,18 +406,32 @@
                         <td class="px-4 py-4 align-middle">
                             <div class="text-xs leading-relaxed">{{ d.commentaire|default:"" }}</div>
                             {% if d.justificatif or d.justificatif_bis %}
-                                <div class="flex flex-wrap gap-2 mt-3 no-print">
+                                <div class="flex flex-wrap gap-3 mt-3">
                                     {% if d.justificatif %}
-                                    <a href="{{ d.justificatif.url }}" target="_blank"
-                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-black rounded text-[11px] font-bold text-black hover:bg-slate-100 transition-all">
-                                        <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Preuve #1
-                                    </a>
+                                    <div class="flex flex-col gap-1">
+                                        <a href="{{ d.justificatif.url }}" target="_blank" class="group block relative overflow-hidden rounded border-2 border-black shadow-md no-print">
+                                            <img src="{{ d.justificatif.url }}" class="w-48 h-64 object-cover group-hover:scale-105 transition-transform duration-500">
+                                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                <div class="bg-white/90 p-2 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300">
+                                                    <i data-lucide="maximize-2" class="w-5 h-5 text-black"></i>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <span class="text-[10px] font-black text-slate-900 uppercase tracking-tight">Preuve #1</span>
+                                    </div>
                                     {% endif %}
                                     {% if d.justificatif_bis %}
-                                    <a href="{{ d.justificatif_bis.url }}" target="_blank"
-                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-black rounded text-[11px] font-bold text-black hover:bg-slate-100 transition-all">
-                                        <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Preuve #2
-                                    </a>
+                                    <div class="flex flex-col gap-1">
+                                        <a href="{{ d.justificatif_bis.url }}" target="_blank" class="group block relative overflow-hidden rounded border-2 border-black shadow-md no-print">
+                                            <img src="{{ d.justificatif_bis.url }}" class="w-48 h-64 object-cover group-hover:scale-105 transition-transform duration-500">
+                                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                <div class="bg-white/90 p-2 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300">
+                                                    <i data-lucide="maximize-2" class="w-5 h-5 text-black"></i>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <span class="text-[10px] font-black text-slate-900 uppercase tracking-tight">Preuve #2</span>
+                                    </div>
                                     {% endif %}
                                 </div>
                             {% endif %}
@@ -457,18 +488,22 @@
                         <div class="text-[10px] font-black text-black uppercase tracking-widest mb-1">Observations & Preuves</div>
                         <div class="text-[10px] leading-snug">{{ d.commentaire|default:"" }}</div>
                         {% if d.justificatif or d.justificatif_bis %}
-                            <div class="flex flex-wrap gap-2 mt-2 no-print">
+                            <div class="flex flex-wrap gap-2 mt-3 no-print">
                                 {% if d.justificatif %}
-                                <a href="{{ d.justificatif.url }}" target="_blank"
-                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
-                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #1
-                                </a>
+                                <div class="flex flex-col gap-1">
+                                    <a href="{{ d.justificatif.url }}" target="_blank" class="block rounded border border-black overflow-hidden shadow-sm">
+                                        <img src="{{ d.justificatif.url }}" class="w-16 h-16 object-cover">
+                                    </a>
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase">Preuve #1</span>
+                                </div>
                                 {% endif %}
                                 {% if d.justificatif_bis %}
-                                <a href="{{ d.justificatif_bis.url }}" target="_blank"
-                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
-                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #2
-                                </a>
+                                <div class="flex flex-col gap-1">
+                                    <a href="{{ d.justificatif_bis.url }}" target="_blank" class="block rounded border border-black overflow-hidden shadow-sm">
+                                        <img src="{{ d.justificatif_bis.url }}" class="w-16 h-16 object-cover">
+                                    </a>
+                                    <span class="text-[8px] font-bold text-slate-500 uppercase">Preuve #2</span>
+                                </div>
                                 {% endif %}
                             </div>
                         {% endif %}

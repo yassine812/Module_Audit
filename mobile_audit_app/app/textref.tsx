@@ -121,9 +121,9 @@ const TextRefManagementScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 40 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 40 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1.2 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.norme}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}>
         {item.file_name && item.file_name !== 'N/A' ? (

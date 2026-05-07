@@ -127,12 +127,12 @@
                              data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
                             <div class="card-header-row">
                                 <h4 class="card-title">{{ resultat.sujet }}</h4>
-                                <span class="card-id-badge">#{{ resultat.id }}</span>
+                                <span class="card-id-badge">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
                             </div>
 
                             <div class="card-field">
                                 <span class="card-field-label">Référence</span>
-                                <span class="card-field-value">{{ resultat.ref_audit|default:"-" }}</span>
+                                <span class="card-field-value">REF-{{ forloop.counter }}</span>
                             </div>
 
                             <div class="card-field">
@@ -216,10 +216,10 @@
                                     <tr class="result-row"
                                         data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
                                         data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
-                                        <td class="col-id ps-3  " data-label="ID">#{{ resultat.id }}</td>
+                                        <td class="col-id ps-3  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                                         <td class="col-name" data-label="Sujet">
                                             <div class="font-weight-bold  text-dark">{{ resultat.sujet }}</div>
-                                            <small class="">{{ resultat.ref_audit }}</small>
+                                            <small class="text-muted">REF-{{ forloop.counter }}</small>
                                         </td>
                                         <td class="col-auditor" data-label="Auditeur">{{ resultat.auditeur.username }}</td>
                                         <td class="col-site" data-label="Site">{{ resultat.site|default:"N/A" }}</td>
@@ -441,7 +441,11 @@
         margin-bottom: 4px;
       }
     }
+<<<<<<< HEAD
 =======
+=======
+
+>>>>>>> 1d2633d (fix web etape)
   /* Responsive Pagination */
   .pagination-container {
       display: flex;
@@ -465,7 +469,10 @@
           margin-bottom: 4px;
       }
   }
+<<<<<<< HEAD
 >>>>>>> 603d326 (web fix)
+=======
+>>>>>>> 1d2633d (fix web etape)
 </style>
 
 {% endblock %}

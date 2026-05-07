@@ -133,6 +133,9 @@
     <div class="tr-card max-w-[1400px] mx-auto">
         <!-- Header -->
         <div class="tr-header">
+            <a href="{% url 'textref_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
             <div class="tr-header-ico">
                 <i data-lucide="{% if form.instance.pk %}book-open{% else %}plus-square{% endif %}"></i>
             </div>

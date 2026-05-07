@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
 import { useSidebar } from '../src/context/SidebarContext';
@@ -52,7 +52,11 @@ const FormulaireManagementScreen = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const handleSave = async () => {
     if (!formData.name) return Alert.alert('Erreur', 'Nom requis');
@@ -90,35 +94,29 @@ const FormulaireManagementScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 22 }]}><Text style={styles.headerText}>ID</Text></View>
-      <View style={[styles.headerCell, { flex: 1.2 }]}><Text style={styles.headerText}>Nom</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Type</Text></View>
-      <View style={[styles.headerCell, { width: 50 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Critères</Text></View>
-      <View style={[styles.headerCell, { width: 60 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Date</Text></View>
-      <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
+      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { flex: 1.5 }]}><Text style={styles.headerText}>Nom</Text></View>
+      <View style={[styles.headerCell, { flex: 1.0 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Type</Text></View>
+      <View style={[styles.headerCell, { width: 70 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Date</Text></View>
+      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 22 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
-      <View style={[styles.cell, { flex: 1.2 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.name}</Text></View>
-      <View style={[styles.cell, { width: 65, alignItems: 'center' }]}>
+      <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
+      <View style={[styles.cell, { flex: 1.5 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.name}</Text></View>
+      <View style={[styles.cell, { flex: 1.0, alignItems: 'center' }]}>
         <View style={styles.typeBadge}>
           <Text style={styles.typeText}>{item.type_audit_name || '-'}</Text>
         </View>
       </View>
-      <View style={[styles.cell, { width: 50, alignItems: 'center' }]}>
-        <View style={styles.scBadge}>
-          <Text style={styles.scText}>{item.sc_count} SC</Text>
-        </View>
-      </View>
-      <View style={[styles.cell, { width: 60 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.date_creation ? item.date_creation.split(' ')[0] : '-'}</Text></View>
-      <View style={[styles.cell, { width: 75, flexDirection: 'row', justifyContent: 'center' }]}>
-        <TouchableOpacity style={styles.miniAction} onPress={() => { router.push(`/formulaire/${item.id}`) }}>
+      <View style={[styles.cell, { width: 70 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.date_creation ? item.date_creation.split(' ')[0] : '-'}</Text></View>
+      <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'center' }]}>
+        <TouchableOpacity style={styles.miniAction} onPress={() => { router.push(`/formulaire-detail?id=${item.id}`) }}>
             <Feather name="eye" size={11} color="#06b6d4" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.miniAction} onPress={() => { setIsEditing(true); setCurrentId(item.id); setFormData({ name: item.name, processus: item.processus_id || '', type_audit: item.type_audit_id || '' }); setModalVisible(true); }}>
+        <TouchableOpacity style={styles.miniAction} onPress={() => { router.push(`/formulaire-form?id=${item.id}`) }}>
             <Feather name="edit-2" size={11} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.miniAction} onPress={() => handleCopy(item.id)}>
@@ -143,7 +141,7 @@ const FormulaireManagementScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Formulaires</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={() => { setIsEditing(false); setFormData({ name: '', processus: '', type_audit: '' }); setIsSelectingProcessus(false); setIsSelectingType(false); setModalVisible(true); }}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/formulaire-form')}>
           <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -164,70 +162,7 @@ const FormulaireManagementScreen = () => {
         )}
       </View>
 
-      <Modal animationType="fade" transparent visible={modalVisible}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{isEditing ? 'Modifier' : 'Nouveau'}</Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color="#64748b" /></TouchableOpacity>
-              </View>
-              
-              <Text style={styles.inputLabel}>Nom du Formulaire</Text>
-              <TextInput style={styles.input} value={formData.name} onChangeText={t => setFormData({...formData, name: t})} placeholder="Ex: Audit Qualité" />
-              
-              <Text style={styles.inputLabel}>Processus Associé</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingProcessus && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
-                onPress={() => { setIsSelectingProcessus(!isSelectingProcessus); setIsSelectingType(false); }}
-              >
-                <Text style={[styles.pickerText, !formData.processus && { color: '#94a3b8' }]}>
-                  {formData.processus ? processus.find(p => p.id === formData.processus)?.name : "Choisir..."}
-                </Text>
-                <Ionicons name={isSelectingProcessus ? "chevron-up" : "chevron-down"} size={16} color="#3b82f6" />
-              </TouchableOpacity>
-              {isSelectingProcessus && (
-                <View style={styles.inlineDropdown}>
-                  {processus.map(p => (
-                    <TouchableOpacity key={p.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, processus: p.id}); setIsSelectingProcessus(false); }}>
-                      <Text style={styles.inlineItemText}>{p.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
 
-              <Text style={styles.inputLabel}>Type d'Audit</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingType && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
-                onPress={() => { setIsSelectingType(!isSelectingType); setIsSelectingProcessus(false); }}
-              >
-                <Text style={[styles.pickerText, !formData.type_audit && { color: '#94a3b8' }]}>
-                  {formData.type_audit ? typesAudit.find(t => t.id === formData.type_audit)?.name : "Choisir..."}
-                </Text>
-                <Ionicons name={isSelectingType ? "chevron-up" : "chevron-down"} size={16} color="#3b82f6" />
-              </TouchableOpacity>
-              {isSelectingType && (
-                <View style={styles.inlineDropdown}>
-                  {typesAudit.map(t => (
-                    <TouchableOpacity key={t.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, type_audit: t.id}); setIsSelectingType(false); }}>
-                      <Text style={styles.inlineItemText}>{t.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelBtn}>
-                  <Text style={styles.cancelBtnText}>Annuler</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                  <Text style={styles.saveBtnText}>Enregistrer</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };

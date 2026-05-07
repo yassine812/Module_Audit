@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --profile-gradient: linear-gradient(135deg, #0061f2 0%, #00cfd5 100%);
+        --blue-soft: rgba(0, 97, 242, 0.1);
+        --green-soft: rgba(0, 172, 105, 0.1);
+        --orange-soft: rgba(246, 194, 62, 0.1);
+        --letter-spacing-1: 1px;
+    }
+
+    .premium-card {
+        border-radius: 20px;
+    }
+
+    .profile-header {
+        background: var(--profile-gradient);
+        position: relative;
+    }
+
+    .avatar-large {
+        width: 60px;
+        height: 60px;
+        background: white;
+        color: var(--primary-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0 auto;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @media (min-width: 768px) {
+        .avatar-large {
+            width: 120px;
+            height: 120px;
+            font-size: 3rem;
+            border-width: 5px;
+        }
+
+        .h2-md {
+            font-size: 2.5rem !important;
+        }
+
+        .h5-md {
+            font-size: 1.25rem !important;
+        }
+
+        .small-md-reset {
+            font-size: 1rem !important;
+        }
+    }
+
+    .badge-light-soft {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
+    }
+
+    .badge-responsive {
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .badge-responsive {
+            font-size: 1rem;
+        }
+    }
+
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    @media (min-width: 768px) {
+        .info-icon {
+            width: 55px;
+            height: 55px;
+            font-size: 1.5rem;
+            border-radius: 15px;
+        }
+    }
+
+    .bg-blue-soft {
+        background-color: var(--blue-soft);
+    }
+
+    .bg-green-soft {
+        background-color: var(--green-soft);
+    }
+
+    .bg-orange-soft {
+        background-color: var(--orange-soft);
+    }
+
+    .bg-light-soft {
+        background-color: #f8f9fc;
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: var(--letter-spacing-1);
+    }
+
+    .btn-primary-premium {
+        background: #0061f2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
+    }
+
+    .btn-primary-premium:hover {
+        background: #0051cc;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 97, 242, 0.3);
+        color: white;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 576px) {
+        .btn-sm-block-mobile {
+            width: 100% !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row pt-4 mx-0">
+    <div class="col-12 px-0 px-md-3">
+        <div class="card premium-card border-0 shadow-lg overflow-hidden">
+            <!-- Header Section with Gradient -->
+            <div class="profile-header text-center py-2 py-md-5">
+                <div class="avatar-large shadow-lg mb-1 mb-md-4">
+                    {{ user.username|first|upper }}
+                </div>
+                <h2 class="font-weight-bold text-white mb-1 h5 h2-md">{{ user.username }}</h2>
+                <div class="badge badge-pill badge-light-soft px-2 py-1 px-md-3 py-md-2 text-white badge-responsive">
+                    {% if user.is_superuser %}
+                    <i data-lucide="shield" class="mr-1 mr-md-2"></i> <span class="d-inline d-md-none">Admin</span><span
+                        class="d-none d-md-inline">Administrateur</span>
+                    {% else %}
+                    <i data-lucide="user-circle" class="mr-1 mr-md-2"></i> Auditeur
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Details Body -->
+            <div class="card-body p-2 p-md-5">
+                <div class="profile-info-grid">
+                    <div class="row m-0">
+                        <div class="col-12 col-md-6 info-item mb-2 mb-md-4">
+                            <label
+                                class="text-primary font-weight-bold text-uppercase letter-spacing-1 small small-md-reset mb-1">Infos</label>
+                            <div class="d-flex align-items-center">
+                                <div class="info-icon bg-blue-soft mr-2 flex-shrink-0">
+                                    <i data-lucide="id-card" class="text-primary"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{
+                                        user.get_full_name|default:user.username }}</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">Nom complet</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 info-item mb-2 mb-md-4">
+                            <label
+                                class="text-primary font-weight-bold text-uppercase letter-spacing-1 small small-md-reset mb-1">Contact</label>
+                            <div class="d-flex align-items-center">
+                                <div class="info-icon bg-green-soft mr-2 flex-shrink-0">
+                                    <i data-lucide="mail" class="text-success"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{
+                                        user.email|default:"Non renseigné" }}</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">Email professionnel</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 info-item mb-2 mb-md-4">
+                            <label
+                                class="text-primary font-weight-bold text-uppercase letter-spacing-1 small small-md-reset mb-1">Sécurité</label>
+                            <div class="d-flex align-items-center">
+                                <div class="info-icon bg-orange-soft mr-2 flex-shrink-0">
+                                    <i data-lucide="key" class="text-warning"></i>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="text-dark font-weight-bold h6 mb-0">••••••••••••</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">Mot de passe</div>
+                                </div>
+                                <a href="{% url 'password_change' %}"
+                                    class="btn btn-xs btn-outline-warning rounded-pill px-2 ml-2 btn-password-change">
+                                    Modifier
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-2 my-md-5 border-light">
+
+                <div class="text-center mb-2">
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">Inscrit le {{ user.date_joined|date:"d
+                        M Y" }}</p>
+                </div>
+            </div>
+
+            <div class="card-footer bg-light-soft py-2 py-md-4 px-3 px-md-5 text-center text-md-right border-0">
+                <a href="{% url 'dashboard' %}"
+                    class="btn btn-primary-premium transition-all px-4 py-1 py-md-2 btn-sm-block-mobile">
+                    <i data-lucide="arrow-left" class="mr-2"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div id="passwordModalContent">
+            <!-- Loaded via AJAX -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        const modal = $('#passwordModal');
+        const modalContent = $('#passwordModalContent');
+
+        // Open Modal and Load Form
+        $(document).on('click', '.btn-password-change', function (e) {
+            e.preventDefault();
+            const url = $(this).attr('href');
+
+            modalContent.html('<div class="modal-content"><div class="modal-body text-center p-5"><div class="spinner-border text-warning" role="status"></div><p class="mt-2 mb-0">Chargement...</p></div></div>');
+            modal.modal('show');
+
+            $.get(url, function (data) {
+                modalContent.html(data);
+                if (window.lucide) lucide.createIcons();
+            });
+        });
+
+        // Handle Form Submission
+        $(document).on('submit', '#passwordChangeForm', function (e) {
+            e.preventDefault();
+            const form = $(this);
+            const submitBtn = form.find('button[type="submit"]');
+
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>En cours...');
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        modal.modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message,
+                            timer: 3000,
+                            showConfirmButton: false,
+                            customClass: { popup: 'rounded-4 border-0' }
+                        });
+                    } else {
+                        modalContent.html(response);
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Une erreur est survenue lors de la communication avec le serveur.',
+                        customClass: { popup: 'rounded-4 border-0' }
+                    });
+                },
+                complete: function () {
+                    submitBtn.prop('disabled', false).html('<i data-lucide="save" class="mr-2"></i> Mettre à jour');
+                    if (window.lucide) lucide.createIcons();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

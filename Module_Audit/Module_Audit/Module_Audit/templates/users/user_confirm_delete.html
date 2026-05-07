@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer l'utilisateur{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card premium-card border-0 shadow-lg">
+            <div class="card-header bg-danger-soft text-center py-5">
+                <div class="delete-icon-wrapper mb-3">
+                    <i data-lucide="user-minus" class="text-white w-6 h-6"></i>
+                </div>
+                <h3 class="font-weight-bold text-danger mb-0">Supprimer l'utilisateur</h3>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body text-center px-5 py-4">
+                    <p class=" mb-4 lead">
+                        Êtes-vous certain de vouloir supprimer 
+                        <span class="text-dark font-weight-bold">{{ object.username }}</span> ?
+                    </p>
+                    
+                    <div class="warning-box mb-4">
+                        <div class="d-flex align-items-center text-left">
+                            <i data-lucide="alert-triangle" class="text-warning w-6 h-6 mr-3"></i>
+                            <div>
+                                <div class="font-weight-bold text-dark mb-1">Action Irréversible</div>
+                                <div class=" ">Cette action supprimera définitivement le compte. Les données liées aux audits passés seront conservées pour archivage.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light-soft border-0 p-4 d-flex justify-content-between">
+                    <a href="{% url 'user_list' %}" class="btn btn-light px-4 py-2 font-weight-bold  border">
+                        <i data-lucide="x" class="mr-2"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-danger-premium px-4 py-2 font-weight-bold shadow">
+                        <i data-lucide="trash-2" class="mr-2"></i> Confirmer la Suppression
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --soft-danger: rgba(231, 74, 59, 0.1);
+        --premium-danger: #e74a3b;
+        --soft-bg: #f8f9fc;
+    }
+
+    .premium-card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .bg-danger-soft {
+        background-color: #fff5f5;
+        border-bottom: 1px solid #ffe3e3;
+    }
+
+    .bg-light-soft {
+        background-color: var(--soft-bg);
+    }
+
+    .delete-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 5px 15px rgba(231, 74, 59, 0.4);
+    }
+
+    .warning-box {
+        background-color: #fff9db;
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid #ffe066;
+    }
+
+    .btn-danger-premium {
+        background-color: var(--premium-danger);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-danger-premium:hover {
+        background-color: #be2617;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 74, 59, 0.3);
+        color: white;
+    }
+
+    .btn-light {
+        border-radius: 8px;
+        background: white;
+    }
+
+    .btn-light:hover {
+        background: #f1f3f5;
+        color: #495057 !important;
+    }
+</style>
+{% endblock %}
+

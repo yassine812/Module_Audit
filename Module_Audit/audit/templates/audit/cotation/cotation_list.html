@@ -13,19 +13,17 @@
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /* Mobile Responsive Modal for Cotation */
   @media (max-width: 768px) {
     #cotationModal.modal {
       padding: 0 !important;
     }
+=======
+>>>>>>> 1d2633d (fix web etape)
 
-    #cotationModal .modal-dialog {
-      margin: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
 
+<<<<<<< HEAD
     #cotationModal .modal-content {
       height: 100vh !important;
       border-radius: 0 !important;
@@ -89,6 +87,8 @@
     }
 =======
 
+=======
+>>>>>>> 1d2633d (fix web etape)
   /* Responsive Pagination */
   .pagination-container {
       display: flex;
@@ -111,7 +111,10 @@
           font-size: 0.9rem;
           margin-bottom: 4px;
       }
+<<<<<<< HEAD
 >>>>>>> 603d326 (web fix)
+=======
+>>>>>>> 1d2633d (fix web etape)
   }
 </style>
 {% endblock %}
@@ -157,7 +160,11 @@
             <tbody>
               {% for cotation in page_obj %}
               <tr>
+<<<<<<< HEAD
                 <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+=======
+                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+>>>>>>> 1d2633d (fix web etape)
                 <td class="col-libelle text-truncate">
                   <strong class="text-dark ">{{ cotation.content }}</strong>
                   {% if cotation.code %}
@@ -165,7 +172,7 @@
                   {% endif %}
                 </td>
                 <td class="col-val text-center">
-                  <span class="badge badge-secondary">{{ cotation.valeur|floatformat:"-1" }}</span>
+                  <strong class="text-dark">{{ cotation.valeur|floatformat:"-1" }}</strong>
                 </td>
                 <td class="col-type text-center">
                   {% if cotation.type_cotation %}
@@ -261,7 +268,7 @@
 <!-- Modal Containers -->
 <div class="modal fade" id="cotationModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: visible;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>

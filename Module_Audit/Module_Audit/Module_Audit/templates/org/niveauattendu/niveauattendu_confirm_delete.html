@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Niveau Attendu{% endblock %}
+
+{% block page_title %}Supprimer Niveau Attendu{% endblock %}
+
+{% block breadcrumb %}Niveaux Attendus / Supprimer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h4 class="card-title mb-0">
+            <i data-lucide="alert-triangle" class="mr-2"></i>
+            Confirmation de Suppression
+          </h4>
+        </div>
+        
+        <div class="card-body text-center">
+          <!-- Icône d'avertissement -->
+          <div class="mb-4">
+            <i class="fas fa-trash-alt" style="font-size: 4rem; color: #dc3545;"></i>
+          </div>
+          
+          <!-- Message de confirmation -->
+          <h5 class="mb-3">Voulez-vous supprimer ce niveau ?</h5>
+          
+          <!-- Détails du niveau -->
+          <div class="alert alert-light border">
+            <div class="row">
+              <div class="col-12">
+                <strong>Niveau :</strong> {{ object.name }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <strong>Seuil :</strong> 
+                <span class="badge badge-danger">{{ object.pourcentage }}%</span>
+              </div>
+            </div>
+            {% if object.commentaire %}
+            <div class="row">
+              <div class="col-12">
+                <strong>Description :</strong> {{ object.commentaire }}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Message d'avertissement -->
+          <div class="alert alert-warning mt-3">
+            <i data-lucide="alert-triangle" class="mr-2"></i>
+            <strong>Attention :</strong> Cette action est irréversible.
+          </div>
+          
+          <!-- Boutons d'action -->
+          <div class="mt-4">
+            <form method="post">
+              {% csrf_token %}
+              <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'niveauattendu_list' %}" class="btn btn-secondary px-4">
+                  <i data-lucide="x" class="mr-2"></i>
+                  Annuler
+                </a>
+                <button type="submit" class="btn btn-danger px-4">
+                  <i data-lucide="trash-2" class="mr-2"></i>
+                  Supprimer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.75rem;
+  }
+  
+  .badge-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+  }
+  
+  .btn-secondary {
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+  }
+  
+  .btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c82333 0%, #a02622 100%);
+  }
+  
+  .alert-light {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+  }
+  
+  .alert-warning {
+    border-left: 4px solid #ffc107;
+  }
+</style>
+{% endblock %}
+
+

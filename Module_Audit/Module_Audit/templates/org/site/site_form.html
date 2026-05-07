@@ -85,30 +85,38 @@
         background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.25rem;
     }
 
-    /* Levels List */
+    /* Levels List - Compact Tile (Careaux) Layout */
     .levels-container {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 16px; margin-top: 16px;
     }
     .level-card {
-        padding: 16px; border-radius: 16px; border: 2px solid #f1f5f9;
-        background: #fff; cursor: pointer; transition: all 0.2s;
-        display: flex; align-items: center; gap: 12px;
+        padding: 16px 12px; border-radius: 16px; border: 2px solid #f1f5f9;
+        background: #fff; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 8px; position: relative; text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-    .level-card:hover { border-color: #e2e8f0; background: #f8fafc; }
+    .level-card:hover { border-color: #10b981; transform: translateY(-3px); }
     .level-card.selected { border-color: #10b981; background: #f0fdf4; }
     
     .level-check {
+        position: absolute; top: 8px; right: 8px;
         width: 20px; height: 20px; border-radius: 6px; border: 2px solid #cbd5e1;
         display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        background: #fff;
     }
     .level-card.selected .level-check { background: #10b981; border-color: #10b981; color: #fff; }
     
-    .level-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .level-info { flex-grow: 1; }
-    .level-name { font-size: 0.9rem; font-weight: 700; color: #1e293b; }
-    .level-pct { font-size: 0.75rem; font-weight: 600; color: #64748b; }
+    .level-icon { 
+        width: 36px; height: 36px; border-radius: 10px; 
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 2px;
+    }
+    .level-info { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .level-name { font-size: 0.85rem; font-weight: 800; color: #1e293b; line-height: 1.2; }
+    .level-pct { font-size: 1.1rem; font-weight: 900; }
 
     .st-footer {
         padding: 32px 40px; background: #f8fafc;
@@ -144,6 +152,9 @@
     <div class="st-card max-w-[1400px] mx-auto">
         <!-- Header -->
         <div class="st-header">
+            <a href="{% url 'site_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
             <div class="st-header-ico">
                 <i data-lucide="map-pin"></i>
             </div>

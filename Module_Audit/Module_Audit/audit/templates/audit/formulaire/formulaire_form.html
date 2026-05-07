@@ -6,78 +6,369 @@
 {% block extra_css %}
 
 <style>
-  .stepper-wrapper { margin-top: 1rem; }
-  
-  /* MOBILE RESPONSIVE OVERRIDES (370px+) */
+  .stepper-wrapper {
+    margin-top: 1rem;
+  }
+
+  /* MOBILE - FIT ENTIRE PAGE WITHOUT SCROLLING */
   @media (max-width: 576px) {
-    .container-fluid { padding-left: 10px !important; padding-right: 10px !important; }
-    
-    /* Stepper Refinement */
-    .stepper-item .step-counter { width: 35px !important; height: 35px !important; font-size: 1rem !important; }
-    .stepper-item .step-name { font-size: 0.75rem !important; margin-top: 5px !important; }
-    .stepper-wrapper { margin-bottom: 2rem !important; }
 
-    /* Card Header & Layout */
-    .card-header { padding-top: 1.5rem !important; padding-left: 1rem !important; padding-right: 1rem !important; }
-    .card-header h5 { font-size: 1.1rem !important; }
-    .card-header span.bg-primary { padding: 0.5rem !important; margin-right: 0.75rem !important; }
-    .card-body { padding: 1rem !important; }
-    
-    /* Form Elements */
-    .form-label { font-size: 0.85rem !important; margin-bottom: 0.4rem !important; }
-    .custom-input, .select2-container--bootstrap4 .select2-selection--single { height: 42px !important; font-size: 0.9rem !important; }
-    
-    /* Buttons */
-    #btn-sync { padding: 0.75rem !important; font-size: 0.95rem !important; }
-    
-    /* Footer Bar */
-    .footer-bar { padding: 0.75rem 1rem !important; }
-    .footer-bar small { display: none; }
-    .footer-bar .btn { padding: 0.6rem 0.75rem !important; font-size: 0.85rem !important; flex: 1; }
-    
-    /* Step 2 Specifics */
-    .criterion-row-parent .bg-primary { display: none !important; }
-    #step-2-container .ms-5 { margin-left: 0.5rem !important; }
-    .criterion-row-parent td { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
-    
-    /* Structure Table Refinements */
-    .structure-table th { font-size: 0.7rem !important; padding: 0.5rem !important; }
-    .structure-table td { font-size: 0.85rem !important; padding: 0.5rem !important; vertical-align: middle !important; }
-    .col-actions-structure { width: 100px !important; }
-    .btn-xs { padding: 0.2rem 0.5rem !important; font-size: 0.65rem !important; }
-    
-    #step-2 .btn-primary.px-5 { width: 100% !important; padding: 0.75rem !important; border-radius: 12px !important; }
+    /* Remove ALL margins and padding from body and html */
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
 
-    /* New Precise Mobile Layout */
+    /* Container minimal padding - no top space */
+    .container-fluid {
+      padding: 0 4px 4px 4px !important;
+      margin-top: 0 !important;
+    }
+
+    .container-fluid.py-4 {
+      padding-top: 0 !important;
+      padding-bottom: 4px !important;
+    }
+
+    .min-vh-100 {
+      min-height: auto !important;
+    }
+
+    .bg-light {
+      background: #f8f9fa !important;
+    }
+
+    /* Remove ALL space from content block - use negative margin to pull up */
+    #step-1 {
+      margin-top: -15px !important;
+      padding-top: 0 !important;
+    }
+
+    form {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+
+    /* Hide stepper completely to save space */
+    .stepper-wrapper {
+      display: none !important;
+    }
+
+    .row.justify-content-center.mb-5 {
+      display: none !important;
+    }
+
+    /* Compact card - minimal spacing, no top margin */
+    .card {
+      margin-top: 0 !important;
+      margin-bottom: 0.2rem !important;
+      border-radius: 6px !important;
+    }
+
+    .card-header {
+      padding: 0.2rem 0.3rem !important;
+    }
+
+    .card-header h5 {
+      font-size: 0.7rem !important;
+      margin: 0 !important;
+    }
+
+    .card-header span.bg-primary {
+      padding: 0.15rem !important;
+      margin-right: 0.2rem !important;
+    }
+
+    .card-header span.bg-primary i {
+      width: 10px !important;
+      height: 10px !important;
+    }
+
+    .card-body {
+      padding: 0.15rem 0.3rem !important;
+    }
+
+    /* Simplified grid layout */
+    #step-1 .row {
+      margin-left: -0.15rem !important;
+      margin-right: -0.15rem !important;
+    }
+
+    #step-1 .col-md-6,
+    #step-1 .col-md-12 {
+      float: left !important;
+      padding-left: 0.15rem !important;
+      padding-right: 0.15rem !important;
+      min-height: 1px !important;
+    }
+
+    #step-1 .col-md-6 {
+      width: 50% !important;
+    }
+
+    #step-1 .col-md-12 {
+      width: 100% !important;
+      clear: both !important;
+    }
+
+    /* Clear floats */
+    #step-1 .row::after {
+      content: "" !important;
+      display: table !important;
+      clear: both !important;
+    }
+
+    /* Ensure form inputs are visible */
+    #step-1 input,
+    #step-1 select {
+      width: 100% !important;
+      display: block !important;
+    }
+
+    /* Ultra compact form elements */
+    .form-group {
+      margin-bottom: 0.05rem !important;
+    }
+
+    .form-label {
+      font-size: 0.6rem !important;
+      margin-bottom: 0 !important;
+      font-weight: 600 !important;
+      line-height: 1.2 !important;
+    }
+
+    .form-control,
+    .form-select,
+    .custom-input,
+    .select2-container--bootstrap4 .select2-selection--single {
+      height: 26px !important;
+      min-height: 26px !important;
+      font-size: 0.7rem !important;
+      padding: 0.1rem 0.25rem !important;
+    }
+
+    /* Row gaps minimal */
+    .row.g-4 {
+      --bs-gutter-y: 0.05rem !important;
+      --bs-gutter-x: 0.1rem !important;
+    }
+
+    /* Sync button very compact */
+    #btn-sync {
+      padding: 0.3rem !important;
+      font-size: 0.7rem !important;
+      margin-top: 0.3rem !important;
+      height: auto !important;
+    }
+
+    #btn-sync i {
+      width: 12px !important;
+      height: 12px !important;
+      margin-right: 0.25rem !important;
+    }
+
+    /* Footer bar fixed at bottom */
+    .footer-bar {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      padding: 0.3rem 0.4rem !important;
+      z-index: 1050 !important;
+    }
+
+    .footer-bar .btn {
+      padding: 0.3rem 0.5rem !important;
+      font-size: 0.7rem !important;
+    }
+
+    .footer-bar small {
+      display: none !important;
+    }
+
+    /* Reduce bottom spacer */
+    form>div[style="height: 120px;"] {
+      height: 50px !important;
+    }
+
+    /* Error alerts compact */
+    .alert {
+      padding: 0.5rem !important;
+      font-size: 0.7rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+
+    .alert i {
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    /* Step 2 - Better mobile organization */
+    #step-2 .d-flex.flex-column.flex-sm-row {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+    }
+
+    #step-2 h5 {
+      font-size: 0.85rem !important;
+    }
+
+    #step-2 .btn-outline-primary {
+      font-size: 0.7rem !important;
+      padding: 0.3rem 0.5rem !important;
+      width: 100% !important;
+    }
+
+    /* Structure - Clean card layout, everything stacked vertically */
+    #step-2-container .table {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    #step-2-container .table thead {
+      display: none !important;
+    }
+
+    #step-2-container .table tbody {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    /* Main criterion row - simple flex column */
+    #step-2-container .table tr.criterion-row-parent {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      border: 1px solid #dee2e6 !important;
+      border-radius: 8px !important;
+      margin-bottom: 0.5rem !important;
+      padding: 0.5rem !important;
+      background: white !important;
+    }
+
+    /* Hide original table cells, we'll rebuild with flex */
+    #step-2-container .table tr.criterion-row-parent>td {
+      display: none !important;
+    }
+
+    /* Show only the cells we need and reorganize */
+    #step-2-container .table tr.criterion-row-parent>td:first-child,
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(2),
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) {
+      display: flex !important;
+      width: 100% !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+
+    /* Chevron row */
+    #step-2-container .table tr.criterion-row-parent>td:first-child {
+      justify-content: center !important;
+      padding-bottom: 0.3rem !important;
+      border-bottom: 1px solid #eee !important;
+      margin-bottom: 0.3rem !important;
+    }
+
+    /* Critere info row */
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(2) {
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
+      margin-bottom: 0.5rem !important;
+    }
+
+    /* Actions row - centered buttons */
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) {
+      flex-direction: row !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      padding-top: 0.3rem !important;
+      border-top: 1px solid #eee !important;
+    }
+
+    /* Actions buttons */
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) .btn {
+      padding: 0.3rem 0.6rem !important;
+      font-size: 0.75rem !important;
+    }
+
+    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) .btn i {
+      width: 14px !important;
+      height: 14px !important;
+    }
+
+    /* Sous-critères collapse row - below the card */
+    #step-2-container .table tr.collapse-row {
+      display: block !important;
+      width: 100% !important;
+      border: none !important;
+      background: #f8f9fa !important;
+      margin: -0.4rem 0 0.5rem 0 !important;
+      padding: 0.5rem !important;
+      border-radius: 0 0 8px 8px !important;
+    }
+
+    #step-2-container .table tr.collapse-row td {
+      display: block !important;
+      width: 100% !important;
+      padding: 0 !important;
+    }
+
+    /* Nested sous-critère table */
+    #step-2-container .table .table-sm {
+      margin: 0 !important;
+      width: 100% !important;
+    }
+
+    #step-2-container .table .table-sm tr {
+      display: flex !important;
+      align-items: center !important;
+      padding: 0.4rem !important;
+      margin-bottom: 0.2rem !important;
+      background: white !important;
+      border-radius: 4px !important;
+    }
+
+    #step-2-container .table .table-sm td {
+      font-size: 0.8rem !important;
+      padding: 0 !important;
+    }
+
+    /* Critere cell - centered */
     .critere-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      text-align: left !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 4px !important;
     }
 
-    .actions-cell {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      justify-content: center;
+    .critere-cell strong {
+      font-size: 1rem !important;
     }
 
-    .structure-table td:first-child + td { /* Target the main Critere cell */
-      min-width: 160px !important;
+    .critere-cell .badge {
+      font-size: 0.75rem !important;
+      padding: 0.2rem 0.4rem !important;
     }
 
-    .structure-table .btn-outline-primary {
-      white-space: nowrap !important;
-      padding: 4px 10px !important;
-      font-size: 12px !important;
+    .critere-cell small {
+      font-size: 0.75rem !important;
+      color: #666 !important;
     }
 
-    .structure-table .badge {
-      display: inline-block !important;
-      font-size: 11px !important;
-      padding: 3px 6px !important;
+    /* Tout Cocher button */
+    .btn-xs {
+      padding: 0.3rem 0.6rem !important;
+      font-size: 0.7rem !important;
+    }
+
+    /* Enregistrer button */
+    #step-2 .btn-primary.px-5 {
+      padding: 0.8rem !important;
+      font-size: 0.9rem !important;
+      width: 100% !important;
+      border-radius: 20px !important;
     }
   }
 </style>
@@ -85,35 +376,24 @@
 
 {% block content %}
 <div class="container-fluid py-4 bg-light min-vh-100">
-  <!-- Step Indicator -->
-  <div class="row justify-content-center mb-5">
-    <div class="col-md-8">
-      <div class="stepper-wrapper">
-        <div class="stepper-item active" id="step-node-1">
-          <div class="step-counter">1</div>
-          <div class="step-name">Configuration</div>
-        </div>
-        <div class="stepper-item" id="step-node-2">
-          <div class="step-counter">2</div>
-          <div class="step-name">Structure</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Stepper removed per request to let form move to top -->
   <form method="post" novalidate id="form-audit">
     {% csrf_token %}
 
     <!-- STEP 1: Configuration Générale -->
     <div id="step-1">
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-white border-0 pt-4 pb-0">
-          <h5 class="fw-bold d-flex align-items-center mb-0">
-            <span class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
-              <i data-lucide="settings"></i>
-            </span>
-            Configuration Générale
-          </h5>
+        <div class="card-header bg-white border-0 pt-3 pb-0 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'formulaire_list' %}"
+              class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0"
+              style="width: 32px !important; height: 32px !important; text-decoration: none;">
+              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
+            <h5 class="fw-bold d-flex align-items-center mb-0" style="font-size: 0.85rem !important;">
+              Configuration Générale
+            </h5>
+          </div>
         </div>
         <div class="card-body px-4 pb-4 mt-3">
           {% if form.errors %}
@@ -174,7 +454,8 @@
                   class="form-label fw-bold  text-dark opacity-75 mb-2">Type équipement</label>
                 {{ form.type_equipement }}
                 {% if form.type_equipement.errors %}
-                <div class="text-danger  mt-1">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}</div>
+                <div class="text-danger  mt-1">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}
+                </div>
                 {% endif %}
               </div>
             </div>
@@ -263,8 +544,6 @@
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
     const step2Container = document.getElementById('step-2-container');
-    const stepNode1 = document.getElementById('step-node-1');
-    const stepNode2 = document.getElementById('step-node-2');
     // 1. Add classes first
     document.querySelectorAll('#step-1 input:not([type="hidden"]), #step-1 select').forEach(el => {
       el.classList.add(el.tagName === 'SELECT' ? 'form-select' : 'form-control', 'custom-input');
@@ -280,16 +559,16 @@
         $(this).select2({
           theme: 'bootstrap4',
           width: '100%',
-          placeholder:"Sélectionnez...",
+          placeholder: "Sélectionnez...",
           allowClear: true
         });
       });
     }
 
     // Get selected IDs from Django context
-    const selectedScIds = {{ selected_sc_ids|default:"[]"|safe }};
-  const isEdit = {{ is_edit|default:"false"|lower }};
-  const currentFormId ="{{ form.instance.pk|default:'' }}";
+    let selectedScIds = {{ selected_sc_ids|default:"[]"|safe }};
+    const isEdit = {{ is_edit|default:"false"|lower }};
+  const currentFormId = "{{ form.instance.pk|default:'' }}";
 
   function createCriterionCard(crit, index) {
     let scHtml = '';
@@ -405,189 +684,132 @@
     checkboxes.forEach(cb => cb.checked = !allChecked);
   };
 
-  // --- Ported CRUD Logic ---
-  window.openAjaxFormModal = function (fetchUrl, title, submitUrl, successCallback, prefillFn = null) {
-    const $modal = $('#ajaxFormModal');
-    $('#ajaxFormModalTitle').html(title);
-    const body = document.getElementById('ajaxFormModalBody');
-    body.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-2  fw-semibold">Chargement...</div></div>';
-    $modal.modal('show');
+  // --- Global Force-Save Handler ---
+  $(document).off('click', '#btn-save-audit-modal-force').on('click', '#btn-save-audit-modal-force', function (e) {
+    e.preventDefault();
+    const $btn = $(this);
+    const submitUrl = $btn.data('url');
+    const $form = $btn.closest('.modal').find('form').first();
 
-    fetch(fetchUrl, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        return res.text();
-      })
-      .then(html => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const formNode = doc.querySelector('form');
-        if (!formNode) {
-          body.innerHTML = `
-                  <div class="alert alert-danger m-3 d-flex align-items-center rounded-3">
-                    <i data-lucide="alert-circle" class="me-3"></i>
-                    <div>
-                      <div class="fw-bold">Erreur de structure</div>
-                      <div class=" opacity-75">Le formulaire n'a pas pu être extrait de la réponse serveur.</div>
-                    </div>
-                  </div>
-                `;
-          if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (!$form.length) {
+      alert("ERREUR: Formulaire introuvable!");
+      return;
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    const csrf = getCookie('csrftoken') || '{{ csrf_token }}';
+    const originalHtml = $btn.html();
+
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...');
+
+    $.ajax({
+      url: submitUrl,
+      method: 'POST',
+      data: new FormData($form[0]),
+      processData: false,
+      contentType: false,
+      headers: { 'X-CSRFToken': csrf },
+      success: function (data) {
+        if (typeof data === 'string' && data.includes('<!DOCTYPE')) {
+          alert("ERREUR SERVEUR: Page HTML reçue. Vérifiez la session.");
+          $btn.prop('disabled', false).html(originalHtml);
           return;
         }
-        const footer = formNode.querySelector('.card-footer');
-        if (footer) footer.remove();
 
-        const isModern = formNode.getAttribute('data-modern-form') === 'true';
-
-        if (!isModern) {
-          // More aggressive cleaning: remove any original submit buttons or cancel links
-          formNode.querySelectorAll('button[type="submit"], .btn-primary, .btn-secondary, .card-footer a, form > a').forEach(el => {
-            el.style.display = 'none';
-          });
-
-          // Premium Styling and Layout Fixes (Only for non-modern forms)
-          formNode.querySelectorAll('.form-group, .mb-3').forEach(fg => {
-            fg.classList.remove('mb-4');
-            fg.classList.add('mb-3');
-            fg.style.width = '100%';
-          });
-
-          formNode.querySelectorAll('label').forEach(lbl => {
-            lbl.classList.add('fw-bold', 'text-dark', 'small', 'text-uppercase');
-            lbl.style.letterSpacing = '0.5px';
-            lbl.style.marginBottom = '5px';
-            lbl.style.display = 'block';
-            lbl.style.fontSize = '0.7rem';
-          });
-
-          formNode.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select, textarea').forEach(el => {
-            el.classList.add('form-control', 'shadow-sm');
-            el.style.borderRadius = '8px';
-            el.style.border = '1.2px solid #e2e8f0';
-            el.style.padding = '8px 12px';
-            el.style.backgroundColor = '#fcfdfe';
-            el.style.fontSize = '0.85rem';
-            el.style.transition = 'all 0.2s ease';
-
-            if (el.tagName === 'SELECT' && el.multiple) {
-              el.style.height = '90px';
-              el.style.padding = '5px';
-            }
-            if (el.tagName === 'TEXTAREA') {
-              el.style.height = '60px';
-            }
-
-            el.onfocus = () => {
-              el.style.borderColor = '#667eea';
-              el.style.backgroundColor = '#fff';
-              el.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.15)';
-            };
-            el.onblur = () => {
-              el.style.borderColor = '#e2e8f0';
-              el.style.backgroundColor = '#fcfdfe';
-              el.style.boxShadow = 'none';
-            };
-          });
-
-          // Specific Fix for Select fields (only single selects)
-          formNode.querySelectorAll('select:not([multiple])').forEach(sel => {
-            sel.style.appearance = 'none';
-            sel.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23a0aec0\'%3E%3Cpath d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")';
-            sel.style.backgroundRepeat = 'no-repeat';
-            sel.style.backgroundPosition = 'right 12px center';
-            sel.style.backgroundSize = '16px';
-            sel.style.paddingRight = '30px';
-            sel.style.height = '38px';
-          });
+        if (data.status === 'success') {
+          $('#ajaxFormModal').modal('hide');
+          Swal.fire({ icon: 'success', title: 'Enregistré', text: data.message, timer: 1500, showConfirmButton: false });
+          if (window._ajaxModalSuccessCallback) window._ajaxModalSuccessCallback(data);
+          else location.reload();
         } else {
-          // If modern, remove the existing footer entirely as we provide our own
-          formNode.querySelectorAll('.modal-footer, .card-footer, button[type="submit"]').forEach(el => {
-            if (el.id !== 'ajaxSubmitBtn') el.remove();
-          });
+          Swal.fire('Erreur de validation', data.message || 'Formulaire invalide.', 'error');
+          $btn.prop('disabled', false).html(originalHtml);
+        }
+      },
+      error: function (xhr) {
+        Swal.fire('Erreur Réseau', 'Erreur ' + xhr.status + ': Impossible de contacter le serveur.', 'error');
+        $btn.prop('disabled', false).html(originalHtml);
+      }
+    });
+  });
+
+  window.openAjaxFormModal = function (fetchUrl, title, submitUrl, successCallback, prefillFn = null) {
+    const $modal = $('#ajaxFormModal');
+    const $body = $('#ajaxFormModalBody');
+    const $title = $('#ajaxFormModalTitle');
+
+    window._ajaxModalSuccessCallback = successCallback;
+
+    $title.html(title);
+    $body.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>');
+    $modal.modal('show');
+
+    $.ajax({
+      url: fetchUrl,
+      method: 'GET',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      success: function (html) {
+        $body.html(html);
+
+        // Re-execute scripts
+        $body.find('script').each(function () {
+          try {
+            const script = document.createElement('script');
+            if (this.src) script.src = this.src;
+            script.textContent = this.textContent;
+            document.body.appendChild(script);
+            document.body.removeChild(script);
+          } catch (e) { console.error(e); }
+        });
+
+        const $form = $body.find('form').first();
+        if (!$form.length) {
+          $body.html('<div class="alert alert-warning m-3">Formulaire non trouvé.</div>');
+          return;
         }
 
-        body.innerHTML = '';
-        body.appendChild(formNode);
-        if (prefillFn) prefillFn(formNode);
+        // Cleanup redundant components
+        $body.find('.modal-header, .card-header').remove();
+        $body.find('.modal-footer, .card-footer, button[type="submit"]').remove();
 
-        // Initialize Select2 for Multi-selects (Preuves Attendues, etc.)
-        if (window.jQuery && typeof $.fn.select2 === 'function') {
-          $(formNode).find('select[multiple]').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder:"Sélectionnez...",
-            allowClear: true,
-            dropdownParent: $modal
-          });
-        }
+        if (prefillFn) prefillFn($form[0]);
 
-        // Re-add footer at the end of the formNode
-        // We search for the best place to append it (usually at the end)
-        let footerContainer = formNode;
-        const cardBody = formNode.querySelector('.card-body');
-        if (cardBody) footerContainer = cardBody;
+        let $footerTarget = $form.find('.modal-body, .card-body, .p-4').last();
+        if (!$footerTarget.length) $footerTarget = $form;
 
-        footerContainer.insertAdjacentHTML('beforeend', `
-                <div class="d-flex justify-content-end align-items-center gap-3 mt-4 pt-4 border-top">
-                    <button type="button" class="btn btn-link  fw-bold text-decoration-none px-4" data-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm" id="ajaxSubmitBtn" style="min-width: 150px; height: 45px;">
-                      <i data-lucide="save" class="me-2"></i> Enregistrer
-                    </button>
-                </div>
-            `);
+        $footerTarget.append(`
+          <div class="d-flex justify-content-end align-items-center gap-3 mt-4 pt-4 border-top">
+            <button type="button" class="btn btn-link fw-bold text-decoration-none px-4" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm" id="btn-save-audit-modal-force" data-url="${submitUrl}" style="min-width: 150px; height: 45px;">
+              <i data-lucide="save" class="me-2"></i> Enregistrer
+            </button>
+          </div>
+        `);
 
-        formNode.onsubmit = function (e) {
-          e.preventDefault();
-          const btn = document.getElementById('ajaxSubmitBtn');
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enregistrement...';
-
-          const formData = new FormData(formNode);
-          fetch(submitUrl, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRFToken': csrfToken }
-          })
-            .then(res => res.json())
-            .then(res => {
-              if (res.status === 'success') {
-                $modal.modal('hide');
-                if (successCallback) successCallback(res);
-                else btnSync.click();
-              } else {
-                Swal.fire('Erreur', res.message || 'Erreur lors de l\'enregistrement', 'error');
-                btn.disabled = false;
-                btn.innerHTML = 'Enregistrer';
-              }
-            })
-            .catch(err => {
-              console.error('Submit Error:', err);
-              Swal.fire('Erreur', err.message || 'Erreur réseau', 'error');
-              btn.disabled = false;
-              btn.innerHTML = 'Enregistrer';
-            });
-        };
         if (typeof lucide !== 'undefined') lucide.createIcons();
-      })
-      .catch(err => {
-        console.error('Modal Fetch Error:', err);
-        body.innerHTML = `
-              <div class="text-center py-5">
-                 <i data-lucide="alert-triangle" class="text-warning mb-3" ></i>
-                 <h5 class="fw-bold text-dark">Erreur de chargement</h5>
-                 <p class="  mb-4">${err.message}</p>
-                 <button type="button" class="btn btn-outline-primary rounded-pill px-4" onclick="window.openAjaxFormModal('${fetchUrl}', '${title}', '${submitUrl}', ${successCallback})">Réessayer</button>
-              </div>
-            `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      });
+      },
+      error: function (xhr) {
+        $body.html('<div class="alert alert-danger m-3">Erreur (' + xhr.status + ')</div>');
+      }
+    });
   };
 
   window.openAddCritereModal = function () {
-    window.openAjaxFormModal("{% url 'critere_create' %}","<i class='fas fa-plus-circle me-2'></i>Nouveau Critère","/audit/critere/save-inline/",
+    window.openAjaxFormModal("{% url 'critere_create' %}", "<i class='fas fa-plus-circle me-2'></i>Nouveau Critère", "{% url 'save_critere_inline' %}",
       (res) => {
         btnSync.click();
         // Proactively ask if they want to add sub-criteria now
@@ -633,7 +855,7 @@
 
   window.editCritere = function (id) {
     window.openAjaxFormModal(
-      `/audit/critere/${id}/edit/`,"<i class='fas fa-pen me-2'></i>Modifier le Critère",
+      `/audit/critere/${id}/edit/`, "<i class='fas fa-pen me-2'></i>Modifier le Critère",
       `/audit/critere/${id}/update-inline/`,
       () => btnSync.click(),
       (formNode) => {
@@ -652,7 +874,7 @@
   window.deleteCritere = function (id) {
     Swal.fire({
       title: 'Êtes-vous sûr ?',
-      text:"Tous les sous-critères associés seront également supprimés !",
+      text: "Tous les sous-critères associés seront également supprimés !",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -668,7 +890,8 @@
           .then(res => {
             if (res.status === 'success') {
               Swal.fire('Supprimé !', '', 'success');
-              btnSync.click();
+              const syncBtn = document.getElementById('btn-sync');
+              if (syncBtn) syncBtn.click();
             } else {
               Swal.fire('Erreur', res.message, 'error');
             }
@@ -678,45 +901,51 @@
   };
 
   window.openAddSousCritereModal = function (critId) {
-    window.openAjaxFormModal("{% url 'souscritere_create' %}","<i class='fas fa-plus-circle me-2'></i>Nouveau Sous-critère","/audit/sous-critere/save-inline/",
-      () => btnSync.click(),
+    window.openAjaxFormModal("{% url 'souscritere_create' %}", "<i class='fas fa-plus-circle me-2'></i>Nouveau Sous-critère", "{% url 'save_sous_critere_inline' %}",
+      (data) => {
+        if (data.id) {
+          selectedScIds.push(data.id);
+        }
+        const syncBtn = document.getElementById('btn-sync');
+        if (syncBtn) syncBtn.click();
+      },
       (formNode) => {
         const validCritId = parseInt(critId);
 
-        // 1. Force-inject parent Criterion ID (only if valid number)
-        if (!isNaN(validCritId)) {
-          const hiddenCrit = document.createElement('input');
-          hiddenCrit.type = 'hidden';
-          hiddenCrit.name = 'critere_id';
-          hiddenCrit.value = validCritId;
-          formNode.appendChild(hiddenCrit);
+        // 1. Parent Criterion
+        let critInput = formNode.querySelector('[name="critere"]');
+        if (critInput) {
+            critInput.value = validCritId;
+            // If it's a select, hide its container. If it's hidden, it's already hidden.
+            if (critInput.tagName === 'SELECT') {
+                const container = critInput.closest('.col-md-6, .col-md-12, .form-group, .mb-3');
+                if (container) container.style.setProperty('display', 'none', 'important');
+            }
+        } else {
+            // Force create hidden if not found
+            const hiddenCrit = document.createElement('input');
+            hiddenCrit.type = 'hidden';
+            hiddenCrit.name = 'critere_id';
+            hiddenCrit.value = validCritId;
+            formNode.appendChild(hiddenCrit);
+        }
 
-          // 2. Sync parent Criterion Select if it exists
-          const critSelect = formNode.querySelector('[name="critere"]');
-          if (critSelect) {
-            critSelect.value = validCritId;
-            const container = critSelect.closest('.col-md-6') || critSelect.closest('.col-md-12') || critSelect.closest('.form-group') || critSelect.parentElement;
-            if (container) container.style.setProperty('display', 'none', 'important');
-          }
-        } else { console.warn("Missing critId in openAddSousCritereModal"); }
-
-        // 3. Pre-fill and hide Types d'Audit (M2M)
-        const taSelect = formNode.querySelector('[name="type_audit"]');
-        if (taSelect) {
-          const validTaId = typeAuditSelect ? parseInt(typeAuditSelect.value) : NaN;
-          if (!isNaN(validTaId)) {
-            try {
-              if (window.jQuery && typeof $.fn.select2 === 'function' && $(taSelect).data('select2')) {
-                $(taSelect).val([validTaId]).trigger('change');
-              } else {
-                for (let opt of taSelect.options) {
-                  if (parseInt(opt.value) === validTaId) opt.selected = true;
-                }
-              }
-            } catch (e) { console.warn("Select2 prefill error:", e); }
-          }
-          const container = taSelect.closest('.col-md-6') || taSelect.closest('.col-md-12') || taSelect.closest('.form-group') || taSelect.parentElement;
-          if (container) container.style.setProperty('display', 'none', 'important');
+        // 2. Type Audit
+        const taInput = formNode.querySelector('[name="type_audit"]');
+        const activeTaId = typeAuditSelect ? typeAuditSelect.value : "";
+        if (taInput && activeTaId) {
+            taInput.value = activeTaId;
+            if (taInput.tagName === 'SELECT') {
+                 const container = taInput.closest('.col-md-6, .col-md-12, .form-group, .mb-3');
+                 if (container) container.style.setProperty('display', 'none', 'important');
+            }
+        } else if (activeTaId) {
+            // Force create hidden if not found
+            const hiddenTa = document.createElement('input');
+            hiddenTa.type = 'hidden';
+            hiddenTa.name = 'type_audit';
+            hiddenTa.value = activeTaId;
+            formNode.appendChild(hiddenTa);
         }
       }
     );
@@ -724,9 +953,12 @@
 
   window.editSousCritere = function (id) {
     window.openAjaxFormModal(
-      `/audit/sous-critere/${id}/edit/`,"<i class='fas fa-pen me-2'></i>Modifier le Sous-critère",
+      `/audit/sous-critere/${id}/edit/`, "<i class='fas fa-pen me-2'></i>Modifier le Sous-critère",
       `/audit/sous-critere/${id}/update-inline/`,
-      () => btnSync.click(),
+      () => {
+        const syncBtn = document.getElementById('btn-sync');
+        if (syncBtn) syncBtn.click();
+      },
       (formNode) => {
         // Hide redundant fields in edit mode as well
         const fieldsToHide = ['critere', 'type_audit'];
@@ -744,7 +976,7 @@
   window.deleteSousCritere = function (id) {
     Swal.fire({
       title: 'Êtes-vous sûr ?',
-      text:"Ce sous-critère sera supprimé.",
+      text: "Ce sous-critère sera supprimé.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -839,10 +1071,8 @@
         // Show Step 2 without hiding Step 1
         step2.style.display = 'block';
 
-        // Update Stepper
-        stepNode1.classList.remove('active');
-        stepNode1.classList.add('completed');
-        stepNode2.classList.add('active');
+        // Update Stepper - Removed
+
 
         btnSubmit.disabled = false;
         step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -895,67 +1125,6 @@
     background-color: #f8f9fa !important;
   }
 
-  .stepper-wrapper {
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin-bottom: 20px;
-  }
-
-  .stepper-wrapper::before {
-    content:"";
-    position: absolute;
-    top: 20px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: #e9ecef;
-    z-index: 0;
-  }
-
-  .stepper-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    position: relative;
-    z-index: 1;
-  }
-
-  .step-counter {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #fff;
-    border: 4px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    color: #adb5bd;
-    margin-bottom: 10px;
-    transition: 0.4s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-  }
-
-  .stepper-item.active .step-counter {
-    background: #1a56db;
-    border-color: #fff;
-    color: #fff;
-    box-shadow: 0 0 0 6px rgba(26, 86, 219, 0.1);
-  }
-
-  .step-name {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #adb5bd;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .stepper-item.active .step-name {
-    color: #1a56db;
-  }
 
   .custom-input {
     border: 1.5px solid #edf2f7 !important;
@@ -1008,7 +1177,7 @@
   }
 
   .x-small {
-     !important;
+    !important;
   }
 
   .border-dashed {
@@ -1149,7 +1318,7 @@
     border-radius: 6px !important;
     padding: 2px 10px !important;
     color: #4a5568 !important;
-     !important;
+    !important;
     margin-top: 4px !important;
   }
 
@@ -1170,12 +1339,10 @@
     .step-counter {
       width: 32px;
       height: 32px;
-      
+
     }
 
-    .step-name {
-      
-    }
+    .step-name {}
 
     .footer-bar small {
       display: none;
@@ -1200,7 +1367,7 @@
       width: 34px;
       height: 34px;
       border-width: 3px;
-      
+
     }
 
     .step-name {
@@ -1244,35 +1411,76 @@
   }
 
   @media (max-width: 768px) {
-    .card-header { padding: 1rem !important; flex-direction: column !important; align-items: stretch !important; gap: 0.8rem !important; }
-    .card-header .ml-auto { margin-left: 0 !important; width: 100%; display: flex; }
-    .card-header .btn { width: 100%; justify-content: center; }
-    .header-text h3 { font-size: 1.25rem !important; text-align: left; }
-    
+    .card-header {
+      padding: 1rem !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.8rem !important;
+    }
+
+    .card-header .ml-auto {
+      margin-left: 0 !important;
+      width: 100%;
+      display: flex;
+    }
+
+    .card-header .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .header-text h3 {
+      font-size: 1.25rem !important;
+      text-align: left;
+    }
+
     /* Responsive Horizontal Scroll for all Data */
-    .table th, 
-    .table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; border: 0 !important; }
-    .table { width: 100% !important; min-width: 800px; /* Force scroll */ table-layout: auto !important; }
-    
-    .btn-group .btn { padding: 0.25rem 0.5rem; }
-    .badge { font-size: 0.75rem !important; }
+    .table th,
+    .table-responsive {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      border: 0 !important;
+    }
+
+    .table {
+      width: 100% !important;
+      min-width: 800px;
+      /* Force scroll */
+      table-layout: auto !important;
+    }
+
+    .btn-group .btn {
+      padding: 0.25rem 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.75rem !important;
+    }
   }
 
-    /* Hide text on mobile */
-    .stepper-wrapper::before {
-      top: 17px;
-    }
-
-    .card-body {
-      padding: 1.25rem !important;
-    }
-
-    /* Structure Table Mobile Refinement */
-    .criterion-row-parent td {
-      padding-top: 0.75rem !important;
-      padding-bottom: 0.75rem !important;
-    }
+  /* Hide text on mobile */
+  .stepper-wrapper::before {
+    top: 17px;
   }
+
+  .card-body {
+    padding: 1.25rem !important;
+  }
+
+  /* Structure Table Mobile Refinement */
+  .criterion-row-parent td {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  
+  /* Hide redundant components in AJAX modals */
+  #ajaxFormModalBody .modal-header,
+  #ajaxFormModalBody .card-header,
+  #ajaxFormModalBody .modal-footer,
+  #ajaxFormModalBody .card-footer {
+    display: none !important;
+  }
+}
 </style>
 
 <!-- Ported Ajax Modal -->
@@ -1285,14 +1493,10 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body bg-light mt-3" id="ajaxFormModalBody" style="min-height: 200px;">
+      <div class="modal-body bg-white mt-0" id="ajaxFormModalBody" style="min-height: 200px;">
         <!-- Content loaded via AJAX -->
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
-
-
-
-

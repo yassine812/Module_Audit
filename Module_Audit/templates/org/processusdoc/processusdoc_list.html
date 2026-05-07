@@ -59,7 +59,11 @@
               <tbody>
                 {% for doc in documents %}
                 <tr>
+<<<<<<< HEAD
                   <td class="text-center col-id " data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+=======
+                  <td class="text-center col-id " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+>>>>>>> 1d2633d (fix web etape)
                   <td class="text-center col-type" data-label="Type">
                     {% if ".pdf" in doc.content.name|lower %}<i data-lucide="file-text" class="text-danger"></i>
                     {% elif ".doc" in doc.content.name|lower %}<i data-lucide="file-word" class="text-primary"></i>

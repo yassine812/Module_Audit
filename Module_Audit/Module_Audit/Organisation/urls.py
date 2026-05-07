@@ -46,8 +46,13 @@ from .views import (
     EquipementDeleteView,
 )
 from .api_views import (
-    SectionListAPIView, SectionDetailAPIView, SiteListAPIView,
-    ProcessusListAPIView, TypeEquipementListAPIView, EquipementListAPIView, NiveauAttenduListAPIView
+    SectionListAPIView, SectionDetailAPIView, 
+    SiteListAPIView, SiteDetailAPIView,
+    ProcessusListAPIView, ProcessusDetailAPIView,
+    TypeEquipementListAPIView, TypeEquipementDetailAPIView,
+    EquipementListAPIView, EquipementDetailAPIView,
+    NiveauAttenduListAPIView, NiveauAttenduDetailAPIView,
+    ProcessusDocListAPIView
 )
 
 urlpatterns = [
@@ -116,9 +121,21 @@ urlpatterns = [
     # =====================================================
     path("api/sections/", SectionListAPIView.as_view(), name="api_section_list"),
     path("api/sections/<int:pk>/", SectionDetailAPIView.as_view(), name="api_section_detail"),
+    
     path("api/sites/", SiteListAPIView.as_view(), name="api_site_list"),
+    path("api/sites/<int:pk>/", SiteDetailAPIView.as_view(), name="api_site_detail"),
+    
     path("api/processus/", ProcessusListAPIView.as_view(), name="api_processus_list"),
+    path("api/processus/<int:pk>/", ProcessusDetailAPIView.as_view(), name="api_processus_detail"),
+    
     path("api/types-equipements/", TypeEquipementListAPIView.as_view(), name="api_type_equipement_list"),
+    path("api/types-equipements/<int:pk>/", TypeEquipementDetailAPIView.as_view(), name="api_type_equipement_detail"),
+    
     path("api/equipements/", EquipementListAPIView.as_view(), name="api_equipement_list"),
+    path("api/equipements/<int:pk>/", EquipementDetailAPIView.as_view(), name="api_equipement_detail"),
+    
     path("api/niveau-attendu/", NiveauAttenduListAPIView.as_view(), name="api_niveau_attendu_list"),
+    path("api/niveau-attendu/<int:pk>/", NiveauAttenduDetailAPIView.as_view(), name="api_niveau_attendu_detail"),
+    
+    path("api/processus-docs/", ProcessusDocListAPIView.as_view(), name="api_processus_doc_list"),
 ]

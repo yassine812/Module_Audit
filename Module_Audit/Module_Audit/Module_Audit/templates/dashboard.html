@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord - Audit d'entreprise{% endblock %}
+
+{% block page_title %}Tableau de Bord{% endblock %}
+
+
+{% block content %}
+<style>
+  .small-box h3 {
+    transition: transform 0.2s ease-out;
+    display: inline-block;
+  }
+  
+  /* Mobile Optimization: Zero-Scroll Pattern */
+  @media (max-width: 576px) {
+    .content-header { display: none !important; } /* Hide page title to save space */
+    .content-wrapper { padding: 4px !important; }
+    
+    /* Grid Spacing */
+    .row { margin-left: -4px !important; margin-right: -4px !important; }
+    .row > [class*="col-"] { padding-left: 4px !important; padding-right: 4px !important; }
+    
+    /* Statistics Cards: 2x2 Grid */
+    .small-box { margin-bottom: 8px !important; border-radius: 8px !important; }
+    .small-box .inner { padding: 10px !important; min-height: 65px; }
+    .small-box h3 { font-size: 1.2rem !important; margin-bottom: 2px !important; }
+    .small-box p { font-size: 0.65rem !important; margin-bottom: 0 !important; font-weight: 600; }
+    .small-box .icon { display: none !important; }
+    .small-box-footer { font-size: 0.6rem !important; padding: 2px 0 !important; background: rgba(0,0,0,0.05) !important; }
+
+    /* Cards & Content */
+    .card { margin-bottom: 8px !important; border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; }
+    .card-header { padding: 6px 12px !important; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .card-title { font-size: 0.85rem !important; }
+    .card-body { padding: 8px !important; }
+    
+    /* Timeline Area */
+    .timeline { max-height: 180px !important; }
+    .timeline-item { margin-left: 35px !important; }
+    .timeline-header { font-size: 0.75rem !important; padding: 6px !important; }
+    .time-label span { font-size: 0.6rem !important; padding: 2px 6px !important; }
+    
+    /* Chart Area */
+    .chart { height: 160px !important; }
+    
+    /* Buttons */
+    .btn-sm { font-size: 0.75rem !important; padding: 6px 10px !important; }
+    
+    /* Force 100vh behavior */
+    .content { padding: 0 !important; }
+  }
+</style>
+<div class="row">
+  <!-- Statistics Cards -->
+  <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
+    <div class="small-box bg-info h-100 mb-0">
+      <div class="inner">
+        <h3 id="total-types-audit">{{ types_audit_count }}</h3>
+        <p>Types d'Audit</p>
+      </div>
+      <div class="icon">
+        <i data-lucide="clipboard-list"></i>
+      </div>
+      <a href="{% url 'typeaudit_list' %}" class="small-box-footer">
+        Voir plus <i data-lucide="arrow-right-circle" class="w-4 h-4 inline"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
+    <div class="small-box bg-success h-100 mb-0">
+      <div class="inner">
+        <h3 id="total-formulaires">{{ formulaires_count }}</h3>
+        <p>Formulaires</p>
+      </div>
+      <div class="icon">
+        <i data-lucide="file-text"></i>
+      </div>
+      <a href="{% url 'formulaire_list' %}" class="small-box-footer">
+        Voir plus <i data-lucide="arrow-right-circle" class="w-4 h-4 inline"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
+    <div class="small-box bg-warning h-100 mb-0">
+      <div class="inner">
+        <h3 id="total-audits-planifies">{{ audits_count }}</h3>
+        <p>Audits Planifiés</p>
+      </div>
+      <div class="icon">
+        <i data-lucide="calendar"></i>
+      </div>
+      <a href="{% url 'liste_audit_list' %}" class="small-box-footer">
+        Voir plus <i data-lucide="arrow-right-circle" class="w-4 h-4 inline"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
+    <div class="small-box bg-danger h-100 mb-0">
+      <div class="inner">
+        <h3 id="total-resultats">{{ resultats_count }}</h3>
+        <p>Résultats</p>
+      </div>
+      <div class="icon">
+        <i data-lucide="trending-up"></i>
+      </div>
+      <a href="{% url 'resultat_list' %}" class="small-box-footer">
+        Voir plus <i data-lucide="arrow-right-circle" class="w-4 h-4 inline"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row d-flex align-items-stretch">
+  <!-- Quick Actions -->
+  <div class="col-lg-4 col-md-5 mb-4">
+    <div class="card h-100 mb-0">
+      <div class="card-header">
+        <h3 class="card-title font-weight-bold">Actions Rapides</h3>
+      </div>
+      <div class="card-body p-3">
+        <div class="row g-2">
+          <div class="col-12 col-sm-6 col-lg-12 mb-2">
+            <button onclick="openTypeAuditModal('{% url 'typeaudit_create' %}')" class="btn btn-primary btn-block btn-sm text-left py-2 d-flex align-items-center">
+              <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Nouveau Type d'Audit
+            </button>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-12 mb-2">
+            <a href="{% url 'formulaire_create' %}" class="btn btn-success btn-block btn-sm text-left py-2 d-flex align-items-center">
+              <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Nouveau Formulaire
+            </a>
+          </div>
+          <div class="col-12 col-sm-12 col-lg-12 mb-2">
+            <a href="{% url 'liste_audit_create' %}" class="btn btn-warning btn-block btn-sm text-left py-2 d-flex align-items-center">
+              <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Planifier Audit
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="col-lg-8 col-md-7 mb-4">
+    <div class="card h-100 mb-0">
+      <div class="card-header">
+        <h3 class="card-title font-weight-bold">Activité Récente</h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="timeline timeline-inverse m-0 p-3" style="max-height: 400px; overflow-y: auto;">
+          {% for activity in recent_activities %}
+            {% if request.user.is_superuser %}
+              <div class="time-label">
+                <span class="bg-info" style=" padding: 2px 8px;">{{ activity.action_time|date:"d M Y" }}</span>
+              </div>
+              <div class="mb-3">
+                {% if activity.action_flag == 1 %}
+                  <i data-lucide="plus-circle" class="bg-success text-white p-1 rounded-circle" ></i>
+                {% elif activity.action_flag == 2 %}
+                  <i data-lucide="edit" class="bg-warning text-white p-1 rounded-circle" ></i>
+                {% else %}
+                  <i data-lucide="trash-2" class="bg-danger text-white p-1 rounded-circle" ></i>
+                {% endif %}
+                <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
+                  <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.action_time|timesince }} ago</span>
+                  <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
+                    {% if activity.action_flag == 1 %}Création de{% elif activity.action_flag == 2 %}Modification de{% else %}Suppression de{% endif %} 
+                    {{ activity.content_type.name }} : <b class="text-primary">{{ activity.object_repr }}</b>
+                  </h3>
+                </div>
+              </div>
+            {% else %}
+              <div class="time-label">
+                <span class="bg-info" style=" padding: 2px 8px;">{{ activity.date|date:"d M Y" }}</span>
+              </div>
+              <div class="mb-3">
+                <i data-lucide="clipboard-check" class="bg-primary text-white p-1 rounded-circle" ></i>
+                <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
+                  <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.date|timesince }} ago</span>
+                  <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
+                    <b>Nouvel audit :</b>
+                    <a href="{% url 'liste_audit_list' %}" class="text-primary">{{ activity.formulaire_audit.name }}</a>
+                  </h3>
+                  <div class="timeline-body " style="padding: 0 10px 10px; ">
+                    Audit prévu le {{ activity.date|date:"d/m/Y" }} {% if activity.site %}au site {{ activity.site }}{% endif %}.
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% empty %}
+          <div class="text-center py-5">
+            <i data-lucide="inbox" class="w-10 h-10  mb-2 opacity-50"></i>
+            <p class=" mb-0">Aucune activité récente.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Recap Report (Chart) -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap" style="gap:12px;">
+        <h5 class="card-title mb-0 font-weight-bold">Rapport d'Audit</h5>
+        <div class="d-flex align-items-center flex-wrap" style="gap:8px;">
+
+          <!-- Multi-month picker -->
+          <div class="dropdown" id="monthPickerDropdown" style="position:relative;">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="monthPickerBtn"
+              style="min-width:140px; text-align:left;">
+              Tous les mois
+            </button>
+            <div class="dropdown-menu p-3 shadow-lg border-0" id="monthPickerMenu"
+              style="display:none; position:absolute; top:100%; right:0; z-index:9999; min-width:240px; border-radius:12px;">
+              <div class="px-1 pb-2 d-flex justify-content-between align-items-center border-bottom mb-2">
+                <small class=" font-weight-bold uppercase tracking-wider" style="font-size: 10px;">Sélectionner des mois</small>
+                <a href="#" id="clearMonths" class="text-xs text-danger font-weight-bold">Effacer</a>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                {% for m_val, m_label in month_choices %}
+                <label class="dropdown-item py-1 px-2 d-flex align-items-center rounded"
+                   style="cursor:pointer; font-size:0.85rem; gap:8px;">
+                  <input type="checkbox" class="month-checkbox" value="{{ m_val }}"> {{ m_label }}
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <select id="filterYear" class="form-control form-control-sm" style="width:90px; border-radius: 6px;"></select>
+        </div>
+      </div>
+      <div class="card-body p-2 p-md-4">
+        <div class="chart" style="height: 250px; min-height: 200px;">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Container -->
+<div class="modal fade" id="typeAuditModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div id="modalBodyContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2  ">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function openTypeAuditModal(url) {
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#typeAuditModal').modal('show');
+        $.ajax({
+            url: url,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                $('#modalBodyContent').html(data);
+                initModalBehaviors();
+            }
+        });
+    }
+
+    function initModalBehaviors() {
+        $('#typeAuditModalForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            $.ajax({
+                type:"POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        $('#typeAuditModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        $('#modalBodyContent').html(response);
+                        initModalBehaviors();
+                    }
+                },
+                error: function(xhr) {
+                    $('#modalBodyContent').html(xhr.responseText);
+                    initModalBehaviors();
+                }
+            });
+        });
+    }
+</script>
+<script>
+  (function () {
+    const CHART_API_URL ="{% url 'chart_data' %}";
+
+    // -- Year dropdown --
+    const yearSelect = document.getElementById('filterYear');
+    const availableYears = {{ available_years|safe }};
+    availableYears.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      yearSelect.appendChild(opt);
+    });
+    yearSelect.value = {{ current_year }};
+
+  // -- Multi-month picker toggle --
+  const pickBtn = document.getElementById('monthPickerBtn');
+  const pickMenu = document.getElementById('monthPickerMenu');
+  const clearLink = document.getElementById('clearMonths');
+
+  pickBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    pickMenu.style.display = pickMenu.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', function (e) {
+    if (!document.getElementById('monthPickerDropdown').contains(e.target)) {
+      pickMenu.style.display = 'none';
+    }
+  });
+
+  function getSelectedMonths() {
+    return Array.from(document.querySelectorAll('.month-checkbox:checked')).map(cb => cb.value);
+  }
+
+  function updatePickerLabel() {
+    const months = getSelectedMonths();
+    if (months.length === 0) {
+      pickBtn.textContent = 'Tous les mois';
+    } else if (months.length <= 2) {
+      const labels = Array.from(document.querySelectorAll('.month-checkbox:checked'))
+        .map(cb => cb.parentElement.textContent.trim());
+      pickBtn.textContent = labels.join(', ');
+    } else {
+      pickBtn.textContent = `${months.length} mois`;
+    }
+  }
+
+  document.querySelectorAll('.month-checkbox').forEach(cb => {
+    cb.addEventListener('change', function () {
+      updatePickerLabel();
+      loadChart();
+    });
+  });
+
+  clearLink.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelectorAll('.month-checkbox').forEach(cb => cb.checked = false);
+    updatePickerLabel();
+    loadChart();
+  });
+
+  // -- Chart --
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            boxWidth: 12,
+            padding: 15,
+            font: { size: 11, weight: '500' }
+          }
+        },
+        tooltip: {
+            padding: 10,
+            cornerRadius: 8,
+            usePointStyle: true
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 10, weight: '600' },
+            maxRotation: 45,
+            minRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 12
+          }
+        },
+        y: {
+          grid: { 
+              color: 'rgba(0,0,0,0.03)',
+              drawBorder: false
+          },
+          beginAtZero: true,
+          ticks: {
+            precision: 0,
+            stepSize: 1,
+            autoSkip: true,
+            maxTicksLimit: 6,
+            font: { size: 10, weight: '600' }
+          }
+        }
+      }
+    }
+  });
+
+  function buildDatasets(data) {
+    const baseConfig = { borderWidth: 3, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 };
+    return [
+      { ...baseConfig, label:"Types d'Audit", data: data.datasets.types_audit, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)' },
+      { ...baseConfig, label: 'Formulaires', data: data.datasets.formulaires, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+      { ...baseConfig, label: 'Audits Planifiés', data: data.datasets.audits_planifies, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.05)' },
+      { ...baseConfig, label: 'Résultats', data: data.datasets.resultats, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)' }
+    ];
+  }
+
+  function loadChart() {
+    const year = yearSelect.value;
+    const months = getSelectedMonths();
+    let url = `${CHART_API_URL}?year=${year}`;
+    months.forEach(m => { url += `&month=${m}`; });
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(data => {
+        // Update Chart
+        salesChart.data.labels = data.labels;
+        salesChart.data.datasets = buildDatasets(data);
+        salesChart.update();
+
+        // Update Stat Cards with a smooth transition
+        const stats = [
+          { id: 'total-types-audit', val: data.totals.types_audit },
+          { id: 'total-formulaires', val: data.totals.formulaires },
+          { id: 'total-audits-planifies', val: data.totals.audits_planifies },
+          { id: 'total-resultats', val: data.totals.resultats }
+        ];
+        
+        stats.forEach(item => {
+          const el = document.getElementById(item.id);
+          if (el && el.textContent != item.val) {
+            el.textContent = item.val;
+            el.animate([
+                { transform: 'scale(1)', opacity: 1 },
+                { transform: 'scale(1.2)', opacity: 0.8 },
+                { transform: 'scale(1)', opacity: 1 }
+            ], { duration: 300 });
+          }
+        });
+      })
+      .catch(err => console.error('Chart load error:', err));
+  }
+
+  yearSelect.addEventListener('change', loadChart);
+  loadChart();
+  }) ();
+</script>
+{% endblock %}
+

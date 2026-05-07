@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails du Formulaire d'Audit{% endblock %}
+
+{% block page_title %}Détails du Formulaire d'Audit{% endblock %}
+
+{% block breadcrumb %}Formulaires d'Audit / Détails{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0"><i data-lucide="file-text" class="me-2"></i> Détails du Formulaire d'Audit</h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Form Metadata -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold   text-uppercase">Nom du Formulaire</label>
+                    <div class="h5">{{ formulaire.name }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold   text-uppercase">Processus</label>
+                    <div>{{ formulaire.processus.name|default:"-" }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold   text-uppercase">Type d'Audit</label>
+                    <div>{{ formulaire.type_audit.name|default:"-" }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold   text-uppercase">Type d'Équipement</label>
+                    <div>{{ formulaire.type_equipement.name|default:"-" }}</div>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="fw-bold   text-uppercase">Sections Concernées</label>
+                    <div>
+                        {% for s in formulaire.section.all %}
+                            <span class="badge bg-light text-dark border me-1">{{ s.name }}</span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <label class="fw-bold   text-uppercase">Date de Création</label>
+                    <div class=" ">{{ formulaire.date_creation|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Sub-criteria Table -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 text-primary"><i data-lucide="list" class="me-2"></i> Liste des Critères et Sous-critères</h5>
+                <span class="badge bg-dark rounded-pill">{{ formulaire.get_sous_criteres_ordonne|length }} Sous-critères</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60px;" class="text-center">N°</th>
+                            <th>Critère</th>
+                            <th>Sous-critère</th>
+                            <th style="width: 150px;" class="text-center">Cotation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% with fsc_list=formulaire.get_sous_criteres_ordonne %}
+                            {% if fsc_list %}
+                                {% for fsc in fsc_list %}
+                                <tr>
+                                    <td class="text-center fw-bold ">{{ forloop.counter }}</td>
+                                    <td>{{ fsc.sous_critere.critere.name }}</td>
+                                    <td class="fw-medium text-dark">{{ fsc.sous_critere.content }}</td>
+                                    <td class="text-center   fw-bold">
+                                        {{ fsc.sous_critere.type_cotation.name|default:"Standard" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 ">
+                                        <i data-lucide="info" class="me-2"></i> Aucun sous-critère sélectionné pour ce formulaire.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white text-end py-3">
+            <a href="{% url 'formulaire_list' %}" class="btn btn-secondary px-4">
+                <i data-lucide="arrow-left" class="me-2"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+</div>
+
+</style>
+{% endblock %}
+

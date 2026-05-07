@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rapport d'Audit - {{ resultat.sujet }}{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false,
+        }
+    }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+    .content-wrapper {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    .report-body {
+        font-family: 'Inter', sans-serif;
+        background-color: #fcfcfc;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .print-shadow-none {
+            box-shadow: none !important;
+            border: 1px solid #eee !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .no-break-inside {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        #report-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .no-break-inside {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        #report-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+
+    .table-fixed-layout {
+        table-layout: fixed;
+    }
+
+    .col-id {
+        width: 50px;
+    }
+
+    .col-eval {
+        width: 140px;
+    }
+
+    .col-score {
+        width: 100px;
+    }
+
+    .col-obs {
+        width: 250px;
+    }
+
+    /* Custom scrollbar for mobile tables */
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-body py-10 px-1 md:px-2">
+    <div id="report-container" class="max-w-full space-y-6">
+
+        <!-- 📄 ACADEMIC COVER PAGE -->
+        <div class="bg-white border border-slate-200 shadow-lg min-h-0 print:min-h-[1056px] w-full p-3 md:p-4 flex flex-col relative no-break-inside print-shadow-none mb-6 md:mb-10">
+            <!-- Floating Print Buttons (Hidden in print) -->
+            <div class="flex justify-end w-full mb-4 md:mb-0 md:absolute md:top-6 md:right-6 no-print" data-html2canvas-ignore="true">
+                <div class="flex items-center gap-3 bg-white/80 backdrop-blur p-2 rounded-xl border border-slate-200 shadow-sm">
+                    <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Télécharger PDF">
+                        <i data-lucide="file-down" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Imprimer">
+                        <i data-lucide="printer" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top Logos placeholder -->
+            <div class="flex justify-center items-center gap-6 md:gap-8 mb-4 md:mb-12 mt-0">
+                <div class="flex items-center gap-5 text-slate-800">
+                    <i data-lucide="landmark" class="w-12 h-12 text-slate-700 stroke-[1.5]"></i>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Document Officiel</span>
+                        <span class="font-black text-xl leading-tight tracking-wide">Rapport d'Évaluation</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Section -->
+            <div class="text-center mb-8 md:mb-16 mt-8 md:mt-16 px-2 md:px-4 flex flex-col justify-center">
+                <h1 class="text-3xl md:text-[2.75rem] font-black text-black leading-tight tracking-tight">
+                    {{ resultat.sujet }}
+                </h1>
+            </div>
+
+            <!-- Metadata Section -->
+            <div class="space-y-2 md:space-y-4 text-sm md:text-base text-black max-w-2xl mx-auto w-full pb-4 md:pb-8">
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Auditeur(s) :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
+                </div>
+                
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Référence d'Audit :</div>
+                    <div class="font-medium text-slate-800">#{{ resultat.id }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Programme / Norme :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.audit.type_audit|default:"Standard Qualité" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Site Audité :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.site|default:"NON SPÉCIFIÉ" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Date :</div>
+                    <div class="font-medium text-slate-800">{{ resultat.date_audit|date:"F j, Y" }}</div>
+                </div>
+
+                <div class="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-1 md:gap-4 pt-6 mt-6 border-t-2 border-slate-900/10">
+                    <div class="font-bold tracking-tight mt-1">Performance Globale :</div>
+                    <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl">
+                        {{ resultat.score_audit|floatformat:"-2" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 PROFESSIONAL AUDIT TABLE -->
+        <div class="bg-white border-2 border-solid border-black print-shadow-none no-break-inside page-break mt-10">
+            <!-- DESKTOP TABLE -->
+            <table class="hidden md:table w-full border-collapse text-black">
+                <thead>
+                    <tr class="bg-white border-b-2 border-solid border-black">
+                        <th class="border-r border-solid border-black px-2 py-3 text-center text-[10px] font-black uppercase tracking-widest w-10">#</th>
+                        <th class="border-r border-solid border-black px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest">Catégorie / Point de contrôle</th>
+                        <th class="border-r border-solid border-black px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest w-24">Évaluation</th>
+                        <th class="border-r border-solid border-black px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest w-20">Score</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest w-64">Observations & Preuves</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in grouped_results %}
+                    <!-- 📁 CRITERIA GROUP HEADER -->
+                    <tr class="bg-white border-b-2 border-solid border-black">
+                        <td class="border-r border-solid border-black px-2 py-3 text-center font-black text-xs align-middle">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-3 align-middle">
+                            <div class="font-black uppercase tracking-tight text-sm leading-none">{{ group.critere.text_ref }}</div>
+                            <div class="text-[10px] font-bold text-black uppercase tracking-widest mt-1">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
+                        </td>
+                        <td colspan="2" class="border-r border-solid border-black px-4 py-3 align-middle bg-white">
+                            <div class="flex items-center justify-between gap-4 w-full">
+                                <div class="flex-grow h-2 bg-white rounded-full overflow-hidden border-2 border-black">
+                                    <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
+                                </div>
+                                <span class="text-sm font-black tabular-nums">{{ group.score|floatformat:"-2" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 align-middle bg-white">
+                            <!-- Group Summary -->
+                        </td>
+                    </tr>
+
+                    <!-- 📝 SUB-CRITERIA ROWS -->
+                    {% for d in group.details %}
+                    <tr class="border-b border-solid border-black bg-white">
+                        <td class="border-r border-solid border-black px-2 py-3 text-center align-middle">
+                            <div class="w-1.5 h-1.5 rounded-full bg-black mx-auto"></div>
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-3 align-middle">
+                            <div class="text-xs font-bold">{{ d.sous_critere }}</div>
+                            {% if d.norme %}
+                                <div class="mt-1 text-[9px] font-bold text-black uppercase">{{ d.norme }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-3 text-center align-middle">
+                            <span class="inline-block border-2 border-solid border-black px-2 py-1 text-[9px] font-black uppercase tracking-widest">
+                                {{ d.cotation|default:"NON EVALUÉ" }}
+                            </span>
+                        </td>
+                        <td class="border-r border-solid border-black px-4 py-3 text-center align-middle bg-white">
+                            <div class="font-black text-sm tabular-nums">
+                                {% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 align-middle">
+                            <div class="text-[10px] leading-snug">{{ d.commentaire|default:"" }}</div>
+                            {% if d.justificatif or d.justificatif_bis %}
+                                <div class="flex flex-wrap gap-2 mt-2 no-print">
+                                    {% if d.justificatif %}
+                                    <a href="{{ d.justificatif.url }}" target="_blank"
+                                        class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                        <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #1
+                                    </a>
+                                    {% endif %}
+                                    {% if d.justificatif_bis %}
+                                    <a href="{{ d.justificatif_bis.url }}" target="_blank"
+                                        class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                        <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #2
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- MOBILE STACKED LIST -->
+            <div class="md:hidden flex flex-col border-solid border-black">
+                {% for group in grouped_results %}
+                <!-- 📁 CRITERIA GROUP HEADER MOBILE -->
+                <div class="flex flex-col border-b-4 border-solid border-black">
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col">
+                        <div class="font-black uppercase tracking-tight text-sm leading-none">{{ group.critere.text_ref }}</div>
+                        <div class="text-[10px] font-bold text-black uppercase tracking-widest mt-1">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col justify-center bg-white">
+                        <div class="flex justify-between items-center w-full mb-2">
+                            <span class="text-[10px] font-black text-black uppercase tracking-widest">Performance</span>
+                            <span class="text-sm font-black tabular-nums">{{ group.score|floatformat:"-2" }}</span>
+                        </div>
+                        <div class="w-full h-2 bg-white rounded-full overflow-hidden border-2 border-solid border-black">
+                            <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📝 SUB-CRITERIA ROWS MOBILE -->
+                {% for d in group.details %}
+                <div class="flex flex-col border-b-2 border-black">
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex flex-col">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest mb-1">Point de contrôle</div>
+                        <div class="text-xs font-bold">{{ d.sous_critere }}</div>
+                        {% if d.norme %}
+                            <div class="mt-1 text-[9px] font-bold text-black uppercase">{{ d.norme }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex justify-between items-center">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest">Évaluation</div>
+                        <span class="inline-block border-2 border-black px-2 py-1 text-[9px] font-black uppercase tracking-widest">
+                            {{ d.cotation|default:"NON EVALUÉ" }}
+                        </span>
+                    </div>
+                    <div class="border-b-2 border-solid border-black px-4 py-4 flex justify-between items-center bg-white">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest">Score</div>
+                        <div class="font-black text-sm tabular-nums">
+                            {% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}
+                        </div>
+                    </div>
+                    <div class="px-4 py-4 flex flex-col border-solid border-black">
+                        <div class="text-[10px] font-black text-black uppercase tracking-widest mb-1">Observations & Preuves</div>
+                        <div class="text-[10px] leading-snug">{{ d.commentaire|default:"" }}</div>
+                        {% if d.justificatif or d.justificatif_bis %}
+                            <div class="flex flex-wrap gap-2 mt-2 no-print">
+                                {% if d.justificatif %}
+                                <a href="{{ d.justificatif.url }}" target="_blank"
+                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #1
+                                </a>
+                                {% endif %}
+                                {% if d.justificatif_bis %}
+                                <a href="{{ d.justificatif_bis.url }}" target="_blank"
+                                    class="flex items-center gap-1.5 px-2 py-1 bg-white border border-black rounded text-[9px] font-bold text-black hover:bg-slate-100 transition-all">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i> Preuve #2
+                                </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 🏁 FINAL FOOTER -->
+        <div class="pt-8 border-t border-slate-200 text-center pb-0">
+            <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-2">{{ resultat.audit.type_audit|default:"Module Audit" }} • Rapport Généré le {% now "d/m/Y H:i" %}</div>
+            <p class="text-[9px] text-slate-300 font-bold uppercase italic opacity-70">Document confidentiel à usage
+                interne uniquement • Toute reproduction interdite sans autorisation.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function generatePDF() {
+        const element = document.getElementById('report-container');
+        const btn = document.getElementById('downloadPdfBtn');
+        const originalContent = btn.innerHTML;
+
+        // Minimalist loading feedback
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 text-white animate-spin"></i>';
+        lucide.createIcons();
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                letterRendering: true,
+                scrollX: 0,
+                scrollY: 0
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        // Delay slightly to ensure UI update is rendered
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            }).catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            });
+        }, 300);
+    }
+
+    lucide.createIcons();
+</script>
+{% endblock %}
+
+

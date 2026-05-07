@@ -27,7 +27,7 @@ const CritereManagementScreen = () => {
   const [chapitres, setChapitres] = useState([]);
   const [formulaires, setFormulaires] = useState([]);
   const [search, setSearch] = useState('');
-  
+
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSelectingChapitre, setIsSelectingChapitre] = useState(false);
@@ -69,10 +69,10 @@ const CritereManagementScreen = () => {
   const handleEdit = (item) => {
     setIsEditing(true);
     setCurrentId(item.id);
-    setFormData({ 
-      name: item.name, 
-      chapitre_norme: item.chapitre_norme_id?.toString() || '', 
-      formulaire: item.formulaire_id?.toString() || '' 
+    setFormData({
+      name: item.name,
+      chapitre_norme: item.chapitre_norme_id?.toString() || '',
+      formulaire: item.formulaire_id?.toString() || ''
     });
     setIsSelectingChapitre(false);
     setIsSelectingForm(false);
@@ -85,8 +85,8 @@ const CritereManagementScreen = () => {
       'Êtes-vous sûr de vouloir supprimer ce critère ?',
       [
         { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
+        {
+          text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -135,9 +135,9 @@ const CritereManagementScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1.5 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.name}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}><Text style={styles.cellText} numberOfLines={1}>{item.chapitre_norme_name || '-'}</Text></View>
       <View style={[styles.cell, { width: 55, flexDirection: 'row', justifyContent: 'center' }]}>
@@ -201,8 +201,8 @@ const CritereManagementScreen = () => {
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
-                 <Text style={styles.modalTitle}>{isEditing ? 'Modifier' : 'Nouveau'}</Text>
-                 <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color="#64748b" /></TouchableOpacity>
+                <Text style={styles.modalTitle}>{isEditing ? 'Modifier' : 'Nouveau'}</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color="#64748b" /></TouchableOpacity>
               </View>
 
               <Text style={styles.inputLabel}>Désignation du Critère</Text>
@@ -215,8 +215,8 @@ const CritereManagementScreen = () => {
               />
 
               <Text style={styles.inputLabel}>Chapitre Norme</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingChapitre && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+              <TouchableOpacity
+                style={[styles.pickerContainer, isSelectingChapitre && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}
                 onPress={() => setIsSelectingChapitre(!isSelectingChapitre)}
               >
                 <Text style={[styles.pickerText, !formData.chapitre_norme && { color: '#94a3b8' }]}>
@@ -227,7 +227,7 @@ const CritereManagementScreen = () => {
               {isSelectingChapitre && (
                 <View style={styles.inlineDropdown}>
                   {chapitres.map(item => (
-                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, chapitre_norme: item.id.toString()}); setIsSelectingChapitre(false); }}>
+                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({ ...formData, chapitre_norme: item.id.toString() }); setIsSelectingChapitre(false); }}>
                       <Text style={styles.inlineItemText}>{item.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -235,8 +235,8 @@ const CritereManagementScreen = () => {
               )}
 
               <Text style={styles.inputLabel}>Formulaire Associé</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingForm && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+              <TouchableOpacity
+                style={[styles.pickerContainer, isSelectingForm && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}
                 onPress={() => setIsSelectingForm(!isSelectingForm)}
               >
                 <Text style={[styles.pickerText, !formData.formulaire && { color: '#94a3b8' }]}>
@@ -247,7 +247,7 @@ const CritereManagementScreen = () => {
               {isSelectingForm && (
                 <View style={styles.inlineDropdown}>
                   {formulaires.map(item => (
-                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, formulaire: item.id.toString()}); setIsSelectingForm(false); }}>
+                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({ ...formData, formulaire: item.id.toString() }); setIsSelectingForm(false); }}>
                       <Text style={styles.inlineItemText}>{item.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -278,32 +278,32 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   title: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginLeft: 5 },
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
-  
+
   searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', marginHorizontal: 12, marginTop: 10, marginBottom: 5, paddingHorizontal: 12, borderRadius: 8, height: 38 },
   searchInput: { flex: 1, marginLeft: 8, fontSize: 13, color: '#1e293b' },
-  
+
   tableContainer: { flex: 1, marginTop: 5 },
   tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   headerCell: { padding: 8, justifyContent: 'center' },
   headerText: { fontSize: 11, fontWeight: '700', color: '#64748b' },
-  
+
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   cell: { padding: 8, justifyContent: 'center' },
   cellText: { fontSize: 12, color: '#475569' },
   miniActionBtn: { padding: 5, marginHorizontal: 2 },
-  
+
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
-  
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 15, padding: 15, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 6 },
   modalInput: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, marginBottom: 15, fontSize: 14, color: '#1e293b', textAlignVertical: 'top' },
-  
+
   pickerContainer: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
   pickerText: { fontSize: 14, color: '#1e293b' },
-  
+
   inlineDropdown: { backgroundColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#e2e8f0', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 8, marginBottom: 15 },
   inlineItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   inlineItemText: { fontSize: 13, color: '#475569' },

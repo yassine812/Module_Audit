@@ -29,9 +29,17 @@ const TypeAuditManagementScreen = () => {
   
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSelectingName, setIsSelectingName] = useState(false);
   const [isSelectingSection, setIsSelectingSection] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  const [formData, setFormData] = useState({ name: '', section: [] });
+  const [formData, setFormData] = useState({ name: '', sections: [] });
+
+  const AUDIT_CATEGORIES = [
+    'Audit équipement',
+    'Audit interne',
+    'Audit de poste',
+    'Audit de Site'
+  ];
 
   const fetchData = async () => {
     try {
@@ -56,7 +64,9 @@ const TypeAuditManagementScreen = () => {
 
   const handleAdd = () => {
     setIsEditing(false);
-    setFormData({ name: '', section: [] });
+    setFormData({ name: '', sections: [] });
+    setIsSelectingName(false);
+    setIsSelectingSection(false);
     setModalVisible(true);
   };
 
@@ -65,8 +75,10 @@ const TypeAuditManagementScreen = () => {
     setCurrentId(item.id);
     setFormData({ 
       name: item.name, 
-      section: item.sections ? item.sections.map(s => s.id) : [] 
+      sections: item.sections ? item.sections.map(s => s.id) : [] 
     });
+    setIsSelectingName(false);
+    setIsSelectingSection(false);
     setModalVisible(true);
   };
 
@@ -120,9 +132,9 @@ const TypeAuditManagementScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 40 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 40 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1.5 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.name}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}><Text style={styles.cellText} numberOfLines={1}>{item.section_names || '-'}</Text></View>
       <View style={[styles.cell, { width: 70, flexDirection: 'row', justifyContent: 'center' }]}>
@@ -191,12 +203,61 @@ const TypeAuditManagementScreen = () => {
               </View>
 
               <Text style={styles.inputLabel}>Nom du type d'audit</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Ex: Audit Interne"
-                value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
-              />
+              <TouchableOpacity 
+                style={[styles.pickerContainer, isSelectingName && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+                onPress={() => setIsSelectingName(!isSelectingName)}
+              >
+                <Text style={[styles.pickerText, !formData.name && { color: '#94a3b8' }]}>
+                  {formData.name || "Choisir un type..."}
+                </Text>
+                <Ionicons name={isSelectingName ? "chevron-up" : "chevron-down"} size={18} color="#3b82f6" />
+              </TouchableOpacity>
+              {isSelectingName && (
+                <View style={styles.inlineDropdown}>
+                  {AUDIT_CATEGORIES.map(cat => (
+                    <TouchableOpacity key={cat} style={styles.inlineItem} onPress={() => { setFormData({...formData, name: cat}); setIsSelectingName(false); }}>
+                      <Text style={styles.inlineItemText}>{cat}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <Text style={styles.inputLabel}>Sections associées</Text>
+              <TouchableOpacity 
+                style={[styles.pickerContainer, isSelectingSection && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+                onPress={() => setIsSelectingSection(!isSelectingSection)}
+              >
+                <Text style={[styles.pickerText, formData.sections.length === 0 && { color: '#94a3b8' }]}>
+                  {formData.sections.length > 0 
+                    ? `${formData.sections.length} section(s) sélectionnée(s)` 
+                    : "Choisir des sections..."}
+                </Text>
+                <Ionicons name={isSelectingSection ? "chevron-up" : "chevron-down"} size={18} color="#3b82f6" />
+              </TouchableOpacity>
+              {isSelectingSection && (
+                <View style={styles.inlineDropdown}>
+                  {sections.map(sec => {
+                    const isSelected = formData.sections.includes(sec.id);
+                    return (
+                      <TouchableOpacity 
+                        key={sec.id} 
+                        style={[styles.inlineItem, isSelected && { backgroundColor: '#eff6ff' }]} 
+                        onPress={() => {
+                          const newSections = isSelected
+                            ? formData.sections.filter(id => id !== sec.id)
+                            : [...formData.sections, sec.id];
+                          setFormData({ ...formData, sections: newSections });
+                        }}
+                      >
+                        <Text style={[styles.inlineItemText, isSelected && { color: '#3b82f6', fontWeight: '600' }]}>
+                          {sec.name}
+                        </Text>
+                        {isSelected && <Ionicons name="checkmark" size={16} color="#3b82f6" />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
 
               <View style={styles.modalActions}>
                 <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelBtn}>
@@ -242,9 +303,41 @@ const styles = StyleSheet.create({
   modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 15, padding: 15, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 6 },
-  modalInput: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, marginBottom: 15, fontSize: 14, color: '#1e293b' },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 6, marginTop: 10 },
   
+  pickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  pickerText: { fontSize: 14, color: '#1e293b' },
+  inlineDropdown: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#e2e8f0',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    marginTop: -15,
+    marginBottom: 15,
+    maxHeight: 200,
+  },
+  inlineItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  inlineItemText: { fontSize: 14, color: '#475569' },
+
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
   cancelBtn: { paddingVertical: 8, paddingHorizontal: 12 },
   cancelBtnText: { color: '#64748b', fontWeight: '600', fontSize: 13 },

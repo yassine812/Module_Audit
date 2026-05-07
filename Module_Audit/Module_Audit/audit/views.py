@@ -14,6 +14,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseForbidden
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from .models import (
     TypeAudit,
     TextRef,
@@ -135,7 +137,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
         return context
 
-class ChartDataAPIView(LoginRequiredMixin, View):
+@method_decorator(csrf_exempt, name='dispatch')
+class ChartDataAPIView(View):
     def get(self, request, *args, **kwargs):
         from django.db.models.functions import TruncMonth, TruncDay
         from django.db.models import Count
@@ -578,8 +581,8 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
                         f"{len(related_sous_criteres)} sous-critère(s): {', '.join(sc_names)}{'...' if len(related_sous_criteres) > 3 else ''}."
                     )
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-
         return super().form_valid(form)
+
 #SousCritère
 class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = SousCritere
@@ -587,6 +590,12 @@ class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     context_object_name = "souscriteres"
     ordering = ["id"]
     paginate_by = 7
+
+    def get_paginate_by(self, queryset):
+        user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
+        if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+            return 5
+        return self.paginate_by
 
     def paginate_queryset(self, queryset, page_size):
         from django.http import Http404
@@ -1256,7 +1265,27 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["details"] = self.object.detailresultataudit_set.all().order_by('id')
+        details = list(self.object.detailresultataudit_set.all().order_by('id'))
+        
+        # Prefetch preuves_attendues and page number to match by content
+        from .models import SousCritere
+        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme').prefetch_related('preuve_attendu').all()
+        sc_info_dict = {}
+        for sc in sous_criteres:
+            if sc.critere:
+                key = f"{sc.critere.name}____{sc.content}"
+                page = sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None
+                sc_info_dict[key] = {
+                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
+                    'page': page
+                }
+                
+        for d in details:
+            info = sc_info_dict.get(f"{d.critere}____{d.sous_critere}", {'preuves': [], 'page': None})
+            d.preuves_attendues = info['preuves']
+            d.pdf_page = info['page']
+            
+        context["details"] = details
         context["readonly"] = not self.object.en_cours
         
         # Fetch all available cotations for the wizard buttons
@@ -1451,14 +1480,36 @@ class ResultatAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
     paginate_by = 20
 
     def get_queryset(self):
+        sort = self.request.GET.get('sort', 'id')
+        order = self.request.GET.get('order', 'asc')
+
         qs = ResultatAudit.objects.select_related(
             "audit", "auditeur"
-        ).order_by("-date_audit")
+        )
+
+        # Determine sort field
+        if sort == 'date':
+            sort_field = 'date_audit'
+        else:
+            sort_field = 'id'
+
+        # Apply sort order
+        if order == 'desc':
+            qs = qs.order_by(f'-{sort_field}')
+        else:
+            qs = qs.order_by(sort_field)
 
         if self.request.user.is_superuser:
             return qs
 
         return qs.filter(auditeur=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sort'] = self.request.GET.get('sort', 'id')
+        context['order'] = self.request.GET.get('order', 'asc')
+        return context
+
 class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):
     model = ResultatAudit
     template_name = "audit/resultataudit/resultat_report.html"
@@ -2200,7 +2251,6 @@ def quick_create_formulaire(request):
             })
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    
     return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
 
 @transaction.atomic
@@ -2211,14 +2261,16 @@ def save_sous_critere_inline(request):
 
     if request.method == "POST":
         critere_id = request.POST.get("critere_id") or request.POST.get("critere")
-        content = request.POST.get("content")
+        content = request.POST.get("content") or request.POST.get("nom") or request.POST.get("libelle")
         type_cotation_id = request.POST.get("type_cotation")
         reaction = request.POST.get("reaction")
         type_audit_ids = request.POST.getlist("types_audit[]") or request.POST.getlist("type_audit")
         preuve_ids = request.POST.getlist("preuves[]") or request.POST.getlist("preuve_attendu")
 
-        if not critere_id or not content:
-            return JsonResponse({"status": "error", "message": "Données manquantes"}, status=400)
+        if not critere_id:
+            return JsonResponse({"status": "error", "message": "ID Critère manquant (critere_id)"}, status=400)
+        if not content:
+            return JsonResponse({"status": "error", "message": "Libellé manquant (content)"}, status=400)
 
         try:
             
@@ -2504,3 +2556,46 @@ def get_critere_type_audits(request, pk):
         return JsonResponse({"status": "success", "type_audits": type_audits})
     except Critere.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Critère introuvable"}, status=404)
+
+import base64
+from django.core.mail import EmailMessage
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def send_audit_report_email(request, pk):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email_to = data.get('email_to')
+            email_message = data.get('email_message')
+            pdf_base64 = data.get('pdf_data')
+            
+            if not email_to or not pdf_base64:
+                return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+                
+            if ',' in pdf_base64:
+                pdf_base64 = pdf_base64.split(',')[1]
+                
+            pdf_content = base64.b64decode(pdf_base64)
+            
+            email = EmailMessage(
+                subject=f'Rapport d\'Audit #{pk}',
+                body=email_message,
+                to=[email_to],
+            )
+            email.attach(f'Rapport_Audit_{pk}.pdf', pdf_content, 'application/pdf')
+            email.send()
+            
+            return JsonResponse({'status': 'success', 'message': 'Email sent successfully'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+def get_formulaire_type_audit(request, formulaire_id):
+    formulaire = get_object_or_404(FormulaireAudit, pk=formulaire_id)
+    return JsonResponse({
+        'type_audit_id': formulaire.type_audit.id if formulaire.type_audit else None,
+        'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
+    })

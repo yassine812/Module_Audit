@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if object %}Modifier Type de Preuve{% else %}Nouveau Type de Preuve{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if object %}Modifier Type de Preuve{% else %}Nouveau Type de Preuve{% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+Référentiel > <a href="{% url 'typepreuve_list' %}">Types de Preuves</a> > <strong>{% if object %}Modification{% else
+    %}Création{% endif %}</strong>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                    <h5 class="mb-0">
+                        <i class="fas {% if object %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+                        {% if object %}Modifier le type : {{ object.name }}{% else %}Nouveau Type de Preuve{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger shadow-sm">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}"
+                                class="form-label fw-bold   text-uppercase">
+                                Nom du Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger  mt-1">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text mt-2 ">Exemple: Documentation, Photo, Certificat, etc.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a href="{% url 'typepreuve_list' %}" class="btn btn-light px-4 rounded-3 border">
+                                <i data-lucide="x" class="me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
+                                <i data-lucide="save" class="me-2"></i>
+                                {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selects = document.querySelectorAll('select');
+        selects.forEach(s => s.classList.add('form-select', 'rounded-3'));
+
+        const inputs = document.querySelectorAll('input[type="text"], textarea');
+        inputs.forEach(i => i.classList.add('form-control', 'rounded-3'));
+    });
+</script>
+{% endblock %}
+
+<style>
+    .card {
+        border-radius: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+

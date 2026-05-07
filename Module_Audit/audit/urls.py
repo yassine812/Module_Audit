@@ -6,7 +6,7 @@ from .api_views import (
     TypeAuditDetailAPIView, ChapitreNormeListAPIView, ChapitreNormeDetailAPIView, CritereListAPIView, 
     CritereDetailAPIView, TypeCotationListAPIView, TypeCotationDetailAPIView, SousCritereListAPIView, 
     SousCritereDetailAPIView, FormulaireAuditListAPIView, FormulaireAuditDetailAPIView, 
-    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
+    FormulaireAuditCopyAPIView,    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
     SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView, TextRefDetailAPIView, 
     ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView
 )
@@ -177,6 +177,7 @@ urlpatterns = [
     
     path("api/formulaire-audit/", FormulaireAuditListAPIView.as_view(), name="api_formulaire_audit_list"),
     path("api/formulaire-audit/<int:pk>/", FormulaireAuditDetailAPIView.as_view(), name="api_formulaire_audit_detail"),
+    path("api/formulaire-audit/<int:pk>/copy/", FormulaireAuditCopyAPIView.as_view(), name="api_formulaire_audit_copy"),
     
     path("api/liste-audit/", ListeAuditListAPIView.as_view(), name="api_liste_audit_list"),
     path("api/liste-audit/<int:pk>/", ListeAuditListAPIView.as_view(), name="api_liste_audit_detail"),

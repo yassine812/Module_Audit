@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'Équipement{% endblock %}
+{% block page_title %}Confirmation de Retrait{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i data-lucide="trash-2" class="text-danger w-12 h-12 mb-3"></i>
+                        <h3 class="fw-bold">Suppression Définitive</h3>
+                        <p class="">
+                            Voulez-vous retirer cet équipement de l'inventaire ?<br>
+                            <span class="fw-bold text-dark h4">"{{ object.name }}"</span>
+                        </p>
+                        <div class="alert alert-warning py-2 mt-3 ">
+                            <i data-lucide="info" class="me-1"></i> Cette action n'est pas réversible. L'historique des contrôles pourrait être affecté.
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-3 shadow-sm">
+                                <i data-lucide="trash-2" class="me-2"></i>Oui, Supprimer
+                            </button>
+                            <a href="{% url 'equipement_list' %}" class="btn btn-light btn-lg rounded-3 border mt-2">
+                                Annuler et Retourner
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

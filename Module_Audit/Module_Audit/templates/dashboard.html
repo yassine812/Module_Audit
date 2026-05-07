@@ -50,6 +50,58 @@
     /* Force 100vh behavior */
     .content { padding: 0 !important; }
   }
+
+  /* Dashboard Filter Fixes */
+  #monthPickerBtn::after {
+      display: none !important; /* Hide default bootstrap caret */
+  }
+  
+  #monthPickerBtn {
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      padding-right: 12px !important;
+  }
+
+  #monthPickerBtn::before {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #6c757d;
+      order: 2;
+      margin-left: 8px;
+  }
+
+  #filterYear {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-image: none !important;
+      padding-right: 25px !important;
+      position: relative;
+      cursor: pointer;
+  }
+
+  .year-select-container {
+      position: relative;
+      display: inline-block;
+  }
+
+  .year-select-container::after {
+      content: '';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #6c757d;
+      pointer-events: none;
+  }
 </style>
 <div class="row">
   <!-- Statistics Cards -->
@@ -233,7 +285,9 @@
             </div>
           </div>
 
-          <select id="filterYear" class="form-control form-control-sm" style="width:90px; border-radius: 6px;"></select>
+          <div class="year-select-container">
+            <select id="filterYear" class="form-control form-control-sm" style="width:90px; border-radius: 6px;"></select>
+          </div>
         </div>
       </div>
       <div class="card-body p-2 p-md-4">

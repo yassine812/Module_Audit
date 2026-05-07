@@ -80,7 +80,11 @@
             <tbody>
                {% for typeaudit in page_obj %}
               <tr>
+<<<<<<< HEAD
                 <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+=======
+                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+>>>>>>> 1d2633d (fix web etape)
                 <td class="col-name text-truncate">
                   <strong class="text-dark ">{{ typeaudit.name }}</strong>
                 </td>

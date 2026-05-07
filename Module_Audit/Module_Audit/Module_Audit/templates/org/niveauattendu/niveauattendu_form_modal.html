@@ -1,0 +1,74 @@
+{% load static %}
+
+<div class="modal-header border-bottom-0 pt-4 px-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg">
+            <i data-lucide="bar-chart" ></i>
+        </div>
+        <div>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Niveau{% else %}Nouveau Niveau Attendu{% endif %}</h4>
+            <p class="  mb-0">Définissez les seuils de performance attendus.</p>
+        </div>
+    </div>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form id="niveauAttenduModalForm" method="post" action="{% if object %}{% url 'niveauattendu_update' object.id %}{% else %}{% url 'niveauattendu_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_commentaire">Libellé / Description <span class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 ps-3">
+                            <i data-lucide="type" class="text-blue-500" ></i>
+                        </span>
+                    </div>
+                    {{ form.commentaire }}
+                </div>
+                {% if form.commentaire.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.commentaire.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <label class=" font-weight-bold text-dark" for="id_valeur">Valeur cible (%) <span class="text-danger">*</span></label>
+                <div class="input-group shadow-sm rounded-lg overflow-hidden border">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-0 ps-3">
+                            <i data-lucide="percent" class="text-blue-500" ></i>
+                        </span>
+                    </div>
+                    {{ form.valeur }}
+                </div>
+                {% if form.valeur.errors %}
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.valeur.errors %}{{ error }}{% endfor %}</small>
+                {% endif %}
+                <small class="  mt-1">Entrez un nombre entre 0 et 100.</small>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer border-top-0 px-4 pb-4 bg-light">
+        <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary text-white font-weight-bold rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
+            <i data-lucide="save" class="mr-2" ></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+

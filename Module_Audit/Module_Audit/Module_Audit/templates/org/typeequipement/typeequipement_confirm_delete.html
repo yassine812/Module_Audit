@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer Type d'Équipement{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i data-lucide="alert-triangle" class="text-warning w-12 h-12 mb-3"></i>
+                        <h3 class="fw-bold">Êtes-vous sûr ?</h3>
+                        <p class="">
+                            Vous allez supprimer le type :<br>
+                            <span class="fw-bold text-dark h4">"{{ object.name }}"</span>
+                        </p>
+                        {% if object.equipement_set.count > 0 %}
+                        <div class="alert alert-danger py-3 mt-3">
+                            <i data-lucide="ban" class="me-2"></i>
+                            <strong>Attention :</strong> Ce type est utilisé par <strong>{{ object.equipement_set.count }}</strong> équipements. 
+                            La suppression sera bloquée par le système.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2 mt-3 ">
+                            Action irréversible. Aucun équipement n'est actuellement lié à ce type.
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-3 shadow-sm" {% if object.equipement_set.count > 0 %}disabled{% endif %}>
+                                <i data-lucide="trash-2" class="me-2"></i>Oui, supprimer definitivement
+                            </button>
+                            <a href="{% url 'typeequipement_list' %}" class="btn btn-light btn-lg rounded-3 border mt-2">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

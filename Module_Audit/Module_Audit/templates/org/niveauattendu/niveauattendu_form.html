@@ -118,6 +118,9 @@
     <div class="na-card max-w-[1400px] mx-auto">
         <!-- Header -->
         <div class="na-header">
+            <a href="{% url 'niveauattendu_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
             <div class="na-header-ico">
                 <i data-lucide="award"></i>
             </div>
@@ -190,8 +193,8 @@
             <!-- Footer -->
             <div class="na-footer">
                 <a href="{% url 'niveauattendu_list' %}" class="btn-cancel">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    Beso de retour
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Annuler
                 </a>
                 <button type="submit" class="btn-save">
                     <i data-lucide="save" class="w-4 h-4"></i>

@@ -1,0 +1,865 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{% block title %}Audit d'entreprise{% endblock %}</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.min.css' %}">
+  <!-- Google Font: Source Sans Pro -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="{% static 'adminlte/plugins/select2/css/select2.min.css' %}">
+  <link rel="stylesheet" href="{% static 'adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  {% block extra_css %}{% endblock %}
+
+  <style>
+    :root {
+      --fluid-12: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+      --fluid-14: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+      --fluid-16: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);
+      --fluid-20: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+      --sidebar-width: 250px;
+      --sidebar-width-tablet: 220px;
+      --sidebar-width-mobile: 280px;
+      --primary-color: #17a2b8;
+    }
+
+    /* 1. Core Layout Transitions */
+    .main-sidebar,
+    .main-sidebar::before,
+    .content-wrapper,
+    .main-footer,
+    .main-header {
+      transition: margin-left .3s ease-in-out, width .3s ease-in-out, transform .3s ease-in-out !important;
+    }
+
+    /* 2. Expanded State (Default Desktop) */
+    @media (min-width: 992px) {
+      .main-sidebar {
+        width: var(--sidebar-width);
+      }
+
+      .sidebar-collapse .main-sidebar {
+        width: 4.6rem !important;
+        /* AdminLTE mini sidebar */
+      }
+    }
+
+    /* 3. Mobile/Tablet Specific Sidebar (< 992px) */
+    @media (max-width: 991.98px) {
+      .main-sidebar {
+        margin-left: 0 !important;
+        transform: translateX(-100%);
+        width: var(--sidebar-width-mobile) !important;
+        position: fixed;
+        height: 100vh;
+        z-index: 1050;
+      }
+
+      .sidebar-open .main-sidebar {
+        transform: translateX(0);
+      }
+
+      .content-wrapper,
+      .main-header,
+      .main-footer {
+        margin-left: 0 !important;
+      }
+
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        backdrop-filter: blur(2px);
+      }
+
+      .sidebar-open #sidebar-overlay {
+        display: block;
+      }
+    }
+
+    /* 4. Industry-Standard Responsive Tables (Horizontal Container Scroll) */
+    @media (max-width: 767.98px) {
+      .table-responsive {
+        overflow-x: hidden !important;
+        /* Enable horizontal scroll on container ONLY */
+        -webkit-overflow-scrolling: touch;
+        width: 100% !important;
+        margin-bottom: 1rem;
+        padding: 0 !important;
+      }
+
+      .table {
+        display: table !important;
+        min-width: 100% !important;
+        /* Allow table to fit container width */
+        width: 100% !important;
+        table-layout: auto !important;
+        /* Allow columns to size naturally */
+        border-collapse: collapse !important;
+        margin-bottom: 0 !important;
+      }
+
+      .table th,
+      .table td {
+        display: table-cell !important;
+        white-space: normal !important;
+        /* Allow text wrapping to keep all columns visible */
+        padding: 0.5rem 0.15rem !important;
+        /* Absolute minimum horizontal padding */
+        font-size: 0.72rem !important;
+        /* Slightly smaller font for high-density tables */
+        text-align: left !important;
+        vertical-align: middle !important;
+        border: 1px solid #dee2e6 !important;
+      }
+
+      .table th {
+        background-color: #f8f9fa !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+      }
+
+      /* Keep Action buttons aligned horizontally */
+      .table td:last-child {
+        min-width: 85px !important;
+      }
+
+      /* Restore icons and badges for full professional UI */
+      .table i,
+      .table svg,
+      .table [data-lucide] {
+        display: inline-block !important;
+        margin-right: 4px;
+      }
+
+      .table .btn,
+      .table .badge {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.8rem !important;
+        display: inline-flex !important;
+        align-items: center;
+        white-space: nowrap !important;
+      }
+    }
+
+    /* Ensure the main document never scrolls horizontally */
+    html,
+    body {
+      overflow-x: hidden !important;
+    }
+
+
+    /* 5. Mobile UI Enhancements (Edge-to-Edge) */
+    @media (max-width: 576px) {
+      .content-wrapper {
+        padding: 0.5rem 0 !important;
+      }
+
+      .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .card {
+        margin-bottom: 1rem !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .card-header {
+        padding: 0.75rem 1rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+      }
+
+      .card-header .ml-auto {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+
+      .card-body {
+        padding: 0 !important;
+      }
+
+      .table-responsive {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      /* Spacing for elements that should NOT be edge-to-edge */
+      .card-header .card-title,
+      .card-header .btn,
+      .card-body>*:not(.table-responsive),
+      .card-footer {
+        margin-left: 1rem !important;
+        margin-right: 1rem !important;
+      }
+
+      .btn-sm-block,
+      .card-header .btn {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+      }
+    }
+
+    /* 6. Form Modernization (Global) */
+    .form-control,
+    .form-select,
+    .custom-input {
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 0.75rem !important;
+      padding: 0.6rem 1rem !important;
+      height: auto !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1) !important;
+    }
+
+    /* 7. Navigation Aesthetics */
+    .nav-sidebar .nav-link {
+      border-radius: 0.75rem !important;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-sidebar .nav-link.active {
+      box-shadow: 0 4px 12px rgba(23, 162, 184, 0.25) !important;
+    }
+
+    /* 8. Lucide Icon Consistency */
+    [data-lucide] {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .col-actions [data-lucide] {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Desktop Preservation - Ensure these classes don't break desktop */
+    @media (min-width: 1024px) {
+
+      .table:not(.select2-results__options) td,
+      .table:not(.select2-results__options) th {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.95rem !important;
+      }
+    }
+  </style>
+
+</head>
+
+<body class="{% block body_class %}hold-transition layout-fixed{% endblock %}">
+  <div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+      <!-- Left navbar links -->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-widget="pushmenu" href="#" role="button" id="sidebar-toggle-btn">
+            <i data-lucide="menu" id="sidebar-toggle-icon"></i>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Right navbar links -->
+      <ul class="navbar-nav ml-auto">
+
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-toggle="dropdown" href="#" style="position: relative;">
+            <i data-lucide="bell"></i>
+            {% if notifications_count > 0 %}
+            <span class="badge badge-danger navbar-badge nav-badge-notif">{{ notifications_count }}</span>
+            {% endif %}
+          </a>
+          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow-sm border-0 notif-dropdown-menu">
+            <div class="dropdown-header bg-white border-bottom py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ notifications_count }}
+                  Notification{{ notifications_count|pluralize }}</span>
+                <span
+                  class="badge bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded text-[10px] font-black">{{
+                  notifications_count }} NOUVELLES</span>
+              </div>
+            </div>
+            <div style="max-height: 350px; overflow-y: auto;">
+              {% for notif in notifications %}
+              <a href="{{ notif.url }}"
+                class="dropdown-item py-3 px-4 border-bottom notif-item transition-all hover:bg-slate-50">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="flex-shrink-0">
+                    <div
+                      class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                      <i data-lucide="{{ notif.icon|default:'bell' }}" class="text-blue-500 w-5 h-5"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow min-w-0">
+                    <p class="text-sm font-bold text-slate-700 mb-0 leading-snug truncate-2-lines">{{ notif.message }}
+                    </p>
+                    <span
+                      class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1 d-block opacity-70">Il y
+                      a quelques instants</span>
+                  </div>
+                </div>
+              </a>
+              {% empty %}
+              <div class="p-4 text-center ">
+                <i data-lucide="inbox"
+                  style="width: 40px; height: 40px; opacity: 0.3; margin: 0 auto 10px auto; display: block;"></i>
+                <p class="mb-0 text-sm font-weight-bold">Aucune notification</p>
+                <p class="text-xs mt-1 mb-0">Vous êtes à jour !</p>
+              </div>
+              {% endfor %}
+            </div>
+            <a href="#"
+              class="dropdown-item dropdown-footer text-center py-3 bg-slate-50 text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] border-top hover:bg-slate-100 transition-colors">
+              Voir toutes les notifications
+            </a>
+          </div>
+        </li>
+        <!-- User Account Menu -->
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-toggle="dropdown" href="#" style="position: relative;">
+            <i data-lucide="user"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a href="{% url 'user_profile' %}" class="dropdown-item">
+              <i data-lucide="user" class="mr-2"></i> Profil
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="{% url 'logout' %}" class="dropdown-item">
+              <i data-lucide="log-out" class="mr-2"></i> Déconnexion
+            </a>
+          </div>
+        </li>
+      </ul>
+    </nav>
+    <aside class="main-sidebar sidebar-light-info elevation-4">
+      <a href="{% url 'dashboard' %}" class="brand-link"
+        style="display: flex; align-items: center; gap: 0.5rem; padding-left: 1rem; overflow: visible;">
+        <img src="{% static 'img/ab-serve-logo.png' %}" alt="AB Serve Logo" class="brand-image"
+          style="opacity: .8; margin-left: 0; box-shadow: none; border-radius: 0; max-height: 40px; width: auto; transform: scale(1.45) translateY(-3px); transform-origin: left center; z-index: 10;">
+        <span class="brand-text font-weight-bold" style="font-size: 1.1rem; line-height: 1; z-index: 20;">Audit
+          d'entreprise</span>
+      </a>
+      <div class="sidebar">
+        <!-- Sidebar Search -->
+        <div class="px-3 mb-2">
+          <div
+            style="display: grid !important; grid-template-columns: 1fr 45px !important; width: 100% !important; background: #fff !important; border: 1px solid #ddd !important; border-radius: 8px !important; overflow: hidden !important; margin-top: 15px !important;">
+            <input type="search" id="sidebarSearchInput" placeholder="Rechercher..."
+              style="border: none !important; padding: 10px 12px !important; outline: none !important; background: transparent !important; font-size: 0.9rem !important; width: 100% !important;"
+              autocomplete="off">
+            <button
+              style="border: none !important; border-left: 1px solid #ddd !important; background: #f8f9fa !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;">
+              <i data-lucide="search" style="width: 18px; height: 18px; color: #555;"></i>
+            </button>
+          </div>
+        </div>
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="true">
+            {% load auth_extras %}
+            {% if user.is_superuser %}
+
+            <!-- Organisation -->
+            <li
+              class="nav-item {% if '/sites/' in request.path or '/sections/' in request.path or '/processus/' in request.path and not '/processus-docs/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/sites/' in request.path or '/sections/' in request.path or '/processus/' in request.path and not '/processus-docs/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Organisation">
+                <i class="nav-icon" data-lucide="building"></i>
+                <p>
+                  Organisation
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'site_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'site_list' %}active{% endif %}">
+                    <i data-lucide="factory" class="nav-icon"></i>
+                    <p>Sites</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'section_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'section_list' %}active{% endif %}">
+                    <i data-lucide="network" class="nav-icon"></i>
+                    <p>Section</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'processus_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'processus_list' %}active{% endif %}">
+                    <i data-lucide="workflow" class="nav-icon"></i>
+                    <p>Processus</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Référentiel -->
+            <li
+              class="nav-item {% if '/textref/' in request.path or '/chapitres/' in request.path or '/critere/' in request.path or '/sous-critere/' in request.path or '/cotation/' in request.path or '/typecotation/' in request.path or '/niveau-attendu/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/textref/' in request.path or '/chapitres/' in request.path or '/critere/' in request.path or '/sous-critere/' in request.path or '/cotation/' in request.path or '/typecotation/' in request.path or '/niveau-attendu/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Référentiel">
+                <i class="nav-icon" data-lucide="book"></i>
+                <p>
+                  Référentiel
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'textref_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'textref_list' %}active{% endif %}">
+                    <i data-lucide="book-open" class="nav-icon"></i>
+                    <p>Textes de Référence</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'chapitre_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'chapitre_list' %}active{% endif %}">
+                    <i data-lucide="file-text" class="nav-icon"></i>
+                    <p>Chapitres de Normes</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'critere_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'critere_list' %}active{% endif %}">
+                    <i data-lucide="check-square" class="nav-icon"></i>
+                    <p>Critères</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'souscritere_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'souscritere_list' %}active{% endif %}">
+                    <i data-lucide="list" class="nav-icon"></i>
+                    <p>Sous-Critères</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'cotation_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'cotation_list' %}active{% endif %}">
+                    <i data-lucide="star" class="nav-icon"></i>
+                    <p>Cotations</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'niveauattendu_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'niveauattendu_list' %}active{% endif %}">
+                    <i data-lucide="target" class="nav-icon"></i>
+                    <p>Niveaux Attendus</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'typecotation_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'typecotation_list' %}active{% endif %}">
+                    <i data-lucide="tags" class="nav-icon"></i>
+                    <p>Types de Cotation</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Audit -->
+            <li
+              class="nav-item {% if '/type-audit/' in request.path or '/formulaire/' in request.path or '/liste-audit/' in request.path or '/resultat/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/type-audit/' in request.path or '/formulaire/' in request.path or '/liste-audit/' in request.path or '/resultat/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Audit">
+                <i class="nav-icon" data-lucide="clipboard-list"></i>
+                <p>
+                  Audit
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'typeaudit_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'typeaudit_list' %}active{% endif %}">
+                    <i data-lucide="clipboard-list" class="nav-icon"></i>
+                    <p>Types d'Audit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'formulaire_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'formulaire_list' %}active{% endif %}">
+                    <i data-lucide="pen-tool" class="nav-icon"></i>
+                    <p>Formulaires d'Audit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'liste_audit_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'liste_audit_list' %}active{% endif %}">
+                    <i data-lucide="list-checks" class="nav-icon"></i>
+                    <p>Listes d'Audits</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'resultat_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'resultat_list' %}active{% endif %}">
+                    <i data-lucide="bar-chart" class="nav-icon"></i>
+                    <p>Résultats d'Audits</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- NiveauAttendus -->
+            <li
+              class="nav-item {% if '/type-preuve/' in request.path or '/preuve-attendue/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/type-preuve/' in request.path or '/preuve-attendue/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="NiveauAttendus">
+                <i class="nav-icon" data-lucide="folder"></i>
+                <p>
+                  Preuves
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'typepreuve_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'typepreuve_list' %}active{% endif %}">
+                    <i data-lucide="layers" class="nav-icon"></i>
+                    <p>Types de Preuves</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'preuveattendu_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'preuveattendu_list' %}active{% endif %}">
+                    <i data-lucide="check-check" class="nav-icon"></i>
+                    <p>Preuves Attendues</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Ressources -->
+            <li
+              class="nav-item {% if '/processus-docs/' in request.path or '/equipements/' in request.path or '/types-equipements/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/processus-docs/' in request.path or '/equipements/' in request.path or '/types-equipements/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Ressources">
+                <i class="nav-icon" data-lucide="package"></i>
+                <p>
+                  Ressources
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'processusdoc_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'processusdoc_list' %}active{% endif %}">
+                    <i data-lucide="file" class="nav-icon"></i>
+                    <p>Documents</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'equipement_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'equipement_list' %}active{% endif %}">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    <p>Equipements</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'typeequipement_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'typeequipement_list' %}active{% endif %}">
+                    <i data-lucide="wrench" class="nav-icon"></i>
+                    <p>Types d'Equipements</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Gestion des utilisateurs -->
+            <li class="nav-item">
+              <a href="{% url 'user_list' %}"
+                class="nav-link {% if 'users' in request.path %}bg-info text-white active{% endif %}">
+                <i class="nav-icon" data-lucide="users"></i>
+                <p>Gestion des utilisateurs</p>
+              </a>
+            </li>
+
+            {% else %}
+            <!-- Auditeur Sidebar -->
+
+            <!-- Référentiel -->
+            <li class="nav-item {% if '/critere/' in request.path %}menu-open{% endif %}">
+              <a href="#" class="nav-link {% if '/critere/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Référentiel">
+                <i class="nav-icon" data-lucide="book"></i>
+                <p>
+                  Référentiel
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'critere_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'critere_list' %}active{% endif %}">
+                    <i data-lucide="check-square" class="nav-icon"></i>
+                    <p>Critères</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Audit -->
+            <li
+              class="nav-item {% if '/formulaire/' in request.path or '/liste-audit/' in request.path or '/resultat/' in request.path %}menu-open{% endif %}">
+              <a href="#"
+                class="nav-link {% if '/formulaire/' in request.path or '/liste-audit/' in request.path or '/resultat/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Audit">
+                <i class="nav-icon" data-lucide="clipboard-list"></i>
+                <p>
+                  Audit
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'formulaire_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'formulaire_list' %}active{% endif %}">
+                    <i data-lucide="pen-tool" class="nav-icon"></i>
+                    <p>Formulaires d'Audit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'liste_audit_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'liste_audit_list' %}active{% endif %}">
+                    <i data-lucide="list-checks" class="nav-icon"></i>
+                    <p>Listes d'Audits</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'resultat_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'resultat_list' %}active{% endif %}">
+                    <i data-lucide="bar-chart" class="nav-icon"></i>
+                    <p>Résultats d'Audits</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Ressources -->
+            <li class="nav-item {% if '/equipements/' in request.path %}menu-open{% endif %}">
+              <a href="#" class="nav-link {% if '/equipements/' in request.path %}bg-info text-white active{% endif %}"
+                data-tooltip="Ressources">
+                <i class="nav-icon" data-lucide="package"></i>
+                <p>
+                  Ressources
+                  <i data-lucide="angle-left" class="right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'equipement_list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'equipement_list' %}active{% endif %}">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    <p>Équipements</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            {% endif %}
+
+          </ul>
+        </nav>
+      </div>
+    </aside>
+    <div class="content-wrapper">
+
+      <section class="content">
+        <div class="container-fluid">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </section>
+    </div>
+    <aside class="control-sidebar control-sidebar-dark">
+      <div class="p-3">
+        <h5>Paramètres</h5>
+      </div>
+    </aside>
+    <footer class="main-footer">
+      <strong>Copyright &copy; <a href="#">Audit d'entreprise</a>.</strong>
+      Tous droits réservés.
+      <div class="float-right -block">
+        <b>Version</b>
+      </div>
+    </footer>
+  </div>
+
+  <script src="{% static 'adminlte/plugins/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'adminlte/dist/js/adminlte.min.js' %}"></script>
+  <!-- Select2 -->
+  <script src="{% static 'adminlte/plugins/select2/js/select2.full.min.js' %}"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    $(function () {
+      /**
+       * RESPONSIVE STRATEGY (Senior Engineer Implementation)
+       * 1. Automated Table Labels: Map headers to data-labels for mobile cards.
+       * 2. Sidebar Orchestration: Ensure smooth mobile toggle with overlay.
+       * 3. State Persistence: Maintain user preferences across reloads.
+       */
+
+      const body = $('body');
+      const sidebar = $('.main-sidebar');
+
+      // --- 1. Automated Table Responsiveness ---
+      function applyTableLabels() {
+        $('table').each(function () {
+          const table = $(this);
+          const headers = [];
+
+          // Capture headers
+          table.find('thead th').each(function () {
+            headers.push($(this).text().trim());
+          });
+
+          // Apply labels to cells
+          table.find('tbody tr').each(function () {
+            $(this).find('td').each(function (index) {
+              if (headers[index] && !$(this).attr('data-label')) {
+                $(this).attr('data-label', headers[index]);
+              }
+            });
+          });
+        });
+      }
+
+      // Initial apply and watch for AJAX completions
+      applyTableLabels();
+      $(document).ajaxComplete(function () {
+        applyTableLabels();
+        if (window.lucide) lucide.createIcons();
+      });
+
+      // --- 2. Sidebar & Overlay Management ---
+      const overlay = $('<div id="sidebar-overlay"></div>').appendTo('.wrapper');
+
+      overlay.on('click', function () {
+        body.removeClass('sidebar-open').addClass('sidebar-collapse');
+      });
+
+      // Sync Lucide icons and sidebar state
+      function syncUIState() {
+        const isMobile = $(window).width() < 992;
+        const icon = $('#sidebar-toggle-icon');
+
+        if (isMobile) {
+          icon.attr('data-lucide', 'menu');
+        } else {
+          const isCollapsed = body.hasClass('sidebar-collapse');
+          icon.attr('data-lucide', isCollapsed ? 'chevron-right' : 'chevron-left');
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // Initial state sync
+      const persistedState = localStorage.getItem('sidebar-collapsed');
+      if (persistedState === 'true' && $(window).width() >= 992) {
+        body.addClass('sidebar-collapse');
+      }
+
+      $(window).on('load resize', syncUIState);
+
+      $(document).on('collapsed.lte.pushmenu shown.lte.pushmenu', function () {
+        if ($(window).width() >= 992) {
+          localStorage.setItem('sidebar-collapsed', body.hasClass('sidebar-collapse'));
+        }
+        syncUIState();
+      });
+
+      // --- 3. Enhanced Tooltips & UX ---
+      if (window.lucide) lucide.createIcons();
+
+      // SweetAlert2 Confirmation for finishing audits
+      $(document).on('click', '.btn-finish-audit', function (e) {
+        e.preventDefault();
+        const form = $(this).closest('.finish-audit-form');
+        Swal.fire({
+          title: 'Clôturer l\'audit ?',
+          text: "Cette action va finaliser l'audit et générer le rapport final.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#28a745',
+          confirmButtonText: 'Oui, clôturer',
+          cancelButtonText: 'Annuler',
+          reverseButtons: true,
+          customClass: { popup: 'rounded-4 shadow-lg border-0' }
+        }).then((result) => { if (result.isConfirmed) form.submit(); });
+      });
+
+      // --- 4. Sidebar Search: In-place Filtering ---
+      const searchInput = $('#sidebarSearchInput');
+      searchInput.on('input', function () {
+        const query = $(this).val().toLowerCase().trim();
+        const navSidebar = $('.nav-sidebar');
+        const allItems = navSidebar.find('.nav-item');
+
+        if (query.length < 1) {
+          allItems.show();
+          return;
+        }
+
+        allItems.hide();
+        navSidebar.find('.nav-link').each(function () {
+          const link = $(this);
+          const text = link.find('p').text().toLowerCase();
+          if (text.includes(query)) {
+            link.closest('.nav-item').show();
+            link.parentsUntil('.nav-sidebar', '.nav-item').show().addClass('menu-open');
+          }
+        });
+      });
+    });
+  </script>
+
+
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

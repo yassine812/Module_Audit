@@ -1,0 +1,91 @@
+{% load static %}
+
+<div class="modal-header border-bottom py-3 px-4 bg-white">
+    <h5 class="modal-title font-weight-bold d-flex align-items-center">
+        <i data-lucide="file-text" class="mr-2 text-primary" ></i>
+        {% if object %}Modifier Document{% else %}Nouveau Document{% endif %}
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<style>
+    .modal-header { padding: 0.75rem 1rem !important; }
+    .modal-body { padding: 1.25rem !important; }
+    .form-group { margin-bottom: 1rem !important; }
+    .modal-title { font-size: 1.1rem !important; }
+</style>
+
+<form id="processusDocModalForm" method="post"
+    action="{% if object %}{% url 'processusdoc_update' object.id %}{% else %}{% url 'processusdoc_create' %}{% endif %}"
+    enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.name.id_for_label }}">Nom du document <span
+                    class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <small class="text-danger d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.content.id_for_label }}">Fichier <span
+                    class="text-danger">*</span></label>
+            {{ form.content }}
+            {% if object and object.content %}
+            <small class=" d-block mt-1">Actuel : {{ object.content.name }}</small>
+            {% endif %}
+            {% if form.content.errors %}
+            <small class="text-danger d-block">{% for error in form.content.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.document_processus.id_for_label }}">Processus
+                associés</label>
+            {{ form.document_processus }}
+            {% if form.document_processus.errors %}
+            <small class="text-danger d-block">{% for error in form.document_processus.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer bg-light border-top-0">
+        <button type="button" class="btn btn-secondary px-4 shadow-sm" data-dismiss="modal">
+            <i data-lucide="x" class="mr-1" ></i>
+            Annuler
+        </button>
+        <button type="submit" class="btn btn-success px-4 shadow-sm">
+            <i data-lucide="save" class="mr-1" ></i>
+            {% if object %}Confirmer{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+
+    // Initialisation de Select2 pour les champs multi-sélection dans la modale
+    $(document).ready(function () {
+        $('.select2-modal').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Sélectionner un ou plusieurs processus...',
+            allowClear: true,
+            dropdownParent: $('#processusDocModal')
+        });
+
+        // Ajout des classes bootstrap standard
+        $('#processusDocModalForm input:not([type="file"]), #processusDocModalForm textarea').addClass('form-control');
+    });
+</script>
+
+

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visionneuse de Document - {{ doc.name }}{% endblock %}
+
+{% block extra_css %}
+
+<style>
+    .viewer-container {
+        background: #f4f6f9;
+        min-height: calc(100vh - 200px);
+        padding: 40px 20px;
+    }
+    .document-page {
+        background: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        margin: 0 auto;
+        max-width: 900px;
+        padding: 50px;
+        border-radius: 4px;
+    }
+    .viewer-header {
+        background: white;
+        border-bottom: 1px solid #dee2e6;
+        padding: 15px 30px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    #docx-container {
+        width: 100%;
+    }
+    /* docx-preview custom overrides */
+    .docx-wrapper {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    .docx {
+        box-shadow: none !important;
+        margin-bottom: 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="viewer-header d-flex justify-content-between align-items-center">
+    <div>
+        <h5 class="mb-0 fw-bold text-primary">
+            <i data-lucide="file-word" class="me-2"></i>{{ doc.name }}
+        </h5>
+        <small class="">Type: Microsoft Word (.docx)</small>
+    </div>
+    <div class="btn-group">
+        <a href="{{ doc.content.url }}" class="btn btn-outline-secondary btn-sm" download>
+            <i data-lucide="download" class="me-1"></i>Télécharger
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
+            <i data-lucide="printer" class="me-1"></i>Imprimer
+        </button>
+    </div>
+</div>
+
+<div class="viewer-container">
+    <div id="docx-container" class="document-page">
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="">Chargement du document Word en cours...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jszip is required by docx-preview -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+<!-- docx-preview library -->
+<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById("docx-container");
+        const docUrl ="{{ doc.content.url }}";
+
+        fetch(docUrl)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                const loading = document.getElementById("loading");
+                if (loading) loading.remove();
+                
+                // Render the DOCX file
+                docx.renderAsync(buffer, container, null, {
+                    className:"docx",
+                    inWrapper: true,
+                    ignoreWidth: false,
+                    ignoreHeight: false,
+                    debug: false
+                }).then(x => console.log("docx: finished"));
+            })
+            .catch(err => {
+                console.error("Error loading docx:", err);
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i data-lucide="alert-circle" class="me-2"></i>
+                        Impossible de charger le document. <br>
+                        <small>${err.message}</small>
+                    </div>
+                `;
+            });
+    });
+</script>
+{% endblock %}
+
+
+

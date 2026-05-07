@@ -27,16 +27,16 @@ const SousCritereManagementScreen = () => {
   const [criteres, setCriteres] = useState([]);
   const [typeCotations, setTypeCotations] = useState([]);
   const [search, setSearch] = useState('');
-  
+
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSelectingCritere, setIsSelectingCritere] = useState(false);
   const [isSelectingCotation, setIsSelectingCotation] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  const [formData, setFormData] = useState({ 
-    critere: '', 
-    content: '', 
-    type_cotation: '', 
+  const [formData, setFormData] = useState({
+    critere: '',
+    content: '',
+    type_cotation: '',
     reaction: ''
   });
 
@@ -74,9 +74,9 @@ const SousCritereManagementScreen = () => {
   const handleEdit = (item) => {
     setIsEditing(true);
     setCurrentId(item.id);
-    setFormData({ 
-      critere: item.critere_id?.toString() || '', 
-      content: item.content, 
+    setFormData({
+      critere: item.critere_id?.toString() || '',
+      content: item.content,
       type_cotation: item.type_cotation_id?.toString() || '',
       reaction: item.reaction || ''
     });
@@ -91,8 +91,8 @@ const SousCritereManagementScreen = () => {
       'Êtes-vous sûr de vouloir supprimer ce sous-critère ?',
       [
         { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
+        {
+          text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -137,29 +137,29 @@ const SousCritereManagementScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 22 }]}><Text style={styles.headerText}>ID</Text></View>
-      <View style={[styles.headerCell, { flex: 0.8 }]}><Text style={styles.headerText}>Critère</Text></View>
-      <View style={[styles.headerCell, { flex: 1.0 }]}><Text style={styles.headerText}>Contenu</Text></View>
+      <View style={[styles.headerCell, { width: 35 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { flex: 0.7 }]}><Text style={styles.headerText} numberOfLines={1}>Critère</Text></View>
+      <View style={[styles.headerCell, { flex: 1.0 }]}><Text style={styles.headerText} numberOfLines={1}>Contenu</Text></View>
       <View style={[styles.headerCell, { flex: 0.8 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Type\nCotation"}</Text></View>
-      <View style={[styles.headerCell, { flex: 0.9 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Réaction</Text></View>
-      <View style={[styles.headerCell, { flex: 1.1 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Preuves\nAttendues"}</Text></View>
-      <View style={[styles.headerCell, { flex: 0.7 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Type\nAudit"}</Text></View>
+      <View style={[styles.headerCell, { flex: 0.8 }]}><Text style={[styles.headerText, { textAlign: 'center' }]} numberOfLines={1}>Réaction</Text></View>
+      <View style={[styles.headerCell, { flex: 0.8 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Preuves\nAttendues"}</Text></View>
+      <View style={[styles.headerCell, { flex: 1.0 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Type\nAudit"}</Text></View>
       <View style={[styles.headerCell, { width: 60 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     const proofNames = item.preuves_attendues ? item.preuves_attendues.map(p => p.name).join(', ') : '-';
-    
+
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 22 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
-        <View style={[styles.cell, { flex: 0.8 }]}><Text style={styles.cellText}>{item.critere_name}</Text></View>
-        <View style={[styles.cell, { flex: 1.0 }]}><Text style={[styles.cellText, { fontWeight: '600' }]}>{item.content}</Text></View>
-        <View style={[styles.cell, { flex: 0.8 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.type_cotation_name || '-'}</Text></View>
-        <View style={[styles.cell, { flex: 0.9 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.reaction || '-'}</Text></View>
-        <View style={[styles.cell, { flex: 1.1 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{proofNames}</Text></View>
-        <View style={[styles.cell, { flex: 0.7 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.type_audit_names || '-'}</Text></View>
+        <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
+        <View style={[styles.cell, { flex: 0.7 }]}><Text style={styles.cellText} numberOfLines={1}>{item.critere_name}</Text></View>
+        <View style={[styles.cell, { flex: 1.0 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.content}</Text></View>
+        <View style={[styles.cell, { flex: 0.8 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.type_cotation_name || '-'}</Text></View>
+        <View style={[styles.cell, { flex: 0.8 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.reaction || '-'}</Text></View>
+        <View style={[styles.cell, { flex: 0.8 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{proofNames}</Text></View>
+        <View style={[styles.cell, { flex: 1.0 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.type_audit_names || '-'}</Text></View>
         <View style={[styles.cell, { width: 60, flexDirection: 'row', justifyContent: 'center' }]}>
           <TouchableOpacity onPress={() => handleEdit(item)} style={styles.miniActionBtn}>
             <Feather name="edit-2" size={12} color="#f59e0b" />
@@ -222,13 +222,13 @@ const SousCritereManagementScreen = () => {
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
-                 <Text style={styles.modalTitle}>{isEditing ? 'Modifier' : 'Nouveau'}</Text>
-                 <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color="#64748b" /></TouchableOpacity>
+                <Text style={styles.modalTitle}>{isEditing ? 'Modifier' : 'Nouveau'}</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color="#64748b" /></TouchableOpacity>
               </View>
 
               <Text style={styles.inputLabel}>Critère Parent</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingCritere && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+              <TouchableOpacity
+                style={[styles.pickerContainer, isSelectingCritere && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}
                 onPress={() => setIsSelectingCritere(!isSelectingCritere)}
               >
                 <Text style={[styles.pickerText, !formData.critere && { color: '#94a3b8' }]}>
@@ -239,7 +239,7 @@ const SousCritereManagementScreen = () => {
               {isSelectingCritere && (
                 <View style={styles.inlineDropdown}>
                   {criteres.map(item => (
-                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, critere: item.id.toString()}); setIsSelectingCritere(false); }}>
+                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({ ...formData, critere: item.id.toString() }); setIsSelectingCritere(false); }}>
                       <Text style={styles.inlineItemText}>{item.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -265,8 +265,8 @@ const SousCritereManagementScreen = () => {
               />
 
               <Text style={styles.inputLabel}>Type de Cotation</Text>
-              <TouchableOpacity 
-                style={[styles.pickerContainer, isSelectingCotation && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]} 
+              <TouchableOpacity
+                style={[styles.pickerContainer, isSelectingCotation && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}
                 onPress={() => setIsSelectingCotation(!isSelectingCotation)}
               >
                 <Text style={[styles.pickerText, !formData.type_cotation && { color: '#94a3b8' }]}>
@@ -277,7 +277,7 @@ const SousCritereManagementScreen = () => {
               {isSelectingCotation && (
                 <View style={styles.inlineDropdown}>
                   {typeCotations.map(item => (
-                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({...formData, type_cotation: item.id.toString()}); setIsSelectingCotation(false); }}>
+                    <TouchableOpacity key={item.id} style={styles.inlineItem} onPress={() => { setFormData({ ...formData, type_cotation: item.id.toString() }); setIsSelectingCotation(false); }}>
                       <Text style={styles.inlineItemText}>{item.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -308,35 +308,35 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   title: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginLeft: 5 },
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
-  
+
   searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', marginHorizontal: 12, marginTop: 10, marginBottom: 5, paddingHorizontal: 12, borderRadius: 8, height: 38 },
   searchInput: { flex: 1, marginLeft: 8, fontSize: 13, color: '#1e293b' },
-  
+
   tableContainer: { flex: 1, marginTop: 5 },
   tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   headerCell: { padding: 2, justifyContent: 'center' },
   headerText: { fontSize: 9, fontWeight: '700', color: '#1e293b' },
-  
+
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
   cell: { padding: 4, justifyContent: 'center' },
   cellText: { fontSize: 9, color: '#475569' },
   miniActionBtn: { padding: 4, marginHorizontal: 1 },
-  
+
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
-  
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 15, padding: 15, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 6 },
   modalInput: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, marginBottom: 15, fontSize: 14, color: '#1e293b', textAlignVertical: 'top' },
-  
+
   pickerContainer: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
   pickerText: { fontSize: 14, color: '#1e293b' },
   inlineDropdown: { backgroundColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#e2e8f0', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 8, marginBottom: 15 },
   inlineItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   inlineItemText: { fontSize: 13, color: '#475569' },
- 
+
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
   cancelBtn: { paddingVertical: 8, paddingHorizontal: 12 },
   cancelBtnText: { color: '#64748b', fontWeight: '600', fontSize: 13 },

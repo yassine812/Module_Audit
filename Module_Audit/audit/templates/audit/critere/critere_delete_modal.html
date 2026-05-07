@@ -26,23 +26,6 @@
         <div id="deleteErrorMessage" class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold" style="display: none;">
             <!-- Dynamic error message -->
         </div>
-
-        <div class="bg-light p-3 rounded-xl border border-dashed">
-            <div class="d-flex justify-content-between mb-2">
-                <span class=" ">ID:</span>
-                <span class="font-weight-bold ">#{{ object.id }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-                <span class=" ">Nom:</span>
-                <span class="font-weight-bold  text-right ml-3">{{ object.name }}</span>
-            </div>
-            {% if object.chapitre_norme %}
-            <div class="d-flex justify-content-between">
-                <span class=" ">Chapitre:</span>
-                <span class="badge badge-info shadow-none border-0">{{ object.chapitre_norme.name }}</span>
-            </div>
-            {% endif %}
-        </div>
     </div>
 
     <div class="modal-footer border-top-0 px-4 pb-4 bg-light">

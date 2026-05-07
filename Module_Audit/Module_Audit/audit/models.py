@@ -199,7 +199,7 @@ class ResultatAudit(models.Model):
         # Group by criteria name (snapshot)
         groups = {}
         for d in details:
-            if d.value < 0: # Skip N/A
+            if d.value < 0 or not d.cotation: # Skip N/A or unanswered
                 continue
             if d.critere not in groups:
                 groups[d.critere] = []

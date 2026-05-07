@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Types d'Audit{% endblock %}
+
+{% block page_title %}Types d'Audit{% endblock %}
+
+{% block breadcrumb %}Types d'Audit{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  
+  
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3">
+          <h3 class="card-title fw-bold header-text mb-0">
+            <i data-lucide="trending-up" class="mr-2 text-primary"></i>
+            Types d'Audit
+          </h3>
+          {% if page_obj %}
+          <div class="ml-auto">
+            <button onclick="openTypeAuditModal('{% url 'typeaudit_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
+              <i data-lucide="plus" class="mr-1"></i>
+              Nouveau Type
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="card-body px-0 pb-0">
+          {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+              <thead class="bg-light shadow-none">
+                <tr>
+                  <th class="ps-3 col-id text-center">ID</th>
+                  <th class="col-name">Nom du Type</th>
+                  <th class="col-sections">Sections Associées</th>
+                  <th class="text-center col-actions">Actions</th>
+                </tr>
+              </thead>
+            <tbody>
+               {% for typeaudit in page_obj %}
+              <tr>
+                <td class="text-center col-id  ">#{{ typeaudit.id }}</td>
+                <td class="col-name text-truncate">
+                  <strong class="text-dark ">{{ typeaudit.name }}</strong>
+                </td>
+                <td class="col-sections">
+                  {% for sec in typeaudit.section.all %}
+                    <span class="badge badge-info">{{ sec.name }}</span>
+                  {% empty %}
+                    <span class=" ">-</span>
+                  {% endfor %}
+                </td>
+                <td class="text-center col-actions">
+                  <div class="d-flex justify-content-center align-items-center">
+                    <button onclick="openTypeAuditModal('{% url 'typeaudit_update' typeaudit.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                      <i data-lucide="edit" ></i>
+                    </button>
+                    <button onclick="openDeleteModal('{% url 'typeaudit_delete' typeaudit.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <i data-lucide="trash-2" ></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-5">
+            <i data-lucide="trending-up" class="w-12 h-12  mb-3 opacity-25"></i>
+            <h4 class=" font-weight-bold">Aucun type d'audit trouvé</h4>
+            <p class=" ">Commencez par créer votre premier type d'audit.</p>
+            <button onclick="openTypeAuditModal('{% url 'typeaudit_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
+              <i data-lucide="plus" class="mr-2"></i>
+              Créer un Type d'Audit
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 pt-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class=" ">
+              Page {{ page_obj.number }} sur {{ paginator.num_pages }} (Total: {{ paginator.count }} types)
+            </div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="Première">
+                      <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                      <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
+        </div>
+        {% elif page_obj %}
+        <div class="card-footer bg-light border-top-0">
+           <small class="">Affichage de {{ page_obj|length }} type d'audit{{ page_obj|length|pluralize }}</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Containers -->
+<div class="modal fade" id="typeAuditModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div id="modalBodyContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2  ">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div id="deleteModalBodyContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-danger" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function openTypeAuditModal(url) {
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#typeAuditModal').modal('show');
+        $.ajax({
+            url: url,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                $('#modalBodyContent').html(data);
+                initModalBehaviors();
+            }
+        });
+    }
+
+    function openDeleteModal(url) {
+        $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
+        $('#deleteModal').modal('show');
+        $.ajax({
+            url: url,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                $('#deleteModalBodyContent').html(data);
+                initDeleteBehavior();
+            }
+        });
+    }
+
+    function initModalBehaviors() {
+        $('#typeAuditModalForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            $.ajax({
+                type:"POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        $('#typeAuditModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        $('#modalBodyContent').html(response);
+                        initModalBehaviors();
+                    }
+                },
+                error: function(xhr) {
+                    $('#modalBodyContent').html(xhr.responseText);
+                    initModalBehaviors();
+                }
+            });
+        });
+    }
+
+    function initDeleteBehavior() {
+        $('#typeAuditDeleteModalForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            $.ajax({
+                type:"POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        $('#deleteModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Supprimé !',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: response ? response.message :"Une erreur est survenue lors de la suppression."
+                    });
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
+
+
+
+
+

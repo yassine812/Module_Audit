@@ -55,12 +55,14 @@ const ListeAuditScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => {
-    const isTermine = !item.en_cours;
+  const renderItem = ({ item, index }) => {
+    const isPlanifie = item.status === 'planifie';
+    const isEnCours = item.status === 'en_cours';
+    const isTermine = item.status === 'termine';
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 20 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+        <View style={[styles.cell, { width: 20 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
         <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text></View>
         <View style={[styles.cell, { width: 55 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.departement_name || '-'}</Text></View>
         <View style={[styles.cell, { width: 65, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
@@ -73,8 +75,10 @@ const ListeAuditScreen = () => {
         </View>
         <View style={[styles.cell, { width: 55 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.formulaire_name || 'form'}</Text></View>
         <View style={[styles.cell, { width: 50, alignItems: 'center' }]}>
-            <View style={[styles.statusBadge, { backgroundColor: isTermine ? '#10b981' : '#f59e0b' }]}>
-                <Text style={styles.statusText}>{isTermine ? 'Terminé' : 'En cours'}</Text>
+            <View style={[styles.statusBadge, { 
+              backgroundColor: isTermine ? '#10b981' : isEnCours ? '#3b82f6' : '#94a3b8' 
+            }]}>
+                <Text style={styles.statusText}>{item.status_label}</Text>
             </View>
         </View>
         <View style={[styles.cell, { width: 70, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
@@ -83,13 +87,21 @@ const ListeAuditScreen = () => {
                     <Text style={styles.rapportBtnText}>Rapport</Text>
                     <MaterialCommunityIcons name="file-document-outline" size={9} color="#64748b" />
                 </TouchableOpacity>
-            ) : (
-                <TouchableOpacity style={styles.continuerBtn} onPress={() => router.push({ pathname: '/audit-form', params: { id: item.id } })}>
+            ) : isEnCours ? (
+                <TouchableOpacity style={styles.continuerBtn} onPress={() => router.push({ pathname: '/audit-form', params: { id: item.resultat_id || item.id } })}>
                     <Text style={styles.continuerBtnText}>Continuer</Text>
                     <Ionicons name="chevron-forward" size={9} color="#fff" />
                 </TouchableOpacity>
+            ) : (
+                <TouchableOpacity 
+                  style={[styles.continuerBtn, { backgroundColor: '#22c55e' }]} 
+                  onPress={() => router.push({ pathname: '/audit-schedule', params: { id: item.id } })}
+                >
+                    <Text style={styles.continuerBtnText}>Modifier</Text>
+                    <Ionicons name="create-outline" size={9} color="#fff" />
+                </TouchableOpacity>
             )}
-            <TouchableOpacity style={{ marginLeft: 2 }}>
+            <TouchableOpacity style={{ marginLeft: 2 }} onPress={() => Alert.alert('Action', 'Options supplémentaires pour l\'audit #' + item.id)}>
                 <Entypo name="dots-three-horizontal" size={9} color="#3b82f6" />
             </TouchableOpacity>
         </View>
@@ -109,7 +121,7 @@ const ListeAuditScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Liste de mes audits</Text>
         </View>
-        <TouchableOpacity style={styles.planifierBtn}>
+        <TouchableOpacity style={styles.planifierBtn} onPress={() => router.push('/audit-schedule')}>
           <Ionicons name="add" size={16} color="#fff" />
           <Text style={styles.planifierBtnText}>Planifier Audit</Text>
         </TouchableOpacity>
@@ -148,8 +160,9 @@ const ListeAuditScreen = () => {
             data={data.filter(item => {
               const matchesSearch = (item.audit_desc || item.sujet || '').toLowerCase().includes(search.toLowerCase());
               if (filter === 'Tous') return matchesSearch;
-              if (filter === 'Terminés') return matchesSearch && !item.en_cours;
-              if (filter === 'En cours') return matchesSearch && item.en_cours;
+              if (filter === 'Terminés') return matchesSearch && item.status === 'termine';
+              if (filter === 'En cours') return matchesSearch && item.status === 'en_cours';
+              if (filter === 'Planifiés') return matchesSearch && item.status === 'planifie';
               return matchesSearch;
             })}
             renderItem={renderItem}

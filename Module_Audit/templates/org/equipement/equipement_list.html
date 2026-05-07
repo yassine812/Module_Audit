@@ -64,7 +64,11 @@
             <tbody>
               {% for equipement in page_obj %}
               <tr>
+<<<<<<< HEAD
                 <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+=======
+                <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+>>>>>>> 1d2633d (fix web etape)
                 <td class="col-name text-truncate" data-label="Désignation">
                   <strong class="text-dark ">{{ equipement.name|default:"-"|truncatechars:20 }}</strong>
                 </td>

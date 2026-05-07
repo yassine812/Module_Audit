@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un type d'audit{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un type d'audit{% endblock %}
+{% block breadcrumb %}Types d'Audit / {% if form.instance.pk %}Modifier{% else %}Créer{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+<style>
+/* ── Wrapper card ──────────────────────────────── */
+.ta-wrapper { width: 100%; margin: 0; }
+.ta-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 28px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+/* ── Card header ───────────────────────────────── */
+.ta-header {
+  padding: 26px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ta-header-ico {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,.2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; color: #fff; flex-shrink: 0;
+}
+.ta-header h4 { margin: 0; color: #fff; font-weight: 700; font-size: 1.1rem; }
+.ta-header p  { margin: 2px 0 0; color: rgba(255,255,255,.75); font-size: 0.83rem; }
+
+/* ── Card body ─────────────────────────────────── */
+.ta-body { padding: 32px 36px; }
+
+/* ── Section blocks ────────────────────────────── */
+.ta-section { margin-bottom: 32px; }
+.ta-section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 0.88rem;
+  color: #374151; text-transform: uppercase; letter-spacing: .6px;
+  margin-bottom: 16px;
+}
+.ta-num {
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: #fff; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Type cards grid ───────────────────────────── */
+.ta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 16px;
+}
+
+.ta-type-card {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+  border: 2px solid #e5e9f5;
+  border-radius: 14px;
+  cursor: pointer;
+  background: #fafbff;
+  transition: all .22s ease;
+  margin: 0;
+}
+.ta-type-card:hover {
+  border-color: #a5b4fc;
+  background: #f0f3ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(102,126,234,.14);
+}
+.ta-type-card.selected {
+  border-color: #667eea;
+  background: #eef1ff;
+  box-shadow: 0 6px 18px rgba(102,126,234,.22);
+}
+
+/* icon bubble */
+.ta-ico {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.1rem;
+}
+/* text */
+.ta-type-card input[type="radio"] { display: none; }
+.ta-type-body { flex: 1; min-width: 0; }
+.ta-type-name { font-weight: 700; font-size: .9rem; color: #1e2a45; margin-bottom: 2px; }
+.ta-type-desc { font-size: .75rem; color: #94a3b8; line-height: 1.4; }
+/* checkmark */
+.ta-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex; align-items: center; justify-content: center;
+  color: transparent; flex-shrink: 0;
+  transition: all .2s;
+}
+.ta-type-card.selected .ta-check {
+  background: #667eea; border-color: #667eea; color: #fff;
+}
+
+/* dashed custom card */
+.ta-type-card--custom { border-style: dashed; }
+.ta-type-card--custom.selected { border-style: solid; }
+
+/* ── Custom name box ───────────────────────────── */
+.ta-custom-box {
+  margin-top: 12px;
+  background: #f8f9ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 18px 20px;
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ta-custom-label {
+  font-size: .75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: #667eea; margin-bottom: 8px;
+}
+.ta-custom-input {
+  width: 100%; border: 1.5px solid #c7d2fe;
+  border-radius: 10px; padding: 10px 16px;
+  font-size: .9rem; outline: none;
+  transition: .2s; background: #fff; color: #1e293b;
+}
+.ta-custom-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,.18);
+}
+
+/* error */
+.ta-error {
+  font-size: .8rem; color: #ef4444; margin-top: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* hide Django's raw name field */
+#id_name { display: none !important; }
+
+/* ── Select2 overrides ─────────────────────────── */
+.select2-container { width: 100% !important; }
+.select2-container--default .select2-selection--multiple {
+  border: 2px solid #e5e9f5 !important;
+  border-radius: 12px !important;
+  min-height: 52px !important;
+  padding: 5px 8px !important;
+  background: #fafbff !important;
+  transition: .2s;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102,126,234,.18) !important;
+  background: #fff !important;
+}
+.select2-container--default .select2-selection__choice {
+  background: linear-gradient(135deg,#667eea,#764ba2) !important;
+  border: none !important; border-radius: 8px !important;
+  color: #fff !important;
+  padding: 5px 10px 5px 12px !important;
+  font-size: .8rem !important; font-weight: 600 !important;
+  margin: 3px 4px 3px 0 !important;
+}
+.select2-container--default .select2-selection__choice__remove {
+  color: rgba(255,255,255,.8) !important;
+  margin-right: 6px !important; font-size: .95rem !important;
+}
+.select2-container--default .select2-selection__choice__remove:hover { color: #fff !important; }
+.select2-container--default .select2-selection__placeholder { color: #94a3b8 !important; line-height: 40px !important; padding-left: 4px !important; }
+.select2-dropdown {
+  border: 1.5px solid #e5e9f5 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.1) !important;
+  overflow: hidden;
+}
+.select2-search--dropdown .select2-search__field {
+  border: 1.5px solid #e5e9f5 !important; border-radius: 8px !important;
+  padding: 8px 12px !important; font-size: .9rem !important;
+}
+.select2-results__option { padding: 10px 14px !important; font-size: .88rem !important; }
+.select2-results__option--highlighted[aria-selected] {
+  background: linear-gradient(135deg,#667eea,#764ba2) !important;
+}
+.select2-results__option[aria-selected=true] {
+  background: #eef1ff !important; color: #667eea !important; font-weight: 600 !important;
+}
+
+/* ── Footer ────────────────────────────────────── */
+.ta-footer {
+  padding: 20px 36px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbff;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ta-btn-cancel {
+  background: #f1f5f9; color: #64748b; border: none;
+  border-radius: 10px; padding: 10px 24px; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  transition: .2s;
+}
+.ta-btn-cancel:hover { background: #e2e8f0; color: #334155; text-decoration: none; }
+.ta-btn-save {
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 10px 28px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 14px rgba(102,126,234,.4);
+  transition: .2s; cursor: pointer;
+}
+.ta-btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(102,126,234,.5); color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="ta-wrapper">
+    <div class="ta-card">
+
+      <!-- ── Header ─────────────────────────────── -->
+      <div class="ta-header">
+        <div class="ta-header-ico"><i data-lucide="tags"></i></div>
+        <div>
+          <h4>{% if form.instance.pk %}Modifier le type d'audit{% else %}Nouveau type d'audit{% endif %}</h4>
+          <p>Définissez les paramètres du type d'audit à créer</p>
+        </div>
+      </div>
+
+      <form method="post" novalidate id="typeAuditForm">
+        {% csrf_token %}
+
+        <div class="ta-body">
+          {% if form.non_field_errors %}<div class="alert alert-danger rounded-3 mb-4">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+
+          <!-- ── 01 · Type d'audit ──────────────── -->
+          <div class="ta-section">
+            <div class="ta-section-label">
+              <span class="ta-num">01</span> Type d'audit <span class="text-danger ml-1">*</span>
+            </div>
+
+            <div class="ta-grid" id="typeGrid">
+
+              <!-- Audit de poste -->
+              <label class="ta-type-card" id="card-poste" for="r-poste">
+                <input type="radio" id="r-poste" name="__tc" value="Audit de poste">
+                <div class="ta-ico" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                  <i data-lucide="user-tie"></i>
+                </div>
+                <div class="ta-type-body">
+                  <div class="ta-type-name">Audit de poste</div>
+                  <div class="ta-type-desc">Évaluation individuelle d'un poste de travail</div>
+                </div>
+                <div class="ta-check"><i class="fas fa-check" style="font-size:.7rem;"></i></div>
+              </label>
+
+              <!-- Audit interne -->
+              <label class="ta-type-card" id="card-interne" for="r-interne">
+                <input type="radio" id="r-interne" name="__tc" value="Audit interne">
+                <div class="ta-ico" style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                  <i data-lucide="building"></i>
+                </div>
+                <div class="ta-type-body">
+                  <div class="ta-type-name">Audit interne</div>
+                  <div class="ta-type-desc">Contrôle des processus internes</div>
+                </div>
+                <div class="ta-check"><i class="fas fa-check" style="font-size:.7rem;"></i></div>
+              </label>
+
+              <!-- Audit d'équipement -->
+              <label class="ta-type-card" id="card-equip" for="r-equip">
+                <input type="radio" id="r-equip" name="__tc" value="Audit d'équipement">
+                <div class="ta-ico" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+                  <i data-lucide="wrench"></i>
+                </div>
+                <div class="ta-type-body">
+                  <div class="ta-type-name">Audit d'équipement</div>
+                  <div class="ta-type-desc">Inspection et évaluation des équipements</div>
+                </div>
+                <div class="ta-check"><i class="fas fa-check" style="font-size:.7rem;"></i></div>
+              </label>
+
+              <!-- Audit de Site -->
+              <label class="ta-type-card" id="card-site" for="r-site">
+                <input type="radio" id="r-site" name="__tc" value="Audit de Site">
+                <div class="ta-ico" style="background:linear-gradient(135deg,#fa709a,#fee140);">
+                  <i data-lucide="map-pin"></i>
+                </div>
+                <div class="ta-type-body">
+                  <div class="ta-type-name">Audit de Site</div>
+                  <div class="ta-type-desc">Évaluation globale d'un site ou localisation</div>
+                </div>
+                <div class="ta-check"><i class="fas fa-check" style="font-size:.7rem;"></i></div>
+              </label>
+
+              <!-- Personnalisé -->
+              <label class="ta-type-card ta-type-card--custom" id="card-custom" for="r-custom">
+                <input type="radio" id="r-custom" name="__tc" value="__custom__">
+                <div class="ta-ico" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+                  <i data-lucide="pen-nib"></i>
+                </div>
+                <div class="ta-type-body">
+                  <div class="ta-type-name">Personnalisé</div>
+                  <div class="ta-type-desc">Définir un type sur mesure</div>
+                </div>
+                <div class="ta-check"><i class="fas fa-check" style="font-size:.7rem;"></i></div>
+              </label>
+
+            </div><!-- /ta-grid -->
+
+            <!-- Custom name box -->
+            <div id="customBox" class="ta-custom-box d-none">
+              <div class="ta-custom-label"><i data-lucide="keyboard" class="mr-1"></i> Nom personnalisé</div>
+              <input type="text" id="customInput" class="ta-custom-input"
+                     placeholder="Ex : Audit fournisseur, Audit sécurité…">
+            </div>
+
+            <!-- Validation error -->
+            <div id="typeErr" class="ta-error d-none">
+              <i data-lucide="alert-circle"></i> Veuillez sélectionner un type d'audit.
+            </div>
+
+            <!-- Hidden Django field (written by JS) -->
+            {{ form.name }}
+            {% if form.name.errors %}<div class="ta-error mt-1">{% for e in form.name.errors %}<span>{{ e }}</span>{% endfor %}</div>{% endif %}
+          </div>
+
+          <!-- ── 02 · Sections ──────────────────── -->
+          <div class="ta-section">
+            <div class="ta-section-label">
+              <span class="ta-num">02</span> Sections associées
+            </div>
+            <small class=" d-block mb-3" style="font-size:.82rem;">
+              <i data-lucide="info" class="mr-1"></i>Sélectionnez une ou plusieurs sections liées à ce type d'audit.
+            </small>
+            {{ form.section }}
+            {% if form.section.errors %}<div class="ta-error mt-2">{% for e in form.section.errors %}<span>{{ e }}</span>{% endfor %}</div>{% endif %}
+            {% if form.instance.pk and form.instance.section.all %}
+            <div class="mt-2 d-flex flex-wrap" style="gap:6px;">
+              <span class="  font-weight-bold mr-1">Actuellement :</span>
+              {% for s in form.instance.section.all %}<span class="badge" style="background:#eef1ff;color:#667eea;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:600;">{{ s.name }}</span>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+        </div><!-- /ta-body -->
+
+        <!-- ── Footer ───────────────────────────── -->
+        <div class="ta-footer">
+          <a href="{% url 'typeaudit_list' %}" class="ta-btn-cancel">
+            <i data-lucide="arrow-left"></i> Annuler
+          </a>
+          <button type="submit" class="ta-btn-save">
+            <i data-lucide="save"></i> Enregistrer
+          </button>
+        </div>
+
+      </form>
+    </div><!-- /ta-card -->
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const cards      = document.querySelectorAll('.ta-type-card');
+  const hiddenFld  = document.getElementById('id_name');
+  const customBox  = document.getElementById('customBox');
+  const customInp  = document.getElementById('customInput');
+  const typeErr    = document.getElementById('typeErr');
+
+  const MAP = {
+    'Audit de poste'    : 'card-poste',
+    'Audit interne'     : 'card-interne',"Audit d'équipement": 'card-equip',
+    'Audit de Site'     : 'card-site'
+  };
+
+  /* ── Activate a card ───────────────────── */
+  function pick(cardId, customVal) {
+    cards.forEach(c => c.classList.remove('selected'));
+    var t = document.getElementById(cardId);
+    if (t) { t.classList.add('selected'); t.querySelector('input').checked = true; }
+
+    if (cardId === 'card-custom') {
+      customBox.classList.remove('d-none');
+      customInp.value  = customVal || '';
+      hiddenFld.value  = customVal || '';
+    } else {
+      customBox.classList.add('d-none');
+      hiddenFld.value = t ? t.querySelector('input').value : '';
+    }
+    typeErr.classList.add('d-none');
+  }
+
+  /* ── Init (edit mode) ──────────────────── */
+  var existing = hiddenFld ? hiddenFld.value.trim() : '';
+  if (existing) {
+    MAP[existing] ? pick(MAP[existing]) : pick('card-custom', existing);
+  }
+
+  /* ── Click handler ─────────────────────── */
+  cards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      var val = this.querySelector('input').value;
+      if (val === '__custom__') { pick('card-custom', customInp.value); setTimeout(function(){ customInp.focus(); }, 50); }
+      else { pick(this.id); }
+    });
+  });
+
+  /* ── Sync custom input ─────────────────── */
+  customInp.addEventListener('input', function() { hiddenFld.value = this.value.trim(); });
+
+  /* ── Submit guard ──────────────────────── */
+  document.getElementById('typeAuditForm').addEventListener('submit', function(e) {
+    if (!hiddenFld.value.trim()) {
+      e.preventDefault();
+      typeErr.classList.remove('d-none');
+      document.getElementById('typeGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+
+  /* ── Select2 for Sections ──────────────── */
+  if (typeof $ !== 'undefined' && $.fn.select2) {
+    $('#id_section').select2({
+      placeholder: '🔍 Rechercher et sélectionner des sections…',
+      allowClear: true,
+      width: '100%',
+      language: { noResults: function() { return 'Aucune section trouvée'; } }
+    });
+  }
+
+});
+</script>
+{% endblock %}
+
+
+

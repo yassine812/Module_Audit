@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer Preuve Attendue{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i data-lucide="alert-circle" class="text-danger w-12 h-12 mb-3"></i>
+                        <h3 class="fw-bold">Confirmer suppression</h3>
+                        <p class="">
+                            Supprimer la preuve attendue :<br>
+                            <span class="fw-bold text-dark">"{{ object.name|truncatewords:10 }}"</span>?
+                        </p>
+                        <div class="alert alert-warning py-2 mt-3 ">
+                            <i data-lucide="info" class="me-1"></i> Cette preuve ne sera plus proposée dans les nouveaux questionnaires.
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-3 shadow-sm">
+                                <i data-lucide="trash-2" class="me-2"></i>Supprimer définitivement
+                            </button>
+                            <a href="{% url 'preuveattendu_list' %}" class="btn btn-light btn-lg rounded-3 border mt-2">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

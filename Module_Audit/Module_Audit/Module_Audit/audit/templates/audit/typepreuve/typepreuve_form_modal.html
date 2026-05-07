@@ -1,0 +1,67 @@
+{% load static %}
+
+<div class="modal-header border-bottom py-2 px-3 bg-white">
+    <h5 class="modal-title font-weight-bold d-flex align-items-center">
+        <i data-lucide="file-check" class="mr-2 text-primary" ></i>
+        {% if object %}Modifier Type{% else %}Nouveau Type{% endif %}
+    </h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<style>
+    .modal-header { padding: 0.5rem 0.75rem !important; }
+    .modal-body { padding: 0.75rem !important; }
+    .form-group { margin-bottom: 0.5rem !important; }
+    .modal-title { font-size: 0.95rem !important; }
+    @media (max-width: 768px) {
+    .card-header { padding: 1rem !important; flex-direction: column !important; align-items: stretch !important; gap: 0.8rem !important; }
+    .card-header .ml-auto { margin-left: 0 !important; width: 100%; display: flex; }
+    .card-header .btn { width: 100%; justify-content: center; }
+    .header-text h3 { font-size: 1.25rem !important; text-align: left; }
+    
+    /* Responsive Horizontal Scroll for all Data */
+    .table th, 
+    .table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; border: 0 !important; }
+    .table { width: 100% !important; min-width: 800px; /* Force scroll */ table-layout: auto !important; }
+    
+    .btn-group .btn { padding: 0.25rem 0.5rem; }
+    .badge { font-size: 0.75rem !important; }
+  }
+</style>
+
+<form id="typePreuveModalForm" method="post" action="{% if object %}{% url 'typepreuve_update' object.id %}{% else %}{% url 'typepreuve_create' %}{% endif %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" for="{{ form.name.id_for_label }}">Nom du Type <span class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <small class="text-danger d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+            {% endif %}
+            <small class="form-text ">Exemple: Documentation, Photo, Certificat, etc.</small>
+        </div>
+    </div>
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary px-4">
+            <i data-lucide="save" class="mr-2"></i>
+            {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    // Add bootstrap form classes if not present
+    $('#typePreuveModalForm input').addClass('form-control');
+</script>
+
+

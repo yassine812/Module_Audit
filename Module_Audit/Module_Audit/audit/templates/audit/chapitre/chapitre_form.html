@@ -122,8 +122,11 @@
     <div class="ch-card max-w-[1400px] mx-auto">
         <!-- Header -->
         <div class="ch-header">
+            <a href="{% url 'chapitre_list' %}" class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 text-white rounded-3 border-0 shadow-sm" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+            </a>
             <div class="ch-header-ico">
-                <i data-lucide="book mr-2"></i>
+                <i data-lucide="book" class="mr-0"></i>
             </div>
             <div>
                 <h2>{% if form.instance.pk %}Modifier le Chapitre Norme{% else %}Nouveau Chapitre Norme{% endif %}</h2>

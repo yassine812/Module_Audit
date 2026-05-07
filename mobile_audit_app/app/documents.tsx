@@ -69,9 +69,9 @@ const DocumentsManagementScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
       <View style={[styles.cell, { width: 40, alignItems: 'center' }]}>
         <MaterialCommunityIcons name="file-pdf-box" size={14} color="#ef4444" />
       </View>

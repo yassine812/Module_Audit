@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer Type de Preuve{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i data-lucide="alert-triangle" class="text-warning w-12 h-12 mb-3"></i>
+                        <h3 class="fw-bold">Êtes-vous sûr ?</h3>
+                        <p class="">
+                            Vous êtes sur le point de supprimer le type de preuve <strong>"{{ object.name }}"</strong>.
+                            Cette action est irréversible.
+                        </p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-3 shadow-sm">
+                                <i data-lucide="trash-2" class="me-2"></i>Oui, supprimer definitivement
+                            </button>
+                            <a href="{% url 'typepreuve_list' %}" class="btn btn-light btn-lg rounded-3 border mt-2">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

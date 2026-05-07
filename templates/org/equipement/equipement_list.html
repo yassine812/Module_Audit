@@ -9,6 +9,10 @@
 
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  @media (max-width: 576px) {
+    #equipementModal .modal-dialog { max-width: 340px; margin: 0.5rem auto; }
+    #equipementModal .modal-content { border-radius: 12px !important; }
+  }
   .btn-primary { 
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); 
     border: none; border-radius: 0.75rem; padding: 0.6rem 1.5rem;
@@ -157,7 +161,7 @@
 </div>
 <!-- Modals -->
 <div class="modal fade" id="equipementModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+  <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content shadow-lg border-0" id="modalBodyContent" style="border-radius: 12px;"></div>
   </div>
 </div>
