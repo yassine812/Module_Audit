@@ -1218,6 +1218,9 @@ class StartAuditView(LoginRequiredMixin, View):
         if existing:
             return redirect("etape_audit", pk=existing.pk)
 
+        # Extract commentaire
+        commentaire = request.POST.get('commentaire', '')
+
         # Create ResultatAudit
         resultat = ResultatAudit.objects.create(
             ref_audit=liste_audit.pk,
@@ -1226,6 +1229,7 @@ class StartAuditView(LoginRequiredMixin, View):
             sujet=liste_audit.desc,
             auditeur=request.user,
             site=getattr(liste_audit, "site", None),
+            commentaire=commentaire,
             en_cours=True
         )
 
@@ -1496,6 +1500,8 @@ class DetailResultatAuditUpdateView(LoginRequiredMixin, View):
 
         if request.FILES.get("justificatif"):
             detail.justificatif = request.FILES.get("justificatif")
+        elif request.POST.get("delete_justificatif") == "true":
+            detail.justificatif = None
 
         if request.FILES.get("justificatif_bis"):
             detail.justificatif_bis = request.FILES.get("justificatif_bis")
@@ -1517,10 +1523,11 @@ class DetailResultatAuditUpdateView(LoginRequiredMixin, View):
         from django.utils.text import slugify
 
         return JsonResponse({
-            "status": "saved",
+            "status": "success",
             "score": round(float(resultat.score_audit), 1),
             "category_id": slugify(crit_name),
-            "category_score": round(category_score, 1)
+            "category_score": round(category_score, 1),
+            "file_url": detail.justificatif.url if detail.justificatif else ""
         })
 
 
@@ -1825,7 +1832,7 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     model = ListeAudit
     template_name = "audit/listeaudit/liste_audit_list.html"
     context_object_name = "audits"
-    paginate_by = 20
+    paginate_by = 8
 
     def get_paginate_by(self, queryset):
         user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()

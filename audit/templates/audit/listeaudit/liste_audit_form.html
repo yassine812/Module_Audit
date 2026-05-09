@@ -338,6 +338,78 @@
     .swal2-container {
         z-index: 200000 !important;
     }
+
+    /* --- RESPONSIVE TABLE-ROW SYSTEM (MOBILE) --- */
+    #modalMobileList,
+    #mobileStructureList {
+        display: none !important; /* Hidden on Desktop */
+    }
+
+    @media (max-width: 767.98px) {
+        .modal-body .table-responsive,
+        #inlineStructureContent .table-responsive {
+            display: none !important; /* Hide table on mobile */
+        }
+        #modalMobileList,
+        #mobileStructureList {
+            display: block !important;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .mobile-row-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            position: relative;
+            text-align: left;
+        }
+        .mobile-row-item:last-child { border-bottom: none; }
+        .mobile-row-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mobile-row-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .mobile-row-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        .mobile-row-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mobile-row-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mobile-sc-list {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #edf2f7;
+        }
+        .mobile-sc-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .mobile-sc-item:last-child { border-bottom: none; }
+        .x-small { font-size: 9px !important; }
+    }
 </style>
 {% endblock %}
 
@@ -353,8 +425,7 @@ Créer un Audit
 <!-- Hidden data container for JavaScript -->
 <div id="typesAuditData" data-types='[
     {% for ta in types_audit_list %}
-    {"id": {{ ta.id }},"name":"{{ ta.name|escapejs }}","parent_id": {{ ta.parent_id|default:' null' }} }{% if not
-    forloop.last %},{% endif %} {% endfor %} ]'></div>
+    {"id": {{ ta.id }},"name":"{{ ta.name|escapejs }}","parent_id": {{ ta.parent_id|default:' null' }} }{% if not forloop.last %},{% endif %} {% endfor %} ]'></div>
 
 <div class="container py-3">
     <!-- Header -->
@@ -703,6 +774,7 @@ Créer un Audit
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="mobileStructureList"></div>
                             </div>
 
                             <!-- ✅ INLINE CRITÈRE FORM CONTAINER (INSIDE STRUCTURE) -->
@@ -845,6 +917,7 @@ Créer un Audit
 
                 <!-- Accordion Content -->
                 <div id="formulaireModalContent" class="py-2"></div>
+                <div id="modalMobileList"></div>
             </div>
             <div class="modal-footer border-0 pt-2 pb-4 px-4">
                 <button type="button" class="btn btn-light border px-4 fw-bold rounded-pill"
@@ -1199,7 +1272,7 @@ Créer un Audit
                 let totalSousCriteres = data.reduce((sum, c) => sum + (c.sous_criteres ? c.sous_criteres.length : 0), 0);
                 titleCount.textContent = `${totalCriteres} critères · ${totalSousCriteres} sous-critères`;
 
-                let html = `
+                let tableHtml = `
                     <div class="table-responsive">
                         <table class="structure-table table-hover mb-0">
                             <thead>
@@ -1212,15 +1285,18 @@ Créer un Audit
                             </thead>
                             <tbody>`;
 
+                let mobileHtml = '';
+
                 data.forEach((critere, idx) => {
                     const collapseId = `collapse-crit-${critere.critere_id}`;
-                    const headingId = `heading-crit-${critere.critere_id}`;
                     const isFirst = idx === 0;
+                    const scCount = critere.sous_criteres ? critere.sous_criteres.length : 0;
 
-                    let scHtml = '';
-                    if (critere.sous_criteres && critere.sous_criteres.length > 0) {
+                    // Table Row Rendering
+                    let tableScHtml = '';
+                    if (scCount > 0) {
                         critere.sous_criteres.forEach(sc => {
-                            scHtml += `
+                            tableScHtml += `
                                 <div class="d-flex justify-content-between align-items-center py-2 px-3 border-bottom" id="sc-row-${sc.id}">
                                     <span style="font-size:0.83rem;">
                                         <i class="fas fa-circle text-primary me-2" style="font-size:0.35rem;vertical-align:middle;"></i>
@@ -1237,10 +1313,10 @@ Créer un Audit
                                 </div>`;
                         });
                     } else {
-                        scHtml = `<div class="px-3 py-2 text-muted fst-italic" style="font-size:0.82rem;">Aucun sous-critère</div>`;
+                        tableScHtml = `<div class="px-3 py-2 text-muted fst-italic" style="font-size:0.82rem;">Aucun sous-critère</div>`;
                     }
 
-                    html += `
+                    tableHtml += `
                     <tr class="critere-row" id="modal-critere-${critere.critere_id}">
                         <td class="text-center align-middle">
                             <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#${collapseId}" onclick="this.querySelector('.crit-chevron').classList.toggle('rotated')">
@@ -1273,14 +1349,64 @@ Créer un Audit
                                         <i class="fas fa-plus-circle me-1"></i> Ajouter
                                     </button>
                                 </div>
-                                ${scHtml}
+                                ${tableScHtml}
                             </div>
                         </td>
                     </tr>`;
-                });
-                html += '</tbody></table></div>';
 
-                container.innerHTML = html;
+                    // Mobile Row Rendering
+                    let mobileScHtml = '';
+                    if (scCount > 0) {
+                        critere.sous_criteres.forEach(sc => {
+                            mobileScHtml += `
+                                <div class="mobile-sc-item">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-dark small">${sc.nom}</div>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="action-btn-circle" onclick="editSousCritere(${sc.id}, '${sc.nom.replace(/'/g, "\\'")}')"><i class="fas fa-pen fa-xs"></i></button>
+                                        <button type="button" class="action-btn-circle text-danger" onclick="deleteSousCritere(${sc.id})"><i class="fas fa-trash fa-xs"></i></button>
+                                    </div>
+                                </div>`;
+                        });
+                    } else {
+                        mobileScHtml = '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>';
+                    }
+
+                    mobileHtml += `
+                        <div class="mobile-row-item" id="mobile-modal-crit-${critere.critere_id}">
+                            <div class="mobile-row-top">
+                                <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#mobile-sc-collapse-${critere.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                                    <i class="fas fa-chevron-right accordion-icon ${isFirst ? 'rotated' : ''}"></i>
+                                </button>
+                                <div class="mobile-row-content">
+                                    <div class="mobile-row-title">${critere.critere_nom}</div>
+                                    <div class="mobile-row-meta">
+                                        <span class="badge-chapitre">${critere.chapitre || 'N/A'}</span>
+                                        <span class="badge-count">${scCount}</span>
+                                    </div>
+                                </div>
+                                <div class="mobile-row-actions">
+                                    <button type="button" class="action-btn-circle" onclick="editCritere(${critere.critere_id})"><i class="fas fa-pen fa-xs"></i></button>
+                                    <button type="button" class="action-btn-circle text-danger" onclick="deleteCritere(${critere.critere_id})"><i class="fas fa-trash fa-xs"></i></button>
+                                </div>
+                            </div>
+                            <div id="mobile-sc-collapse-${critere.critere_id}" class="collapse ${isFirst ? 'show' : ''}">
+                                <div class="mobile-sc-list">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="text-muted x-small fw-bold">SOUS-CRITÈRES</span>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-primary x-small fw-bold" onclick="openAddSousCritereModal(${critere.critere_id})">+ AJOUTER</button>
+                                    </div>
+                                    ${mobileScHtml}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                tableHtml += '</tbody></table></div>';
+
+                container.innerHTML = tableHtml;
+                document.getElementById('modalMobileList').innerHTML = mobileHtml;
 
                 // Rotate chevron on collapse toggle
                 container.querySelectorAll('[data-toggle="collapse"], [data-bs-toggle="collapse"]').forEach(btn => {
@@ -2223,11 +2349,70 @@ Créer un Audit
                         };
 
                         let listHtml = '';
+                        let mobileHtml = '';
+
                         data.forEach((crit, idx) => {
+                            const isFirst = idx === 0;
+                            const scCount = crit.sous_criteres ? crit.sous_criteres.length : 0;
+
+                            // 1. Render Table Rows (Desktop)
                             listHtml += window.createCriterionRow(crit, idx);
+
+                            // 2. Render Mobile Rows (Mobile)
+                            let mobileScHtml = '';
+                            if (scCount > 0) {
+                                crit.sous_criteres.forEach(sc => {
+                                    mobileScHtml += `
+                                        <div class="mobile-sc-item">
+                                            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                                <input class="form-check-input inline-sc-checkbox sous-checkbox" 
+                                                       type="checkbox" value="${sc.id}" id="mob-inline-sc-${sc.id}" checked 
+                                                       data-critere="${crit.critere_id}" style="width:1.2rem;height:1.2rem;">
+                                                <div class="fw-bold text-dark small">${sc.nom}</div>
+                                            </div>
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="action-btn-circle" onclick="editSousCritere(${sc.id})"><i class="fas fa-pen fa-xs"></i></button>
+                                                <button type="button" class="action-btn-circle text-danger" onclick="deleteSousCritere(${sc.id})"><i class="fas fa-trash fa-xs"></i></button>
+                                            </div>
+                                        </div>`;
+                                });
+                            } else {
+                                mobileScHtml = '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>';
+                            }
+
+                            mobileHtml += `
+                                <div class="mobile-row-item" id="mobile-inline-crit-${crit.critere_id}">
+                                    <div class="mobile-row-top">
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#mob-inline-sc-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                                            <i class="fas fa-chevron-right accordion-icon ${isFirst ? 'rotated' : ''}"></i>
+                                        </button>
+                                        <div class="mobile-row-content">
+                                            <div class="mobile-row-title">${crit.critere_nom}</div>
+                                            <div class="mobile-row-meta">
+                                                <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
+                                                <span class="badge-count">${scCount}</span>
+                                            </div>
+                                        </div>
+                                        <div class="mobile-row-actions">
+                                            <button type="button" class="action-btn-circle" onclick="editCritere(${crit.critere_id})"><i class="fas fa-pen fa-xs"></i></button>
+                                            <button type="button" class="action-btn-circle text-danger" onclick="deleteCritere(${crit.critere_id})"><i class="fas fa-trash fa-xs"></i></button>
+                                        </div>
+                                    </div>
+                                    <div id="mob-inline-sc-collapse-${crit.critere_id}" class="collapse ${isFirst ? 'show' : ''}">
+                                        <div class="mobile-sc-list">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted x-small fw-bold">SOUS-CRITÈRES</span>
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-primary x-small fw-bold" onclick="openSousModal(${crit.critere_id})">+ AJOUTER</button>
+                                            </div>
+                                            ${mobileScHtml}
+                                        </div>
+                                    </div>
+                                </div>`;
                         });
 
                         document.querySelector('#structureTableBody').innerHTML = listHtml;
+                        const mobList = document.querySelector('#mobileStructureList');
+                        if (mobList) mobList.innerHTML = mobileHtml;
 
                         // 🔄 Chevron rotation fix for dynamically added content
                         $('[data-toggle="collapse"]').on('click', function () {

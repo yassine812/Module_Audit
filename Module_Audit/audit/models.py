@@ -35,7 +35,12 @@ class TypePreuve(models.Model):
     def __str__(self):
         return self.name
 class PreuveAttendu(models.Model):
+    CODE_CHOICES = [
+        ('C', 'Conforme'),
+        ('PC', 'Partiellement Conforme'),
+    ]
     name = models.TextField()
+    code = models.CharField(max_length=2, choices=CODE_CHOICES, blank=True, null=True, verbose_name='Code de preuve')
     type_preuve = models.ForeignKey(TypePreuve, on_delete=models.SET_NULL, null=True, blank=True)
     def __str__(self):
         type_name = self.type_preuve.name if self.type_preuve else "N/A"

@@ -365,6 +365,72 @@
     justify-content: space-between;
     align-items: center;
   }
+
+  /* --- RESPONSIVE TABLE-ROW SYSTEM (MOBILE) --- */
+  @media (max-width: 767.98px) {
+    .structure-grid-container {
+      display: none !important;
+    }
+    #structureMobileList {
+      display: block !important;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mobile-row-item {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      position: relative;
+    }
+    .mobile-row-item:last-child { border-bottom: none; }
+    
+    .mobile-row-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mobile-row-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .mobile-row-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+    .mobile-row-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mobile-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mobile-sc-list {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #edf2f7;
+    }
+    .mobile-sc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .mobile-sc-item:last-child { border-bottom: none; }
+  }
+  @media (min-width: 768px) {
+    #structureMobileList { display: none !important; }
+  }
 </style>
 {% endblock %}
 
@@ -530,6 +596,9 @@
           </table>
         </div>
 
+        <!-- MOBILE CARDS CONTAINER -->
+        <div id="structureMobileList"></div>
+
         <!-- Padding for footer -->
         <div class="mb-5 pb-5"></div>
       </div>
@@ -666,6 +735,59 @@
               </table>
           </td>
       </tr>`;
+  }
+
+  function createMobileCard(crit, index) {
+    let scHtml = '';
+    const scCount = crit.sous_criteres ? crit.sous_criteres.length : 0;
+
+    if (scCount > 0) {
+      crit.sous_criteres.forEach(sc => {
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        scHtml += `
+          <div class="mobile-sc-item">
+            <input class="form-check-input sc-checkbox sc-crit-${crit.critere_id}" type="checkbox" name="sous_criteres" value="${sc.id}" ${isChecked ? 'checked' : ''}>
+            <div class="flex-grow-1 ms-2">
+              <div class="fw-bold text-dark small">${sc.nom}</div>
+            </div>
+            <div class="d-flex gap-1">
+              <button type="button" class="action-btn-circle" onclick="window.editSousCritere(${sc.id})"><i class="fas fa-pen fa-xs"></i></button>
+              <button type="button" class="action-btn-circle text-danger" onclick="window.deleteSousCritere(${sc.id})"><i class="fas fa-trash fa-xs"></i></button>
+            </div>
+          </div>`;
+      });
+    } else {
+      scHtml = '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>';
+    }
+
+    return `
+      <div class="mobile-row-item" id="mobile-crit-${crit.critere_id}">
+        <div class="mobile-row-top">
+          <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#mobile-sc-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+            <i class="fas fa-chevron-right accordion-icon"></i>
+          </button>
+          <div class="mobile-row-content">
+            <div class="mobile-row-title">${crit.critere_nom}</div>
+            <div class="mobile-row-meta">
+              <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
+              <span class="badge-count">${scCount}</span>
+            </div>
+          </div>
+          <div class="mobile-row-actions">
+            <button type="button" class="action-btn-circle" onclick="window.editCritere(${crit.critere_id})"><i class="fas fa-pen fa-xs"></i></button>
+            <button type="button" class="action-btn-circle text-danger" onclick="window.deleteCritere(${crit.critere_id})"><i class="fas fa-trash fa-xs"></i></button>
+          </div>
+        </div>
+        <div id="mobile-sc-collapse-${crit.critere_id}" class="collapse">
+          <div class="mobile-sc-list">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted x-small fw-bold">SOUS-CRITÈRES</span>
+              <button type="button" class="btn btn-link btn-sm p-0 text-primary x-small fw-bold" onclick="window.openAddSousCritereModal(${crit.critere_id})">+ AJOUTER</button>
+            </div>
+            ${scHtml}
+          </div>
+        </div>
+      </div>`;
   }
 
   // New helper to toggle selection per Criteria
@@ -1078,16 +1200,23 @@
       .then(response => response.json())
       .then(data => {
         const tableBody = document.querySelector('#structureTableBody');
+        const mobileList = document.querySelector('#structureMobileList');
+        
         if (tableBody) tableBody.innerHTML = '';
+        if (mobileList) mobileList.innerHTML = '';
 
         if (data.length === 0) {
           if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</td></tr>';
+          if (mobileList) mobileList.innerHTML = '<div class="text-center py-5 text-muted">Aucune structure.</div>';
         } else {
-          let rowsHtml = '';
+          let tableHtml = '';
+          let mobileHtml = '';
           data.forEach((crit, index) => {
-            rowsHtml += createCriterionRow(crit, index);
+            tableHtml += createCriterionRow(crit, index);
+            mobileHtml += createMobileCard(crit, index);
           });
-          if (tableBody) tableBody.innerHTML = rowsHtml;
+          if (tableBody) tableBody.innerHTML = tableHtml;
+          if (mobileList) mobileList.innerHTML = mobileHtml;
         }
 
         // Show Step 2 without hiding Step 1

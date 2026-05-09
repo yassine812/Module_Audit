@@ -116,8 +116,9 @@ class TypePreuveForm(forms.ModelForm):
 class PreuveAttenduForm(forms.ModelForm):
     class Meta:
         model = PreuveAttendu
-        fields = ['name', 'type_preuve']
+        fields = ['name', 'code', 'type_preuve']
         widgets = {
             'name': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2, 'placeholder': 'Désignation de la preuve attendue...'}),
+            'code': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_preuve': forms.Select(attrs={'class': 'custom-input form-select'}),
         }

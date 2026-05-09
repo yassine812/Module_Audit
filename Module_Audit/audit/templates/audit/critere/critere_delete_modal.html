@@ -9,7 +9,6 @@
             </div>
             <div>
                 <h4 class="modal-title font-weight-bold mb-0">Supprimer le Critère</h4>
-                <p class="  mb-0 text-truncate" style="max-width: 300px;">{{ object.name }}</p>
             </div>
         </div>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -18,9 +17,8 @@
     </div>
 
     <div class="modal-body p-4">
-        <div class="text-center mb-4">
-            <p class="text-dark font-weight-bold">Êtes-vous sûr de vouloir supprimer ce critère ?</p>
-            <p class=" ">Cette action est irréversible et supprimera définitivement le critère et ses associations.</p>
+        <div class="text-center mb-2 mt-2">
+            <p class="text-dark font-weight-bold mb-0" style="font-size: 1.05rem;">Êtes-vous sûr de vouloir supprimer ce critère ?</p>
         </div>
 
         <div id="deleteErrorMessage" class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold" style="display: none;">

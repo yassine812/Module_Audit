@@ -18,7 +18,6 @@
   var ControlSidebar = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'ControlSidebar';
     var DATA_KEY = 'lte.controlsidebar';
@@ -59,7 +58,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var ControlSidebar = /*#__PURE__*/function () {
@@ -253,7 +251,6 @@
     /**
      *
      * Data Api implementation
-     * ====================================================
      */
 
 
@@ -264,7 +261,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = ControlSidebar._jQueryInterface;
@@ -287,7 +283,6 @@
   var Layout = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'Layout';
     var DATA_KEY = 'lte.layout';
@@ -330,7 +325,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var Layout = /*#__PURE__*/function () {
@@ -490,7 +484,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -505,7 +498,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = Layout._jQueryInterface;
@@ -528,7 +520,6 @@
   var PushMenu = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'PushMenu';
     var DATA_KEY = 'lte.pushmenu';
@@ -558,7 +549,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var PushMenu = /*#__PURE__*/function () {
@@ -709,7 +699,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -728,7 +717,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = PushMenu._jQueryInterface;
@@ -751,7 +739,6 @@
   var Treeview = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'Treeview';
     var DATA_KEY = 'lte.treeview';
@@ -786,7 +773,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var Treeview = /*#__PURE__*/function () {
@@ -898,7 +884,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -909,7 +894,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = Treeview._jQueryInterface;
@@ -932,7 +916,6 @@
   var DirectChat = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'DirectChat';
     var DATA_KEY = 'lte.directchat';
@@ -949,7 +932,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var DirectChat = /*#__PURE__*/function () {
@@ -984,7 +966,6 @@
     /**
      *
      * Data Api implementation
-     * ====================================================
      */
 
 
@@ -995,7 +976,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = DirectChat._jQueryInterface;
@@ -1018,7 +998,6 @@
   var TodoList = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'TodoList';
     var DATA_KEY = 'lte.todolist';
@@ -1039,7 +1018,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var TodoList = /*#__PURE__*/function () {
@@ -1103,7 +1081,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -1112,7 +1089,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = TodoList._jQueryInterface;
@@ -1135,7 +1111,6 @@
   var CardWidget = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'CardWidget';
     var DATA_KEY = 'lte.cardwidget';
@@ -1329,7 +1304,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -1356,7 +1330,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = CardWidget._jQueryInterface;
@@ -1379,7 +1352,6 @@
   var CardRefresh = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'CardRefresh';
     var DATA_KEY = 'lte.cardrefresh';
@@ -1502,7 +1474,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -1520,7 +1491,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = CardRefresh._jQueryInterface;
@@ -1543,7 +1513,6 @@
   var Dropdown = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'Dropdown';
     var DATA_KEY = 'lte.dropdown';
@@ -1561,7 +1530,6 @@
     var Default = {};
     /**
      * Class Definition
-     * ====================================================
      */
 
     var Dropdown = /*#__PURE__*/function () {
@@ -1636,7 +1604,6 @@
     }();
     /**
      * Data API
-     * ====================================================
      */
 
 
@@ -1654,7 +1621,6 @@
     });
     /**
      * jQuery API
-     * ====================================================
      */
 
     $.fn[NAME] = Dropdown._jQueryInterface;
@@ -1677,7 +1643,6 @@
   var Toasts = function ($) {
     /**
      * Constants
-     * ====================================================
      */
     var NAME = 'Toasts';
     var DATA_KEY = 'lte.toasts';
@@ -1727,7 +1692,6 @@
     };
     /**
      * Class Definition
-     * ====================================================
      */
 
     var Toasts = /*#__PURE__*/function () {
@@ -1864,7 +1828,6 @@
     }();
     /**
      * jQuery API
-     * ====================================================
      */
 
 

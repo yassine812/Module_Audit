@@ -143,7 +143,6 @@
       display: flex !important;
       gap: 8px !important;
     }
-
     .footer-btn-container .btn {
       flex: 1 !important;
       width: auto !important;
@@ -151,21 +150,18 @@
   }
 
   /* 🔥 CRITICAL FIX: Ensure buttons are NEVER blocked by other layers */
-  #btn-sync,
-  .btn-primary,
-  .btn-submit-form,
+  #btn-sync, 
+  .btn-primary, 
+  .btn-submit-form, 
   .footer-btn-container .btn {
     position: relative !important;
-    z-index: 9999 !important;
-    /* Extremely high to beat any form-group/card overlays */
+    z-index: 9999 !important; /* Extremely high to beat any form-group/card overlays */
     pointer-events: auto !important;
     cursor: pointer !important;
   }
 
   /* Prevent containers from overlapping buttons */
-  .card,
-  .form-group,
-  .row {
+  .card, .form-group, .row {
     z-index: 1;
   }
 
@@ -207,7 +203,7 @@
   .swal2-container {
     z-index: 200000 !important;
   }
-
+  
   /* Flat Enterprise Datagrid Styling (Zero Cards) - PREMIUM V2 */
   .structure-grid-container {
     background: #ffffff;
@@ -215,16 +211,14 @@
     border-radius: 8px;
     width: 100%;
     margin-top: 15px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
-
   .structure-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
     margin: 0;
   }
-
   .structure-table thead th {
     background: #f8fafc;
     color: #64748b;
@@ -236,34 +230,29 @@
     border-bottom: 2px solid #f1f5f9;
     text-align: left;
   }
-
   .structure-table tbody tr.critere-row {
     background: #ffffff;
     border-bottom: 1px solid #f1f5f9;
     transition: all 0.2s;
   }
-
   .structure-table tbody tr.critere-row:hover {
     background: #f8fafc;
   }
-
   .structure-table tbody td {
     padding: 10px 16px;
     vertical-align: middle;
     font-size: 13px;
     color: #334155;
   }
-
+  
   /* Sub-Grid (Nested Tree Style) */
   .sub-grid-row {
     background: #f8fafc !important;
   }
-
   .sub-grid-container-cell {
     padding: 0 !important;
     background: #f8fafc;
   }
-
   .sub-grid-header {
     background: #f8fafc;
     padding: 4px 16px 4px 48px;
@@ -272,7 +261,6 @@
     gap: 12px;
     border-bottom: 1px solid #f1f5f9;
   }
-
   .sub-grid-header span {
     font-size: 9px;
     font-weight: 800;
@@ -280,7 +268,6 @@
     text-transform: uppercase;
     letter-spacing: 1px;
   }
-
   .sub-grid-table {
     width: 100%;
     margin: 0;
@@ -288,17 +275,14 @@
     background: transparent !important;
     --bs-table-bg: transparent !important;
   }
-
   .sub-grid-table tr {
     border-bottom: 1px solid #f1f5f9;
     background: transparent !important;
     --bs-table-bg: transparent !important;
   }
-
   .sub-grid-table tr:last-child {
     border-bottom: none;
   }
-
   .sub-grid-table td {
     padding: 8px 16px 8px 32px !important;
     font-size: 12px;
@@ -306,7 +290,6 @@
     position: relative;
     background: transparent !important;
   }
-
   .sub-grid-table td * {
     background: transparent !important;
     background-color: transparent !important;
@@ -321,7 +304,7 @@
     font-weight: 600;
     border: 1px solid #e2e8f0;
   }
-
+  
   .badge-count {
     background: #eff6ff;
     color: #3b82f6;
@@ -337,12 +320,11 @@
     font-size: 11px;
     color: #94a3b8;
   }
-
   .accordion-icon.rotated {
     transform: rotate(90deg);
     color: #3b82f6;
   }
-
+  
   .action-btn-circle {
     width: 28px;
     height: 28px;
@@ -355,17 +337,15 @@
     background: transparent;
     border: none;
   }
-
   .action-btn-circle:hover {
     background: #f1f5f9;
     color: #1e293b;
   }
-
   .action-btn-circle.text-danger:hover {
     background: #fef2f2;
     color: #ef4444;
   }
-
+  
   .form-check-input-sm {
     width: 16px;
     height: 16px;
@@ -374,7 +354,6 @@
     border: 1.5px solid #cbd5e1;
     transition: all 0.2s;
   }
-
   .form-check-input-sm:checked {
     background-color: #3b82f6;
     border-color: #3b82f6;
@@ -385,6 +364,72 @@
     width: 100%;
     justify-content: space-between;
     align-items: center;
+  }
+
+  /* --- RESPONSIVE TABLE-ROW SYSTEM (MOBILE) --- */
+  @media (max-width: 767.98px) {
+    .structure-grid-container {
+      display: none !important;
+    }
+    #structureMobileList {
+      display: block !important;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mobile-row-item {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      position: relative;
+    }
+    .mobile-row-item:last-child { border-bottom: none; }
+    
+    .mobile-row-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mobile-row-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .mobile-row-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+    .mobile-row-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mobile-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mobile-sc-list {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #edf2f7;
+    }
+    .mobile-sc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .mobile-sc-item:last-child { border-bottom: none; }
+  }
+  @media (min-width: 768px) {
+    #structureMobileList { display: none !important; }
   }
 </style>
 {% endblock %}
@@ -503,25 +548,20 @@
 
       <!-- STEP 2: Structure de l'Audit -->
       <div id="step-2" style="display:none;">
-        <div
-          class="section-title mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+        <div class="section-title mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
           <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0 d-flex align-items-center gap-2">
             <i data-lucide="layers" class="me-2 text-primary"></i>STRUCTURE DU FORMULAIRE
           </h5>
-
+          
           <div class="d-flex align-items-center gap-4 ms-auto">
             <div class="d-none d-md-flex align-items-center gap-4 me-0">
-              <button type="button"
-                class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-primary fw-bold p-0 transition-all"
-                id="selectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
-                <i class="fas fa-check-double me-1"></i> Tout cocher
-              </button>
-              <div style="width: 1px; height: 12px; background: #e2e8f0;"></div>
-              <button type="button"
-                class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-danger p-0 transition-all"
-                id="deselectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
-                <i class="fas fa-times me-1"></i> Tout décocher
-              </button>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-primary fw-bold p-0 transition-all" id="selectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-check-double me-1"></i> Tout cocher
+                </button>
+                <div style="width: 1px; height: 12px; background: #e2e8f0;"></div>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-danger p-0 transition-all" id="deselectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-times me-1"></i> Tout décocher
+                </button>
             </div>
           </div>
         </div>
@@ -529,33 +569,35 @@
         <div id="step-2-container" class="structure-grid-container mb-4 overflow-hidden">
           <table class="structure-table">
             <thead>
-              <tr>
-                <th style="width: 45px;" class="text-center"></th>
-                <th>
-                  <div class="d-flex align-items-center gap-2">
-                    CRITÈRE
-                    <button type="button" class="action-btn-circle text-primary" id="btnAddCritere"
-                      title="Ajouter un critère" style="width: 20px; height: 20px;" onclick="openAddCritereModal()">
-                      <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
-                    </button>
-                  </div>
-                </th>
-                <th style="width: 180px;">CHAPITRE</th>
-                <th style="width: 140px;" class="text-center text-nowrap">SOUS-CRITÈRES</th>
-                <th style="width: 120px;" class="text-end px-3">ACTIONS</th>
-              </tr>
+                <tr>
+                    <th style="width: 45px;" class="text-center"></th>
+                    <th>
+                        <div class="d-flex align-items-center gap-2">
+                            CRITÈRE
+                            <button type="button" class="action-btn-circle text-primary" id="btnAddCritere" title="Ajouter un critère" style="width: 20px; height: 20px;" onclick="openAddCritereModal()">
+                                <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th style="width: 180px;">CHAPITRE</th>
+                    <th style="width: 140px;" class="text-center text-nowrap">SOUS-CRITÈRES</th>
+                    <th style="width: 120px;" class="text-end px-3">ACTIONS</th>
+                </tr>
             </thead>
             <tbody id="structureTableBody">
-              <tr>
-                <td colspan="5" class="text-center py-5">
-                  <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Chargement...</span>
-                  </div>
-                </td>
-              </tr>
+                <tr>
+                  <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Chargement...</span>
+                    </div>
+                  </td>
+                </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- MOBILE CARDS CONTAINER -->
+        <div id="structureMobileList"></div>
 
         <!-- Padding for footer -->
         <div class="mb-5 pb-5"></div>
@@ -568,7 +610,8 @@
 
     <div class="footer-btn-container">
       <a href="{% url 'formulaire_list' %}" class="btn btn-light fw-bold">Annuler</a>
-      <button type="submit" id="btn-submit-form" class="btn btn-primary fw-bold shadow-sm">Enregistrer</button>
+      <button type="submit" id="btn-submit-form"
+        class="btn btn-primary fw-bold shadow-sm">Enregistrer</button>
     </div>
   </div>
   </form>
@@ -577,13 +620,13 @@
   function initFormulaireForm() {
     const scope = document.getElementById('ajaxFormModalBody') || document;
     const getEl = (id) => scope.querySelector('#modal-' + id) || scope.querySelector('#' + id) || document.getElementById(id);
-
+    
     const btnSync = getEl('btn-sync');
     const typeAuditSelect = getEl('{{ form.type_audit.id_for_label }}');
     const step1 = getEl('step-1');
     const step2 = getEl('step-2');
     const step2Container = getEl('step-2-container');
-
+    
     if (!btnSync || btnSync.dataset.initialized) return;
     btnSync.dataset.initialized = 'true';
 
@@ -612,10 +655,9 @@
     }
 
     // Get selected IDs from Django context
-    let selectedScIds = {{ selected_sc_ids|default: "[]" | safe
-  }};
-  const isEdit = {{ is_edit|default: "false" | lower }};
-  const currentFormId = "{{ form.instance.pk|default:'' }}";
+    let selectedScIds = {{ selected_sc_ids|default:"[]"|safe }};
+    const isEdit = {{ is_edit|default:"false"|lower }};
+    const currentFormId = "{{ form.instance.pk|default:'' }}";
 
   function createCriterionRow(crit, index) {
     let scRowsHtml = '';
@@ -693,6 +735,59 @@
               </table>
           </td>
       </tr>`;
+  }
+
+  function createMobileCard(crit, index) {
+    let scHtml = '';
+    const scCount = crit.sous_criteres ? crit.sous_criteres.length : 0;
+
+    if (scCount > 0) {
+      crit.sous_criteres.forEach(sc => {
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        scHtml += `
+          <div class="mobile-sc-item">
+            <input class="form-check-input sc-checkbox sc-crit-${crit.critere_id}" type="checkbox" name="sous_criteres" value="${sc.id}" ${isChecked ? 'checked' : ''}>
+            <div class="flex-grow-1 ms-2">
+              <div class="fw-bold text-dark small">${sc.nom}</div>
+            </div>
+            <div class="d-flex gap-1">
+              <button type="button" class="action-btn-circle" onclick="window.editSousCritere(${sc.id})"><i class="fas fa-pen fa-xs"></i></button>
+              <button type="button" class="action-btn-circle text-danger" onclick="window.deleteSousCritere(${sc.id})"><i class="fas fa-trash fa-xs"></i></button>
+            </div>
+          </div>`;
+      });
+    } else {
+      scHtml = '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>';
+    }
+
+    return `
+      <div class="mobile-row-item" id="mobile-crit-${crit.critere_id}">
+        <div class="mobile-row-top">
+          <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#mobile-sc-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+            <i class="fas fa-chevron-right accordion-icon"></i>
+          </button>
+          <div class="mobile-row-content">
+            <div class="mobile-row-title">${crit.critere_nom}</div>
+            <div class="mobile-row-meta">
+              <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
+              <span class="badge-count">${scCount}</span>
+            </div>
+          </div>
+          <div class="mobile-row-actions">
+            <button type="button" class="action-btn-circle" onclick="window.editCritere(${crit.critere_id})"><i class="fas fa-pen fa-xs"></i></button>
+            <button type="button" class="action-btn-circle text-danger" onclick="window.deleteCritere(${crit.critere_id})"><i class="fas fa-trash fa-xs"></i></button>
+          </div>
+        </div>
+        <div id="mobile-sc-collapse-${crit.critere_id}" class="collapse">
+          <div class="mobile-sc-list">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted x-small fw-bold">SOUS-CRITÈRES</span>
+              <button type="button" class="btn btn-link btn-sm p-0 text-primary x-small fw-bold" onclick="window.openAddSousCritereModal(${crit.critere_id})">+ AJOUTER</button>
+            </div>
+            ${scHtml}
+          </div>
+        </div>
+      </div>`;
   }
 
   // New helper to toggle selection per Criteria
@@ -945,7 +1040,7 @@
           .then(res => {
             if (res.status === 'success') {
               Swal.fire('Supprimé !', '', 'success');
-
+              
               // 🚀 REMOVE FROM DOM IMMEDIATELY
               const card = document.getElementById(`crit-item-${id}`);
               if (card) {
@@ -1049,7 +1144,7 @@
           .then(res => {
             if (res.status === 'success') {
               Swal.fire('Supprimé !', '', 'success');
-
+              
               // 🚀 REMOVE FROM DOM IMMEDIATELY
               const item = document.getElementById(`sc-item-${id}`);
               if (item) {
@@ -1105,16 +1200,23 @@
       .then(response => response.json())
       .then(data => {
         const tableBody = document.querySelector('#structureTableBody');
+        const mobileList = document.querySelector('#structureMobileList');
+        
         if (tableBody) tableBody.innerHTML = '';
+        if (mobileList) mobileList.innerHTML = '';
 
         if (data.length === 0) {
           if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</td></tr>';
+          if (mobileList) mobileList.innerHTML = '<div class="text-center py-5 text-muted">Aucune structure.</div>';
         } else {
-          let rowsHtml = '';
+          let tableHtml = '';
+          let mobileHtml = '';
           data.forEach((crit, index) => {
-            rowsHtml += createCriterionRow(crit, index);
+            tableHtml += createCriterionRow(crit, index);
+            mobileHtml += createMobileCard(crit, index);
           });
-          if (tableBody) tableBody.innerHTML = rowsHtml;
+          if (tableBody) tableBody.innerHTML = tableHtml;
+          if (mobileList) mobileList.innerHTML = mobileHtml;
         }
 
         // Show Step 2 without hiding Step 1
@@ -1153,7 +1255,7 @@
     // Global Select
     const selectAllBtn = getEl('selectAllItems');
     const deselectAllBtn = getEl('deselectAllItems');
-
+    
     selectAllBtn?.addEventListener('click', () => {
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = true);
     });

@@ -103,7 +103,7 @@
     /* 4. Industry-Standard Responsive Tables (Horizontal Container Scroll) */
     @media (max-width: 767.98px) {
       .table-responsive {
-        overflow-x: hidden !important;
+        overflow-x: auto !important;
         /* Enable horizontal scroll on container ONLY */
         -webkit-overflow-scrolling: touch;
         width: 100% !important;
@@ -127,10 +127,10 @@
         display: table-cell !important;
         white-space: normal !important;
         /* Allow text wrapping to keep all columns visible */
-        padding: 0.5rem 0.15rem !important;
-        /* Absolute minimum horizontal padding */
-        font-size: 0.72rem !important;
-        /* Slightly smaller font for high-density tables */
+        padding: 0.5rem 0.5rem !important;
+        /* Increased horizontal padding */
+        font-size: 0.75rem !important;
+        /* Slightly larger font for better readability */
         text-align: left !important;
         vertical-align: middle !important;
         border: 1px solid #dee2e6 !important;
@@ -143,8 +143,9 @@
       }
 
       /* Keep Action buttons aligned horizontally */
-      .table td:last-child {
-        min-width: 85px !important;
+      .table td:last-child, .table th:last-child {
+        min-width: 90px !important; /* Slightly reduced to help fit on 370px */
+        padding-right: 0.5rem !important;
       }
 
       /* Restore icons and badges for full professional UI */
@@ -162,6 +163,20 @@
         display: inline-flex !important;
         align-items: center;
         white-space: nowrap !important;
+      }
+      
+      /* Extremely narrow screens fix */
+      @media (max-width: 400px) {
+        .table th, .table td {
+          padding: 0.4rem 0.25rem !important;
+        }
+        .col-actions [data-lucide] {
+          width: 15px !important;
+          height: 15px !important;
+        }
+        .table .btn {
+          padding: 0.15rem 0.25rem !important;
+        }
       }
     }
 
@@ -209,8 +224,17 @@
 
       .table-responsive {
         margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
+        padding: 0 10px !important; /* Added container padding for breathing room */
+        overflow-x: auto !important;
+        display: block;
+        width: 100%;
+      }
+      
+      /* Allow badges to wrap on mobile to save horizontal space */
+      .badge {
+        white-space: normal !important;
+        max-width: 120px;
+        display: inline-block !important;
       }
 
       /* Spacing for elements that should NOT be edge-to-edge */

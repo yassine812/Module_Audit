@@ -11,6 +11,10 @@
 
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  .col-actions { min-width: 75px !important; white-space: nowrap !important; }
+  .table td.col-actions { padding-right: 5px !important; padding-left: 5px !important; }
+  .col-id { width: 35px !important; }
+  .col-val { width: 45px !important; }
 
 
 
@@ -92,7 +96,7 @@
         <div class="card-body px-0 pb-0">
           {% if page_obj %}
           <div class="table-responsive">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0">
               <thead class="bg-light shadow-none">
                 <tr>
                   <th class="ps-3 col-id text-center">ID</th>
@@ -106,7 +110,7 @@
               {% for cotation in page_obj %}
               <tr>
                 <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
-                <td class="col-libelle text-truncate">
+                <td class="col-libelle">
                   <strong class="text-dark ">{{ cotation.content }}</strong>
                   {% if cotation.code %}
                   <small class=" ml-1">({{ cotation.code }})</small>
@@ -123,7 +127,7 @@
                   {% endif %}
                 </td>
                 <td class="text-center col-actions">
-                  <div class="d-flex justify-content-center align-items-center">
+                  <div class="d-flex justify-content-center align-items-center gap-1">
                     <button onclick="openCotationModal('{% url 'cotation_update' cotation.id %}')"
                       class="btn btn-link text-warning p-1" title="Modifier">
                       <i data-lucide="edit" ></i>
@@ -220,14 +224,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-      <div id="deleteModalBodyContent">
-        <div class="text-center py-5">
-          <div class="spinner-border text-danger" role="status"></div>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -267,86 +264,60 @@
     });
   }
 
-  function openDeleteModal(url) {
-    $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
-    $('#deleteModal').modal('show');
-    $.ajax({
-      url: url,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      success: function (data) {
-        $('#deleteModalBodyContent').html(data);
-        initDeleteBehavior();
-      }
-    });
-  }
+              function openDeleteModal(url, name) {
+        Swal.fire({
+            title: 'Confirmer la suppression',
+            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: response.message || "L'élément a été supprimé",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
+                        });
+                    }
+                });
+            }
+        });
+    }
+    
+    // Alias for compatibility
+    function confirmDelete(url, name) {
+        openDeleteModal(url, name);
+    }
 
-  function initModalBehaviors() {
-    $('#cotationModalForm').off('submit').on('submit', function (e) {
-      e.preventDefault();
-      const form = $(this);
-      $.ajax({
-        type:"POST",
-        url: form.attr('action'),
-        data: form.serialize(),
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        success: function (response) {
-          if (response.success) {
-            $('#cotationModal').modal('hide');
-            Swal.fire({
-              icon: 'success',
-              title: 'Succès',
-              text: response.message,
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => {
-              location.reload();
-            });
-          } else {
-            $('#modalBodyContent').html(response);
-            initModalBehaviors();
-          }
-        },
-        error: function (xhr) {
-          $('#modalBodyContent').html(xhr.responseText);
-          initModalBehaviors();
-        }
-      });
-    });
-  }
 
-  function initDeleteBehavior() {
-    $('#cotationDeleteModalForm').off('submit').on('submit', function (e) {
-      e.preventDefault();
-      const form = $(this);
-      $.ajax({
-        type:"POST",
-        url: form.attr('action'),
-        data: form.serialize(),
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        success: function (response) {
-          if (response.success) {
-            $('#deleteModal').modal('hide');
-            Swal.fire({
-              icon: 'success',
-              title: 'Supprimé !',
-              text: response.message,
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => {
-              location.reload();
-            });
-          }
-        },
-        error: function (xhr) {
-          const response = xhr.responseJSON;
-          Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: response ? response.message :"Une erreur est survenue lors de la suppression."
-          });
-        }
-      });
-    });
-  }
 </script>
 {% endblock %}

@@ -12,7 +12,6 @@
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
 
-<<<<<<< HEAD
   /* Mobile Responsive Modal for Critere */
   @media (max-width: 768px) {
     #critereModal.modal {
@@ -127,7 +126,6 @@
       font-size: 0.85rem !important;
       border-radius: 20px !important;
     }
-=======
 
   /* Responsive Pagination */
   .pagination-container {
@@ -151,7 +149,6 @@
           font-size: 0.9rem;
           margin-bottom: 4px;
       }
->>>>>>> 603d326 (web fix)
   }
 </style>
 {% endblock %}
@@ -225,7 +222,7 @@
                       <button onclick="openCritereModal('{% url 'critere_update' critere.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit" ></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'critere_delete' critere.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <button onclick="confirmDelete('{% url 'critere_delete' critere.id %}', '{{ critere.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                         <i data-lucide="trash-2" ></i>
                       </button>
                     </div>
@@ -315,18 +312,7 @@
     </div>
 </div>
 
-<!-- Deletion Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div id="deleteModalBodyContent">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-danger" role="status"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 {% endblock %}
 
@@ -378,7 +364,13 @@
                 success: function(response) {
                     if (response.success) {
                         $('#critereModal').modal('hide');
-                        location.reload(); 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message || 'Opération réussie',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload()); 
                     } else {
                         $('#modalBodyContent').html(response);
                         initModalBehaviors();
@@ -388,45 +380,60 @@
         });
     }
 
-    function openDeleteModal(url) {
-        $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
-        $('#deleteModal').modal('show');
-        $.ajax({
-            url: url,
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#deleteModalBodyContent').html(data);
-                initDeleteBehaviors();
+                function openDeleteModal(url, name) {
+        Swal.fire({
+            title: 'Confirmer la suppression',
+            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: response.message || "L'élément a été supprimé",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
+                        });
+                    }
+                });
             }
         });
     }
-
-    function initDeleteBehaviors() {
-        $('#deleteForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            $.ajax({
-                type:"POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                success: function(response) {
-                    if (response.success) {
-                        $('#deleteModal').modal('hide');
-                        location.reload(); 
-                    }
-                },
-                error: function(xhr) {
-                    const response = xhr.responseJSON;
-                    if (response && response.message) {
-                        $('#deleteErrorMessage').text(response.message).fadeIn();
-                        form.find('button[type="submit"]').fadeOut();
-                    } else {
-                        alert("Une erreur imprévue est survenue.");
-                    }
-                }
-            });
-        });
+    
+    // Alias for compatibility
+    function confirmDelete(url, name) {
+        openDeleteModal(url, name);
     }
+
+
 </script>
 {% endblock %}

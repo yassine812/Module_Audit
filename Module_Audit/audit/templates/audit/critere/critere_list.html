@@ -8,13 +8,9 @@
 {% block breadcrumb %}Critères{% endblock %}
 
 {% block extra_css %}
-<style>
-  .card { 
-    border: none; 
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); 
-    border-radius: 1rem; 
-  }
 
+<style>
+  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
   @media (max-width: 768px) {
     /* Mobile Cards View */
     .mobile-cards-container {
@@ -35,79 +31,6 @@
     .card-header-flex .ml-auto {
         margin-left: 0 !important;
         margin-top: 1rem;
-    }
-
-    /* Mobile Responsive Modal for Critere */
-    #critereModal .modal-content {
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
-
-    #critereModal .modal-body {
-      max-height: calc(100vh - 120px) !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 12px 16px 70px 16px !important;
-    }
-
-    #critereModal .modal-header {
-      padding: 12px 16px !important;
-    }
-
-    #critereModal .modal-title {
-      font-size: 1.1rem !important;
-    }
-
-    #critereModal .nav-pills {
-      padding: 4px !important;
-      margin-bottom: 12px !important;
-    }
-
-    #critereModal .nav-link {
-      padding: 6px 10px !important;
-      font-size: 0.8rem !important;
-    }
-
-    #critereModal .form-group,
-    #critereModal .input-group {
-      margin-bottom: 4px !important;
-    }
-
-    #critereModal label {
-      margin-bottom: 2px !important;
-      font-size: 0.85rem !important;
-      line-height: 1.2 !important;
-    }
-
-    #critereModal .form-control {
-      padding: 6px 10px !important;
-      font-size: 14px !important;
-      height: 36px !important;
-      min-height: 36px !important;
-    }
-
-    #critereModal select.form-control {
-      padding-right: 30px !important;
-    }
-
-    #critereModal .modal-footer {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      background: white !important;
-      border-top: 1px solid #e5e7eb !important;
-      padding: 8px 16px !important;
-      display: flex !important;
-      gap: 8px;
-      z-index: 1050 !important;
-    }
-
-    #critereModal .modal-footer .btn {
-      flex: 1;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-      border-radius: 20px !important;
     }
   }
 
@@ -141,7 +64,6 @@
     padding-top: 12px;
     border-top: 1px dashed #e2e8f0;
   }
-
   .desktop-table-container table td {
     white-space: nowrap;
     overflow: hidden;
@@ -210,7 +132,6 @@
 
         <div class="card-body px-0 pb-0">
           {% if criteres %}
-          <!-- Mobile Cards View -->
           <div class="mobile-cards-container p-3">
              {% for critere in page_obj %}
              <div class="critere-card">
@@ -237,8 +158,6 @@
              </div>
              {% endfor %}
           </div>
-
-          <!-- Desktop Table View -->
           <div class="desktop-table-container">
             <div class="table-responsive">
               <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
@@ -254,9 +173,9 @@
                 <tbody>
                   {% for critere in page_obj %}
                   <tr>
-                    <td class="text-center col-id" data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                    <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                     <td class="col-name" data-label="Désignation du Critère">
-                      <strong class="text-dark">{{ critere.name }}</strong>
+                      <strong class="text-dark ">{{ critere.name }}</strong>
                     </td>
                     <td class="col-chapitre" data-label="Chapitre de Norme">
                       {% if critere.chapitre_norme %}
@@ -265,26 +184,26 @@
                               {{ critere.chapitre_norme.name }}
                           </span>
                       {% else %}
-                          <span class="italic">Aucun</span>
+                          <span class="  italic">Aucun</span>
                       {% endif %}
                     </td>
                     <td class="col-form" data-label="Formulaire associé">
                       {% if critere.formulaire %}
-                          <span class="badge rounded-pill bg-light px-3 py-1 border font-weight-normal">
+                          <span class="badge rounded-pill bg-light  px-3 py-1 border font-weight-normal">
                               <i data-lucide="file-text" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                              {{ critere.formulaire.name|truncatechars:20 }}
+                              {{ critere.formulaire.name }}
                           </span>
                       {% else %}
-                          <span class="italic">-</span>
+                          <span class="  italic">-</span>
                       {% endif %}
                     </td>
                     <td class="text-center col-actions" data-label="Actions">
                       <div class="d-flex justify-content-center align-items-center">
                         <button onclick="openCritereModal('{% url 'critere_update' critere.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
-                          <i data-lucide="edit"></i>
+                          <i data-lucide="edit" ></i>
                         </button>
                         <button onclick="openDeleteModal('{% url 'critere_delete' critere.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                          <i data-lucide="trash-2"></i>
+                          <i data-lucide="trash-2" ></i>
                         </button>
                       </div>
                     </td>
@@ -296,9 +215,9 @@
           </div>
           {% else %}
           <div class="text-center py-5">
-            <i data-lucide="check-square" class="w-12 h-12 mb-3 opacity-25"></i>
-            <h4 class="font-weight-bold">Aucun critère trouvé</h4>
-            <p>Commencez par créer votre premier critère d'évaluation.</p>
+            <i data-lucide="check-square" class="w-12 h-12  mb-3 opacity-25"></i>
+            <h4 class=" font-weight-bold">Aucun critère trouvé</h4>
+            <p class=" ">Commencez par créer votre premier critère d'évaluation.</p>
             <button onclick="openCritereModal('{% url 'critere_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
               Créer un Critère
@@ -352,7 +271,7 @@
         </div>
         {% elif page_obj %}
         <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
-           <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> critère{{ page_obj|length|pluralize }}</small>
+           <small class="">Affichage de <span class="fw-bold">{{ page_obj|length }}</span> critère{{ page_obj|length|pluralize }}</small>
         </div>
         {% endif %}
       </div>
@@ -374,18 +293,11 @@
     </div>
 </div>
 
-<!-- Deletion Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div id="deleteModalBodyContent">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-danger" role="status"></div>
-                </div>
-            </div>
+
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -446,34 +358,54 @@
         });
     }
 
-    function openDeleteModal(url) {
-        $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
-        $('#deleteModal').modal('show');
-        $.ajax({
-            url: url,
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#deleteModalBodyContent').html(data);
-                initDeleteBehaviors();
+    function confirmDelete(url, name) {
+        Swal.fire({
+            title: 'Confirmer la suppression',
+            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: response.message || "L'élément a été supprimé",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
+                        });
+                    }
+                });
             }
         });
-    }
-
-    function initDeleteBehaviors() {
-        $('#deleteForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            $.ajax({
-                type:"POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                success: function(response) {
-                    if (response.success) {
-                        $('#deleteModal').modal('hide');
-                        location.reload(); 
-                    }
-                },
+    },
                 error: function(xhr) {
                     const response = xhr.responseJSON;
                     if (response && response.message) {

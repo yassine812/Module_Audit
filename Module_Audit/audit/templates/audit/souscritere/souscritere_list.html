@@ -218,73 +218,8 @@
       margin-bottom: 4px;
     }
 
-    #souscritereModal .modal-content {
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
 
-    #souscritereModal .modal-header {
-      padding: 8px 12px !important;
-    }
 
-    #souscritereModal .modal-title {
-      font-size: 1rem !important;
-    }
-
-    /* Compact form fields - minimal spacing */
-    #souscritereModal .form-group,
-    #souscritereModal .input-group {
-      margin-bottom: 0 !important;
-    }
-
-    #souscritereModal label {
-      margin-bottom: 0 !important;
-      font-size: 0.8rem !important;
-      line-height: 1 !important;
-    }
-
-    #souscritereModal .form-control,
-    #souscritereModal select {
-      padding: 4px 8px !important;
-      font-size: 13px !important;
-      height: 32px !important;
-      min-height: 32px !important;
-    }
-
-    #souscritereModal textarea.form-control {
-      height: auto !important;
-      min-height: 45px !important;
-    }
-
-    /* Compact modal body - taller to fit all fields */
-    #souscritereModal .modal-body-responsive {
-      max-height: calc(100vh - 80px) !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 6px 12px 40px 12px !important;
-    }
-
-    /* Fixed footer with buttons */
-    #souscritereModal .modal-footer {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      background: white !important;
-      border-top: 1px solid #e5e7eb !important;
-      padding: 8px 16px !important;
-      display: flex !important;
-      gap: 8px;
-      z-index: 1050 !important;
-    }
-
-    #souscritereModal .modal-footer .btn {
-      flex: 1;
-      padding: 8px 12px !important;
-      font-size: 0.85rem !important;
-      border-radius: 20px !important;
-    }
-  }
   /* Responsive Pagination */
   .pagination-container {
       display: flex;
@@ -298,6 +233,15 @@
       color: #64748b;
       font-weight: 500;
   }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
   }
 </style>
 {% endblock %}
@@ -506,7 +450,6 @@
             <div class="pagination-info px-2">
               <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
-            </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
                 {% if page_obj.has_previous %}
@@ -568,15 +511,7 @@
   </div>
 </div>
 
-<!-- Deletion Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-      <div id="deleteModalBodyContent">
-        <div class="text-center py-5">
-          <div class="spinner-border text-danger" role="status"></div>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -637,34 +572,54 @@
     });
   }
 
-  function openDeleteModal(url) {
-    $('#deleteModalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>');
-    $('#deleteModal').modal('show');
-    $.ajax({
-      url: url,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      success: function (data) {
-        $('#deleteModalBodyContent').html(data);
-        initDeleteBehaviors();
-      }
-    });
-  }
-
-  function initDeleteBehaviors() {
-    $('#deleteForm').off('submit').on('submit', function (e) {
-      e.preventDefault();
-      const form = $(this);
-      $.ajax({
-        type: "POST",
-        url: form.attr('action'),
-        data: form.serialize(),
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        success: function (response) {
-          if (response.success) {
-            $('#deleteModal').modal('hide');
-            location.reload();
-          }
-        },
+  function confirmDelete(url, name) {
+        Swal.fire({
+            title: 'Confirmer la suppression',
+            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: response.message || "L'élément a été supprimé",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
+                        });
+                    }
+                });
+            }
+        });
+    },
         error: function (xhr) {
           const response = xhr.responseJSON;
           if (response && response.message) {
