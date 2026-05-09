@@ -21,11 +21,13 @@
     }
 
     .page-container {
-      min-height: 100vh !important;
+      height: 100vh !important;
+      overflow: hidden !important;
     }
 
     .page-content {
       padding: 8px !important;
+      overflow-y: auto !important;
       padding-bottom: 80px !important;
     }
 
@@ -198,63 +200,165 @@
     font-size: 0.9rem;
   }
 
-  .critere-card {
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
-    transition: all 0.3s ease;
-  }
-  .critere-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: #e2e8f0;
-  }
-  .card-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    cursor: pointer;
-  }
-  .badge-chapitre {
-    background: #f1f5f9;
-    color: #475569;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-  .card-body-flex {
-    margin-bottom: 12px;
-  }
-  .sous-criteres-list {
-    margin-top: 10px;
-    padding: 12px;
-    background: #f8fafc;
-    border-radius: 10px;
-    border: 1px solid #edf2f7;
-  }
-  .card-actions-flex {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    padding-top: 12px;
-    border-top: 1px solid #f8fafc;
-  }
-  .accordion-icon.rotated {
-    transform: rotate(90deg);
-  }
-
-  /* SweetAlert z-index fix */
   .swal2-container {
     z-index: 200000 !important;
   }
   
+  /* Flat Enterprise Datagrid Styling (Zero Cards) - PREMIUM V2 */
+  .structure-grid-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 100%;
+    margin-top: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .structure-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0;
+  }
+  .structure-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    padding: 12px 16px;
+    border-bottom: 2px solid #f1f5f9;
+    text-align: left;
+  }
+  .structure-table tbody tr.critere-row {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s;
+  }
+  .structure-table tbody tr.critere-row:hover {
+    background: #f8fafc;
+  }
+  .structure-table tbody td {
+    padding: 10px 16px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #334155;
+  }
+  
+  /* Sub-Grid (Nested Tree Style) */
+  .sub-grid-row {
+    background: #f8fafc !important;
+  }
+  .sub-grid-container-cell {
+    padding: 0 !important;
+    background: #f8fafc;
+  }
+  .sub-grid-header {
+    background: #f8fafc;
+    padding: 4px 16px 4px 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .sub-grid-header span {
+    font-size: 9px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .sub-grid-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    background: transparent !important;
+    --bs-table-bg: transparent !important;
+  }
+  .sub-grid-table tr {
+    border-bottom: 1px solid #f1f5f9;
+    background: transparent !important;
+    --bs-table-bg: transparent !important;
+  }
+  .sub-grid-table tr:last-child {
+    border-bottom: none;
+  }
+  .sub-grid-table td {
+    padding: 8px 16px 8px 32px !important;
+    font-size: 12px;
+    color: #475569;
+    position: relative;
+    background: transparent !important;
+  }
+  .sub-grid-table td * {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .badge-chapitre {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .badge-count {
+    background: #eff6ff;
+    color: #3b82f6;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid #dbeafe;
+  }
+
+  .accordion-icon {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .accordion-icon.rotated {
+    transform: rotate(90deg);
+    color: #3b82f6;
+  }
+  
+  .action-btn-circle {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    color: #64748b;
+    background: transparent;
+    border: none;
+  }
+  .action-btn-circle:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+  .action-btn-circle.text-danger:hover {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+  
+  .form-check-input-sm {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    transition: all 0.2s;
+  }
+  .form-check-input-sm:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+  }
+
   .footer-btn-container {
     display: flex;
     width: 100%;
@@ -378,27 +482,52 @@
 
       <!-- STEP 2: Structure de l'Audit -->
       <div id="step-2" style="display:none;">
-        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-4 mt-2 gap-3">
-          <div class="d-flex align-items-center">
-            <span class="bg-primary text-white p-2 rounded-3 me-3 shadow-sm">
-              <i data-lucide="list"></i>
-            </span>
-            <h5 class="fw-bold mb-0">Structure de l'Audit</h5>
-          </div>
-          <button type="button"
-            class="btn btn-outline-primary btn-sm rounded-pill px-4 py-2 fw-bold shadow-sm align-self-start align-self-sm-center"
-            onclick="openAddCritereModal()">
-            <i data-lucide="plus-circle" class="me-1"></i> Ajouter un Critère
-          </button>
-        </div>
-
-        <div id="step-2-container" class="mb-4">
-          <!-- Dynamic content will be injected here -->
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Chargement...</span>
+        <div class="section-title mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+          <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0 d-flex align-items-center gap-2">
+            <i data-lucide="layers" class="me-2 text-primary"></i>STRUCTURE DU FORMULAIRE
+          </h5>
+          
+          <div class="d-flex align-items-center gap-4 ms-auto">
+            <div class="d-none d-md-flex align-items-center gap-4 me-0">
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-primary fw-bold p-0 transition-all" id="selectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-check-double me-1"></i> Tout cocher
+                </button>
+                <div style="width: 1px; height: 12px; background: #e2e8f0;"></div>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-danger p-0 transition-all" id="deselectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-times me-1"></i> Tout décocher
+                </button>
             </div>
           </div>
+        </div>
+
+        <div id="step-2-container" class="structure-grid-container mb-4 overflow-hidden">
+          <table class="structure-table">
+            <thead>
+                <tr>
+                    <th style="width: 45px;" class="text-center"></th>
+                    <th>
+                        <div class="d-flex align-items-center gap-2">
+                            CRITÈRE
+                            <button type="button" class="action-btn-circle text-primary" id="btnAddCritere" title="Ajouter un critère" style="width: 20px; height: 20px;" onclick="openAddCritereModal()">
+                                <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th style="width: 180px;">CHAPITRE</th>
+                    <th style="width: 140px;" class="text-center text-nowrap">SOUS-CRITÈRES</th>
+                    <th style="width: 120px;" class="text-end px-3">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="structureTableBody">
+                <tr>
+                  <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Chargement...</span>
+                    </div>
+                  </td>
+                </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Padding for footer -->
@@ -461,72 +590,82 @@
     const isEdit = {{ is_edit|default:"false"|lower }};
     const currentFormId = "{{ form.instance.pk|default:'' }}";
 
-  function createCriterionCard(crit, index) {
-    let scHtml = '';
+  function createCriterionRow(crit, index) {
+    let scRowsHtml = '';
+    const scCount = crit.sous_criteres ? crit.sous_criteres.length : 0;
 
-    if (crit.sous_criteres.length > 0) {
+    if (scCount > 0) {
       crit.sous_criteres.forEach((sc, scIndex) => {
         const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
 
-        scHtml += `
-          <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" id="sc-item-${sc.id}">
-            <label class="d-flex align-items-center cursor-pointer mb-0 w-100" for="sc-${sc.id}">
-              <input class="custom-checkbox sc-checkbox sc-crit-${crit.critere_id} me-3" type="checkbox" name="sous_criteres" value="${sc.id}" id="sc-${sc.id}" ${isChecked ? 'checked' : ''} data-crit-id="${crit.critere_id}" style="width: 1.2rem; height: 1.2rem;">
-              <span class="fw-bold me-2 opacity-50 d-none d-sm-inline">${index + 1}.${scIndex + 1}</span>
-              <span class="fw-medium text-dark" style="font-size: 0.9rem;">${sc.nom}</span>
-            </label>
-            <div class="d-flex gap-1 ms-2">
-              <button type="button" class="btn btn-sm btn-link text-info p-1" title="Modifier" onclick="window.editSousCritere(${sc.id})">
-                <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-link text-danger p-1" title="Supprimer" onclick="window.deleteSousCritere(${sc.id})">
-                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-              </button>
-            </div>
-          </div>
-        `;
+        scRowsHtml += `
+          <tr id="sc-item-${sc.id}">
+              <td>
+                  <div class="d-flex align-items-center justify-content-between" style="background: transparent !important;">
+                      <div class="d-flex align-items-center gap-3" style="background: transparent !important;">
+                          <input class="form-check-input form-check-input-sm sc-checkbox sc-crit-${crit.critere_id} sous-checkbox" 
+                                 type="checkbox" name="sous_criteres" value="${sc.id}" id="sc-${sc.id}" ${isChecked ? 'checked' : ''} 
+                                 data-crit-id="${crit.critere_id}">
+                          <div class="fw-medium text-slate-700" style="background: transparent !important;">${sc.nom}</div>
+                      </div>
+                      <div class="d-flex align-items-center gap-1" style="background: transparent !important;">
+                          <button type="button" class="action-btn-circle" onclick="window.editSousCritere(${sc.id})" title="Modifier">
+                              <i class="fas fa-pen" style="font-size: 11px;"></i>
+                          </button>
+                          <button type="button" class="action-btn-circle text-danger" onclick="window.deleteSousCritere(${sc.id})" title="Supprimer">
+                              <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
+                          </button>
+                      </div>
+                  </div>
+              </td>
+          </tr>`;
       });
     } else {
-      scHtml = '<div class="text-center py-2 opacity-50 font-italic">Aucun sous-critère</div>';
+      scRowsHtml = `<tr><td class="text-center py-2 text-muted small italic">Aucun sous-critère défini</td></tr>`;
     }
 
     return `
-      <div class="critere-card shadow-xs mb-3" id="crit-item-${crit.critere_id}">
-        <div class="card-header-flex" data-toggle="collapse" data-target="#crit-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
-          <div class="d-flex align-items-center gap-2">
-            <i class="fas fa-chevron-right accordion-icon text-muted" style="font-size: 0.8rem;"></i>
-            <span class="fw-bold text-dark" style="font-size: 1rem;">Critère ${index + 1}: ${crit.critere_nom}</span>
-          </div>
-          <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
-        </div>
-        
-        <div id="crit-collapse-${crit.critere_id}" class="collapse">
-          <div class="card-body-flex">
-            <div class="sous-criteres-list">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-uppercase text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">Sous-critères</span>
-                <button type="button" class="btn btn-xs btn-primary rounded-pill px-2 py-0 fw-bold shadow-sm" style="font-size: 10px;" onclick="window.openAddSousCritereModal(${crit.critere_id})">
-                  <i class="fas fa-plus-circle me-1"></i> Ajouter
-                </button>
+      <tr class="critere-row" id="crit-item-${crit.critere_id}">
+          <td class="text-center" style="width: 45px;">
+              <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#crit-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                  <i class="fas fa-chevron-right accordion-icon"></i>
+              </button>
+          </td>
+          <td>
+              <div class="fw-bold text-slate-800">Critère ${index + 1}: ${crit.critere_nom}</div>
+          </td>
+          <td style="width: 180px;">
+              <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
+          </td>
+          <td class="text-center" style="width: 140px;">
+              <span class="badge-count">${scCount}</span>
+          </td>
+          <td class="text-end" style="width: 120px;">
+              <div class="d-flex justify-content-end align-items-center gap-1 pe-2">
+                  <button type="button" class="action-btn-circle" onclick="window.editCritere(${crit.critere_id})" title="Modifier">
+                      <i class="fas fa-pen" style="font-size: 11px;"></i>
+                  </button>
+                  <button type="button" class="action-btn-circle text-danger" onclick="window.deleteCritere(${crit.critere_id})" title="Supprimer">
+                      <i class="fas fa-trash" style="font-size: 11px;"></i>
+                  </button>
               </div>
-              <div class="sous-criteres-container">
-                ${scHtml}
+          </td>
+      </tr>
+      <tr id="crit-collapse-${crit.critere_id}" class="collapse sub-grid-row">
+          <td colspan="5" class="sub-grid-container-cell">
+              <div class="sub-grid-header">
+                  <span>Sous-critères</span>
+                  <button type="button" class="action-btn-circle text-primary" style="width: 20px; height: 20px;" onclick="window.openAddSousCritereModal(${crit.critere_id})" title="Ajouter un sous-critère">
+                      <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+                  </button>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-actions-flex">
-          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill me-auto px-3" onclick="toggleAllInCrit(${crit.critere_id})">Tout Cocher</button>
-          <button type="button" class="btn btn-sm btn-light text-info p-2 rounded-circle shadow-xs" title="Modifier" onclick="window.editCritere(${crit.critere_id})">
-            <i data-lucide="edit" style="width:16px; height:16px;"></i>
-          </button>
-          <button type="button" class="btn btn-sm btn-light text-danger p-2 rounded-circle shadow-xs" title="Supprimer" onclick="window.deleteCritere(${crit.critere_id})">
-            <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
-          </button>
-        </div>
-      </div>
-    `;
+              <table class="sub-grid-table">
+                  <tbody>
+                      ${scRowsHtml}
+                  </tbody>
+              </table>
+          </td>
+      </tr>`;
   }
 
   // New helper to toggle selection per Criteria
@@ -601,16 +740,14 @@
   });
 
   window.openAjaxFormModal = function (fetchUrl, title, submitUrl, successCallback, prefillFn = null) {
-    const $modal = $('#ajaxFormModal');
-    const $body = $('#ajaxFormModalBody');
-    const $title = $('#ajaxFormModalTitle');
-    const $footer = $('#ajaxFormModalFooter');
+    const $modal = $(getEl('ajaxFormModal'));
+    const $body = $(getEl('ajaxFormModalBody'));
+    const $title = $(getEl('ajaxFormModalTitle'));
 
     window._ajaxModalSuccessCallback = successCallback;
 
     $title.html(title);
     $body.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>');
-    $footer.html(''); // Clear previous buttons
     $modal.modal('show');
 
     $.ajax({
@@ -618,15 +755,6 @@
       method: 'GET',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
       success: function (html) {
-        // Inject buttons immediately to ensure visibility
-        $footer.html(`
-            <button type="button" class="btn btn-link fw-bold text-muted text-decoration-none px-4" data-dismiss="modal">Annuler</button>
-            <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" id="btn-save-audit-modal-force" data-url="${submitUrl}" style="min-width: 150px; height: 45px;">
-              <i data-lucide="save" class="w-5 h-5"></i> Enregistrer
-            </button>
-        `);
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
         $body.html(html);
 
         // Re-execute scripts
@@ -652,7 +780,16 @@
 
         if (prefillFn) prefillFn($form[0]);
 
+        // Clean the footer target and inject buttons into the explicit modal-footer
+        const $footer = $(getEl('ajaxFormModalFooter'));
+        $footer.html(`
+            <button type="button" class="btn btn-link fw-bold text-decoration-none px-4" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm" id="btn-save-audit-modal-force" data-url="${submitUrl}" style="min-width: 150px; height: 45px;">
+              <i data-lucide="save" class="me-2"></i> Enregistrer
+            </button>
+        `);
 
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       },
       error: function (xhr) {
         $body.html('<div class="alert alert-danger m-3">Erreur (' + xhr.status + ')</div>');
@@ -940,28 +1077,21 @@
     fetch(`/audit/get-structure/?type_audit_id=${typeId}`)
       .then(response => response.json())
       .then(data => {
-        step2Container.innerHTML = '';
+        const tableBody = document.querySelector('#structureTableBody');
+        if (tableBody) tableBody.innerHTML = '';
 
         if (data.length === 0) {
-          step2Container.innerHTML = '<div class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</div>';
+          if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</td></tr>';
         } else {
-          let tableHtml = `
-              <div class="structure-cards-container mb-4" id="structureTableBody">
-            `;
+          let rowsHtml = '';
           data.forEach((crit, index) => {
-            tableHtml += createCriterionCard(crit, index);
+            rowsHtml += createCriterionRow(crit, index);
           });
-          tableHtml += `
-              </div>
-            `;
-          step2Container.innerHTML = tableHtml;
+          if (tableBody) tableBody.innerHTML = rowsHtml;
         }
 
         // Show Step 2 without hiding Step 1
         step2.style.display = 'block';
-
-        // Update Stepper - Removed
-
 
         if (btnSubmit) btnSubmit.disabled = false;
         step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -994,8 +1124,8 @@
 
   function attachSelectionListeners() {
     // Global Select
-    const selectAllBtn = getEl('global-select-all');
-    const deselectAllBtn = getEl('global-deselect-all');
+    const selectAllBtn = getEl('selectAllItems');
+    const deselectAllBtn = getEl('deselectAllItems');
     
     selectAllBtn?.addEventListener('click', () => {
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = true);
@@ -1004,8 +1134,6 @@
     deselectAllBtn?.addEventListener('click', () => {
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = false);
     });
-
-    // Individual SC Checkbox - No longer needs to sync with a criterion-level Select All
   }
   }
 
@@ -1393,14 +1521,14 @@
 <div class="modal fade" id="ajaxFormModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content shadow-lg border-0 rounded-4"
-      style="overflow: hidden; max-height: 95vh; display: flex; flex-direction: column;">
+      style="overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header border-0 pb-0 pt-4 px-4">
         <h5 class="modal-title fw-bold text-dark" id="ajaxFormModalTitle">...</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body bg-white mt-0 p-0" id="ajaxFormModalBody" style="overflow: hidden; flex: 1;">
+      <div class="modal-body bg-white mt-0 p-0" id="ajaxFormModalBody" style="overflow-y: auto; flex: 1;">
         <!-- Content loaded via AJAX -->
       </div>
       <div class="modal-footer border-top bg-white p-3" id="ajaxFormModalFooter"

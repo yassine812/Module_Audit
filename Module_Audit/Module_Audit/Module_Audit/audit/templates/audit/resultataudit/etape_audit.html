@@ -143,6 +143,113 @@
         max-height: 500px;
         opacity: 1;
         margin-top: 1rem;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 📱 Mobile: bottom-sheet overlay for Observation & Proof panels */
+    @media (max-width: 767.98px) {
+        .mobile-panel-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 400;
+            animation: fadeInBg 0.2s ease;
+        }
+        .mobile-panel-overlay.active {
+            display: block;
+        }
+        @keyframes fadeInBg {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        .mobile-panel-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            z-index: 401;
+            padding: 1rem 1rem 2rem;
+            max-height: 70dvh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+            box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+        }
+        .mobile-panel-sheet.active {
+            transform: translateY(0);
+        }
+        .mobile-panel-sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin: 0 auto 1rem;
+        }
+        .mobile-panel-sheet-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        /* Hide inline collapsible on mobile; sheet takes over */
+        @media (max-width: 767.98px) {
+            .collapsible-content { display: none !important; }
+        }
+    }
+
+    /* Premium Button States - ENHANCED VISIBILITY */
+    .status-btn.active-conforme, .status-btn.active-excellent {
+        background-color: #059669 !important; /* Deeper Emerald */
+        border-color: #047857 !important;
+        border-width: 3px !important;
+        box-shadow: 0 8px 20px rgba(5, 150, 105, 0.4) !important;
+    }
+    
+    .status-btn.active-non-conforme, .status-btn.active-mauvais {
+        background-color: #dc2626 !important; /* Deeper Red */
+        border-color: #b91c1c !important;
+        border-width: 3px !important;
+        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4) !important;
+    }
+    
+    .status-btn.active-partiel, .status-btn.active-acceptable {
+        background-color: #d97706 !important; /* Deeper Amber */
+        border-color: #b45309 !important;
+        border-width: 3px !important;
+        box-shadow: 0 8px 20px rgba(217, 119, 6, 0.4) !important;
+    }
+
+    .status-btn.active-non-applicable {
+        background-color: #475569 !important; /* Deeper Slate */
+        border-color: #1e293b !important;
+        border-width: 3px !important;
+    }
+
+    /* Force White Text on Active State */
+    [class*='active-'] span {
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Hide Original Icon when Active to avoid double checkmarks */
+    [class*='active-'] .icon-box {
+        display: none !important;
+    }
+
+    /* Make text larger when icons are hidden */
+    [class*='active-'] .text-center {
+        transform: scale(1.2);
+        transition: transform 0.2s ease;
     }
 
     .standard-card {
@@ -161,8 +268,7 @@
             width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            touch-action: none;
-            /* Prevent browser swipe-to-refresh */
+            overscroll-behavior-y: none; /* Prevent browser swipe-to-refresh */
         }
 
         .wizard-container {
@@ -228,7 +334,8 @@
             min-height: 0 !important;
             display: flex !important;
             flex-direction: column !important;
-            overflow: hidden !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
 
         #criteria-container>div {
@@ -236,104 +343,161 @@
             display: flex !important;
             flex-direction: column !important;
             margin-bottom: 0 !important;
-            border-radius: 8px !important;
+            border-radius: 12px !important;
         }
 
         .grid-cols-1.lg\:grid-cols-12 {
             display: flex !important;
             flex-direction: column !important;
-            height: 100% !important;
+            min-height: 100% !important;
+            justify-content: space-between !important;
         }
 
         .lg\:col-span-8 {
-            padding: 0.5rem !important;
-            flex-grow: 0 !important;
+            padding: 0.75rem !important;
+            flex-grow: 1 !important;
             display: flex !important;
             flex-direction: column !important;
+            justify-content: center !important; /* Center the questions vertically */
         }
 
-        .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.2rem !important; }
+        .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
         .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.2rem !important; }
-        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.2rem !important; }
+        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
 
-        #item-title { font-size: 1.1rem !important; margin-top: 0 !important; margin-bottom: 0 !important; }
-        #item-description { font-size: 0.8rem !important; line-height: 1.2 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.2rem !important; }
+        #item-title { font-size: 1.2rem !important; margin-top: 0 !important; margin-bottom: 0 !important; }
+        #item-description { font-size: 0.85rem !important; line-height: 1.2 !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.2rem !important; }
 
         hr.border-slate-50 { display: none !important; }
-
         label.text-\[10px\] { display: none !important; }
 
+        /* Glassmorphism Info Boxes - COMPACT (Participant & Preuves) */
+        .mb-4.bg-indigo-50\/50, #preuve-attendu-container {
+            margin-bottom: 0.2rem !important;
+            padding: 0.3rem 0.5rem !important;
+            border-radius: 10px !important;
+            backdrop-filter: blur(4px) !important;
+            background: rgba(238, 242, 255, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        }
+        #preuve-attendu-container {
+            gap: 0.3rem !important;
+        }
+        
+        .mb-4.bg-indigo-50\/50 .w-8, #preuve-attendu-container .w-8 { width: 20px !important; height: 20px !important; flex-shrink: 0 !important; }
+        #preuve-attendu-container .w-8 i { width: 12px !important; height: 12px !important; }
+        
+        .mb-4.bg-indigo-50\/50 p.text-\[10px\], #preuve-attendu-container p.text-\[10px\] { font-size: 7px !important; margin-bottom: -2px !important; }
+        .mb-4.bg-indigo-50\/50 p.text-sm { font-size: 0.75rem !important; font-weight: 600 !important; margin-bottom: 0 !important; }
+
+        /* Small Square Cotation Buttons */
         .grid.grid-cols-2 {
             display: flex !important;
-            flex-wrap: nowrap !important;
-            gap: 0.2rem !important;
-            overflow-x: auto !important;
-            padding-bottom: 2px !important;
-            scrollbar-width: none !important;
-        }
-
-        .grid.grid-cols-2::-webkit-scrollbar {
-            display: none !important;
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
         }
 
         .status-btn {
-            padding: 0.4rem !important;
-            width: 80px !important;
-            height: 80px !important;
-            flex: 0 0 auto !important; /* Don't stretch */
-            border-radius: 8px !important;
+            padding: 0.2rem !important;
+            width: 65px !important;
+            height: 65px !important;
+            border-radius: 12px !important;
             justify-content: center !important;
             flex-direction: column !important;
-            gap: 0.2rem !important;
+            gap: 0.1rem !important;
             align-items: center !important;
+            min-height: 0 !important;
+            outline: none !important;
+            background-color: #ffffff;
+            border: 1px solid #f1f5f9;
+            flex: 0 0 65px !important;
+            cursor: pointer !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
-        .icon-box { width: 24px !important; height: 24px !important; margin-bottom: 0 !important; border-radius: 6px !important; }
-        .icon-box svg { width: 14px !important; height: 14px !important; }
-        .status-btn span.font-bold { font-size: 0.65rem !important; line-height: 1 !important; }
+        .icon-box { 
+            width: 22px !important; 
+            height: 22px !important; 
+            margin-bottom: 0 !important; 
+            border-radius: 6px !important;
+            background: #f8fafc !important;
+        }
+        .icon-box svg { width: 12px !important; height: 12px !important; }
+        .status-btn span.font-bold { font-size: 0.65rem !important; line-height: 1 !important; color: #334155 !important; }
+        .status-btn span.text-\[10px\] { font-size: 7px !important; color: #94a3b8 !important; }
+
+        /* Custom Range Slider Styling */
+        #step-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #2563eb;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+            border: 3px solid white;
+        }
+
+        #step-range::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #2563eb;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+            border: 3px solid white;
+        }
 
         .lg\:col-span-4 {
-            padding: 0.2rem !important;
-            background: transparent !important;
-            border-top: 1px solid #eee !important;
+            padding: 0.5rem !important;
+            background: #f8fafc !important;
+            border-top: 1px solid #e2e8f0 !important;
+            flex-grow: 0 !important;
         }
 
         /* Action Buttons Row on Mobile */
         #action-buttons-wrapper {
             flex-direction: row !important;
+            gap: 0.4rem !important;
         }
 
         .action-panel-btn {
             flex: 1 !important;
-            padding: 0.4rem 0.5rem !important;
-            border-radius: 8px !important;
-            min-height: 36px !important;
+            padding: 0.5rem !important;
+            border-radius: 10px !important;
+            min-height: 40px !important;
             justify-content: center !important;
             border-width: 1px !important;
+            background-color: #fff !important;
         }
 
-        .action-panel-btn .w-8 { width: 20px !important; height: 20px !important; }
-        .action-panel-btn svg { width: 12px !important; height: 12px !important; }
-        .action-panel-btn span.font-bold { font-size: 0.8rem !important; margin-left: 4px !important; }
+        .action-panel-btn .w-8 { display: none !important; } /* Hide circle to save space */
+        .action-panel-btn span.font-bold { font-size: 0.85rem !important; margin-left: 0 !important; }
         #comment-chevron, #proof-chevron { display: none !important; }
 
         #bottom-nav-container {
-            margin-top: auto !important;
-            padding: 0.5rem !important;
-            background: #fff !important;
-            border-top: 1px solid #e2e8f0 !important;
+            margin-top: 0.5rem !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border-top: none !important;
             flex-shrink: 0 !important;
+            gap: 0.5rem !important;
         }
         
         button#prevBtn, button#nextBtn, button#finishBtn {
-            padding: 0.4rem 0.8rem !important;
-            font-size: 0.8rem !important;
-            border-radius: 8px !important;
-            height: 38px !important;
+            padding: 0.6rem 1rem !important;
+            font-size: 0.9rem !important;
+            border-radius: 10px !important;
+            height: 42px !important;
+            flex: 1 !important;
+            justify-content: center !important;
         }
         button#prevBtn svg, button#nextBtn svg, button#finishBtn svg { width: 16px !important; height: 16px !important; }
         
-        #save-indicator { font-size: 0.7rem !important; margin-right: 0 !important; }
+        #save-indicator { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem !important; }
     }
 </style>
 {% endblock %}
@@ -343,15 +507,22 @@
     <div class="max-w-6xl mx-auto space-y-4">
 
         <!-- 🔝 SIMPLE HEADER -->
-        <div class="standard-card p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-            <div class="space-y-1 text-center md:text-left">
-                <h1 class="text-xl font-bold text-slate-800">{{ resultat.sujet }}</h1>
-                <p class="text-slate-400 font-medium text-xs flex items-center justify-center md:justify-start gap-2">
-                    <i data-lucide="map-pin" class="w-3 h-3"></i>
-                    {{ resultat.site|default:"Site Industriel" }}
-                    <span class="mx-2 text-slate-200">|</span>
-                    <span class="font-bold">ID #{{ resultat.id }}</span>
-                </p>
+        <div class="standard-card p-4 md:p-6 flex items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'liste_audit_list' %}" 
+                   class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-6-6 6-6"/></svg>
+                </a>
+                <div class="space-y-0.5">
+                    <h1 class="text-lg md:text-xl font-black text-slate-800 leading-tight">{{ resultat.sujet }}</h1>
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i data-lucide="map-pin" class="w-3 h-3"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">{{ resultat.site.name }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-400 rounded-full border border-slate-100 shrink-0">
+                <span class="text-[10px] font-black uppercase tracking-tight">ID #{{ resultat.id }}</span>
             </div>
 
             <div class="flex items-center gap-8">
@@ -362,12 +533,12 @@
             </div>
         </div>
 
-        <!-- 🧭 MINIMALIST STEPPER -->
-        <div class="relative py-4">
-            <div class="step-line"></div>
-            <div id="stepper-dots"
-                class="flex items-center justify-between px-2 relative z-10 no-scrollbar overflow-x-auto gap-4">
-                <!-- Dots injected via JS -->
+        <!-- 🧭 RANGE STEPPER -->
+        <div class="relative py-2 px-2">
+            <div class="flex items-center">
+                <input type="range" id="step-range" min="1" max="{{ details|length }}" value="1" 
+                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    oninput="handleRangeChange(this.value)">
             </div>
         </div>
 
@@ -416,18 +587,21 @@
                 <!-- Criterion Header -->
                 <div class="space-y-3">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span
-                            class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded uppercase tracking-widest border border-blue-100"
-                            id="item-chapitre">CHAPITRE</span>
-                        <span
-                            class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black rounded uppercase tracking-widest border border-slate-200 flex items-center gap-2">
-                            <span id="item-norme">NORME</span>
-                            <a id="item-ref-link" href="#" target="_blank"
-                                class="text-blue-600 hover:text-blue-800 transition-colors hidden"
-                                title="Voir la référence">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
-                            </a>
-                        </span>
+                        <a id="item-chapitre-link" href="#" target="_blank" class="text-decoration-none">
+                            <span
+                                class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded uppercase tracking-widest border border-blue-100 hover:bg-blue-100 transition-all cursor-pointer"
+                                id="item-chapitre">CHAPITRE</span>
+                        </a>
+                        <a id="item-norme-link" href="#" target="_blank" class="text-decoration-none">
+                            <span
+                                class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded uppercase tracking-widest border border-blue-100 flex items-center gap-2 hover:bg-blue-100 transition-all cursor-pointer"
+                                id="item-norme-badge">
+                                <span id="item-norme">NORME</span>
+                                <div id="item-ref-icon" class="hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                                </div>
+                            </span>
+                        </a>
                     </div>
                     <h2 class="text-2xl font-black text-slate-800 leading-tight" id="item-title">Titre du critère</h2>
                     <p class="text-base text-slate-500 font-medium leading-relaxed" id="item-description">Description...
@@ -438,13 +612,48 @@
 
                 <!-- Status Selection -->
                 <div class="space-y-4">
+                    <!-- PARTICIPANT DISPLAY -->
+                    {% if resultat.audit.participants.all %}
+                    <div class="mb-4 bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Participant(s)</p>
+                            <p class="text-sm font-bold text-slate-700 leading-tight">
+                                {% for p in resultat.audit.participants.all %}
+                                    {{ p.get_full_name|default:p.username }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Preuves Attendues (Dynamic JS Injection) -->
+                    <div id="preuve-attendu-container" class="hidden mb-4 bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                        </div>
+                        <div class="w-full">
+                            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Preuve(s) attendue(s)</p>
+                            <div id="preuve-attendu-list" class="flex flex-wrap gap-1.5 mt-0.5">
+                            </div>
+                        </div>
+                    </div>
+
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Évaluation du
                         critère</label>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 items-start auto-rows-max">
                         {% for cot in cotations %}
-                        <button type="button" id="btn-{{ cot.content|lower|slugify }}"
+                        <button type="button" 
+                            data-status="{{ cot.content|escapejs }}"
                             onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'))"
-                            class="status-btn flex flex-col items-center justify-center p-4 md:p-5 transition-all group h-fit min-h-[100px] md:max-h-[140px]">
+                            class="status-btn relative flex flex-col items-center justify-center p-4 md:p-5 transition-all group h-fit min-h-[100px] md:max-h-[140px]">
+                            
+                            <!-- Selection Checkmark Overlay -->
+                            <div class="absolute top-1 right-1 w-5 h-5 bg-white rounded-full opacity-0 group-[[class*='active-']]:opacity-100 flex items-center justify-center shadow-sm transition-opacity z-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 text-emerald-600"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
 
                             <div
                                 class="icon-box group-[.active-conforme]:bg-emerald-100 group-[.active-excellent]:bg-emerald-100 group-[.active-partiellement-conforme]:bg-amber-100 group-[.active-partiel]:bg-amber-100 group-[.active-non-conforme]:bg-rose-100 group-[.active-mauvais]:bg-rose-100 group-[.active-non-applicable]:bg-slate-200">
@@ -491,10 +700,35 @@
                         {% endfor %}
                     </div>
                 </div>
+
+                <!-- ✅ Saved Preview Strip — compact horizontal row -->
+                <div id="saved-preview-strip" class="hidden mt-2 rounded-xl border border-slate-100 bg-slate-50 flex items-center gap-2 px-3 py-2">
+                    <div id="saved-obs-preview" class="hidden items-center gap-1.5 flex-1 min-w-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <p id="saved-obs-text" class="text-xs text-slate-600 font-medium truncate"></p>
+                    </div>
+                    <div id="saved-file-preview" class="hidden shrink-0">
+                        <img id="saved-file-img" class="w-11 h-11 object-cover rounded-lg border border-slate-200" alt="Justificatif">
+                    </div>
+                </div>
+
+                <!-- 📱 Mobile-only: Obs/Justif buttons (hidden on desktop) -->
+                <div class="flex gap-2 mt-3 md:hidden">
+                    <button type="button" onclick="toggleObservation()"
+                        class="action-panel-btn flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span class="text-sm font-bold text-slate-700">Observations</span>
+                    </button>
+                    <button type="button" onclick="toggleProof()"
+                        class="action-panel-btn flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        <span class="text-sm font-bold text-slate-700">Justificatifs</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- RIGHT COLUMN (35%) -->
-            <div class="lg:col-span-4 bg-slate-50/50 p-6 md:p-8 space-y-6">
+            <!-- RIGHT COLUMN (35%) — hidden on mobile, shown on desktop -->
+            <div class="lg:col-span-4 bg-slate-50/50 p-6 md:p-8 space-y-6 hidden md:block">
                 <!-- Action Buttons -->
                 <div class="space-y-3">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:block">Informations
@@ -566,8 +800,6 @@
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -575,12 +807,65 @@
     </div>
 </template>
 
+<!-- 📱 Mobile Bottom Sheets (Observations & Justificatifs) -->
+<div id="mobile-panel-overlay" class="mobile-panel-overlay" onclick="closeMobilePanel()"></div>
+
+<div id="mobile-obs-sheet" class="mobile-panel-sheet">
+    <div class="mobile-panel-sheet-handle"></div>
+    <div class="mobile-panel-sheet-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Observations
+    </div>
+    <textarea id="mobile-obs-input" rows="5" onchange="syncObsFromSheet()"
+        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none text-sm font-medium placeholder:text-slate-400"
+        placeholder="Détaillez vos observations..."></textarea>
+    <button onclick="closeMobilePanel()" class="mt-3 w-full py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm">Confirmer</button>
+</div>
+
+<div id="mobile-proof-sheet" class="mobile-panel-sheet">
+    <div class="mobile-panel-sheet-handle"></div>
+    <div class="mobile-panel-sheet-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        Justificatifs
+    </div>
+    <div id="mobile-proof-area" class="w-full h-36 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-3 bg-white relative overflow-hidden">
+        <div id="mobile-file-options" class="flex items-center gap-4">
+            <div class="relative">
+                <input type="file" accept="image/*" capture="camera" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleMobileFileSelect(this)">
+                <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-xl flex flex-col items-center justify-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <span class="text-[9px] font-black uppercase">Appareil</span>
+                </div>
+            </div>
+            <div class="relative">
+                <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleMobileFileSelect(this)">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex flex-col items-center justify-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    <span class="text-[9px] font-black uppercase">Galerie</span>
+                </div>
+            </div>
+        </div>
+        <span id="mobile-file-label" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center px-4">Preuve photo</span>
+        <div id="mobile-file-preview" class="hidden absolute inset-0 bg-white z-20 group/preview p-1">
+            <img id="mobile-preview-img" class="w-full h-full object-cover rounded-xl border border-slate-100">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button type="button" onclick="clearMobileFile(event)" class="p-2 bg-rose-500 text-white rounded-lg shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <button onclick="closeMobilePanel()" class="mt-3 w-full py-2.5 bg-purple-600 text-white rounded-xl font-bold text-sm">Confirmer</button>
+</div>
+
 <!-- Data for JS -->
 <script type="application/json" id="details-data">
     [
         {% for d in details %}
-        {"id": {{ d.id }},"critere":"{{ d.critere|escapejs }}","sous_critere":"{{ d.sous_critere|escapejs }}","chapitre":"{{ d.chapitre_norme|escapejs }}","norme":"{{ d.norme|escapejs }}","cotation":"{{ d.cotation|default:'' }}","commentaire":"{{ d.commentaire|escapejs }}","value": {{ d.value|stringformat:"f"|default:"0" }},"has_file": {% if d.justificatif %}true{% else %}false{% endif %},"file_url":"{% if d.justificatif %}{{ d.justificatif.url }}{% endif %}","text_ref_url":"{{ d.text_ref_url|default:'' }}"
+        {% with active_url=d.dynamic_text_ref_url|default:d.text_ref_url %}
+        {"id": {{ d.id }},"critere":"{{ d.critere|escapejs }}","sous_critere":"{{ d.sous_critere|escapejs }}","chapitre":"{{ d.chapitre_norme|escapejs }}","chapitre_id": {{ d.chapitre_id|default:"null" }},"norme":"{{ d.norme|escapejs }}","text_ref_id": {{ d.text_ref_id|default:"null" }},"cotation":"{{ d.cotation|default:'' }}","commentaire":"{{ d.commentaire|escapejs }}","value": {{ d.value|stringformat:"f"|default:"0" }},"preuves_attendues": [{% for p in d.preuves_attendues %}"{{ p|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],"has_file": {% if d.justificatif %}true{% else %}false{% endif %},"file_url":"{% if d.justificatif %}{{ d.justificatif.url }}{% endif %}","text_ref_url":"{{ active_url|default:'' }}{% if d.pdf_page and active_url %}#page={{ d.pdf_page }}{% endif %}"
         }{% if not forloop.last %},{% endif %}
+        {% endwith %}
         {% endfor %}
     ]
 </script>
@@ -596,50 +881,44 @@
     const totalSteps = detailsData.length;
 
     function init() {
-        // Recovery of last session step
-        const savedStep = localStorage.getItem(`audit_{{ resultat.id }}_step`);
-        if (savedStep !== null && !isNaN(savedStep)) {
-            currentStep = parseInt(savedStep);
-            if (currentStep >= totalSteps) currentStep = 0;
+        // Recovery of last edited step (Prioritized)
+        const lastEdited = localStorage.getItem(`audit_{{ resultat.id }}_last_edited`);
+        const lastViewed = localStorage.getItem(`audit_{{ resultat.id }}_step`);
+        
+        if (lastEdited !== null && !isNaN(lastEdited)) {
+            currentStep = parseInt(lastEdited);
+        } else if (lastViewed !== null && !isNaN(lastViewed)) {
+            currentStep = parseInt(lastViewed);
         } else {
             // Default to first non-evaluated step
             const firstEmpty = detailsData.findIndex(d => !d.cotation);
             if (firstEmpty !== -1) currentStep = firstEmpty;
         }
 
+        if (currentStep >= totalSteps) currentStep = 0;
+
         renderStepper();
         renderStep();
         lucide.createIcons();
     }
 
-    function renderStepper() {
-        const container = document.getElementById('stepper-dots');
-        container.innerHTML = '';
-        detailsData.forEach((d, index) => {
-            const dot = document.createElement('div');
-            dot.className = `step-indicator ${getStepClass(index)}`;
-
-            if (detailsData[index].cotation && index !== currentStep) {
-                dot.innerHTML = '<i data-lucide="check" ></i>';
-            } else {
-                dot.innerText = index + 1;
-            }
-
-            dot.onclick = () => {
-                if (index <= currentStep || detailsData[index - 1]?.cotation) {
-                    currentStep = index;
-                    renderStep();
-                }
-            };
-            container.appendChild(dot);
-        });
-        lucide.createIcons();
+    function handleRangeChange(value) {
+        const index = parseInt(value) - 1;
+        // Allow navigation if going backwards, or if the previous step has been completed
+        if (index <= currentStep || (index > 0 && detailsData[index - 1]?.cotation)) {
+            currentStep = index;
+            renderStep();
+        } else {
+            // Revert slider visually if not allowed
+            renderStepper();
+        }
     }
 
-    function getStepClass(index) {
-        if (index === currentStep) return 'active';
-        if (detailsData[index].cotation) return 'completed';
-        return 'pending';
+    function renderStepper() {
+        const range = document.getElementById('step-range');
+        if (range) {
+            range.value = currentStep + 1;
+        }
     }
 
     function renderStep() {
@@ -647,11 +926,63 @@
         const container = document.getElementById('criteria-container');
         const template = document.getElementById('criterion-template');
 
-        // Persist current step session
+        // Persist current step session (for temporary navigation)
         localStorage.setItem(`audit_{{ resultat.id }}_step`, currentStep);
 
         container.innerHTML = '';
         const clone = template.content.cloneNode(true);
+
+        const chapLink = clone.getElementById('item-chapitre-link');
+        const chapBadge = clone.getElementById('item-chapitre');
+        
+        if (d.text_ref_url) {
+            chapLink.href = d.text_ref_url;
+            chapLink.title = `Ouvrir le chapitre à la page ${d.pdf_page || 1}`;
+            chapBadge.classList.replace('bg-slate-50', 'bg-blue-50');
+            chapBadge.classList.replace('text-slate-400', 'text-blue-600');
+            chapBadge.style.opacity = '1';
+        } else if (d.chapitre_id) {
+            // No PDF URL but we have a Chapter ID
+            chapLink.href = "javascript:void(0)";
+            chapLink.onclick = () => alert("Aucun document PDF n'est lié à ce chapitre dans la bibliothèque.");
+            chapLink.title = "Document PDF manquant";
+            chapBadge.classList.replace('bg-slate-50', 'bg-blue-50');
+            chapBadge.classList.replace('text-slate-400', 'text-blue-600');
+            chapBadge.style.opacity = '1';
+        } else {
+            chapLink.style.pointerEvents = 'none';
+            chapBadge.classList.replace('bg-blue-50', 'bg-slate-50');
+            chapBadge.classList.replace('text-blue-600', 'text-slate-400');
+            chapBadge.style.opacity = '0.6';
+        }
+
+        const normLink = clone.getElementById('item-norme-link');
+        const refIcon = clone.getElementById('item-ref-icon');
+        const normBadge = clone.getElementById('item-norme-badge');
+        
+        if (d.text_ref_url) {
+            normLink.href = d.text_ref_url;
+            normLink.title = "Ouvrir la norme (PDF)";
+            refIcon.classList.remove('hidden');
+            normBadge.classList.replace('bg-slate-50', 'bg-blue-50');
+            normBadge.classList.replace('text-slate-400', 'text-blue-600');
+            normBadge.style.opacity = '1';
+        } else if (d.text_ref_id) {
+            // No PDF URL but we have a TextRef ID
+            normLink.href = "javascript:void(0)";
+            normLink.onclick = () => alert("Aucun document PDF n'est lié à cette norme dans la bibliothèque.");
+            normLink.title = "Document PDF manquant";
+            normBadge.classList.replace('bg-slate-50', 'bg-blue-50');
+            normBadge.classList.replace('text-slate-400', 'text-blue-600');
+            normBadge.style.opacity = '1';
+            refIcon.classList.add('hidden');
+        } else {
+            normLink.style.pointerEvents = 'none';
+            normBadge.classList.replace('bg-blue-50', 'bg-slate-50');
+            normBadge.classList.replace('text-blue-600', 'text-slate-400');
+            normBadge.style.opacity = '0.6';
+            refIcon.classList.add('hidden');
+        }
 
         clone.getElementById('item-chapitre').innerText = d.chapitre || 'AUTRE';
         clone.getElementById('item-norme').innerText = d.norme || '-';
@@ -664,6 +995,20 @@
         clone.getElementById('item-title').innerText = d.critere;
         clone.getElementById('item-description').innerText = d.sous_critere;
 
+        // Render preuves attendues
+        const preuvesContainer = clone.getElementById('preuve-attendu-container');
+        const preuvesList = clone.getElementById('preuve-attendu-list');
+        if (d.preuves_attendues && d.preuves_attendues.length > 0) {
+            preuvesContainer.classList.remove('hidden');
+            preuvesList.innerHTML = '';
+            d.preuves_attendues.forEach(preuve => {
+                const span = document.createElement('span');
+                span.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-slate-600 border border-slate-200 shadow-sm';
+                span.innerText = preuve;
+                preuvesList.appendChild(span);
+            });
+        }
+
         // Restore values
         const obsValue = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
         clone.getElementById('observation-input').value = obsValue;
@@ -671,8 +1016,7 @@
         // Update selection states
         if (d.cotation) {
             const safeStatus = d.cotation.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            const btnId = 'btn-' + safeStatus;
-            const targetBtn = clone.getElementById(btnId);
+            const targetBtn = clone.querySelector(`[data-status="${d.cotation}"]`);
             if (targetBtn) targetBtn.classList.add('active-' + safeStatus);
         }
 
@@ -686,10 +1030,8 @@
             // Auto expand proof if file exists
             clone.getElementById('proof-container').classList.add('expanded');
             clone.getElementById('proof-chevron').style.transform = 'rotate(180deg)';
-        }
-
-        // Auto expand observation if content exists
-        if (obsValue && obsValue !== '') {
+        } else if (obsValue && obsValue !== '') {
+            // Auto expand observation ONLY IF no file exists (Accordion priority)
             clone.getElementById('observation-container').classList.add('expanded');
             clone.getElementById('comment-chevron').style.transform = 'rotate(180deg)';
         }
@@ -703,43 +1045,164 @@
 
         updateNavigationState();
         updateProgress();
+        // Refresh saved preview strip
+        updateSavedPreview(d);
         lucide.createIcons();
     }
 
+    function updateSavedPreview(d) {
+        const strip = document.getElementById('saved-preview-strip');
+        const obsPreview = document.getElementById('saved-obs-preview');
+        const obsText = document.getElementById('saved-obs-text');
+        const filePreview = document.getElementById('saved-file-preview');
+        const fileImg = document.getElementById('saved-file-img');
+        if (!strip) return;
+
+        const hasObs = d.commentaire && d.commentaire !== 'None' && d.commentaire.trim() !== '';
+        const hasFile = d.has_file && d.file_url;
+
+        if (hasObs) {
+            obsPreview.classList.remove('hidden');
+            obsText.textContent = d.commentaire;
+        } else {
+            obsPreview.classList.add('hidden');
+        }
+
+        if (hasFile) {
+            filePreview.classList.remove('hidden');
+            fileImg.src = d.file_url;
+        } else {
+            filePreview.classList.add('hidden');
+        }
+
+        strip.classList.toggle('hidden', !hasObs && !hasFile);
+    }
+
+    const isMobile = () => window.innerWidth < 768;
+    let mobileSelectedFile = null; // Stores file selected from mobile sheet
+
+    function openMobileSheet(sheetId) {
+        document.getElementById('mobile-panel-overlay').classList.add('active');
+        document.getElementById(sheetId).classList.add('active');
+    }
+
+    function closeMobilePanel() {
+        document.getElementById('mobile-panel-overlay').classList.remove('active');
+        document.getElementById('mobile-obs-sheet').classList.remove('active');
+        document.getElementById('mobile-proof-sheet').classList.remove('active');
+        // Sync obs back to hidden input inside criteria clone
+        const obsInput = document.getElementById('observation-input');
+        const mobileObs = document.getElementById('mobile-obs-input');
+        if (obsInput && mobileObs) obsInput.value = mobileObs.value;
+        // Fire-and-forget save
+        saveStep(false);
+    }
+
+    function syncObsFromSheet() {
+        const obsInput = document.getElementById('observation-input');
+        const mobileObs = document.getElementById('mobile-obs-input');
+        if (obsInput && mobileObs) obsInput.value = mobileObs.value;
+    }
+
+    function handleMobileFileSelect(input) {
+        if (input.files && input.files[0]) {
+            mobileSelectedFile = input.files[0]; // Store for saveStep
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('mobile-file-preview').classList.remove('hidden');
+                document.getElementById('mobile-preview-img').src = e.target.result;
+                // Also update preview inside the criteria clone if it exists
+                const mainPreview = document.getElementById('file-preview-container');
+                const mainImg = document.getElementById('file-preview-img');
+                if (mainPreview) mainPreview.classList.remove('hidden');
+                if (mainImg) mainImg.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function clearMobileFile(e) {
+        if (e) e.stopPropagation();
+        document.getElementById('mobile-file-preview').classList.add('hidden');
+        clearFile(null);
+    }
+
     function toggleObservation() {
-        const container = document.getElementById('observation-container');
-        const chevron = document.getElementById('comment-chevron');
-        const isExpanded = container.classList.toggle('expanded');
-        chevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (isMobile()) {
+            // Sync current obs value into sheet
+            const obsInput = document.getElementById('observation-input');
+            const mobileObs = document.getElementById('mobile-obs-input');
+            if (mobileObs && obsInput) mobileObs.value = obsInput.value;
+            openMobileSheet('mobile-obs-sheet');
+            return;
+        }
+        // Desktop: original accordion behaviour
+        const obsContainer = document.getElementById('observation-container');
+        const proofContainer = document.getElementById('proof-container');
+        const obsChevron = document.getElementById('comment-chevron');
+        const proofChevron = document.getElementById('proof-chevron');
+        if (!obsContainer.classList.contains('expanded')) {
+            proofContainer.classList.remove('expanded');
+            if (proofChevron) proofChevron.style.transform = 'rotate(0deg)';
+        }
+        const isExpanded = obsContainer.classList.toggle('expanded');
+        if (obsChevron) obsChevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
     }
 
     function toggleProof() {
-        const container = document.getElementById('proof-container');
-        const chevron = document.getElementById('proof-chevron');
-        const isExpanded = container.classList.toggle('expanded');
-        chevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (isMobile()) {
+            // Sync current file preview state into sheet
+            const d = detailsData[currentStep];
+            if (d.has_file && d.file_url) {
+                document.getElementById('mobile-file-preview').classList.remove('hidden');
+                document.getElementById('mobile-preview-img').src = d.file_url;
+            } else {
+                document.getElementById('mobile-file-preview').classList.add('hidden');
+            }
+            openMobileSheet('mobile-proof-sheet');
+            return;
+        }
+        // Desktop: original accordion behaviour
+        const obsContainer = document.getElementById('observation-container');
+        const proofContainer = document.getElementById('proof-container');
+        const obsChevron = document.getElementById('comment-chevron');
+        const proofChevron = document.getElementById('proof-chevron');
+        if (!proofContainer.classList.contains('expanded')) {
+            obsContainer.classList.remove('expanded');
+            if (obsChevron) obsChevron.style.transform = 'rotate(0deg)';
+        }
+        const isExpanded = proofContainer.classList.toggle('expanded');
+        if (proofChevron) proofChevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
     }
 
     async function setStatus(status, value) {
         const d = detailsData[currentStep];
+        const trimmedStatus = status.trim();
 
-        // Prevent redundant saves if same status
-        if (d.cotation === status) return;
-
-        d.cotation = status;
-        d.value = value;
+        // Toggle behavior: if already selected, unselect it
+        if (d.cotation === trimmedStatus) {
+            d.cotation = null;
+            d.value = null;
+        } else {
+            d.cotation = trimmedStatus;
+            d.value = value;
+        }
 
         // Visual feedback immediately
         const buttons = document.querySelectorAll('.status-btn');
         buttons.forEach(b => {
-            // Reset to base classes only
-            b.className = 'status-btn flex flex-col items-center p-8 transition-all group';
+            [...b.classList].forEach(cls => {
+                if (cls.startsWith('active-')) b.classList.remove(cls);
+            });
         });
 
-        const safeStatus = status.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const btnId = 'btn-' + safeStatus;
-        const activeBtn = document.getElementById(btnId);
-        if (activeBtn) activeBtn.classList.add('active-' + safeStatus);
+        if (d.cotation) {
+            const safeStatus = d.cotation.toLowerCase().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const activeBtn = document.querySelector(`[data-status="${d.cotation}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active-' + safeStatus);
+            }
+        }
 
         updateNavigationState();
         renderStepper();
@@ -761,8 +1224,10 @@
     function updateProgress() {
         const completed = detailsData.filter(d => !!d.cotation).length;
         const percent = Math.round((completed / totalSteps) * 100);
-        document.getElementById('progress-bar').style.width = percent + '%';
-        document.getElementById('progress-text').innerText = percent + '%';
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        if (progressBar) progressBar.style.width = percent + '%';
+        if (progressText) progressText.innerText = percent + '%';
         renderStepper();
     }
 
@@ -787,19 +1252,26 @@
         const d = detailsData[currentStep];
         const obsInput = document.getElementById('observation-input');
         const obs = obsInput ? obsInput.value : '';
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        let selectedFile = null;
-        fileInputs.forEach(input => {
-            if (input.files && input.files[0]) selectedFile = input.files[0];
-        });
 
-        d.commentaire = obs;
+        // Check mobile obs too
+        const mobileObs = document.getElementById('mobile-obs-input');
+        const finalObs = (mobileObs && mobileObs.value) ? mobileObs.value : obs;
+
+        // File: prefer mobileSelectedFile, then fall back to DOM inputs
+        let selectedFile = mobileSelectedFile;
+        if (!selectedFile) {
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                if (input.files && input.files[0]) selectedFile = input.files[0];
+            });
+        }
+
+        d.commentaire = finalObs;
 
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        formData.append('commentaire', obs);
-        formData.append('cotation', d.cotation);
-        formData.append('value', d.value);
+        formData.append('commentaire', finalObs);
+        formData.append('cotation', d.cotation || '');
+        formData.append('value', d.value || 0);
         if (selectedFile) {
             formData.append('justificatif', selectedFile);
         }
@@ -816,6 +1288,16 @@
             const data = await response.json();
             if (data.status === 'saved') {
                 document.getElementById('global-score').innerText = data.score.toFixed(1);
+                // Update local state
+                if (selectedFile) {
+                    d.has_file = true;
+                    if (data.file_url) d.file_url = data.file_url;
+                    mobileSelectedFile = null; // Clear after successful save
+                }
+                d.commentaire = finalObs;
+                localStorage.setItem(`audit_{{ resultat.id }}_last_edited`, currentStep);
+                // Refresh preview strip
+                updateSavedPreview(d);
                 return true;
             }
         } catch (err) {

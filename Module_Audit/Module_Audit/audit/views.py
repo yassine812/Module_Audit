@@ -592,9 +592,13 @@ class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
+        page_size = self.request.GET.get('page_size')
+        if page_size and page_size.isdigit():
+            return int(page_size)
+            
         user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
         if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
-            return 5
+            return 3
         return self.paginate_by
 
     def paginate_queryset(self, queryset, page_size):
@@ -762,10 +766,15 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
     template_name = "audit/typepreuve/typepreuve_confirm_delete.html"
     success_url = reverse_lazy("typepreuve_list")
 
-    def delete(self, request, *args, **kwargs):
+    def get_template_names(self):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            self.object = self.get_object()
+            return ["audit/typepreuve/typepreuve_delete_modal.html"]
+        return [self.template_name]
+
+    def form_valid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             try:
+                self.object = self.get_object()
                 self.object.delete()
                 return JsonResponse({'success': True})
             except ProtectedError:
@@ -773,13 +782,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
                     'success': False,
                     'message': "Ce type de preuve ne peut pas être supprimé car il est utilisé ailleurs."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            self.object = self.get_object()
-            return render(self.request, "audit/typepreuve/typepreuve_delete_modal.html", {'object': self.object})
-        return super().get(request, *args, **kwargs)
+        return super().form_valid(form)
 # =====================================================
 # LIST VIEW
 # =====================================================
@@ -1072,7 +1075,18 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["-id"]
+    ordering = ["id"]
+    paginate_by = 7
+
+    def get_paginate_by(self, queryset):
+        page_size = self.request.GET.get("page_size")
+        if page_size and page_size.isdigit():
+            return int(page_size)
+            
+        user_agent = self.request.META.get("HTTP_USER_AGENT", "").lower()
+        is_mobile = any(x in user_agent for x in ["mobi", "android", "iphone"])
+        return 4 if is_mobile else 7
+
 
 
 class FormulaireAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):
@@ -1267,23 +1281,92 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         details = list(self.object.detailresultataudit_set.all().order_by('id'))
         
-        # Prefetch preuves_attendues and page number to match by content
-        from .models import SousCritere
-        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme').prefetch_related('preuve_attendu').all()
+        import re
+        def norm(s):
+            if not s: return ""
+            # Remove all non-alphanumeric and underscores, then lowercase
+            return re.sub(r'[^a-zA-Z0-9]', '', str(s)).lower()
+
+        from .models import SousCritere, ChapitreNorme
+        from Organisation.models import ProcessusDoc
+        
+        # 0. Global Library Map (Aggressive normalization + Filename fallback)
+        all_docs = {}
+        for d in ProcessusDoc.objects.exclude(content=""):
+            if d.content:
+                url = d.content.url
+                # Map by DB record name
+                all_docs[norm(d.name)] = url
+                # Map by actual filename (without extension)
+                filename = d.content.name.split('/')[-1].split('.')[0]
+                all_docs[norm(filename)] = url
+
+        # 1. Global Chapter Documentation Map
+        global_chap_docs = {}
+        for ch in ChapitreNorme.objects.select_related('text_ref', 'text_ref__text_ref').all():
+            c_key = norm(ch.name)
+            url = ch.text_ref.text_ref.content.url if ch.text_ref and ch.text_ref.text_ref and ch.text_ref.text_ref.content else ""
+            if not url and ch.text_ref:
+                url = all_docs.get(norm(ch.text_ref.norme), "")
+            
+            if url:
+                global_chap_docs[c_key] = {'url': url, 'id': ch.id, 'text_ref_id': ch.text_ref.id if ch.text_ref else None, 'page': ch.page}
+
+        # 2. Map by Criterion + Sub-Criterion
+        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme', 'critere__chapitre_norme__text_ref__text_ref').all()
         sc_info_dict = {}
+        sc_content_map = {} # Secondary fallback by sub-criterion content only
+        
         for sc in sous_criteres:
             if sc.critere:
-                key = f"{sc.critere.name}____{sc.content}"
-                page = sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None
-                sc_info_dict[key] = {
-                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
-                    'page': page
-                }
+                c_norm = norm(sc.critere.name)
+                sc_norm = norm(sc.content)
+                key = f"{c_norm}____{sc_norm}"
                 
+                url = sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else ""
+                
+                if not url and sc.critere.chapitre_norme:
+                    # Try chapter name match in global map
+                    url = global_chap_docs.get(norm(sc.critere.chapitre_norme.name), {}).get('url', "")
+                
+                if not url and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref:
+                    # Try norme name match in global library
+                    url = all_docs.get(norm(sc.critere.chapitre_norme.text_ref.norme), "")
+
+                info = {
+                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
+                    'page': sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None,
+                    'chapitre_id': sc.critere.chapitre_norme.id if sc.critere.chapitre_norme else None,
+                    'text_ref_id': sc.critere.chapitre_norme.text_ref.id if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else None,
+                    'text_ref_url': url
+                }
+                sc_info_dict[key] = info
+                sc_content_map[sc_norm] = info
+
         for d in details:
-            info = sc_info_dict.get(f"{d.critere}____{d.sous_critere}", {'preuves': [], 'page': None})
-            d.preuves_attendues = info['preuves']
-            d.pdf_page = info['page']
+            c_lkp = norm(d.critere)
+            sc_lkp = norm(d.sous_critere)
+            lookup_key = f"{c_lkp}____{sc_lkp}"
+            
+            # Try primary match
+            info = sc_info_dict.get(lookup_key, {})
+            
+            # Fallback 1: By Sub-Criterion content alone
+            if not info.get('text_ref_url'):
+                info.update(sc_content_map.get(sc_lkp, {}))
+            
+            # Fallback 2: By Chapter Name
+            if not info.get('text_ref_url') and d.chapitre_norme:
+                ch_lkp = norm(d.chapitre_norme)
+                ch_info = global_chap_docs.get(ch_lkp, {})
+                if ch_info:
+                    info.update(ch_info)
+            
+            d.preuves_attendues = info.get('preuves', [])
+            d.pdf_page = info.get('page')
+            d.chapitre_id = info.get('chapitre_id')
+            d.text_ref_id = info.get('text_ref_id')
+            d.dynamic_text_ref_url = info.get('text_ref_url', "")
             
         context["details"] = details
         context["readonly"] = not self.object.en_cours
@@ -2107,35 +2190,42 @@ def get_formulaire_structure(request):
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # Group sous-critères by their parent critère
+    # 1. Get ALL Critères linked to this formulaire
+    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    
+    # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
         FormulaireSousCritere.objects
         .filter(formulaire=formulaire)
-        .select_related('sous_critere__critere__chapitre_norme__text_ref')
-        .order_by('sous_critere__critere__name', 'ordre')
+        .select_related('sous_critere')
+        .order_by('ordre')
     )
-
-    grouped = {}
+    
+    # Map sous-critères by critère ID
+    sc_by_critere = {}
     for fsc in fsc_qs:
-        sc = fsc.sous_critere
-        crit = sc.critere
-        key = crit.id
-        if key not in grouped:
-            grouped[key] = {
-                "critere_id": crit.id,
-                "critere_nom": crit.name,
-                "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
-                "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
-                "sous_criteres": []
-            }
-        grouped[key]["sous_criteres"].append({
-            "id": sc.id,
-            "nom": sc.content,
+        crit_id = fsc.sous_critere.critere_id
+        if crit_id not in sc_by_critere:
+            sc_by_critere[crit_id] = []
+        sc_by_critere[crit_id].append({
+            "id": fsc.sous_critere.id,
+            "nom": fsc.sous_critere.content,
+        })
+
+    # 3. Build the grouped structure
+    grouped = []
+    for crit in criteres:
+        grouped.append({
+            "critere_id": crit.id,
+            "critere_nom": crit.name,
+            "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
+            "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
     return JsonResponse({
         "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
-        "criteres": list(grouped.values())
+        "criteres": grouped
     }, safe=False)
 
 @transaction.atomic
@@ -2307,7 +2397,8 @@ def save_critere_inline(request):
     if request.method == "POST":
         name = request.POST.get("name")
         chapitre_id = request.POST.get("chapitre_id") or request.POST.get("chapitre_norme")
-        type_audit_id = request.POST.get("type_audit_id")
+        type_audit_id = request.POST.get("type_audit_id") or request.POST.get("type_audit")
+        formulaire_id = request.POST.get("formulaire")
         sous_criteres_json = request.POST.get("sous_criteres")
 
         if not name:
@@ -2319,8 +2410,15 @@ def save_critere_inline(request):
             # 1. Create the Critere
             critere = Critere.objects.create(
                 name=name,
-                chapitre_norme_id=chapitre_id if chapitre_id else None
+                chapitre_norme_id=chapitre_id if chapitre_id else None,
+                formulaire_id=formulaire_id if formulaire_id else None
             )
+
+            type_audits = request.POST.getlist("type_audit")
+            if type_audits:
+                critere.type_audit.set(type_audits)
+            elif type_audit_id:
+                critere.type_audit.add(type_audit_id)
 
             created_sc = []
             # 2. Add Sub-criteria
@@ -2368,11 +2466,19 @@ def update_critere_inline(request, pk):
             critere = Critere.objects.get(pk=pk)
             name = request.POST.get("name")
             chapitre_id = request.POST.get("chapitre_id") or request.POST.get("chapitre_norme")
+            formulaire_id = request.POST.get("formulaire")
+            
             if name:
                 critere.name = name
             if chapitre_id:
                 critere.chapitre_norme_id = chapitre_id
+            if formulaire_id:
+                critere.formulaire_id = formulaire_id
             critere.save()
+
+            type_audits = request.POST.getlist("type_audit")
+            if type_audits:
+                critere.type_audit.set(type_audits)
             return JsonResponse({"status": "success", "id": critere.id, "name": critere.name})
         except Critere.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Critère not found"}, status=404)

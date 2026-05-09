@@ -10,551 +10,571 @@
     margin-top: 1rem;
   }
 
-  /* MOBILE - FIT ENTIRE PAGE WITHOUT SCROLLING */
+  /* MOBILE - FIT ENTIRE PAGE WITHOUT SCROLLING (OPTIMIZED) */
   @media (max-width: 576px) {
 
-    /* Remove ALL margins and padding from body and html */
     html,
     body {
       margin: 0 !important;
       padding: 0 !important;
+      overflow-x: hidden;
     }
 
-    /* Container minimal padding - no top space */
-    .container-fluid {
-      padding: 0 4px 4px 4px !important;
-      margin-top: 0 !important;
+    .page-container {
+      height: 100vh !important;
+      overflow: hidden !important;
     }
 
-    .container-fluid.py-4 {
-      padding-top: 0 !important;
-      padding-bottom: 4px !important;
+    .page-content {
+      padding: 8px !important;
+      overflow-y: auto !important;
+      padding-bottom: 80px !important;
     }
 
-    .min-vh-100 {
-      min-height: auto !important;
-    }
-
-    .bg-light {
-      background: #f8f9fa !important;
-    }
-
-    /* Remove ALL space from content block - use negative margin to pull up */
+    /* Compact layout for Step 1 */
     #step-1 {
-      margin-top: -15px !important;
-      padding-top: 0 !important;
+      margin-top: -5px !important;
     }
 
-    form {
-      margin-top: 0 !important;
-      padding-top: 0 !important;
-    }
-
-    /* Hide stepper completely to save space */
-    .stepper-wrapper {
-      display: none !important;
-    }
-
-    .row.justify-content-center.mb-5 {
-      display: none !important;
-    }
-
-    /* Compact card - minimal spacing, no top margin */
     .card {
-      margin-top: 0 !important;
-      margin-bottom: 0.2rem !important;
-      border-radius: 6px !important;
-    }
-
-    .card-header {
-      padding: 0.2rem 0.3rem !important;
-    }
-
-    .card-header h5 {
-      font-size: 0.7rem !important;
-      margin: 0 !important;
-    }
-
-    .card-header span.bg-primary {
-      padding: 0.15rem !important;
-      margin-right: 0.2rem !important;
-    }
-
-    .card-header span.bg-primary i {
-      width: 10px !important;
-      height: 10px !important;
+      margin-bottom: 0 !important;
     }
 
     .card-body {
-      padding: 0.15rem 0.3rem !important;
+      padding: 0.5rem 0.8rem !important;
     }
 
-    /* Simplified grid layout */
+    /* 50% width for the first 4 fields */
     #step-1 .row {
-      margin-left: -0.15rem !important;
-      margin-right: -0.15rem !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      margin-left: -4px !important;
+      margin-right: -4px !important;
     }
 
     #step-1 .col-md-6,
     #step-1 .col-md-12 {
-      float: left !important;
-      padding-left: 0.15rem !important;
-      padding-right: 0.15rem !important;
-      min-height: 1px !important;
+      padding-left: 4px !important;
+      padding-right: 4px !important;
     }
 
     #step-1 .col-md-6 {
-      width: 50% !important;
+      flex: 0 0 50% !important;
+      max-width: 50% !important;
     }
 
     #step-1 .col-md-12 {
-      width: 100% !important;
-      clear: both !important;
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
     }
 
-    /* Clear floats */
-    #step-1 .row::after {
-      content: "" !important;
-      display: table !important;
-      clear: both !important;
-    }
-
-    /* Ensure form inputs are visible */
-    #step-1 input,
-    #step-1 select {
-      width: 100% !important;
-      display: block !important;
-    }
-
-    /* Ultra compact form elements */
     .form-group {
-      margin-bottom: 0.05rem !important;
+      margin-bottom: 0.5rem !important;
     }
 
     .form-label {
-      font-size: 0.6rem !important;
-      margin-bottom: 0 !important;
-      font-weight: 600 !important;
-      line-height: 1.2 !important;
+      font-size: 0.75rem !important;
+      margin-bottom: 4px !important;
+      font-weight: 700 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
+    /* Inputs: big enough to read, but compact */
     .form-control,
     .form-select,
     .custom-input,
     .select2-container--bootstrap4 .select2-selection--single {
-      height: 26px !important;
-      min-height: 26px !important;
-      font-size: 0.7rem !important;
-      padding: 0.1rem 0.25rem !important;
+      height: 38px !important;
+      min-height: 38px !important;
+      font-size: 0.85rem !important;
+      padding: 6px 10px !important;
     }
 
-    /* Row gaps minimal */
-    .row.g-4 {
-      --bs-gutter-y: 0.05rem !important;
-      --bs-gutter-x: 0.1rem !important;
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+      line-height: 36px !important;
+      padding-left: 10px !important;
     }
 
-    /* Sync button very compact */
+    /* Button */
     #btn-sync {
-      padding: 0.3rem !important;
-      font-size: 0.7rem !important;
-      margin-top: 0.3rem !important;
-      height: auto !important;
+      padding: 0.6rem !important;
+      font-size: 0.9rem !important;
+      margin-top: 0.5rem !important;
+      position: relative !important;
+      z-index: 10 !important;
+      pointer-events: auto !important;
     }
 
-    #btn-sync i {
-      width: 12px !important;
-      height: 12px !important;
-      margin-right: 0.25rem !important;
+    /* Ensure form-group doesn't block clicks */
+    .form-group {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    .card-header {
+      padding: 0.5rem 0.8rem !important;
+    }
+
+    .card-header h5 {
+      font-size: 0.95rem !important;
     }
 
     /* Footer bar fixed at bottom */
-    .footer-bar {
+    .footer-bar,
+    .page-footer {
       position: fixed !important;
       bottom: 0 !important;
       left: 0 !important;
       right: 0 !important;
-      padding: 0.3rem 0.4rem !important;
+      padding: 8px 12px !important;
       z-index: 1050 !important;
     }
 
-    .footer-bar .btn {
-      padding: 0.3rem 0.5rem !important;
-      font-size: 0.7rem !important;
-    }
-
-    .footer-bar small {
-      display: none !important;
-    }
-
-    /* Reduce bottom spacer */
-    form>div[style="height: 120px;"] {
-      height: 50px !important;
-    }
-
-    /* Error alerts compact */
-    .alert {
-      padding: 0.5rem !important;
-      font-size: 0.7rem !important;
-      margin-bottom: 0.5rem !important;
-    }
-
-    .alert i {
-      width: 16px !important;
-      height: 16px !important;
-    }
-
-    /* Step 2 - Better mobile organization */
-    #step-2 .d-flex.flex-column.flex-sm-row {
-      flex-direction: column !important;
-      gap: 0.5rem !important;
-    }
-
-    #step-2 h5 {
+    .page-footer button,
+    .page-footer a {
+      height: 36px !important;
       font-size: 0.85rem !important;
     }
 
-    #step-2 .btn-outline-primary {
-      font-size: 0.7rem !important;
-      padding: 0.3rem 0.5rem !important;
+    .footer-btn-container {
       width: 100% !important;
-    }
-
-    /* Structure - Clean card layout, everything stacked vertically */
-    #step-2-container .table {
-      display: block !important;
-      width: 100% !important;
-    }
-
-    #step-2-container .table thead {
-      display: none !important;
-    }
-
-    #step-2-container .table tbody {
-      display: block !important;
-      width: 100% !important;
-    }
-
-    /* Main criterion row - simple flex column */
-    #step-2-container .table tr.criterion-row-parent {
       display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-      border: 1px solid #dee2e6 !important;
-      border-radius: 8px !important;
-      margin-bottom: 0.5rem !important;
-      padding: 0.5rem !important;
-      background: white !important;
+      gap: 8px !important;
     }
+    .footer-btn-container .btn {
+      flex: 1 !important;
+      width: auto !important;
+    }
+  }
 
-    /* Hide original table cells, we'll rebuild with flex */
-    #step-2-container .table tr.criterion-row-parent>td {
-      display: none !important;
-    }
+  /* 🔥 CRITICAL FIX: Ensure buttons are NEVER blocked by other layers */
+  #btn-sync, 
+  .btn-primary, 
+  .btn-submit-form, 
+  .footer-btn-container .btn {
+    position: relative !important;
+    z-index: 9999 !important; /* Extremely high to beat any form-group/card overlays */
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
 
-    /* Show only the cells we need and reorganize */
-    #step-2-container .table tr.criterion-row-parent>td:first-child,
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(2),
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) {
-      display: flex !important;
-      width: 100% !important;
-      padding: 0 !important;
-      border: none !important;
-    }
+  /* Prevent containers from overlapping buttons */
+  .card, .form-group, .row {
+    z-index: 1;
+  }
 
-    /* Chevron row */
-    #step-2-container .table tr.criterion-row-parent>td:first-child {
-      justify-content: center !important;
-      padding-bottom: 0.3rem !important;
-      border-bottom: 1px solid #eee !important;
-      margin-bottom: 0.3rem !important;
-    }
+  .page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    position: relative;
+    z-index: 1;
+  }
 
-    /* Critere info row */
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(2) {
-      flex-direction: column !important;
-      align-items: center !important;
-      text-align: center !important;
-      margin-bottom: 0.5rem !important;
-    }
+  .page-content {
+    flex: 1;
+    padding: 12px;
+  }
 
-    /* Actions row - centered buttons */
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) {
-      flex-direction: row !important;
-      justify-content: center !important;
-      gap: 10px !important;
-      padding-top: 0.3rem !important;
-      border-top: 1px solid #eee !important;
-    }
+  .page-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 20px;
+    background: white;
+    border-top: 1px solid #eee;
+    z-index: 1000;
+    position: sticky;
+    bottom: 0;
+  }
 
-    /* Actions buttons */
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) .btn {
-      padding: 0.3rem 0.6rem !important;
-      font-size: 0.75rem !important;
-    }
+  .page-footer button,
+  .page-footer a {
+    height: 38px;
+    min-width: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+  }
 
-    #step-2-container .table tr.criterion-row-parent>td:nth-child(4) .btn i {
-      width: 14px !important;
-      height: 14px !important;
-    }
+  .swal2-container {
+    z-index: 200000 !important;
+  }
+  
+  /* Flat Enterprise Datagrid Styling (Zero Cards) - PREMIUM V2 */
+  .structure-grid-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 100%;
+    margin-top: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .structure-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0;
+  }
+  .structure-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    padding: 12px 16px;
+    border-bottom: 2px solid #f1f5f9;
+    text-align: left;
+  }
+  .structure-table tbody tr.critere-row {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s;
+  }
+  .structure-table tbody tr.critere-row:hover {
+    background: #f8fafc;
+  }
+  .structure-table tbody td {
+    padding: 10px 16px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #334155;
+  }
+  
+  /* Sub-Grid (Nested Tree Style) */
+  .sub-grid-row {
+    background: #f8fafc !important;
+  }
+  .sub-grid-container-cell {
+    padding: 0 !important;
+    background: #f8fafc;
+  }
+  .sub-grid-header {
+    background: #f8fafc;
+    padding: 4px 16px 4px 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .sub-grid-header span {
+    font-size: 9px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .sub-grid-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    background: transparent !important;
+    --bs-table-bg: transparent !important;
+  }
+  .sub-grid-table tr {
+    border-bottom: 1px solid #f1f5f9;
+    background: transparent !important;
+    --bs-table-bg: transparent !important;
+  }
+  .sub-grid-table tr:last-child {
+    border-bottom: none;
+  }
+  .sub-grid-table td {
+    padding: 8px 16px 8px 32px !important;
+    font-size: 12px;
+    color: #475569;
+    position: relative;
+    background: transparent !important;
+  }
+  .sub-grid-table td * {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
 
-    /* Sous-critères collapse row - below the card */
-    #step-2-container .table tr.collapse-row {
-      display: block !important;
-      width: 100% !important;
-      border: none !important;
-      background: #f8f9fa !important;
-      margin: -0.4rem 0 0.5rem 0 !important;
-      padding: 0.5rem !important;
-      border-radius: 0 0 8px 8px !important;
-    }
+  .badge-chapitre {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .badge-count {
+    background: #eff6ff;
+    color: #3b82f6;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid #dbeafe;
+  }
 
-    #step-2-container .table tr.collapse-row td {
-      display: block !important;
-      width: 100% !important;
-      padding: 0 !important;
-    }
+  .accordion-icon {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .accordion-icon.rotated {
+    transform: rotate(90deg);
+    color: #3b82f6;
+  }
+  
+  .action-btn-circle {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    color: #64748b;
+    background: transparent;
+    border: none;
+  }
+  .action-btn-circle:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+  .action-btn-circle.text-danger:hover {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+  
+  .form-check-input-sm {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    transition: all 0.2s;
+  }
+  .form-check-input-sm:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+  }
 
-    /* Nested sous-critère table */
-    #step-2-container .table .table-sm {
-      margin: 0 !important;
-      width: 100% !important;
-    }
-
-    #step-2-container .table .table-sm tr {
-      display: flex !important;
-      align-items: center !important;
-      padding: 0.4rem !important;
-      margin-bottom: 0.2rem !important;
-      background: white !important;
-      border-radius: 4px !important;
-    }
-
-    #step-2-container .table .table-sm td {
-      font-size: 0.8rem !important;
-      padding: 0 !important;
-    }
-
-    /* Critere cell - centered */
-    .critere-cell {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      gap: 4px !important;
-    }
-
-    .critere-cell strong {
-      font-size: 1rem !important;
-    }
-
-    .critere-cell .badge {
-      font-size: 0.75rem !important;
-      padding: 0.2rem 0.4rem !important;
-    }
-
-    .critere-cell small {
-      font-size: 0.75rem !important;
-      color: #666 !important;
-    }
-
-    /* Tout Cocher button */
-    .btn-xs {
-      padding: 0.3rem 0.6rem !important;
-      font-size: 0.7rem !important;
-    }
-
-    /* Enregistrer button */
-    #step-2 .btn-primary.px-5 {
-      padding: 0.8rem !important;
-      font-size: 0.9rem !important;
-      width: 100% !important;
-      border-radius: 20px !important;
-    }
+  .footer-btn-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 bg-light min-vh-100">
-  <!-- Stepper removed per request to let form move to top -->
-  <form method="post" novalidate id="form-audit">
-    {% csrf_token %}
+<div class="page-container bg-light">
+  <div class="page-content">
+    <!-- Stepper removed per request to let form move to top -->
+    <form method="post" novalidate id="form-audit">
+      {% csrf_token %}
 
-    <!-- STEP 1: Configuration Générale -->
-    <div id="step-1">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-white border-0 pt-3 pb-0 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <a href="{% url 'formulaire_list' %}"
-              class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0"
-              style="width: 32px !important; height: 32px !important; text-decoration: none;">
-              <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
-            </a>
-            <h5 class="fw-bold d-flex align-items-center mb-0" style="font-size: 0.85rem !important;">
-              Configuration Générale
-            </h5>
-          </div>
-        </div>
-        <div class="card-body px-4 pb-4 mt-3">
-          {% if form.errors %}
-          <div class="alert alert-danger rounded-3 p-3 mb-4 shadow-sm d-flex align-items-center">
-            <i data-lucide="alert-triangle" class="me-3"></i>
-            <div>
-              <span class="fw-bold">Erreur:</span> Veuillez corriger les erreurs ci-dessous.
-              {% if form.non_field_errors %}
-              <ul class="mb-0 mt-1 ">
-                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
-              </ul>
-              {% endif %}
+      <!-- STEP 1: Configuration Générale -->
+      <div id="step-1">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+          <div class="card-header bg-white border-0 pt-3 pb-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <a href="{% url 'formulaire_list' %}"
+                class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0"
+                style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
+              </a>
+              <h5 class="fw-bold d-flex align-items-center mb-0" style="font-size: 0.85rem !important;">
+                Configuration Générale
+              </h5>
             </div>
           </div>
-          {% endif %}
-
-          <div class="row g-4">
-            <!-- Row 1: Nom + Processus -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.name.id_for_label }}" class="form-label fw-bold  text-dark opacity-75 mb-2">Nom
-                  du Formulaire</label>
-                {{ form.name }}
-                {% if form.name.errors %}
-                <div class="text-danger  mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+          <div class="card-body px-4 pb-4 mt-3">
+            {% if form.errors %}
+            <div class="alert alert-danger rounded-3 p-3 mb-4 shadow-sm d-flex align-items-center">
+              <i data-lucide="alert-triangle" class="me-3"></i>
+              <div>
+                <span class="fw-bold">Erreur:</span> Veuillez corriger les erreurs ci-dessous.
+                {% if form.non_field_errors %}
+                <ul class="mb-0 mt-1 ">
+                  {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
                 {% endif %}
               </div>
             </div>
+            {% endif %}
 
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.processus.id_for_label }}"
-                  class="form-label fw-bold  text-dark opacity-75 mb-2">Processus</label>
-                {{ form.processus }}
-                {% if form.processus.errors %}
-                <div class="text-danger  mt-1">{% for error in form.processus.errors %}{{ error }}{% endfor %}
+            <div class="row g-4">
+              <!-- Row 1: Nom + Processus -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.name.id_for_label }}" class="form-label fw-bold  text-dark opacity-75 mb-2">Nom
+                    du Formulaire</label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                  <div class="text-danger  mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                  {% endif %}
                 </div>
-                {% endif %}
               </div>
-            </div>
 
-            <!-- Row 2: Type Audit + Type Equipement -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.type_audit.id_for_label }}"
-                  class="form-label fw-bold  text-dark opacity-75 mb-2">Type d'Audit</label>
-                {{ form.type_audit }}
-                {% if form.type_audit.errors %}
-                <div class="text-danger  mt-1">{% for error in form.type_audit.errors %}{{ error }}{% endfor %}
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.processus.id_for_label }}"
+                    class="form-label fw-bold  text-dark opacity-75 mb-2">Processus</label>
+                  {{ form.processus }}
+                  {% if form.processus.errors %}
+                  <div class="text-danger  mt-1">{% for error in form.processus.errors %}{{ error }}{% endfor %}
+                  </div>
+                  {% endif %}
                 </div>
-                {% endif %}
               </div>
-            </div>
 
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.type_equipement.id_for_label }}"
-                  class="form-label fw-bold  text-dark opacity-75 mb-2">Type équipement</label>
-                {{ form.type_equipement }}
-                {% if form.type_equipement.errors %}
-                <div class="text-danger  mt-1">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}
+              <!-- Row 2: Type Audit + Type Equipement -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.type_audit.id_for_label }}"
+                    class="form-label fw-bold  text-dark opacity-75 mb-2">Type d'Audit</label>
+                  {{ form.type_audit }}
+                  {% if form.type_audit.errors %}
+                  <div class="text-danger  mt-1">{% for error in form.type_audit.errors %}{{ error }}{% endfor %}
+                  </div>
+                  {% endif %}
                 </div>
-                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.type_equipement.id_for_label }}"
+                    class="form-label fw-bold  text-dark opacity-75 mb-2">Type équipement</label>
+                  {{ form.type_equipement }}
+                  {% if form.type_equipement.errors %}
+                  <div class="text-danger  mt-1">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Row 3: Section -->
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.section.id_for_label }}"
+                    class="form-label fw-bold  text-dark opacity-75 mb-2">Section concernée</label>
+                  {{ form.section }}
+                  {% if form.section.errors %}
+                  <div class="text-danger  mt-1">{% for error in form.section.errors %}{{ error }}{% endfor %}</div>
+                  {% endif %}
+                </div>
               </div>
             </div>
 
-            <!-- Row 3: Section -->
-            <div class="col-md-12">
-              <div class="form-group">
-                <label for="{{ form.section.id_for_label }}"
-                  class="form-label fw-bold  text-dark opacity-75 mb-2">Section concernée</label>
-                {{ form.section }}
-                {% if form.section.errors %}
-                <div class="text-danger  mt-1">{% for error in form.section.errors %}{{ error }}{% endfor %}</div>
-                {% endif %}
-              </div>
+
+
+            <div class="mt-4 d-flex justify-content-end">
+              <button type="button" id="btn-sync"
+                class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-flex align-items-center shadow-sm">
+                <i data-lucide="refresh-cw" class="me-2"></i> Synchroniser la structure
+              </button>
             </div>
           </div>
+        </div>
+      </div>
 
-
-
-          <div class="mt-5">
-            <button type="button" id="btn-sync"
-              class="btn btn-primary w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center shadow-sm">
-              <i data-lucide="refresh-cw" class="me-2"></i> Synchroniser la structure
-            </button>
+      <!-- STEP 2: Structure de l'Audit -->
+      <div id="step-2" style="display:none;">
+        <div class="section-title mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+          <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0 d-flex align-items-center gap-2">
+            <i data-lucide="layers" class="me-2 text-primary"></i>STRUCTURE DU FORMULAIRE
+          </h5>
+          
+          <div class="d-flex align-items-center gap-4 ms-auto">
+            <div class="d-none d-md-flex align-items-center gap-4 me-0">
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-primary fw-bold p-0 transition-all" id="selectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-check-double me-1"></i> Tout cocher
+                </button>
+                <div style="width: 1px; height: 12px; background: #e2e8f0;"></div>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none text-slate-500 hover-text-danger p-0 transition-all" id="deselectAllItems" style="font-size: 11px; letter-spacing: 0.3px;">
+                    <i class="fas fa-times me-1"></i> Tout décocher
+                </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- STEP 2: Structure de l'Audit -->
-    <div id="step-2" style="display:none;">
-      <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-4 mt-2 gap-3">
-        <div class="d-flex align-items-center">
-          <span class="bg-primary text-white p-2 rounded-3 me-3 shadow-sm">
-            <i data-lucide="list"></i>
-          </span>
-          <h5 class="fw-bold mb-0">Structure de l'Audit</h5>
+        <div id="step-2-container" class="structure-grid-container mb-4 overflow-hidden">
+          <table class="structure-table">
+            <thead>
+                <tr>
+                    <th style="width: 45px;" class="text-center"></th>
+                    <th>
+                        <div class="d-flex align-items-center gap-2">
+                            CRITÈRE
+                            <button type="button" class="action-btn-circle text-primary" id="btnAddCritere" title="Ajouter un critère" style="width: 20px; height: 20px;" onclick="openAddCritereModal()">
+                                <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+                            </button>
+                        </div>
+                    </th>
+                    <th style="width: 180px;">CHAPITRE</th>
+                    <th style="width: 140px;" class="text-center text-nowrap">SOUS-CRITÈRES</th>
+                    <th style="width: 120px;" class="text-end px-3">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="structureTableBody">
+                <tr>
+                  <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Chargement...</span>
+                    </div>
+                  </td>
+                </tr>
+            </tbody>
+          </table>
         </div>
-        <button type="button"
-          class="btn btn-outline-primary btn-sm rounded-pill px-4 py-2 fw-bold shadow-sm align-self-start align-self-sm-center"
-          onclick="openAddCritereModal()">
-          <i data-lucide="plus-circle" class="me-1"></i> Ajouter un Critère
-        </button>
+
+        <!-- Padding for footer -->
+        <div class="mb-5 pb-5"></div>
       </div>
 
-      <div id="step-2-container" class="mb-4">
-        <!-- Dynamic content will be injected here -->
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Chargement...</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Secondary Actions and Save Button -->
-      <div class="d-flex justify-content-between align-items-center mb-5 pb-5">
+  </div> <!-- Close page-content -->
 
-        <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-lg transform-hover">
-          <i data-lucide="check-circle" class="me-2"></i> Enregistrer tout le formulaire
-        </button>
-      </div>
+  <div class="page-footer">
+
+    <div class="footer-btn-container">
+      <a href="{% url 'formulaire_list' %}" class="btn btn-light fw-bold">Annuler</a>
+      <button type="submit" id="btn-submit-form"
+        class="btn btn-primary fw-bold shadow-sm">Enregistrer</button>
     </div>
-
-    <!-- Footer sticky bar (initially partially hidden or context-aware) -->
-    <div
-      class="footer-bar position-fixed bottom-0 start-0 w-100 bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center shadow-lg"
-      style="z-index: 1050; flex-wrap: wrap; gap: 10px;">
-      <div class="d-flex align-items-center ">
-        <i data-lucide="save" class="text-primary opacity-50 me-2"></i>
-        <small class="fw-medium text-dark">Prêt à enregistrer</small>
-      </div>
-      <div class="d-flex gap-2 gap-sm-3 flex-grow-1 flex-sm-grow-0 justify-content-end">
-        <a href="{% url 'formulaire_list' %}"
-          class="btn btn-light px-3 px-sm-4 py-2 rounded-3 fw-bold flex-grow-1 flex-sm-grow-0">Annuler</a>
-        <button type="submit" id="btn-submit-form"
-          class="btn btn-primary px-3 px-sm-4 py-2 rounded-3 fw-bold shadow-sm flex-grow-1 flex-sm-grow-0">Enregistrer</button>
-      </div>
-    </div>
-    <div style="height: 120px;"></div>
+  </div>
   </form>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const btnSync = document.getElementById('btn-sync');
-    const typeAuditSelect = document.getElementById('{{ form.type_audit.id_for_label }}');
-    const step1 = document.getElementById('step-1');
-    const step2 = document.getElementById('step-2');
-    const step2Container = document.getElementById('step-2-container');
+  function initFormulaireForm() {
+    const scope = document.getElementById('ajaxFormModalBody') || document;
+    const getEl = (id) => scope.querySelector('#modal-' + id) || scope.querySelector('#' + id) || document.getElementById(id);
+    
+    const btnSync = getEl('btn-sync');
+    const typeAuditSelect = getEl('{{ form.type_audit.id_for_label }}');
+    const step1 = getEl('step-1');
+    const step2 = getEl('step-2');
+    const step2Container = getEl('step-2-container');
+    
+    if (!btnSync || btnSync.dataset.initialized) return;
+    btnSync.dataset.initialized = 'true';
+
     // 1. Add classes first
-    document.querySelectorAll('#step-1 input:not([type="hidden"]), #step-1 select').forEach(el => {
+    const inputs = step1 ? step1.querySelectorAll('input:not([type="hidden"]), select') : document.querySelectorAll('#step-1 input:not([type="hidden"]), #step-1 select');
+    inputs.forEach(el => {
       el.classList.add(el.tagName === 'SELECT' ? 'form-select' : 'form-control', 'custom-input');
     });
 
-    const btnSubmit = document.getElementById('btn-submit-form');
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const btnSubmit = getEl('btn-submit-form');
+    const csrfTokenNode = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfTokenNode ? csrfTokenNode.value : '';
 
     // 2. Initialize Select2 on all select elements in Step 1
     if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
-      const $selects = $('#step-1 select');
+      const $step1 = $(getEl('step-1'));
+      const $selects = $step1.length ? $step1.find('select') : $('#step-1 select');
       $selects.each(function () {
         $(this).select2({
           theme: 'bootstrap4',
@@ -568,112 +588,84 @@
     // Get selected IDs from Django context
     let selectedScIds = {{ selected_sc_ids|default:"[]"|safe }};
     const isEdit = {{ is_edit|default:"false"|lower }};
-  const currentFormId = "{{ form.instance.pk|default:'' }}";
+    const currentFormId = "{{ form.instance.pk|default:'' }}";
 
-  function createCriterionCard(crit, index) {
-    let scHtml = '';
+  function createCriterionRow(crit, index) {
+    let scRowsHtml = '';
+    const scCount = crit.sous_criteres ? crit.sous_criteres.length : 0;
 
-    if (crit.sous_criteres.length > 0) {
+    if (scCount > 0) {
       crit.sous_criteres.forEach((sc, scIndex) => {
-        // If editing, only check if explicitly in selectedScIds.
-        // If new form, check all (or follow selectedScIds if any).
         const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
 
-        scHtml += `
-            <tr class="border-bottom hover-bg-light transition-all">
-              <td class="align-middle py-2 py-sm-3 border-0">
-                <label class="d-flex align-items-center cursor-pointer mb-0 w-100 px-2 px-sm-4" for="sc-${sc.id}">
-                  <input class="custom-checkbox sc-checkbox sc-crit-${crit.critere_id} me-3" type="checkbox" name="sous_criteres" value="${sc.id}" id="sc-${sc.id}" ${isChecked ? 'checked' : ''} data-crit-id="${crit.critere_id}" style="width: 1.3rem; height: 1.3rem; min-width: 1.3rem; margin: 0; position: relative;">
-                  <span class=" fw-bold me-2  opacity-50 d-none d-sm-inline" style="min-width: 40px;">${index + 1}.${scIndex + 1}</span>
-                  <span class="fw-medium text-dark" style="font-size: 0.9rem;">${sc.nom}</span>
-                </label>
+        scRowsHtml += `
+          <tr id="sc-item-${sc.id}">
+              <td>
+                  <div class="d-flex align-items-center justify-content-between" style="background: transparent !important;">
+                      <div class="d-flex align-items-center gap-3" style="background: transparent !important;">
+                          <input class="form-check-input form-check-input-sm sc-checkbox sc-crit-${crit.critere_id} sous-checkbox" 
+                                 type="checkbox" name="sous_criteres" value="${sc.id}" id="sc-${sc.id}" ${isChecked ? 'checked' : ''} 
+                                 data-crit-id="${crit.critere_id}">
+                          <div class="fw-medium text-slate-700" style="background: transparent !important;">${sc.nom}</div>
+                      </div>
+                      <div class="d-flex align-items-center gap-1" style="background: transparent !important;">
+                          <button type="button" class="action-btn-circle" onclick="window.editSousCritere(${sc.id})" title="Modifier">
+                              <i class="fas fa-pen" style="font-size: 11px;"></i>
+                          </button>
+                          <button type="button" class="action-btn-circle text-danger" onclick="window.deleteSousCritere(${sc.id})" title="Supprimer">
+                              <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
+                          </button>
+                      </div>
+                  </div>
               </td>
-              <td class="align-middle text-center py-2" style="width: 80px;">
-                <div class="d-flex justify-content-center gap-1">
-                  <button type="button" class="btn btn-sm btn-link text-info p-1" title="Modifier" onclick="window.editSousCritere(${sc.id})">
-                    <i data-lucide="edit" ></i>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-link text-danger p-1" title="Supprimer" onclick="window.deleteSousCritere(${sc.id})">
-                    <i data-lucide="trash-2" ></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `;
+          </tr>`;
       });
     } else {
-      scHtml = '<tr><td colspan="2" class="text-center py-4  opacity-50  font-italic">Aucun sous-critère</td></tr>';
+      scRowsHtml = `<tr><td class="text-center py-2 text-muted small italic">Aucun sous-critère défini</td></tr>`;
     }
 
-    const isCollapsed = true; // Always start collapsed
     return `
-        <!-- Main row -->
-        <tr class="cursor-pointer criterion-row-parent bg-white" 
-            data-toggle="collapse" 
-            data-target="#crit-collapse-${crit.critere_id}" 
-            aria-expanded="false"
-            style="transition: background-color 0.2s; border-left: 4px solid transparent;">
-          <td class="text-center align-middle" style="width: 40px;">
-            <i class="fas fa-chevron-right  transition-all accordion-icon" style="font-size: 0.9rem;"></i>
+      <tr class="critere-row" id="crit-item-${crit.critere_id}">
+          <td class="text-center" style="width: 45px;">
+              <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#crit-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
+                  <i class="fas fa-chevron-right accordion-icon"></i>
+              </button>
           </td>
-          <td class="align-middle py-2 py-sm-3">
-            <div class="critere-cell">
-              <div class="fw-bold text-dark d-flex align-items-center mb-1">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-none d-sm-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
-                  <i data-lucide="layers" ></i>
-                </div>
-                <div>
-                  <span style="font-size: 1.05rem;" class="me-1">Critère ${index + 1}:</span>
-                  <span class="d-sm-none badge bg-primary bg-opacity-10 text-primary me-2">${index + 1}</span>
-                  ${crit.critere_nom}
-                </div>
-              </div>
-              <div class="d-sm-none">
-                <div class="d-flex align-items-center">
-                  <span class="small fw-bold text-uppercase opacity-50 me-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">Chapitre:</span>
-                  <span class="badge bg-white border px-2 py-1 shadow-sm text-dark">${crit.chapitre}</span>
-                </div>
-              </div>
-            </div>
+          <td>
+              <div class="fw-bold text-slate-800">Critère ${index + 1}: ${crit.critere_nom}</div>
           </td>
-          <td class="align-middle text-center d-none d-sm-table-cell" style="width: 140px;">
-            <span class="badge bg-white border px-2 py-1 shadow-sm">${crit.chapitre}</span>
+          <td style="width: 180px;">
+              <span class="badge-chapitre">${crit.chapitre || 'N/A'}</span>
           </td>
-          <td class="text-center align-middle p-2" style="width: 100px; min-width: 100px;" onclick="event.stopPropagation();">
-            <div class="actions-cell">
-              <button type="button" class="btn btn-xs btn-outline-primary rounded-pill" onclick="toggleAllInCrit(${crit.critere_id})">Tout Cocher</button>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-link text-info p-1" title="Modifier" onclick="window.editCritere(${crit.critere_id})">
-                  <i data-lucide="edit" style="width:16px; height:16px;"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-link text-danger p-1" title="Supprimer" onclick="window.deleteCritere(${crit.critere_id})">
-                  <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
-                </button>
-              </div>
-            </div>
+          <td class="text-center" style="width: 140px;">
+              <span class="badge-count">${scCount}</span>
           </td>
-        </tr>
-        <!-- Hidden Sub-table row -->
-        <tr class="collapse-row">
-          <td colspan="4" class="p-0 border-0">
-            <div id="crit-collapse-${crit.critere_id}" class="collapse">
-              <div class="p-3 bg-light border-start border-primary border-4 ms-5 my-2 mb-4 rounded-end shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-                  <span class=" fw-bold text-uppercase " style="letter-spacing: 0.5px;">Sous-critères</span>
-                  <button type="button" class="btn btn-xs btn-primary rounded-pill px-2 py-0 fw-bold shadow-sm" style="font-size: 10px;" onclick="window.openAddSousCritereModal(${crit.critere_id})">
-                    <i data-lucide="plus-circle" class="me-1" ></i> Ajouter
+          <td class="text-end" style="width: 120px;">
+              <div class="d-flex justify-content-end align-items-center gap-1 pe-2">
+                  <button type="button" class="action-btn-circle" onclick="window.editCritere(${crit.critere_id})" title="Modifier">
+                      <i class="fas fa-pen" style="font-size: 11px;"></i>
                   </button>
-                </div>
-                <table class="table table-sm table-borderless bg-white rounded-3 overflow-hidden mb-0 shadow-sm">
-                  <tbody>
-                    ${scHtml}
-                  </tbody>
-                </table>
+                  <button type="button" class="action-btn-circle text-danger" onclick="window.deleteCritere(${crit.critere_id})" title="Supprimer">
+                      <i class="fas fa-trash" style="font-size: 11px;"></i>
+                  </button>
               </div>
-            </div>
           </td>
-        </tr>
-      `;
+      </tr>
+      <tr id="crit-collapse-${crit.critere_id}" class="collapse sub-grid-row">
+          <td colspan="5" class="sub-grid-container-cell">
+              <div class="sub-grid-header">
+                  <span>Sous-critères</span>
+                  <button type="button" class="action-btn-circle text-primary" style="width: 20px; height: 20px;" onclick="window.openAddSousCritereModal(${crit.critere_id})" title="Ajouter un sous-critère">
+                      <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+                  </button>
+              </div>
+              <table class="sub-grid-table">
+                  <tbody>
+                      ${scRowsHtml}
+                  </tbody>
+              </table>
+          </td>
+      </tr>`;
   }
 
   // New helper to toggle selection per Criteria
@@ -711,7 +703,7 @@
       return cookieValue;
     }
 
-    const csrf = getCookie('csrftoken') || '{{ csrf_token }}';
+    const csrfToken = getCookie('csrftoken') || '{{ csrf_token }}';
     const originalHtml = $btn.html();
 
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...');
@@ -722,7 +714,7 @@
       data: new FormData($form[0]),
       processData: false,
       contentType: false,
-      headers: { 'X-CSRFToken': csrf },
+      headers: { 'X-CSRFToken': csrfToken },
       success: function (data) {
         if (typeof data === 'string' && data.includes('<!DOCTYPE')) {
           alert("ERREUR SERVEUR: Page HTML reçue. Vérifiez la session.");
@@ -731,7 +723,7 @@
         }
 
         if (data.status === 'success') {
-          $('#ajaxFormModal').modal('hide');
+          $(getEl('ajaxFormModal')).modal('hide');
           Swal.fire({ icon: 'success', title: 'Enregistré', text: data.message, timer: 1500, showConfirmButton: false });
           if (window._ajaxModalSuccessCallback) window._ajaxModalSuccessCallback(data);
           else location.reload();
@@ -748,9 +740,9 @@
   });
 
   window.openAjaxFormModal = function (fetchUrl, title, submitUrl, successCallback, prefillFn = null) {
-    const $modal = $('#ajaxFormModal');
-    const $body = $('#ajaxFormModalBody');
-    const $title = $('#ajaxFormModalTitle');
+    const $modal = $(getEl('ajaxFormModal'));
+    const $body = $(getEl('ajaxFormModalBody'));
+    const $title = $(getEl('ajaxFormModalTitle'));
 
     window._ajaxModalSuccessCallback = successCallback;
 
@@ -788,16 +780,13 @@
 
         if (prefillFn) prefillFn($form[0]);
 
-        let $footerTarget = $form.find('.modal-body, .card-body, .p-4').last();
-        if (!$footerTarget.length) $footerTarget = $form;
-
-        $footerTarget.append(`
-          <div class="d-flex justify-content-end align-items-center gap-3 mt-4 pt-4 border-top">
+        // Clean the footer target and inject buttons into the explicit modal-footer
+        const $footer = $(getEl('ajaxFormModalFooter'));
+        $footer.html(`
             <button type="button" class="btn btn-link fw-bold text-decoration-none px-4" data-dismiss="modal">Annuler</button>
             <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm" id="btn-save-audit-modal-force" data-url="${submitUrl}" style="min-width: 150px; height: 45px;">
               <i data-lucide="save" class="me-2"></i> Enregistrer
             </button>
-          </div>
         `);
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -827,7 +816,21 @@
         });
       },
       (formNode) => {
-        // 1. Handle Type Audit
+        // Hide the Sous-Critères tab and header
+        const modalBody = formNode.closest('.modal-body') || document;
+        const tabsContainer = modalBody.querySelector('#critereTabs');
+        if (tabsContainer) {
+          const tabsHeader = tabsContainer.closest('.px-4');
+          if (tabsHeader) tabsHeader.style.setProperty('display', 'none', 'important');
+        }
+        const sousCriterePane = modalBody.querySelector('#souscritere');
+        if (sousCriterePane) {
+          sousCriterePane.style.setProperty('display', 'none', 'important');
+          // Remove from DOM to prevent any validation/submission issues
+          sousCriterePane.remove();
+        }
+
+        // Set values for context fields if they exist
         const typeAuditField = formNode.querySelector('[name="type_audit"]');
         if (typeAuditField && typeAuditSelect && typeAuditSelect.value) {
           const selectedValue = typeAuditSelect.value;
@@ -835,20 +838,31 @@
             jQuery(typeAuditField).val([selectedValue]).trigger('change');
           } else {
             typeAuditField.value = selectedValue;
-            for (let opt of typeAuditField.options) { if (opt.value === selectedValue) opt.selected = true; }
           }
-          const fg = typeAuditField.closest('.form-group') || typeAuditField.parentElement;
-          if (fg) fg.style.setProperty('display', 'none', 'important');
+        } else if (typeAuditSelect && typeAuditSelect.value) {
+          $(formNode).append(`<input type="hidden" name="type_audit" value="${typeAuditSelect.value}">`);
         }
 
-        // 2. Handle Formulaire Audit (Hide & Prefill)
         const formulaireField = formNode.querySelector('[name="formulaire"]');
-        if (formulaireField) {
-          if (currentFormId) formulaireField.value = currentFormId;
-          // Target the column container (usually .col-md-6) to hide label + field
-          const container = formulaireField.closest('.col-md-6') || formulaireField.closest('.form-group') || formulaireField.parentElement;
-          if (container) container.style.setProperty('display', 'none', 'important');
+        if (formulaireField && currentFormId) {
+          if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined' && jQuery(formulaireField).data('select2')) {
+            jQuery(formulaireField).val([currentFormId]).trigger('change');
+          } else {
+            formulaireField.value = currentFormId;
+          }
+        } else if (currentFormId) {
+          $(formNode).append(`<input type="hidden" name="formulaire" value="${currentFormId}">`);
         }
+
+        // Hide the fields
+        const fieldsToHide = ['type_audit', 'formulaire', 'ciblage'];
+        fieldsToHide.forEach(name => {
+          const el = formNode.querySelector(`[name="${name}"]`);
+          if (el) {
+            const container = el.closest('[class*="col-"], .form-group, .mb-3') || el.parentElement;
+            if (container) container.style.setProperty('display', 'none', 'important');
+          }
+        });
       }
     );
   };
@@ -859,11 +873,25 @@
       `/audit/critere/${id}/update-inline/`,
       () => btnSync.click(),
       (formNode) => {
+        // Hide the Sous-Critères tab and header
+        const modalBody = formNode.closest('.modal-body') || document;
+        const tabsContainer = modalBody.querySelector('#critereTabs');
+        if (tabsContainer) {
+          const tabsHeader = tabsContainer.closest('.px-4');
+          if (tabsHeader) tabsHeader.style.setProperty('display', 'none', 'important');
+        }
+        const sousCriterePane = modalBody.querySelector('#souscritere');
+        if (sousCriterePane) {
+          sousCriterePane.style.setProperty('display', 'none', 'important');
+          // Remove from DOM to prevent any validation/submission issues
+          sousCriterePane.remove();
+        }
+
         // Hide context fields during edit too
-        ['type_audit', 'formulaire'].forEach(name => {
+        ['type_audit', 'formulaire', 'ciblage'].forEach(name => {
           const el = formNode.querySelector(`[name="${name}"]`);
           if (el) {
-            const container = el.closest('.col-md-6') || el.closest('.col-md-12') || el.closest('.form-group') || el.parentElement;
+            const container = el.closest('[class*="col-"], .form-group, .mb-3') || el.parentElement;
             if (container) container.style.setProperty('display', 'none', 'important');
           }
         });
@@ -890,6 +918,15 @@
           .then(res => {
             if (res.status === 'success') {
               Swal.fire('Supprimé !', '', 'success');
+              
+              // 🚀 REMOVE FROM DOM IMMEDIATELY
+              const card = document.getElementById(`crit-item-${id}`);
+              if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+              }
+
               const syncBtn = document.getElementById('btn-sync');
               if (syncBtn) syncBtn.click();
             } else {
@@ -910,42 +947,35 @@
         if (syncBtn) syncBtn.click();
       },
       (formNode) => {
-        const validCritId = parseInt(critId);
+        const validCritId = critId;
+        const activeTaId = typeAuditSelect ? typeAuditSelect.value : "";
 
         // 1. Parent Criterion
-        let critInput = formNode.querySelector('[name="critere"]');
-        if (critInput) {
-            critInput.value = validCritId;
-            // If it's a select, hide its container. If it's hidden, it's already hidden.
-            if (critInput.tagName === 'SELECT') {
-                const container = critInput.closest('.col-md-6, .col-md-12, .form-group, .mb-3');
-                if (container) container.style.setProperty('display', 'none', 'important');
-            }
+        const critField = formNode.querySelector('[name="critere"], #id_critere');
+        if (critField) {
+          if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined' && jQuery(critField).data('select2')) {
+            jQuery(critField).val([validCritId]).trigger('change');
+          } else {
+            critField.value = validCritId;
+          }
+          const container = critField.closest('[class*="col-"], .form-group, .mb-3') || critField.parentElement;
+          if (container) container.style.setProperty('display', 'none', 'important');
         } else {
-            // Force create hidden if not found
-            const hiddenCrit = document.createElement('input');
-            hiddenCrit.type = 'hidden';
-            hiddenCrit.name = 'critere_id';
-            hiddenCrit.value = validCritId;
-            formNode.appendChild(hiddenCrit);
+          $(formNode).append(`<input type="hidden" name="critere" value="${validCritId}">`);
         }
 
         // 2. Type Audit
-        const taInput = formNode.querySelector('[name="type_audit"]');
-        const activeTaId = typeAuditSelect ? typeAuditSelect.value : "";
-        if (taInput && activeTaId) {
-            taInput.value = activeTaId;
-            if (taInput.tagName === 'SELECT') {
-                 const container = taInput.closest('.col-md-6, .col-md-12, .form-group, .mb-3');
-                 if (container) container.style.setProperty('display', 'none', 'important');
-            }
+        const taField = formNode.querySelector('[name="type_audit"], #id_type_audit');
+        if (taField && activeTaId) {
+          if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined' && jQuery(taField).data('select2')) {
+            jQuery(taField).val([activeTaId]).trigger('change');
+          } else {
+            taField.value = activeTaId;
+          }
+          const container = taField.closest('[class*="col-"], .form-group, .mb-3') || taField.parentElement;
+          if (container) container.style.setProperty('display', 'none', 'important');
         } else if (activeTaId) {
-            // Force create hidden if not found
-            const hiddenTa = document.createElement('input');
-            hiddenTa.type = 'hidden';
-            hiddenTa.name = 'type_audit';
-            hiddenTa.value = activeTaId;
-            formNode.appendChild(hiddenTa);
+          $(formNode).append(`<input type="hidden" name="type_audit" value="${activeTaId}">`);
         }
       }
     );
@@ -992,6 +1022,14 @@
           .then(res => {
             if (res.status === 'success') {
               Swal.fire('Supprimé !', '', 'success');
+              
+              // 🚀 REMOVE FROM DOM IMMEDIATELY
+              const item = document.getElementById(`sc-item-${id}`);
+              if (item) {
+                item.style.opacity = '0';
+                setTimeout(() => item.remove(), 300);
+              }
+
               btnSync.click();
             } else {
               Swal.fire('Erreur', res.message, 'error');
@@ -1039,42 +1077,23 @@
     fetch(`/audit/get-structure/?type_audit_id=${typeId}`)
       .then(response => response.json())
       .then(data => {
-        step2Container.innerHTML = '';
+        const tableBody = document.querySelector('#structureTableBody');
+        if (tableBody) tableBody.innerHTML = '';
 
         if (data.length === 0) {
-          step2Container.innerHTML = '<div class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</div>';
+          if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 ">Aucune structure trouvée pour ce type d\'audit.</td></tr>';
         } else {
-          let tableHtml = `
-              <div class="table-responsive rounded-4 shadow-sm border bg-white mb-4">
-                <table class="table table-hover mb-0 align-middle">
-                  <thead class="table-light   text-uppercase" style="letter-spacing: 0.5px;">
-                    <tr>
-                      <th style="width: 40px;" class="text-center"></th>
-                      <th>Critère</th>
-                      <th style="width: 140px;" class="text-center d-none d-sm-table-cell">Chapitre</th>
-                      <th style="width: 100px;" class="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="structureTableBody">
-            `;
+          let rowsHtml = '';
           data.forEach((crit, index) => {
-            tableHtml += createCriterionCard(crit, index);
+            rowsHtml += createCriterionRow(crit, index);
           });
-          tableHtml += `
-                  </tbody>
-                </table>
-              </div>
-            `;
-          step2Container.innerHTML = tableHtml;
+          if (tableBody) tableBody.innerHTML = rowsHtml;
         }
 
         // Show Step 2 without hiding Step 1
         step2.style.display = 'block';
 
-        // Update Stepper - Removed
-
-
-        btnSubmit.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
         step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         // Attach all listeners
@@ -1096,7 +1115,7 @@
   });
 
   // Auto-trigger sync in Edit Mode (if type_audit is already selected)
-  if (typeAuditSelect.value) {
+  if (isEdit && typeAuditSelect.value) {
     // Small delay to ensure everything is ready
     setTimeout(() => {
       btnSync.click();
@@ -1105,18 +1124,24 @@
 
   function attachSelectionListeners() {
     // Global Select
-    document.getElementById('global-select-all')?.addEventListener('click', () => {
+    const selectAllBtn = getEl('selectAllItems');
+    const deselectAllBtn = getEl('deselectAllItems');
+    
+    selectAllBtn?.addEventListener('click', () => {
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = true);
     });
 
-    // Global Deselect
-    document.getElementById('global-deselect-all')?.addEventListener('click', () => {
+    deselectAllBtn?.addEventListener('click', () => {
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = false);
     });
-
-    // Individual SC Checkbox - No longer needs to sync with a criterion-level Select All
   }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFormulaireForm);
+  } else {
+    initFormulaireForm();
+  }
 </script>
 
 <style>
@@ -1472,7 +1497,7 @@
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
   }
-  
+
   /* Hide redundant components in AJAX modals */
   #ajaxFormModalBody .modal-header,
   #ajaxFormModalBody .card-header,
@@ -1480,21 +1505,35 @@
   #ajaxFormModalBody .card-footer {
     display: none !important;
   }
-}
+
+  #ajaxFormModalBody .sc-wrapper {
+    padding: 10px !important;
+  }
+
+  #ajaxFormModalBody .sc-card {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  }
 </style>
 
 <!-- Ported Ajax Modal -->
 <div class="modal fade" id="ajaxFormModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content shadow-lg border-0 rounded-4">
+    <div class="modal-content shadow-lg border-0 rounded-4"
+      style="overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header border-0 pb-0 pt-4 px-4">
         <h5 class="modal-title fw-bold text-dark" id="ajaxFormModalTitle">...</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body bg-white mt-0" id="ajaxFormModalBody" style="min-height: 200px;">
+      <div class="modal-body bg-white mt-0 p-0" id="ajaxFormModalBody" style="overflow-y: auto; flex: 1;">
         <!-- Content loaded via AJAX -->
+      </div>
+      <div class="modal-footer border-top bg-white p-3" id="ajaxFormModalFooter"
+        style="display: flex; justify-content: flex-end; gap: 10px;">
+        <!-- Footer buttons injected here -->
       </div>
     </div>
   </div>

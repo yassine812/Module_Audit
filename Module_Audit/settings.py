@@ -154,3 +154,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'zerniyassine21@gmail.com'  # <-- METTEZ VOTRE EMAIL GMAIL ICI
 EMAIL_HOST_PASSWORD = 'rurr vmuf jcyq iosf'  # <-- METTEZ VOTRE MOT DE PASSE D'APPLICATION ICI
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Allow framing for PDF preview
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+# Permissive for local dev connection issues
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']

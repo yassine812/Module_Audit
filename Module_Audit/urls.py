@@ -24,10 +24,14 @@ from audit.views import DashboardView
 def root_redirect(request):
     return redirect('/audit/login/')
 
+from audit.views import serve_pdf
+from django.urls import re_path
+
 urlpatterns = [
     path('', root_redirect),
     path('admin/', admin.site.urls),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path("Organisation/", include("Organisation.urls")),
     path("audit/", include("audit.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    re_path(r'^processus_docs/(?P<path>.*)$', serve_pdf),
+]

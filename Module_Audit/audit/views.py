@@ -467,8 +467,6 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            data['simple_mode'] = True
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST)
         else:
@@ -491,8 +489,7 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
             if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
-                    'critere_id': self.object.id,
-                    'message': f"Le critère '{self.object.name}' a été créé avec succès."
+                    'message': f"Le critère '{self.object.name}' et ses sous-critères ont été créés avec succès."
                 })
             return redirect(self.success_url)
         else:
@@ -521,8 +518,6 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            data['simple_mode'] = True
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST, instance=self.object)
         else:
@@ -627,11 +622,6 @@ class SousCritereCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateVi
             return ["audit/souscritere/souscritere_form_modal.html"]
         return ["audit/souscritere/souscritere_form.html"]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['critere_id'] = self.request.GET.get('critere')
-        return context
-
     def form_valid(self, form):
         self.object = form.save()
         
@@ -668,11 +658,6 @@ class SousCritereUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateVi
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return ["audit/souscritere/souscritere_form_modal.html"]
         return ["audit/souscritere/souscritere_form.html"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['critere_id'] = self.request.GET.get('critere')
-        return context
 
     def form_valid(self, form):
         self.object = form.save()
@@ -1296,28 +1281,142 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         details = list(self.object.detailresultataudit_set.all().order_by('id'))
         
-        # Prefetch preuves_attendues and page number to match by content
-        from .models import SousCritere
-        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme').prefetch_related('preuve_attendu').all()
-        sc_info_dict = {}
-        for sc in sous_criteres:
-            if sc.critere:
-                key = f"{sc.critere.name}____{sc.content}"
-                page = sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None
-                sc_info_dict[key] = {
-                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
-                    'page': page
-                }
+        import re
+        def norm(s):
+            if not s: return ""
+            # Remove all non-alphanumeric and underscores, then lowercase
+            return re.sub(r'[^a-zA-Z0-9]', '', str(s)).lower()
+
+        from .models import SousCritere, ChapitreNorme
+        from Organisation.models import ProcessusDoc
+        
+        # 0. Global Library Map (Aggressive normalization + Filename fallback)
+        all_docs = {}
+        for d in ProcessusDoc.objects.exclude(content=""):
+            if d.content:
+                url = d.content.url
+                # Map by DB record name
+                all_docs[norm(d.name)] = url
+                # Map by actual filename (without extension)
+                filename = d.content.name.split('/')[-1].split('.')[0]
+                all_docs[norm(filename)] = url
+
+        # 1. Global Chapter Documentation Map
+        global_chap_docs = {}
+        for ch in ChapitreNorme.objects.select_related('text_ref', 'text_ref__text_ref').all():
+            c_key = norm(ch.name)
+            url = ch.text_ref.text_ref.content.url if ch.text_ref and ch.text_ref.text_ref and ch.text_ref.text_ref.content else ""
+            if not url and ch.text_ref:
+                url = all_docs.get(norm(ch.text_ref.norme), "")
                 
-        for d in details:
-            info = sc_info_dict.get(f"{d.critere}____{d.sous_critere}", {'preuves': [], 'page': None})
-            d.preuves_attendues = info['preuves']
-            d.pdf_page = info['page']
+            # Partial match fallback
+            if not url and ch.text_ref:
+                n_key = norm(ch.text_ref.norme)
+                for d_key, d_url in all_docs.items():
+                    if n_key.startswith(d_key) or d_key.startswith(n_key):
+                        url = d_url
+                        break
             
+            if not url:
+                for d_key, d_url in all_docs.items():
+                    if c_key.startswith(d_key) or d_key.startswith(c_key):
+                        url = d_url
+                        break
+            
+        # We pre-fetch everything to follow the exact chain requested
+        criteres_chain = Critere.objects.select_related(
+            'chapitre_norme', 
+            'chapitre_norme__text_ref', 
+            'chapitre_norme__text_ref__text_ref'
+        ).all()
+        
+        # Map by normalized names to match the snapshot data in Details
+        structural_map = {}
+        for c in criteres_chain:
+            c_key = norm(c.name)
+            ch_key = norm(c.chapitre_norme.name) if c.chapitre_norme else ""
+            
+            # Follow the chain: Critere -> Chapitre -> TextRef -> ProcessusDoc
+            url = ""
+            text_ref_id = None
+            chap_id = c.chapitre_norme.id if c.chapitre_norme else None
+            pdf_page = c.chapitre_norme.page if c.chapitre_norme else 1
+            
+            if c.chapitre_norme and c.chapitre_norme.text_ref:
+                tr = c.chapitre_norme.text_ref
+                text_ref_id = tr.id
+                if tr.text_ref and tr.text_ref.content:
+                    url = tr.text_ref.content.url
+            
+            if c_key:
+                structural_map[c_key] = {
+                    'url': url,
+                    'chap_id': chap_id,
+                    'text_ref_id': text_ref_id,
+                    'page': pdf_page
+                }
+
+        # 2. Map proofs (SousCritere)
+        sc_proofs = {}
+        for sc in SousCritere.objects.prefetch_related('preuve_attendu').all():
+            sc_proofs[norm(sc.content)] = list(sc.preuve_attendu.values_list('name', flat=True))
+
+        for d in details:
+            c_lkp = norm(d.critere)
+            sc_lkp = norm(d.sous_critere)
+            
+            # Get info from the strict structural chain
+            info = structural_map.get(c_lkp, {})
+            
+            url = info.get('url', "")
+            
+            # Fallback only if strict chain is missing: Fuzzy match in library by Norme name
+            if not url and d.norme:
+                n_norm = norm(d.norme)
+                for doc_name, doc_url in all_docs.items():
+                    if n_norm in doc_name or doc_name in n_norm:
+                        url = doc_url
+                        break
+            
+            # Fallback: Fuzzy match in library by Chapter name
+            if not url and d.chapitre_norme:
+                ch_norm = norm(d.chapitre_norme)
+                for doc_name, doc_url in all_docs.items():
+                    if ch_norm in doc_name or doc_name in ch_norm:
+                        url = doc_url
+                        break
+
+            d.preuves_attendues = sc_proofs.get(sc_lkp, [])
+            d.pdf_page = info.get('page', 1)
+            d.chapitre_id = info.get('chap_id')
+            d.text_ref_id = info.get('text_ref_id')
+            d.dynamic_text_ref_url = url
+            
+        # 4. Prepare serialized JSON for the frontend to prevent template errors
+        details_json = []
+        for d in details:
+            details_json.append({
+                "id": d.id,
+                "critere": d.critere,
+                "sous_critere": d.sous_critere,
+                "chapitre": d.chapitre_norme,
+                "chapitre_id": d.chapitre_id,
+                "norme": d.norme,
+                "text_ref_id": d.text_ref_id,
+                "cotation": d.cotation,
+                "commentaire": d.commentaire,
+                "value": float(d.value) if d.value else 0.0,
+                "preuves_attendues": d.preuves_attendues,
+                "has_file": bool(d.justificatif),
+                "file_url": d.justificatif.url if d.justificatif else "",
+                "pdf_page": getattr(d, 'pdf_page', 1),
+                "text_ref_url": (d.dynamic_text_ref_url or d.text_ref_url or "").replace('http://127.0.0.1:8000', '').replace('http://localhost:8000', '').replace('/media/processus_docs/', '/processus_docs/')
+            })
+
+        context["details_json"] = details_json
         context["details"] = details
         context["readonly"] = not self.object.en_cours
-        
-        # Fetch all available cotations for the wizard buttons
+        context["library_docs"] = [{"name": d.name, "url": d.content.url} for d in ProcessusDoc.objects.exclude(content="") if d.content]
         context["cotations"] = Cotation.objects.all().order_by('-valeur')
         return context
 
@@ -1580,8 +1679,7 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
             grouped_results.append({
                 'critere': {'text_ref': data['name'], 'chapitre_norme': {'text_ref': data['chapitre']}},
                 'details': data['details'],
-                'score': round(category_score, 3),
-                'score_percent': round(category_score * 100, 1)
+                'score': round(category_score, 1)
             })
 
         context["grouped_results"] = grouped_results
@@ -1727,9 +1825,12 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     model = ListeAudit
     template_name = "audit/listeaudit/liste_audit_list.html"
     context_object_name = "audits"
-    paginate_by = 8
+    paginate_by = 20
 
     def get_paginate_by(self, queryset):
+        user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
+        if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+            return 4
         return self.paginate_by
 
     def get_queryset(self):
@@ -1789,7 +1890,6 @@ class ListeAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         "date",
         "affectation",
         "participants",
-        "participants_externes",
     ]
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
@@ -1943,7 +2043,6 @@ class ListeAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         "date",
         "affectation",
         "participants",
-        "participants_externes",
     ]
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
@@ -2098,9 +2197,8 @@ def get_structure(request):
         criteres = Critere.objects.all().select_related('chapitre_norme__text_ref')
         
         # Get sous-critères for this type audit
-        # Include those linked directly OR via their parent Criterion
-        from django.db.models import Q
-        sous_criteres = SousCritere.objects.filter(Q(type_audit=type_id) | Q(critere__type_audit=type_id)).distinct()
+        # This handles the filter carefully
+        sous_criteres = SousCritere.objects.filter(type_audit=type_id)
 
         result = []
         for critere in criteres:
@@ -2111,14 +2209,10 @@ def get_structure(request):
                 "critere_nom": critere.name,
                 "norme": critere.chapitre_norme.text_ref.norme if critere.chapitre_norme and critere.chapitre_norme.text_ref else "Aucune",
                 "chapitre": critere.chapitre_norme.name if critere.chapitre_norme else "Aucun",
-                "chapitre_id": critere.chapitre_norme.id if critere.chapitre_norme else None,
                 "sous_criteres": [
                     {
                         "id": sc.id,
-                        "nom": sc.content,
-                        "reaction": sc.reaction,
-                        "type_cotation_id": sc.type_cotation.id if sc.type_cotation else None,
-                        "preuves_attendues_ids": list(sc.preuve_attendu.values_list('id', flat=True))
+                        "nom": sc.content
                     }
                     for sc in sc_list
                 ]
@@ -2141,43 +2235,42 @@ def get_formulaire_structure(request):
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # 1. Get SousCriteres linked via FormulaireSousCritere
+    # 1. Get ALL Critères linked to this formulaire
+    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    
+    # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
         FormulaireSousCritere.objects
         .filter(formulaire=formulaire)
-        .select_related('sous_critere__critere', 'sous_critere__type_cotation', 'sous_critere__critere__chapitre_norme')
-        .order_by('sous_critere__critere__name', 'ordre')
+        .select_related('sous_critere')
+        .order_by('ordre')
     )
     
-    # Group by Critere for the UI
-    criteres_dict = {}
+    # Map sous-critères by critère ID
+    sc_by_critere = {}
     for fsc in fsc_qs:
-        sc = fsc.sous_critere
-        crit = sc.critere
-        if crit.id not in criteres_dict:
-            criteres_dict[crit.id] = {
-                "critere_id": crit.id,
-                "critere_nom": crit.name,
-                "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
-                "sous_criteres": []
-            }
-        
-        criteres_dict[crit.id]["sous_criteres"].append({
-            "id": sc.id,
-            "nom": sc.content,
-            "cotation": sc.type_cotation.name if sc.type_cotation else "Standard"
+        crit_id = fsc.sous_critere.critere_id
+        if crit_id not in sc_by_critere:
+            sc_by_critere[crit_id] = []
+        sc_by_critere[crit_id].append({
+            "id": fsc.sous_critere.id,
+            "nom": fsc.sous_critere.content,
+        })
+
+    # 3. Build the grouped structure
+    grouped = []
+    for crit in criteres:
+        grouped.append({
+            "critere_id": crit.id,
+            "critere_nom": crit.name,
+            "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
+            "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
     return JsonResponse({
-        "id": formulaire.id,
-        "name": formulaire.name,
-        "type_audit_id": formulaire.type_audit_id,
-        "processus": formulaire.processus.name if formulaire.processus else "-",
-        "type_audit": formulaire.type_audit.name if formulaire.type_audit else "-",
-        "type_equipement": formulaire.type_equipement.name if formulaire.type_equipement else "-",
-        "sections": list(formulaire.section.values_list('name', flat=True)),
-        "date_creation": formulaire.date_creation.strftime("%d/%m/%Y %H:%M") if formulaire.date_creation else "-",
-        "criteres": list(criteres_dict.values())
+        "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
+        "criteres": grouped
     }, safe=False)
 
 @transaction.atomic
@@ -2657,3 +2750,14 @@ def get_formulaire_type_audit(request, formulaire_id):
         'type_audit_id': formulaire.type_audit.id if formulaire.type_audit else None,
         'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
     })
+
+
+from django.views.static import serve as static_serve
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.conf import settings
+
+@xframe_options_exempt
+def serve_pdf(request, path):
+    response = static_serve(request, path, document_root=settings.MEDIA_ROOT)
+    response["X-Frame-Options"] = "ALLOWALL"
+    return response

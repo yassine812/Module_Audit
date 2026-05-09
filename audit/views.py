@@ -1281,26 +1281,125 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         details = list(self.object.detailresultataudit_set.all().order_by('id'))
         
-        # Prefetch preuves_attendues and page number to match by content
-        from .models import SousCritere
-        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme').prefetch_related('preuve_attendu').all()
+        import re
+        def norm(s):
+            if not s: return ""
+            # Remove all non-alphanumeric and underscores, then lowercase
+            return re.sub(r'[^a-zA-Z0-9]', '', str(s)).lower()
+
+        from .models import SousCritere, ChapitreNorme
+        from Organisation.models import ProcessusDoc
+        
+        # 0. Global Library Map (Aggressive normalization + Filename fallback)
+        all_docs = {}
+        for d in ProcessusDoc.objects.exclude(content=""):
+            if d.content:
+                url = d.content.url
+                # Map by DB record name
+                all_docs[norm(d.name)] = url
+                # Map by actual filename (without extension)
+                filename = d.content.name.split('/')[-1].split('.')[0]
+                all_docs[norm(filename)] = url
+
+        # 1. Global Chapter Documentation Map
+        global_chap_docs = {}
+        for ch in ChapitreNorme.objects.select_related('text_ref', 'text_ref__text_ref').all():
+            c_key = norm(ch.name)
+            url = ch.text_ref.text_ref.content.url if ch.text_ref and ch.text_ref.text_ref and ch.text_ref.text_ref.content else ""
+            if not url and ch.text_ref:
+                url = all_docs.get(norm(ch.text_ref.norme), "")
+                
+            # Partial match fallback
+            if not url and ch.text_ref:
+                n_key = norm(ch.text_ref.norme)
+                for d_key, d_url in all_docs.items():
+                    if n_key.startswith(d_key) or d_key.startswith(n_key):
+                        url = d_url
+                        break
+            
+            if not url:
+                for d_key, d_url in all_docs.items():
+                    if c_key.startswith(d_key) or d_key.startswith(c_key):
+                        url = d_url
+                        break
+            
+            if url:
+                global_chap_docs[c_key] = {'url': url, 'id': ch.id, 'text_ref_id': ch.text_ref.id if ch.text_ref else None, 'page': ch.page}
+
+        # 2. Map by Criterion + Sub-Criterion
+        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme', 'critere__chapitre_norme__text_ref__text_ref').all()
         sc_info_dict = {}
+        sc_content_map = {} # Secondary fallback by sub-criterion content only
+        
         for sc in sous_criteres:
             if sc.critere:
-                key = f"{sc.critere.name}____{sc.content}"
-                page = sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None
-                sc_info_dict[key] = {
-                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
-                    'page': page
-                }
+                c_norm = norm(sc.critere.name)
+                sc_norm = norm(sc.content)
+                key = f"{c_norm}____{sc_norm}"
                 
+                url = sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else ""
+                
+                if not url and sc.critere.chapitre_norme:
+                    # Try chapter name match in global map
+                    url = global_chap_docs.get(norm(sc.critere.chapitre_norme.name), {}).get('url', "")
+                
+                if not url and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref:
+                    # Try norme name match in global library
+                    url = all_docs.get(norm(sc.critere.chapitre_norme.text_ref.norme), "")
+                
+                # 3. Intelligent Fallback (Partial matching)
+                if not url and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref:
+                    norme_norm = norm(sc.critere.chapitre_norme.text_ref.norme)
+                    for doc_name_norm, doc_url in all_docs.items():
+                        if norme_norm in doc_name_norm or doc_name_norm in norme_norm:
+                            url = doc_url
+                            break
+                
+                if not url and sc.critere.chapitre_norme:
+                    chap_norm = norm(sc.critere.chapitre_norme.name)
+                    for doc_name_norm, doc_url in all_docs.items():
+                        if chap_norm in doc_name_norm or doc_name_norm in chap_norm:
+                            url = doc_url
+                            break
+
+                info = {
+                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
+                    'page': sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None,
+                    'chapitre_id': sc.critere.chapitre_norme.id if sc.critere.chapitre_norme else None,
+                    'text_ref_id': sc.critere.chapitre_norme.text_ref.id if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else None,
+                    'text_ref_url': url
+                }
+                sc_info_dict[key] = info
+                sc_content_map[sc_norm] = info
+
         for d in details:
-            info = sc_info_dict.get(f"{d.critere}____{d.sous_critere}", {'preuves': [], 'page': None})
-            d.preuves_attendues = info['preuves']
-            d.pdf_page = info['page']
+            c_lkp = norm(d.critere)
+            sc_lkp = norm(d.sous_critere)
+            lookup_key = f"{c_lkp}____{sc_lkp}"
+            
+            # Try primary match
+            info = sc_info_dict.get(lookup_key, {})
+            
+            # Fallback 1: By Sub-Criterion content alone
+            if not info.get('text_ref_url'):
+                info.update(sc_content_map.get(sc_lkp, {}))
+            
+            # Fallback 2: By Chapter Name
+            if not info.get('text_ref_url') and d.chapitre_norme:
+                ch_lkp = norm(d.chapitre_norme)
+                ch_info = global_chap_docs.get(ch_lkp, {})
+                if ch_info:
+                    info.update(ch_info)
+            
+            d.preuves_attendues = info.get('preuves', [])
+            d.pdf_page = info.get('page')
+            d.chapitre_id = info.get('chapitre_id')
+            d.text_ref_id = info.get('text_ref_id')
+            d.dynamic_text_ref_url = info.get('text_ref_url', "")
             
         context["details"] = details
         context["readonly"] = not self.object.en_cours
+        context["library_docs"] = [{"name": d.name, "url": d.content.url} for d in ProcessusDoc.objects.exclude(content="") if d.content]
         
         # Fetch all available cotations for the wizard buttons
         context["cotations"] = Cotation.objects.all().order_by('-valeur')
