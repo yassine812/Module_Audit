@@ -1727,11 +1727,29 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         resultat = self.object
-        # Ensure score is recalculated for the report
         resultat.recalculate_score()
         
         details = resultat.detailresultataudit_set.all().order_by('id')
         
+        # Calculate Summary Counts for Teleperformance Table
+        # PF (Points Forts): value >= 1.0
+        # PS/AA (Points Sensibles): 0.0 < value < 1.0
+        # E (Ecarts): value == 0.0
+        # Ignore negative (N/A)
+        pf_count = 0
+        ps_count = 0
+        e_count = 0
+        
+        for d in details:
+            if d.value >= 1.0:
+                pf_count += 1
+            elif d.value > 0.0 and d.value < 1.0:
+                ps_count += 1
+            elif d.value == 0.0:
+                # Only count as Ecart if it was actually evaluated (cotation is not empty)
+                if d.cotation and not any(x in d.cotation.lower() for x in ['n/a', 'non applicable']):
+                    e_count += 1
+
         # Same grouping logic as detail view using CharField snapshot
         groups = {}
         for d in details:
@@ -1759,6 +1777,9 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
         context["grouped_results"] = grouped_results
         context["nb_criteres"] = len(grouped_results)
         context["readonly"] = True
+        context["pf_count"] = pf_count
+        context["ps_count"] = ps_count
+        context["e_count"] = e_count
         return context
 
 # =====================================================

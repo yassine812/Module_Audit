@@ -64,235 +64,387 @@
 {% block content %}
 <div class="report-body py-10 px-1 md:px-2">
 
-    <!-- 📄 HIDDEN PDF SPECIFIC STRUCTURE -->
-    <div id="pdf-content">
-        <div style="font-family: Arial, sans-serif; color: black; background: white;">
-            <!-- Header -->
-            <div style="text-align: center; border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 25px;">
-                <div style="font-size: 26px; font-weight: bold; letter-spacing: 2px;">RAPPORT D'AUDIT</div>
-                <div style="font-size: 18px; margin-top: 8px;">{{ resultat.sujet }}</div>
-            </div>
-
-            <!-- Info Table -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+    <!-- 📄 HIDDEN PDF SPECIFIC STRUCTURE (Refactored to match Teleperformance Design) -->
+    <div id="pdf-content" style="font-family: Arial, sans-serif; color: black; background: white; padding: 0;">
+        <div style="padding: 10px; border: 1px solid black; margin: 10px;">
+            
+            <!-- HEADER SECTION -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
                 <tr>
-                    <td style="padding: 10px; border: 1px solid black; width: 30%; font-weight: bold; background: white;">Auditeur(s)</td>
-                    <td style="padding: 10px; border: 1px solid black; width: 70%;">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Participant(s)</td>
-                    <td style="padding: 10px; border: 1px solid black;">
-                        {% for p in resultat.audit.participants.all %}
-                            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
-                        {% endfor %}
-                        {% if resultat.audit.participants_externes %}
-                            {{ resultat.audit.participants_externes }}
-                        {% endif %}
-                        {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}-{% endif %}
+                    <td style="width: 30%; border: 1px solid blue; text-align: center; padding: 10px;">
+                        <img src="{% static 'img/ab-serve-logo.png' %}" style="max-height: 50px; width: auto;">
                     </td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Site Audité</td>
-                    <td style="padding: 10px; border: 1px solid black;">{{ resultat.site|default:"-" }}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Référence / Date</td>
-                    <td style="padding: 10px; border: 1px solid black;">#{{ resultat.id }} | {{ resultat.date_audit|date:"d/m/Y" }}</td>
-                </tr>
-                {% if resultat.commentaire %}
-                <tr>
-                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Contexte de l'Audit</td>
-                    <td style="padding: 10px; border: 1px solid black; font-style: italic;">{{ resultat.commentaire }}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Performance Globale</td>
-                    <td style="padding: 10px; border: 1px solid black; font-size: 20px; font-weight: bold;">{{ resultat.score_audit|floatformat:"-3" }} <span style="font-size: 16px; color: #666; margin-left: 10px;">({{ resultat.score_percentage }}%)</span></td>
+                    <td style="width: 40%; border: 1px solid blue; background-color: #0000FF; color: white; text-align: center; font-size: 22px; font-weight: bold; padding: 10px;">
+                        RAPPORT D'AUDIT
+                    </td>
+                    <td style="width: 30%; border: 1px solid blue; font-size: 11px; padding: 5px;">
+                        <div style="border-bottom: 1px solid blue; padding-bottom: 2px;">Référence : AUD-{{ resultat.id }}</div>
+                        <div style="border-bottom: 1px solid blue; padding: 2px 0;">Page : 1 / 1</div>
+                        <div style="padding-top: 2px;">Indice : 0</div>
+                    </td>
                 </tr>
             </table>
 
-            <!-- Main Results Table -->
-            <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
+            <!-- AUDIT INFO -->
+            <div style="margin-bottom: 20px; line-height: 1.6;">
+                <div style="margin-bottom: 12px;">
+                    <span style="font-weight: bold; display: inline-block; width: 160px;">Auditeurs :</span>
+                    <span style="display: inline-block; vertical-align: top;">
+                        {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}
+                        {% for co in resultat.co_auditeur.all %}<br>{{ co.get_full_name|default:co.username }}{% endfor %}
+                    </span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="font-weight: bold; display: inline-block; width: 160px;">Département audité :</span>
+                    <span>{{ resultat.audit.section|default:"-" }}</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="font-weight: bold; display: inline-block; width: 160px;">Site :</span>
+                    <span style="font-weight: bold;">{{ resultat.site|default:"-" }}</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="font-weight: bold; display: inline-block; width: 160px;">Date d'audit :</span>
+                    <span style="font-weight: bold;">{{ resultat.date_audit|date:"d/m/y" }}</span>
+                </div>
+            </div>
+
+            <!-- TABLE 1: PROCESSUS AUDITÉS -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid black;">
                 <thead>
-                    <tr style="background: white;">
-                        <th style="padding: 12px; border: 1px solid black; text-align: left; width: 75%; font-size: 14px;">CRITÈRES D'AUDIT</th>
-                        <th style="padding: 12px; border: 1px solid black; text-align: right; width: 25%; font-size: 14px;">SCORE</th>
+                    <tr style="background-color: #0000FF; color: white; text-align: center; font-weight: bold; font-size: 13px;">
+                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Processus Audités</th>
+                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Sous processus</th>
+                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Procédures<br><span style="font-size: 9px; font-weight: normal;">(Nombre de procédures)</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for group in grouped_results %}
-                    <tr style="page-break-inside: avoid; background: white;">
-                        <td style="padding: 12px; border: 1px solid black; font-weight: bold; font-size: 14px;">
-                            CRITÈRE: {{ group.critere.text_ref }}
-                        </td>
-                        <td style="padding: 12px; border: 1px solid black; text-align: right; font-weight: bold; font-size: 14px;">
-                            {{ group.score|floatformat:"-2" }}
-                        </td>
+                    <tr style="font-size: 12px;">
+                        <td style="padding: 6px; border: 1px solid black;">{{ group.critere.text_ref|default:"-" }}</td>
+                        <td style="padding: 6px; border: 1px solid black;">-</td>
+                        <td style="padding: 6px; border: 1px solid black; text-align: center;">Toutes les procédures</td>
                     </tr>
-                    {% for d in group.details %}
-                    <tr style="page-break-inside: avoid;">
-                        <td style="padding: 12px 10px 12px 35px; border: 1px solid black; font-size: 13px; line-height: 1.5;">
-                            <div style="font-weight: bold; margin-bottom: 4px; color: #333;">Sous-critère: {{ d.sous_critere }}</div>
-                            
-                            {% if d.commentaire %}
-                            <div style="margin-top: 8px; padding: 8px; border-left: 3px solid black; font-size: 12px;">
-                                <strong>Observation:</strong> {{ d.commentaire }}
-                            </div>
-                            {% endif %}
-
-                            {% if d.justificatif or d.justificatif_bis %}
-                            <div style="margin-top: 10px; display: flex; gap: 15px;">
-                                {% if d.justificatif %}
-                                <div style="display: inline-block; text-align: center;">
-                                    <img src="{{ d.justificatif.url }}" style="width: 120px; height: auto; border: 1px solid black; display: block; margin-bottom: 4px;">
-                                    <span style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Preuve #1</span>
-                                </div>
-                                {% endif %}
-                                {% if d.justificatif_bis %}
-                                <div style="display: inline-block; text-align: center;">
-                                    <img src="{{ d.justificatif_bis.url }}" style="width: 120px; height: auto; border: 1px solid black; display: block; margin-bottom: 4px;">
-                                    <span style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Preuve #2</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 12px; border: 1px solid black; text-align: right; font-size: 13px; vertical-align: top;">
-                            {% if d.value >= 0 %}<strong>{{ d.value|floatformat:"-2" }}</strong>{% else %}-{% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>
 
-            <div style="margin-top: 25px; text-align: center; font-size: 10px; border-top: 1px solid black; padding-top: 8px;">
-                Document Officiel - Généré le {% now "d/m/Y H:i" %}
+            <div style="font-size: 12px; margin-bottom: 15px;">Tout au long de l'audit le M.O.E et les enregistrements qualité seront contrôlés.</div>
+
+            <!-- TABLE 2: PERSONNES AUDITÉES -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid black;">
+                <thead>
+                    <tr style="background-color: #0000FF; color: white; text-align: center; font-weight: bold; font-size: 13px;">
+                        <th style="padding: 6px; border: 1px solid black; width: 50%;">Nom des personnes auditées</th>
+                        <th style="padding: 6px; border: 1px solid black; width: 50%;">Fonction des personnes auditées</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in resultat.audit.participants.all %}
+                    <tr style="font-size: 12px;">
+                        <td style="padding: 6px; border: 1px solid black;">{{ p.get_full_name|default:p.username }}</td>
+                        <td style="padding: 6px; border: 1px solid black;">-</td>
+                    </tr>
+                    {% empty %}
+                    <tr style="font-size: 12px;">
+                        <td style="padding: 6px; border: 1px solid black;">{{ resultat.audites.all.0|default:"-" }}</td>
+                        <td style="padding: 6px; border: 1px solid black;">-</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- TABLE 3: SUMMARY -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 2px solid black;">
+                <tr style="font-size: 13px; font-weight: bold;">
+                    <td style="padding: 8px; border: 1px solid black; width: 60%;">Nombre de points forts</td>
+                    <td style="padding: 8px; border: 1px solid black; width: 20%; text-align: center;">(PF)</td>
+                    <td style="padding: 8px; border: 1px solid black; width: 20%; text-align: center; font-size: 15px;">
+                        {{ pf_count }}
+                    </td>
+                </tr>
+                <tr style="font-size: 13px; font-weight: bold;">
+                    <td style="padding: 8px; border: 1px solid black;">Nombre de points sensibles/Axes d'amélioration</td>
+                    <td style="padding: 8px; border: 1px solid black; text-align: center;">(PS/AA)</td>
+                    <td style="padding: 8px; border: 1px solid black; text-align: center; font-size: 15px;">{{ ps_count }}</td>
+                </tr>
+                <tr style="font-size: 13px; font-weight: bold;">
+                    <td style="padding: 8px; border: 1px solid black;">Nombre d'écarts</td>
+                    <td style="padding: 8px; border: 1px solid black; text-align: center;">(E)</td>
+                    <td style="padding: 8px; border: 1px solid black; text-align: center; font-size: 15px;">{{ e_count }}</td>
+                </tr>
+            </table>
+
+            <!-- SIGNATURE SECTION -->
+            <div style="border: 1px solid black; padding: 10px; margin-bottom: 15px; min-height: 60px;">
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 5px;">Signature des Auditeurs :</div>
+                <div style="font-size: 13px;">
+                    {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }} 
+                    {% if resultat.co_auditeur.exists %} / {% endif %}
+                    {% for co in resultat.co_auditeur.all %}{{ co.get_full_name|default:co.username }}{% if not forloop.last %} / {% endif %}{% endfor %}
+                </div>
             </div>
+
+            <!-- FOOTER -->
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid gray; font-size: 10px; color: #444;">
+                <tr>
+                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">Classé par : MAG / DO</td>
+                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">
+                        Archivé<br>Où : Bureau MAG<br>Par qui : MAG
+                    </td>
+                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">Durée : 2 Ans(s)</td>
+                </tr>
+            </table>
+
         </div>
     </div>
 
-    <!-- ORIGINAL UI LAYOUT -->
-    <div id="report-container" class="max-w-full space-y-6">
-        <div class="bg-white border border-slate-200 shadow-lg min-h-0 w-full p-3 md:p-4 flex flex-col relative no-break-inside print-shadow-none mb-6 md:mb-10">
-            <div class="flex justify-end w-full mb-4 md:mb-0 md:absolute md:top-6 md:right-6 no-print" data-html2canvas-ignore="true">
-                <div class="flex items-center gap-3 bg-white/80 backdrop-blur p-2 rounded-xl border border-slate-200 shadow-sm">
-                    <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Envoyer par Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
-                    <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Télécharger PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
-                    <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Imprimer"><i data-lucide="printer" class="w-5 h-5"></i></button>
-                </div>
-            </div>
-
-            <div class="flex justify-center items-center gap-6 md:gap-8 mb-4 md:mb-12 mt-0">
-                <div class="flex items-center gap-5 text-slate-800">
-                    <i data-lucide="landmark" class="w-12 h-12 text-slate-700 stroke-[1.5]"></i>
-                    <div class="flex flex-col gap-1"><span class="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Document Officiel</span><span class="font-black text-xl leading-tight tracking-wide">Rapport d'Évaluation</span></div>
-                </div>
-            </div>
-
-            <div class="text-center mb-8 md:mb-16 mt-8 md:mt-16 px-2 md:px-4 flex flex-col justify-center">
-                <h1 class="text-4xl md:text-5xl font-black text-black leading-tight tracking-tight">{{ resultat.sujet }}</h1>
-            </div>
-
-            <div class="space-y-3 md:space-y-6 text-base md:text-lg text-black max-w-4xl mx-auto w-full pb-4 md:pb-8 px-4">
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Auditeur(s) :</div>
-                    <div class="font-medium text-slate-800">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
-                </div>
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Participant(s) :</div>
-                    <div class="font-medium text-slate-800">
-                        {% for p in resultat.audit.participants.all %}
-                            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
-                        {% endfor %}
-                        {% if resultat.audit.participants_externes %}
-                            {{ resultat.audit.participants_externes }}
-                        {% endif %}
-                        {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}-{% endif %}
-                    </div>
-                </div>
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Référence d'Audit :</div>
-                    <div class="font-medium text-slate-800">#{{ resultat.id }}</div>
-                </div>
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Programme / Norme :</div>
-                    <div class="font-medium text-slate-800">{{ resultat.audit.type_audit|default:"Standard Qualité" }}</div>
-                </div>
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Site Audité :</div>
-                    <div class="font-medium text-slate-800">{{ resultat.site|default:"NON SPÉCIFIÉ" }}</div>
-                </div>
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Date :</div>
-                    <div class="font-medium text-slate-800">{{ resultat.date_audit|date:"F j, Y" }}</div>
-                </div>
-                {% if resultat.commentaire %}
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
-                    <div class="font-bold tracking-tight">Contexte de l'Audit :</div>
-                    <div class="font-medium text-slate-700 italic leading-relaxed">{{ resultat.commentaire }}</div>
-                </div>
-                {% endif %}
-                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 pt-6 mt-6 border-t-2 border-slate-900/10">
-                    <div class="font-bold tracking-tight mt-1 text-black">Score :</div>
-                    <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl flex items-center gap-3">
-                        {{ resultat.score_audit|floatformat:"-3" }}
-                        <span class="text-slate-400 text-lg font-bold">({{ resultat.score_percentage }}%)</span>
-                    </div>
-                </div>
+       <!-- ORIGINAL UI LAYOUT (Refactored to match Teleperformance Design) -->
+    <div id="report-container" class="max-w-5xl mx-auto space-y-6 no-print">
+        
+        <!-- Floating Actions -->
+        <div class="flex justify-end w-full mb-4" data-html2canvas-ignore="true">
+            <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Envoyer par Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
+                <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Télécharger PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
+                <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Imprimer"><i data-lucide="printer" class="w-5 h-5"></i></button>
             </div>
         </div>
 
-        <div class="bg-white border-2 border-solid border-black print-shadow-none page-break mt-10">
-            <table class="hidden md:table w-full border-collapse text-black">
-                <thead>
-                    <tr class="bg-white border-b-2 border-solid border-black">
-                        <th class="border-r border-solid border-black px-2 py-4 text-center text-xs font-black uppercase tracking-widest w-12">#</th>
-                        <th class="border-r border-solid border-black px-4 py-4 text-left text-xs font-black uppercase tracking-widest">Catégorie / Point de contrôle</th>
-                        <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-32">Évaluation</th>
-                        <th class="border-r border-solid border-black px-4 py-4 text-center text-xs font-black uppercase tracking-widest w-24">Score</th>
-                        <th class="px-4 py-4 text-left text-xs font-black uppercase tracking-widest w-[450px]">Observations & Preuves</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for group in grouped_results %}
-                    <tr class="bg-white border-b-2 border-solid border-black bg-slate-50">
-                        <td class="border-r border-solid border-black px-2 py-4 text-center font-black text-sm align-middle">{{ forloop.counter }}</td>
-                        <td class="border-r border-solid border-black px-4 py-4 align-middle">
-                            <div class="font-black uppercase tracking-tight text-base leading-none">{{ group.critere.text_ref }}</div>
-                            <div class="text-xs font-bold text-black uppercase tracking-widest mt-1">{{ group.critere.chapitre_norme.text_ref|default:"Catégorie Standard" }}</div>
-                        </td>
-                        <td colspan="2" class="border-r border-solid border-black px-4 py-4 align-middle bg-slate-50">
-                            <div class="flex items-center justify-between gap-4 w-full">
-                                <div class="flex-grow h-3 bg-white rounded-full overflow-hidden border-2 border-black">
-                                    <div class="h-full bg-black" style="width: {% widthratio group.score 1 100 %}%"></div>
-                                </div><span class="text-base font-black tabular-nums">{{ group.score|floatformat:"-3" }} <span class="text-slate-400 text-xs font-bold ml-1">({{ group.score_percent }}%)</span></span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 align-middle bg-slate-50"></td>
-                    </tr>
-                    {% for d in group.details %}
-                    <tr class="border-b border-solid border-black bg-white">
-                        <td class="border-r border-solid border-black px-2 py-4 text-center align-middle"><div class="w-2 h-2 rounded-full bg-black mx-auto"></div></td>
-                        <td class="border-r border-solid border-black px-4 py-4 align-middle">
-                            <div class="text-sm font-bold">{{ d.sous_critere }}</div>{% if d.norme %}<div class="mt-1 text-[11px] font-bold text-slate-700 uppercase">{{ d.norme }}</div>{% endif %}
-                        </td>
-                        <td class="border-r border-solid border-black px-4 py-4 text-center align-middle"><span class="inline-block border-2 border-solid border-black px-2 py-1.5 text-[11px] font-black uppercase tracking-widest">{{ d.cotation|default:"NON EVALUÉ" }}</span></td>
-                        <td class="border-r border-solid border-black px-4 py-4 text-center align-middle bg-white"><div class="font-black text-base tabular-nums">{% if d.value >= 0 %}{{ d.value|floatformat:"-2" }}{% else %}-{% endif %}</div></td>
-                        <td class="px-4 py-4 align-middle">
-                            <div class="text-xs leading-relaxed">{{ d.commentaire|default:"" }}</div>
-                            {% if d.justificatif or d.justificatif_bis %}
-                            <div class="flex flex-wrap gap-3 mt-3">
-                                {% if d.justificatif %}<div class="flex flex-col gap-1"><a href="{{ d.justificatif.url }}" target="_blank" class="group block relative overflow-hidden rounded border-2 border-black shadow-md no-print"><img src="{{ d.justificatif.url }}" class="w-48 h-64 object-cover group-hover:scale-105 transition-transform duration-500"><div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center"><div class="bg-white/90 p-2 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"><i data-lucide="maximize-2" class="w-5 h-5 text-black"></i></div></div></a><span class="text-[10px] font-black text-slate-900 uppercase tracking-tight">Preuve #1</span></div>{% endif %}
-                                {% if d.justificatif_bis %}<div class="flex flex-col gap-1"><a href="{{ d.justificatif_bis.url }}" target="_blank" class="group block relative overflow-hidden rounded border-2 border-black shadow-md no-print"><img src="{{ d.justificatif_bis.url }}" class="w-48 h-64 object-cover group-hover:scale-105 transition-transform duration-500"><div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center"><div class="bg-white/90 p-2 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"><i data-lucide="maximize-2" class="w-5 h-5 text-black"></i></div></div></a><span class="text-[10px] font-black text-slate-900 uppercase tracking-tight">Preuve #2</span></div>{% endif %}
-                            </div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Paper Document -->
+        <div class="bg-white border border-slate-300 shadow-2xl p-8 md:p-12 text-black" style="font-family: Arial, sans-serif;">
+            
+            <!-- HEADER (High-Precision Professional Design) -->
+            <div class="w-full flex border-2 border-[#0000FF] mb-12 h-32 overflow-hidden">
+                <!-- Logo Section -->
+                <div class="w-[30%] border-r-2 border-[#0000FF] flex items-center justify-center p-6 bg-white">
+                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-24 w-auto object-contain">
+                </div>
+                
+                <!-- Title Section -->
+                <div class="w-[40%] bg-[#0000FF] text-white flex flex-col items-center justify-center text-center px-4">
+                    <h1 class="font-black text-[32px] uppercase tracking-[0.2em] leading-none m-0">
+                        Rapport<br>d'Audit
+                    </h1>
+                </div>
+                
+                <!-- Reference Section -->
+                <div class="w-[30%] border-l-2 border-[#0000FF] flex flex-col bg-white">
+                    <div class="flex-1 border-b-2 border-[#0000FF] flex items-center px-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Référence</span>
+                        <span class="text-xs font-black">: AUD-{{ resultat.id }}</span>
+                    </div>
+                    <div class="flex-1 border-b-2 border-[#0000FF] flex items-center px-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Page</span>
+                        <span class="text-xs font-black">: 1 / 1</span>
+                    </div>
+                    <div class="flex-1 flex items-center px-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Indice</span>
+                        <span class="text-xs font-black">: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUDIT INFO (High-Fidelity Match) -->
+            <div class="mb-12 space-y-5 text-[14px]">
+                <div class="flex items-start">
+                    <span class="font-bold w-44">Auditeurs :</span>
+                    <div class="flex-1 font-medium space-y-1">
+                        <div>{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
+                        {% for co in resultat.co_auditeur.all %}
+                        <div>{{ co.get_full_name|default:co.username }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-bold w-44">Département audité :</span>
+                    <span class="flex-1 font-medium">{{ resultat.audit.section|default:"-" }}</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-bold w-44">Site :</span>
+                    <span class="flex-1 font-medium">{{ resultat.site|default:"-" }}</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-bold w-44">Date d'audit :</span>
+                    <span class="flex-1 font-bold">{{ resultat.date_audit|date:"d/m/y" }}</span>
+                </div>
+            </div>
+
+            <!-- TABLE 1: PROCESSUS (High-Fidelity Match) -->
+            <div class="overflow-x-auto mb-4">
+                <table class="w-full border-collapse border-2 border-black text-[11px]">
+                    <thead>
+                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
+                            <th class="border border-black p-2 w-[35%]">Processus Audités</th>
+                            <th class="border border-black p-2 w-[35%]">Sous processus</th>
+                            <th class="border border-black p-2 w-[30%]">
+                                <div class="leading-tight">Procédures</div>
+                                <div class="text-[9px] font-normal lowercase tracking-tight">(Nombre de procédures)</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in grouped_results %}
+                        <tr>
+                            <td class="border border-black p-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded-full border border-[#0000FF] flex items-center justify-center flex-shrink-0">
+                                        <div class="w-1.5 h-1.5 bg-[#0000FF] rotate-45"></div>
+                                    </div>
+                                    <span class="font-medium">{{ group.critere.text_ref|default:"-" }}</span>
+                                </div>
+                            </td>
+                            <td class="border border-black p-2 text-center">-</td>
+                            <td class="border border-black p-2 text-center">Toutes les procédures</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-[11px] mb-6">Tout au long de l'audit le M.O.E et les enregistrements qualité seront contrôlés.</p>
+
+            <!-- TABLE 2: PERSONNES AUDITÉES (High-Fidelity Match) -->
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full border-collapse border-2 border-black text-[11px]">
+                    <thead>
+                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
+                            <th class="border border-black p-2 w-1/2">Nom des personnes auditées</th>
+                            <th class="border border-black p-2 w-1/2">Fonction des personnes auditées</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in resultat.audit.participants.all %}
+                        <tr>
+                            <td class="border border-black p-2">{{ p.get_full_name|default:p.username }}</td>
+                            <td class="border border-black p-2">-</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="border border-black p-2">{{ resultat.audites.all.0|default:"-" }}</td>
+                            <td class="border border-black p-2">-</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TABLE 3: SUMMARY (Compact & Professional) -->
+            <div class="max-w-md border-2 border-black mb-8 text-[11px]">
+                <div class="flex border-b border-black font-bold items-center">
+                    <div class="flex-1 p-2">Nombre de points forts</div>
+                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(PF)</div>
+                    <div class="w-16 p-2 text-center font-black text-sm">{{ pf_count }}</div>
+                </div>
+                <div class="flex border-b border-black font-bold items-center">
+                    <div class="flex-1 p-2">Nombre de points sensibles / Axes d'amélioration</div>
+                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(PS/AA)</div>
+                    <div class="w-16 p-2 text-center font-black text-sm">{{ ps_count }}</div>
+                </div>
+                <div class="flex font-bold items-center">
+                    <div class="flex-1 p-2">Nombre d'écarts</div>
+                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(E)</div>
+                    <div class="w-16 p-2 text-center font-black text-sm">{{ e_count }}</div>
+                </div>
+            </div>
+
+            <!-- SIGNATURE -->
+            <div class="border border-black p-3 mb-8 min-h-[80px]">
+                <h3 class="font-bold text-[10px] mb-1 underline">Signature des Auditeurs :</h3>
+                <p class="text-[11px]">
+                    {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }} 
+                    {% if resultat.co_auditeur.exists %} / {% endif %}
+                    {% for co in resultat.co_auditeur.all %}{{ co.get_full_name|default:co.username }}{% if not forloop.last %} / {% endif %}{% endfor %}
+                </p>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="flex border border-slate-300 text-[9px] text-slate-500">
+                <div class="w-1/3 border-r border-slate-300 p-2 italic">Classé par : MAG / DO</div>
+                <div class="w-1/3 border-r border-slate-300 p-2">
+                    Archivé<br>Où : Bureau MAG<br>Par qui : MAG
+                </div>
+                <div class="w-1/3 p-2">Durée : 2 Ans(s)</div>
+            </div>
+
+            <!-- DETAILED RESULTS SECTION (Compact & Professional) -->
+            <div class="mt-8 overflow-x-auto">
+                <table class="w-full border-collapse text-black text-[10px] md:text-[11px] border-2 border-black">
+                    <thead>
+                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
+                            <th class="border border-black p-2 w-8">#</th>
+                            <th class="border border-black p-2 text-left">Processus / Critères / Points de contrôle</th>
+                            <th class="border border-black p-2 w-32 md:w-40 text-center">Conformité</th>
+                            <th class="border border-black p-2 w-14 md:w-20 text-center">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in grouped_results %}
+                        <tr class="bg-slate-50">
+                            <td class="border border-black p-2 font-bold text-center align-middle bg-slate-100">{{ forloop.counter }}</td>
+                            <td class="border border-black p-2 font-bold uppercase align-middle bg-slate-100">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-1 h-3 bg-[#0000FF]"></div>
+                                    <span class="text-xs">{{ group.critere.text_ref }}</span>
+                                </div>
+                            </td>
+                            <td colspan="2" class="border border-black p-2 bg-slate-100 align-middle">
+                                <div class="flex items-center justify-end gap-2">
+                                    <div class="flex-1 h-1.5 bg-white border border-slate-300 rounded-full overflow-hidden hidden md:block">
+                                        <div class="h-full bg-[#0000FF]" style="width: {% widthratio group.score 1 100 %}%"></div>
+                                    </div>
+                                    <span class="font-black text-sm tabular-nums text-blue-800">{{ group.score|floatformat:"-1" }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% for d in group.details %}
+                        <tr>
+                            <td class="border border-black p-2 text-center align-middle">
+                                <div class="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
+                            </td>
+                            <td class="border border-black p-2">
+                                <div class="flex flex-col gap-0.5">
+                                    <div class="font-bold text-slate-800 leading-tight">{{ d.sous_critere }}</div>
+                                    {% if d.commentaire %}
+                                    <div class="text-[9px] text-slate-500 mt-1 border-l border-blue-400 pl-2 italic">
+                                        {{ d.commentaire }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if d.justificatif or d.justificatif_bis %}
+                                <div class="flex flex-wrap gap-1 mt-2 no-print">
+                                    {% if d.justificatif %}
+                                    <a href="{{ d.justificatif.url }}" target="_blank" class="block border border-slate-200 p-0.5 rounded opacity-70 hover:opacity-100 transition-opacity">
+                                        <img src="{{ d.justificatif.url }}" class="h-10 w-auto object-contain">
+                                    </a>
+                                    {% endif %}
+                                    {% if d.justificatif_bis %}
+                                    <a href="{{ d.justificatif_bis.url }}" target="_blank" class="block border border-slate-200 p-0.5 rounded opacity-70 hover:opacity-100 transition-opacity">
+                                        <img src="{{ d.justificatif_bis.url }}" class="h-10 w-auto object-contain">
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="border border-black p-2 text-center align-middle">
+                                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight border
+                                    {% if d.value >= 1.0 %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                    {% elif d.value > 0.0 %}bg-amber-50 text-amber-700 border-amber-200
+                                    {% elif d.value == 0.0 %}bg-rose-50 text-rose-700 border-rose-200
+                                    {% else %}bg-slate-100 text-slate-600 border-slate-200{% endif %}">
+                                    {{ d.cotation|default:"N/A" }}
+                                </span>
+                            </td>
+                            <td class="border border-black p-2 text-right font-black text-sm align-middle tabular-nums bg-slate-50">
+                                {% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 </div>
