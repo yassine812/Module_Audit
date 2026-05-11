@@ -1272,7 +1272,7 @@ class StartAuditView(LoginRequiredMixin, View):
                         chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
                         text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
                         value=0,
-                        value_max=getattr(sc, 'valeur_max', 5),
+                        value_max=getattr(sc, 'valeur_max', 1),
                         cotation="",
                         cotation_option=[],
                     )
@@ -1289,7 +1289,7 @@ class StartAuditView(LoginRequiredMixin, View):
                             sous_critere=sc.content,
                             chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
                             value=0,
-                            value_max=5,
+                            value_max=1,
                             cotation="",
                             cotation_option=[],
                         )
@@ -1333,7 +1333,7 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
                             sous_critere=sc.content,
                             chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
                             value=0,
-                            value_max=5
+                            value_max=1
                         ))
                 else:
                     # Legacy fallback
@@ -1346,7 +1346,7 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
                                 sous_critere=sc.content,
                                 chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
                                 value=0,
-                                value_max=5
+                                value_max=1
                             ))
                 if new_details:
                     DetailResultatAudit.objects.bulk_create(new_details)
@@ -1662,7 +1662,7 @@ class FinishAuditView(LoginRequiredMixin, View):
                             chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
                             text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
                             value=0,
-                            value_max=sc.valeur_max if hasattr(sc, 'valeur_max') else 5, # Fallback to 5
+                            value_max=sc.valeur_max if hasattr(sc, 'valeur_max') else 1, # Fallback to 1
                             cotation="",
                             cotation_option=[],
                         )

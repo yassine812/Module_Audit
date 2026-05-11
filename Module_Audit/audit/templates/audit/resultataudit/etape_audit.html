@@ -7,11 +7,10 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-  /* ── Reset AdminLTE wrappers ── */
-  html,body{overflow:hidden!important;height:100%!important;font-family:'Inter',sans-serif;}
+  /* ── Scope to content area only – do NOT touch sidebar/navbar ── */
   .content-wrapper{overflow:hidden!important;height:calc(100vh - 57px)!important;display:flex!important;flex-direction:column!important;background:#f5f7fb!important;padding:0!important;}
-  .content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-  .container-fluid{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
+  .content-wrapper > .content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
+  .content-wrapper > .content > .container-fluid{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
 
   /* ── Page wrapper fills space beside sidebar ── */
   .audit-page-wrapper{
@@ -123,7 +122,15 @@
         </div>
         <div>
           <span class="lbl">PARTICIPANT</span>
-          <div class="hdr-person">{% for p in resultat.participants.all %}{{ p.get_full_name|default:p.username }}{% if not forloop.last %}, {% endif %}{% empty %}--{% endfor %}</div>
+          <div class="hdr-person">
+            {% for p in resultat.audit.participants.all %}
+              {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
+            {% endfor %}
+            {% if resultat.audit.participants_externes %}
+              {{ resultat.audit.participants_externes }}
+            {% endif %}
+            {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}--{% endif %}
+          </div>
         </div>
       </div>
     </div>
@@ -173,9 +180,6 @@
             {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>{% endif %}
           </div>
           <div class="eval-title">{{ cot.content }}</div>
-          <div class="eval-sub {% if forloop.counter == 1 %}cl-green{% elif forloop.counter == 2 %}cl-orange{% elif forloop.counter == 3 %}cl-red{% else %}cl-dark{% endif %}">
-            {% if forloop.counter == 1 %}Vert{% elif forloop.counter == 2 %}Orange{% elif forloop.counter == 3 %}Rouge{% else %}Noir{% endif %}
-          </div>
         </button>
         {% endfor %}
       </div>
@@ -265,14 +269,17 @@
     const scoreEl=document.getElementById('current-score');
     if(titleEl) titleEl.textContent=d.critere||'--';
     if(descEl) descEl.textContent=d.sous_critere||'';
-    if(preuveEl) preuveEl.textContent=d.preuve_attendue||'';
+    if(preuveEl) preuveEl.textContent=(d.preuves_attendues && d.preuves_attendues.length > 0) ? d.preuves_attendues.join(', ') : '';
     if(obsEl) obsEl.value=(d.commentaire&&d.commentaire!=='None')?d.commentaire:'';
     if(scoreEl) scoreEl.textContent=(d.value!==undefined&&d.value!==null)?parseFloat(d.value).toFixed(1):'--';
-    document.querySelectorAll('.eval-btn').forEach(btn=>btn.classList.remove('selected'));
     if(d.cotation){
       const ab=document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
       if(ab) ab.classList.add('selected');
     }
+  }
+
+  function updateGlobalScoreDisplay(){
+    // Function kept for backward compatibility if needed, but removed from UI
   }
 
   async function changeStep(delta){
@@ -291,6 +298,7 @@
     if(ab) ab.classList.add('selected');
     const scoreEl=document.getElementById('current-score');
     if(scoreEl) scoreEl.textContent=value.toFixed(1);
+    updateGlobalScoreDisplay();
     await saveStep(false);
   }
 
@@ -308,7 +316,7 @@
     try{
       const resp=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});
       const data=await resp.json();
-      if(data.status==='saved'){
+      if(data.status==='success'){
         d.commentaire=finalObs;
         localStorage.setItem('audit_{{ resultat.id }}_last_edited',currentStep);
       }
@@ -326,14 +334,32 @@
     try{
       const resp=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});
       const result=await resp.json();
-      if(result.status==='saved') Swal.fire({icon:'success',title:'Fichier envoyé !',timer:1500,showConfirmButton:false});
+      if(result.status==='success') Swal.fire({icon:'success',title:'Fichier envoyé !',timer:1500,showConfirmButton:false});
     }catch(e){Swal.fire('Erreur','Échec de l\'envoi.','error');}
   }
 
   async function finalizeAudit(){
     await saveStep(false);
-    Swal.fire({icon:'success',title:'Audit finalisé !',confirmButtonText:'Voir la liste'})
-      .then(r=>{if(r.isConfirmed) window.location.href='{% url "resultat_list" %}';});
+    Swal.fire({
+      title: 'Finalisation...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      const resp = await fetch(`/audit/resultat/{{ resultat.id }}/close/`, {method: 'POST', body: fd});
+      
+      if(resp.ok) {
+        Swal.fire({icon: 'success', title: 'Audit finalisé !', confirmButtonText: 'Voir le rapport'})
+          .then(r => { if(r.isConfirmed) window.location.href='{% url "resultat_report" resultat.id %}'; });
+      } else {
+        throw new Error('Close failed');
+      }
+    } catch(e) {
+      Swal.fire('Erreur', 'Échec de la finalisation.', 'error');
+    }
   }
 
   function openPdfModal(url,title,page){
