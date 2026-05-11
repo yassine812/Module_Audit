@@ -1,4 +1,6 @@
 from django.urls import reverse_lazy
+import os
+from django.conf import settings
 from django.views.generic import (
     ListView, CreateView, UpdateView,
     DeleteView, DetailView, View, TemplateView
@@ -33,7 +35,7 @@ from .models import (
     DetailResultatAudit,
     SousCritereTypeAudit,
 )
-from .forms import FormulaireAuditForm, CritereFormSet, SousCritereFormSet, TypeAuditForm, CritereForm, TypePreuveForm, PreuveAttenduForm, SousCritereStandaloneForm
+from .forms import FormulaireAuditForm, CritereFormSet, SousCritereFormSet, TypeAuditForm, CritereForm, TypePreuveForm, PreuveAttenduForm, SousCritereStandaloneForm, ListeAuditForm
 from Organisation.models import Processus, TypeEquipement, Section
 from django import forms
 
@@ -135,6 +137,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
+            
+            # DEBUG LOGGING TO FILE
+            with open(os.path.join(settings.BASE_DIR, 'dashboard_debug.log'), 'a') as f:
+                f.write(f"--- DASHBOARD DEBUG ---\n")
+                f.write(f"User: {user.username} (ID: {user.id})\n")
+                f.write(f"Audits Assigned: {audits_assigned.count()}\n")
+                f.write(f"Planifies: {planifies}\n")
+                f.write(f"En cours: {en_cours}\n")
+                f.write(f"Termines: {termines}\n")
+                f.write(f"Score Moy: {score_moy}\n")
+                f.write(f"-----------------------\n")
+            
         return context
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1141,7 +1155,8 @@ class FormulaireAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
             self.object = form.save()
             # Refresh associations
             self.object.formulairesouscritere_set.all().delete()
-            selected_sc_ids = self.request.POST.getlist('sous_criteres')
+            # Deduplicate selected IDs to avoid redundant records
+            selected_sc_ids = list(dict.fromkeys(self.request.POST.getlist('sous_criteres')))
             if selected_sc_ids:
                 for i, sc_id in enumerate(selected_sc_ids):
                     FormulaireSousCritere.objects.create(
@@ -1229,43 +1244,59 @@ class StartAuditView(LoginRequiredMixin, View):
             sujet=liste_audit.desc,
             auditeur=request.user,
             site=getattr(liste_audit, "site", None),
-            commentaire=commentaire,
             en_cours=True
         )
 
-        # Generate detail rows
+        # Generate detail rows (Support both new association model and legacy direct links)
         formulaire = liste_audit.formulaire_audit
         if not formulaire:
-            # Handle case where no formulaire is attached to the audit
             return JsonResponse({"status": "error", "message": "Aucun formulaire associé à cet audit"}, status=400)
 
-        sous_criteres = formulaire.formulairesouscritere_set.select_related(
+        details = []
+        fscs = formulaire.formulairesouscritere_set.select_related(
             "sous_critere__critere",
             "sous_critere__critere__chapitre_norme",
             "sous_critere__critere__chapitre_norme__text_ref",
-        )
+        ).order_by('ordre')
 
-        details = []
-
-        for fs in sous_criteres:
-            sc = fs.sous_critere
-
-            details.append(
-                DetailResultatAudit(
-                    resultat_audit=resultat,
-                    critere=sc.critere.name if sc.critere else "",
-                    norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
-                    sous_critere=sc.content,
-                    chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
-                    text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
-                    value=0,
-                    value_max=getattr(sc, 'valeur_max', 5),
-                    cotation="",
-                    cotation_option=[],
+        if fscs.exists():
+            for fs in fscs:
+                sc = fs.sous_critere
+                if not sc: continue
+                details.append(
+                    DetailResultatAudit(
+                        resultat_audit=resultat,
+                        critere=sc.critere.name if sc.critere else "",
+                        norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                        sous_critere=sc.content,
+                        chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                        text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
+                        value=0,
+                        value_max=getattr(sc, 'valeur_max', 5),
+                        cotation="",
+                        cotation_option=[],
+                    )
                 )
-            )
+        else:
+            # Legacy Fallback: Criteria linked directly to FormulaireAudit
+            for crit in formulaire.criteres.all():
+                for sc in crit.souscritere_set.all():
+                    details.append(
+                        DetailResultatAudit(
+                            resultat_audit=resultat,
+                            critere=crit.name,
+                            norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                            value=0,
+                            value_max=5,
+                            cotation="",
+                            cotation_option=[],
+                        )
+                    )
 
-        DetailResultatAudit.objects.bulk_create(details)
+        if details:
+            DetailResultatAudit.objects.bulk_create(details)
 
         return redirect("etape_audit", pk=resultat.pk)
 
@@ -1284,6 +1315,42 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         details = list(self.object.detailresultataudit_set.all().order_by('id'))
+        
+        # SELF-HEALING: If no details exist, try to generate them from the form
+        if not details:
+            formulaire = self.object.audit.formulaire_audit
+            if formulaire:
+                new_details = []
+                fscs = formulaire.formulairesouscritere_set.all().order_by('ordre')
+                if fscs.exists():
+                    for fs in fscs:
+                        sc = fs.sous_critere
+                        if not sc: continue
+                        new_details.append(DetailResultatAudit(
+                            resultat_audit=self.object,
+                            critere=sc.critere.name if sc.critere else "",
+                            norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                            value=0,
+                            value_max=5
+                        ))
+                else:
+                    # Legacy fallback
+                    for crit in formulaire.criteres.all():
+                        for sc in crit.souscritere_set.all():
+                             new_details.append(DetailResultatAudit(
+                                resultat_audit=self.object,
+                                critere=crit.name,
+                                norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                                sous_critere=sc.content,
+                                chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                                value=0,
+                                value_max=5
+                            ))
+                if new_details:
+                    DetailResultatAudit.objects.bulk_create(new_details)
+                    details = list(self.object.detailresultataudit_set.all().order_by('id'))
         
         import re
         def norm(s):
@@ -1889,15 +1956,7 @@ class ListeAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         return ListeAudit.objects.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
 class ListeAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, CreateView):
     model = ListeAudit
-    fields = [
-        "desc",
-        "status",
-        "section",
-        "formulaire_audit",
-        "date",
-        "affectation",
-        "participants",
-    ]
+    form_class = ListeAuditForm
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
 
@@ -2042,15 +2101,7 @@ class ListeAuditDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
 
 class ListeAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, UpdateView):
     model = ListeAudit
-    fields = [
-        "desc",
-        "status",
-        "section",
-        "formulaire_audit",
-        "date",
-        "affectation",
-        "participants",
-    ]
+    form_class = ListeAuditForm
     template_name = "audit/listeaudit/liste_audit_form.html"
     success_url = reverse_lazy("liste_audit_list")
 
@@ -2623,40 +2674,51 @@ def copy_formulaire(request, pk):
         fsc_associations = FormulaireSousCritere.objects.filter(formulaire=original_form).order_by('ordre')
         
         # Keep track of cloned criteria to avoid redundant copies
-        # Map: original_critere_id -> cloned_critere_object
         critere_map = {}
 
-        for assoc in fsc_associations:
-            old_sc = assoc.sous_critere
-            old_crit = old_sc.critere
-            
-            # Get or Create the cloned Criterion for this new Form
-            if old_crit.id not in critere_map:
+        if fsc_associations.exists():
+            for assoc in fsc_associations:
+                old_sc = assoc.sous_critere
+                old_crit = old_sc.critere
+                
+                if old_crit.id not in critere_map:
+                    new_crit = Critere.objects.get(pk=old_crit.pk)
+                    new_crit.pk = None
+                    new_crit.formulaire = new_form 
+                    new_crit.save()
+                    critere_map[old_crit.id] = new_crit
+                else:
+                    new_crit = critere_map[old_crit.id]
+                
+                new_sc = SousCritere.objects.get(pk=old_sc.pk)
+                new_sc.pk = None
+                new_sc.critere = new_crit
+                new_sc.save()
+                
+                new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
+                if hasattr(old_sc, 'type_audit'):
+                    new_sc.type_audit.set(old_sc.type_audit.all())
+                
+                # Ensure we don't create duplicates even if they existed in the original
+                FormulaireSousCritere.objects.get_or_create(
+                    formulaire=new_form,
+                    sous_critere=new_sc,
+                    defaults={'ordre': assoc.ordre}
+                )
+        else:
+            # Legacy Fallback: Copy via direct Critere.formulaire link
+            for old_crit in original_form.criteres.all():
                 new_crit = Critere.objects.get(pk=old_crit.pk)
                 new_crit.pk = None
-                new_crit.formulaire = new_form # Link to new form
+                new_crit.formulaire = new_form
                 new_crit.save()
-                critere_map[old_crit.id] = new_crit
-            else:
-                new_crit = critere_map[old_crit.id]
-            
-            # Duplicate the SousCritere and link to the NEW Criterion
-            new_sc = SousCritere.objects.get(pk=old_sc.pk)
-            new_sc.pk = None
-            new_sc.critere = new_crit
-            new_sc.save()
-            
-            # Copy M2M relations of SousCritere
-            new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
-            if hasattr(old_sc, 'type_audit'):
-                new_sc.type_audit.set(old_sc.type_audit.all())
-            
-            # Create the association in the new form
-            FormulaireSousCritere.objects.create(
-                formulaire=new_form,
-                sous_critere=new_sc,
-                ordre=assoc.ordre
-            )
+                
+                for old_sc in old_crit.souscritere_set.all():
+                    new_sc = SousCritere.objects.get(pk=old_sc.pk)
+                    new_sc.pk = None
+                    new_sc.critere = new_crit
+                    new_sc.save()
+                    new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
         
         return JsonResponse({
             "status": "success", 

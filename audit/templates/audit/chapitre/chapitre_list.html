@@ -108,7 +108,7 @@
                     <button onclick="openChapitreModal('{% url 'chapitre_update' chapitre.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                       <i data-lucide="edit" ></i>
                     </button>
-                    <button onclick="openDeleteModal('{% url 'chapitre_delete' chapitre.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                    <button onclick="openDeleteModal('{% url 'chapitre_delete' chapitre.id %}', '{{ chapitre.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                       <i data-lucide="trash-2" ></i>
                     </button>
                   </div>
@@ -195,11 +195,7 @@
                     <p class="mt-2  ">Chargement...</p>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-
+            </div>
         </div>
     </div>
 </div>

@@ -1,108 +1,91 @@
 from django import forms
-from django.forms import inlineformset_factory
-from .models import FormulaireAudit, Critere, SousCritere, TypeAudit, TypePreuve, PreuveAttendu
-from Organisation.models import Section
+from django.forms import inlineformset_factory, modelformset_factory
+from .models import (
+    FormulaireAudit, Critere, SousCritere, ResultatAudit,
+    ChapitreNorme, TypeAudit, TypeCotation, PreuveAttendu,
+    TypePreuve, ListeAudit
+)
 
-class FormulaireAuditForm(forms.ModelForm):
-    # Use ModelChoiceField for a single-select experience on a M2M field
-    section = forms.ModelChoiceField(
-        queryset=Section.objects.all(),
-        required=False,
-        widget=forms.Select(attrs={'class': 'custom-input form-select'})
-    )
-
+class ChapitreNormeForm(forms.ModelForm):
     class Meta:
-        model = FormulaireAudit
-        fields = ["name", "type_audit", "processus", "type_equipement", "section"]
+        model = ChapitreNorme
+        fields = ['name', 'text_ref', 'page']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'custom-input'}),
-            'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'processus': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'type_equipement': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du chapitre...'}),
+            'text_ref': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'page': forms.NumberInput(attrs={'class': 'custom-input'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # If editing, pre-select the first section if any exists
-        if self.instance.pk:
-            initial_section = self.instance.section.first()
-            if initial_section:
-                self.initial['section'] = initial_section
+class TypeAuditForm(forms.ModelForm):
+    class Meta:
+        model = TypeAudit
+        fields = ['name']
+        widgets = {
+            'name': forms.Select(attrs={'class': 'custom-input form-select'}),
+        }
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        section = self.cleaned_data.get('section')
-        if commit:
-            instance.save()
-            if section:
-                instance.section.set([section])
-            else:
-                instance.section.clear()
-        return instance
+class TypeCotationForm(forms.ModelForm):
+    class Meta:
+        model = TypeCotation
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Ex: Conforme, Non-Conforme...'}),
+        }
+
+class FormulaireAuditForm(forms.ModelForm):
+    class Meta:
+        model = FormulaireAudit
+        fields = ['name', 'processus', 'type_audit', 'type_equipement', 'section']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du formulaire...'}),
+            'processus': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_equipement': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'section': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Sélectionner les sections...', 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
+        }
 
 class CritereForm(forms.ModelForm):
     class Meta:
         model = Critere
-        fields = ['name', 'chapitre_norme', 'formulaire', 'type_audit']
+        fields = ['name', 'chapitre_norme', 'formulaire']
         widgets = {
-            'type_audit': forms.SelectMultiple(attrs={'class': 'form-control select2-multiple', 'data-placeholder': 'Sélectionner les types d\'audit...'}),
+            'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du critère...'}),
+            'chapitre_norme': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'formulaire': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
 
 class SousCritereForm(forms.ModelForm):
     class Meta:
         model = SousCritere
-        fields = ['content', 'type_cotation', 'reaction', 'preuve_attendu', 'type_audit']
+        fields = ['content', 'critere', 'type_cotation', 'reaction', 'type_audit', 'preuve_attendu']
         widgets = {
-            'content': forms.Textarea(attrs={'class': 'form-control form-control-sm border-0 bg-light', 'rows': 1}),
-            'type_cotation': forms.Select(attrs={'class': 'form-control bg-light border-0 custom-select-compact'}),
-            'reaction': forms.Textarea(attrs={'class': 'form-control form-control-sm border-0 bg-light', 'rows': 1}),
-            'preuve_attendu': forms.SelectMultiple(attrs={'class': 'form-control form-control-sm border-0 bg-light select2-inline'}),
-            'type_audit': forms.SelectMultiple(attrs={'class': 'form-control form-control-sm border-0 bg-light select2-inline'}),
+            'content': forms.Textarea(attrs={'class': 'custom-input', 'rows': 3, 'placeholder': 'Contenu du sous-critère...'}),
+            'critere': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_cotation': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'reaction': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2}),
+            'type_audit': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
+            'preuve_attendu': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
         }
 
 class SousCritereStandaloneForm(forms.ModelForm):
     class Meta:
         model = SousCritere
-        fields = '__all__'
+        fields = ['content', 'critere', 'type_cotation', 'reaction', 'type_audit', 'preuve_attendu']
         widgets = {
-            'critere': forms.Select(attrs={'class': 'form-control form-control-modern'}),
-            'type_cotation': forms.Select(attrs={'class': 'form-control form-control-modern'}),
-            'content': forms.Textarea(attrs={'class': 'form-control form-control-modern', 'rows': 3}),
-            'reaction': forms.Textarea(attrs={'class': 'form-control form-control-modern', 'rows': 3}),
-            'type_audit': forms.SelectMultiple(attrs={'class': 'form-control select2-multiple'}),
-            'preuve_attendu': forms.SelectMultiple(attrs={'class': 'form-control select2-multiple'}),
+            'content': forms.Textarea(attrs={'class': 'custom-input', 'rows': 3}),
+            'reaction': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2}),
+            'type_audit': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline'}),
+            'preuve_attendu': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline'}),
         }
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['preuve_attendu'].required = False
-        self.fields['type_audit'].required = False
-        self.fields['reaction'].required = False
 
-CritereFormSet = inlineformset_factory(
-    FormulaireAudit,
-    Critere,
-    form=CritereForm,
-    extra=0,
-    can_delete=True
-)
-
-SousCritereFormSet = inlineformset_factory(
-    Critere,
-    SousCritere,
-    form=SousCritereForm,
-    extra=0,
-    can_delete=True
-)
-
-
-class TypeAuditForm(forms.ModelForm):
+class ResultatAuditForm(forms.ModelForm):
     class Meta:
-        model = TypeAudit
-        fields = ["name", "section"]
+        model = ResultatAudit
+        fields = ['audit', 'score_audit', 'site', 'auditeur']
         widgets = {
-            'name': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'section': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-modal'}),
+            'audit': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'site': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'auditeur': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
 
 class TypePreuveForm(forms.ModelForm):
@@ -122,3 +105,60 @@ class PreuveAttenduForm(forms.ModelForm):
             'code': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_preuve': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
+
+class ListeAuditForm(forms.ModelForm):
+    participants_externes = forms.MultipleChoiceField(
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'custom-input form-select select2-tags', 
+            'data-placeholder': 'Tapez un nom et appuyez sur Entrée...'
+        }),
+        choices=[]
+    )
+
+    class Meta:
+        model = ListeAudit
+        fields = [
+            "desc", "status", "site", "section", "type_audit", "formulaire_audit", 
+            "date", "affectation", "participants", "participants_externes"
+        ]
+        widgets = {
+            'desc': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Description de l\'audit...'}),
+            'status': forms.CheckboxInput(attrs={'class': 'switch-input'}),
+            'site': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'section': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'formulaire_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'date': forms.DateTimeInput(attrs={'class': 'custom-input', 'type': 'datetime-local'}),
+            'affectation': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Assigner des auditeurs...'}),
+            'participants': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Ajouter des participants...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Handle participants_externes tags
+        if self.instance and self.instance.participants_externes:
+            current_tags = [tag.strip() for tag in self.instance.participants_externes.split(',') if tag.strip()]
+            self.fields['participants_externes'].choices = [(tag, tag) for tag in current_tags]
+            self.initial['participants_externes'] = current_tags
+        else:
+            self.fields['participants_externes'].choices = []
+            
+        # Handle date formatting
+        if self.instance and self.instance.date:
+            self.initial['date'] = self.instance.date.strftime('%Y-%m-%dT%H:%M')
+
+    def clean_participants_externes(self):
+        data = self.cleaned_data.get('participants_externes')
+        if isinstance(data, list):
+            return ", ".join(data)
+        return data
+
+# FormSets
+SousCritereFormSet = inlineformset_factory(
+    Critere, SousCritere, form=SousCritereForm, extra=1, can_delete=True
+)
+
+CritereFormSet = modelformset_factory(
+    Critere, form=CritereForm, extra=0
+)

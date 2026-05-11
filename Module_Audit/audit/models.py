@@ -107,6 +107,7 @@ class ListeAudit(models.Model):
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True)
     formulaire_audit = models.ForeignKey(FormulaireAudit, on_delete=models.SET_NULL, null=True, blank=True)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
     participants = models.ManyToManyField(User, related_name='liste_audit_participants', blank=True)
     participants_externes = models.TextField(blank=True, null=True, verbose_name="Participants Externes")
     
@@ -135,6 +136,9 @@ class ListeAudit(models.Model):
         }
         return status_map.get(status, 'Inconnu')
     
+    def get_reference(self):
+        return f"AUD-{self.number_audit:04d}"
+
     def save(self, *args, **kwargs):
         if not self.number_audit or self.number_audit == 0:
             last = ListeAudit.objects.order_by('-number_audit').first()
@@ -173,6 +177,7 @@ class FormulaireSousCritere(models.Model):
     sous_critere = models.ForeignKey("SousCritere", on_delete=models.CASCADE)
     ordre = models.PositiveIntegerField(default=0)
     class Meta:
+        unique_together = ("formulaire", "sous_critere")
         ordering = ["ordre"]
     def __str__(self):
         return f"{self.formulaire.name} - {self.sous_critere.content[:30]} (ordre {self.ordre})"
@@ -195,7 +200,6 @@ class ResultatAudit(models.Model):
     point_sensible = models.TextField(blank=True, null=True)
     risque = models.TextField(blank=True, null=True)
     opportunite = models.TextField(blank=True, null=True)
-    commentaire = models.TextField(blank=True, null=True)
     en_cours = models.BooleanField(default=True)
     def __str__(self):
         return f"Audit {self.audit.desc} - {self.date_audit.strftime('%Y-%m-%d %H:%M:%S')} - Score: {self.score_audit}"
@@ -207,15 +211,20 @@ class ResultatAudit(models.Model):
         return round(self.score_audit * 100, 1)
 
     def recalculate_score(self):
-        # Include all details that have a cotation, even if value is negative (e.g. -1)
-        details = self.detailresultataudit_set.exclude(cotation='')
+        # Exclude empty cotations AND N/A cotations from the average
+        # We also exclude negative values as they typically represent N/A in this system
+        details = self.detailresultataudit_set.exclude(cotation='').exclude(
+            models.Q(cotation__icontains='n/a') | 
+            models.Q(cotation__icontains='non applicable') |
+            models.Q(value__lt=0)
+        )
         
         if not details.exists():
             self.score_audit = 0
         else:
             total_value = sum(detail.value for detail in details)
             count = details.count()
-            self.score_audit = round(total_value / count, 3) # Using 3 decimals as per user example 0.375
+            self.score_audit = round(total_value / count, 3) if count > 0 else 0
                 
         self.save(update_fields=["score_audit"])
 # --- EXÉCUTION : DÉTAIL PAR SOUS-CRITÈRE ---

@@ -606,17 +606,33 @@ Créer un Audit
 
                     <!-- Section: Participants (Compact) -->
                     <div class="row g-2 mb-2">
-                        <div class="col-12">
+                        <!-- Internal Participants -->
+                        <div class="col-md-6">
                             <div class="d-flex align-items-center mb-1">
                                 <i data-lucide="user" class="me-2 text-info" style="width: 14px; height: 14px;"></i>
-                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.8rem;">Participants (Optionnel)
-                                </h6>
+                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.8rem;">Participants (Optionnel)</h6>
                             </div>
                             <div class="form-group bg-white p-1 rounded-3 border border-info border-opacity-25">
                                 {{ form.participants }}
                                 {% if form.participants.errors %}
                                 <div class="text-danger mt-1" style="font-size: 0.65rem;">
                                     {% for error in form.participants.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- External Participants (free-text tags) -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-1">
+                                <i data-lucide="user-plus" class="me-2 text-warning" style="width: 14px; height: 14px;"></i>
+                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.8rem;">Participants Externes</h6>
+                            </div>
+                            <div class="form-group bg-white p-1 rounded-3 border border-warning border-opacity-25">
+                                {{ form.participants_externes }}
+                                {% if form.participants_externes.errors %}
+                                <div class="text-danger mt-1" style="font-size: 0.65rem;">
+                                    {% for error in form.participants_externes.errors %}{{ error }}{% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
@@ -1190,6 +1206,31 @@ Créer un Audit
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // 🚀 Select2: standard multi-selects (participants, affectation)
+        if (typeof $ !== 'undefined') {
+            $('.select2-inline').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                placeholder: function () { return $(this).data('placeholder'); },
+                allowClear: true
+            });
+
+            // 🏷️ Select2 Tags: free-text entry for external participants
+            $('.select2-tags').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                tags: true,
+                tokenSeparators: [',', ';'],
+                placeholder: function () { return $(this).data('placeholder'); },
+                allowClear: true,
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '') return null;
+                    return { id: term, text: term, newTag: true };
+                }
+            });
+        }
+
         // Dynamic Form Styling
         const formInputs = document.querySelectorAll('#auditForm input[type="text"], #auditForm input[type="datetime-local"], #auditForm select:not([multiple])');
         formInputs.forEach(input => {

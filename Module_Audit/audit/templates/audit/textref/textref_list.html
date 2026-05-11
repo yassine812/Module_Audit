@@ -191,32 +191,9 @@
         </div>
     </div>
 </div>
-
-
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
-      }
-  });
-</script>
 <script>
     function openTextRefModal(url) {
         $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
@@ -243,7 +220,13 @@
                 success: function(response) {
                     if (response.success) {
                         $('#textRefModal').modal('hide');
-                        location.reload(); 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message || 'Opération réussie',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload()); 
                     } else {
                         $('#modalBodyContent').html(response);
                         initTextRefModalBehaviors();
@@ -253,7 +236,7 @@
         });
     }
 
-    function confirmDelete(url, name) {
+    function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -300,18 +283,10 @@
                 });
             }
         });
-    },
-                error: function(xhr) {
-                    const response = xhr.responseJSON;
-                    if (response && response.message) {
-                        $('#deleteErrorMessage').text(response.message).fadeIn();
-                        form.find('button[type="submit"]').fadeOut();
-                    } else {
-                        alert("Une erreur imprévue est survenue.");
-                    }
-                }
-            });
-        });
+    }
+
+    function confirmDelete(url, name) {
+        openDeleteModal(url, name);
     }
 </script>
 {% endblock %}

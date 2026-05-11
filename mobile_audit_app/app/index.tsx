@@ -10,6 +10,8 @@ import {
   Image,
   Dimensions,
   Alert,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,26 +19,38 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
 import { LineChart } from 'react-native-chart-kit';
 import { useSidebar } from '../src/context/SidebarContext';
+import { useAuth } from '../src/context/AuthContext';
+import AuditeurDashboard from './auditeur-dashboard';
 
 const { width } = Dimensions.get('window');
 
 const DashboardScreen = () => {
   const router = useRouter();
   const { openSidebar } = useSidebar();
+  const { user, logout } = useAuth();
+
+  // Role Detection
+  const isAuditor = user?.role === 'Auditeur' || user?.role === 'Participant';
+
+  if (isAuditor) {
+    return <AuditeurDashboard />;
+  }
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({ 
-    types_audit: 0, 
-    formulaires: 0, 
-    planifies: 0, 
-    resultats: 0 
+  const [stats, setStats] = useState({
+    types_audit: 0,
+    formulaires: 0,
+    planifies: 0,
+    resultats: 0,
+    notifications_count: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [chartData, setChartData] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
-    
+
     // Fetch Stats
     try {
       const statsRes = await api.get(getApiUrl(API_PATHS.STATS));
@@ -46,10 +60,11 @@ const DashboardScreen = () => {
           types_audit: s.type_audits || 0,
           formulaires: s.formulaires || 0,
           planifies: s.liste_audits || 0,
-          resultats: s.resultats || 0
+          resultats: s.resultats || 0,
+          notifications_count: s.notifications_count || 0
         });
       }
-    } catch (e) { 
+    } catch (e) {
       console.error('Stats fetch error:', e);
     }
 
@@ -69,14 +84,14 @@ const DashboardScreen = () => {
       } else {
         setChartData({
           labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"],
-          datasets: { types_audit: [0,0,0,1,0,0,0,0,0,0,0,0], formulaires: [0,0,0,1,0,0,0,0,0,0,0,0], audits_planifies: [0,0,0,2,0,0,0,0,0,0,0,0], resultats: [0,0,0,2,0,0,0,0,0,0,0,0] }
+          datasets: { types_audit: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], formulaires: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], audits_planifies: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], resultats: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0] }
         });
       }
-    } catch (e) { 
+    } catch (e) {
       console.error('Chart fetch error:', e);
       setChartData({
         labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"],
-        datasets: { types_audit: [0,0,0,1,0,0,0,0,0,0,0,0], formulaires: [0,0,0,1,0,0,0,0,0,0,0,0], audits_planifies: [0,0,0,2,0,0,0,0,0,0,0,0], resultats: [0,0,0,2,0,0,0,0,0,0,0,0] }
+        datasets: { types_audit: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], formulaires: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], audits_planifies: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], resultats: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0] }
       });
     }
 
@@ -91,6 +106,24 @@ const DashboardScreen = () => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchData();
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Voulez-vous vraiment vous déconnecter ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Déconnecter",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            router.replace('/login');
+          }
+        }
+      ]
+    );
   };
 
   const KPICard = ({ title, value, icon, iconBg, textColor, onPress }) => (
@@ -184,49 +217,49 @@ const DashboardScreen = () => {
           <Ionicons name="menu" size={28} color="#475569" />
         </TouchableOpacity>
         <Text style={styles.dashboardTitle}>Tableau de Bord</Text>
-        <View style={{ width: 40 }} /> 
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <Ionicons name="notifications-outline" size={24} color="#475569" />
+            {stats.notifications_count > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.badgeText}>{stats.notifications_count}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowUserMenu(true)}>
+            <Feather name="user" size={24} color="#475569" />
+          </TouchableOpacity>
+        </View>
       </View>
-      <ScrollView 
+
+      <Modal visible={showUserMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowUserMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.userDropdown}>
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={() => { setShowUserMenu(false); router.push('/profile'); }}
+              >
+                <Feather name="user" size={18} color="#475569" />
+                <Text style={styles.dropdownText}>Profil</Text>
+              </TouchableOpacity>
+              <View style={styles.dropdownDivider} />
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={() => { setShowUserMenu(false); handleLogout(); }}
+              >
+                <Feather name="log-out" size={18} color="#ef4444" />
+                <Text style={[styles.dropdownText, { color: '#ef4444' }]}>Déconnexion</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+      <ScrollView
         style={styles.scrollView}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View style={styles.content}>
-          {/* KPI Grid */}
-          <View style={styles.kpiGrid}>
-            <KPICard 
-              title="Types d'Audit" 
-              value={stats.types_audit} 
-              icon={<MaterialCommunityIcons name="molecule" size={22} color="#0d9488" />}
-              iconBg="#f0fdfa"
-              textColor="#0d9488"
-              onPress={() => router.push('/type-audit')}
-            />
-            <KPICard 
-              title="Formulaires" 
-              value={stats.formulaires} 
-              icon={<Ionicons name="document-text" size={22} color="#059669" />}
-              iconBg="#f0fdf4"
-              textColor="#059669"
-              onPress={() => router.push('/formulaire')}
-            />
-            <KPICard 
-              title="Audits Planifiés" 
-              value={stats.planifies} 
-              icon={<Ionicons name="calendar" size={22} color="#d97706" />}
-              iconBg="#fffbeb"
-              textColor="#d97706"
-              onPress={() => router.push('/liste-audit')}
-            />
-            <KPICard 
-              title="Résultats" 
-              value={stats.resultats} 
-              icon={<Ionicons name="bar-chart" size={22} color="#e11d48" />}
-              iconBg="#fff1f2"
-              textColor="#e11d48"
-              onPress={() => router.push('/resultat')}
-            />
-          </View>
-
           {/* Quick Actions */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -235,24 +268,70 @@ const DashboardScreen = () => {
                 <Text style={styles.sectionLink}>Toutes les actions</Text>
               </TouchableOpacity>
             </View>
-            <ActionButton 
-              title="Nouveau Type d'Audit" 
-              icon={<Ionicons name="add" size={20} color="#fff" />} 
-              color="#2563eb" 
+            <View style={styles.actionGrid}>
+              <ActionButton
+                title="Type d'Audit"
+                icon={<Ionicons name="add" size={22} color="#fff" />}
+                color="#2563eb"
+                onPress={() => router.push('/type-audit')}
+              />
+              <ActionButton
+                title="Formulaire"
+                icon={<Ionicons name="document-text" size={22} color="#fff" />}
+                color="#059669"
+                onPress={() => router.push('/formulaire')}
+              />
+              <ActionButton
+                title="Planifier"
+                icon={<Ionicons name="calendar" size={22} color="#fff" />}
+                color="#f59e0b"
+                onPress={() => router.push('/liste-audit')}
+              />
+            </View>
+          </View>
+
+          {/* KPI Grid */}
+          <View style={styles.kpiGrid}>
+            <KPICard
+              title="Types d'Audit"
+              value={stats.types_audit}
+              icon={<MaterialCommunityIcons name="molecule" size={22} color="#0d9488" />}
+              iconBg="#f0fdfa"
+              textColor="#0d9488"
               onPress={() => router.push('/type-audit')}
             />
-            <ActionButton 
-              title="Nouveau Formulaire" 
-              icon={<Ionicons name="document-text" size={20} color="#fff" />} 
-              color="#059669" 
+            <KPICard
+              title="Formulaires"
+              value={stats.formulaires}
+              icon={<Ionicons name="document-text" size={22} color="#059669" />}
+              iconBg="#f0fdf4"
+              textColor="#059669"
               onPress={() => router.push('/formulaire')}
             />
-            <ActionButton 
-              title="Planifier Audit" 
-              icon={<Ionicons name="calendar" size={20} color="#fff" />} 
-              color="#f59e0b" 
+            <KPICard
+              title="Audits Planifiés"
+              value={stats.planifies}
+              icon={<Ionicons name="calendar" size={22} color="#d97706" />}
+              iconBg="#fffbeb"
+              textColor="#d97706"
               onPress={() => router.push('/liste-audit')}
             />
+            <KPICard
+              title="Résultats"
+              value={stats.resultats}
+              icon={<Ionicons name="bar-chart" size={22} color="#e11d48" />}
+              iconBg="#fff1f2"
+              textColor="#e11d48"
+              onPress={() => router.push('/resultat')}
+            />
+          </View>
+
+          {/* Audit Report Chart */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Rapport d'Audit</Text>
+            <View style={styles.chartCard}>
+              {renderChart()}
+            </View>
           </View>
 
           {/* Recent Activity */}
@@ -266,10 +345,10 @@ const DashboardScreen = () => {
                   <View key={item.id} style={styles.timelineItem}>
                     <View style={styles.timelineLeft}>
                       <View style={[styles.timelineIconBg, { backgroundColor: '#f8fafc', borderColor: '#f1f5f9', borderWidth: 1 }]}>
-                        <Feather 
-                          name={item.action_type === 'add' ? 'plus-circle' : 'edit-2'} 
-                          size={14} 
-                          color={item.action_type === 'add' ? '#10b981' : '#3b82f6'} 
+                        <Feather
+                          name={item.action_type === 'add' ? 'plus-circle' : 'edit-2'}
+                          size={14}
+                          color={item.action_type === 'add' ? '#10b981' : '#3b82f6'}
                         />
                       </View>
                       {idx < recentActivity.length - 1 && <View style={styles.timelineLine} />}
@@ -291,14 +370,6 @@ const DashboardScreen = () => {
             </View>
           </View>
 
-          {/* Audit Report Chart */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Rapport d'Audit</Text>
-            <View style={styles.chartCard}>
-              {renderChart()}
-            </View>
-          </View>
-
           <View style={styles.footer}>
             <Text style={styles.footerText}>Copyright © Audit d'entreprise. Tous droits réservés.</Text>
             <Text style={styles.footerVersion}>Version 2.4.0-release</Text>
@@ -312,7 +383,18 @@ const DashboardScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   dashboardHeader: { height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  headerIconBtn: { padding: 8, marginLeft: 5, position: 'relative' },
+  notificationBadge: { position: 'absolute', top: 5, right: 5, backgroundColor: '#ef4444', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
+  badgeText: { color: '#fff', fontSize: 8, fontWeight: '800' },
   menuBtn: { padding: 5 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.05)' },
+  userDropdown: { position: 'absolute', top: 60, right: 15, backgroundColor: '#fff', borderRadius: 12, width: 160, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  dropdownItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
+  dropdownText: { fontSize: 15, color: '#475569', marginLeft: 12, fontWeight: '500' },
+  dropdownDivider: { height: 1, backgroundColor: '#f1f5f9', marginHorizontal: 8 },
+
   dashboardTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
   scrollView: { flex: 1 },
   content: { padding: 16, paddingBottom: 100 },
@@ -330,9 +412,22 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
   sectionLink: { fontSize: 13, color: '#2563eb', fontWeight: '600' },
 
-  actionButton: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
-  actionIconBg: { width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  actionText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  actionGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  actionButton: {
+    width: (width - 32 - 16) / 3,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8
+  },
+  actionIconBg: { width: 42, height: 42, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+  actionText: { fontSize: 11, fontWeight: '800', color: '#fff', textAlign: 'center' },
 
   timelineContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   timelineItem: { flexDirection: 'row', marginBottom: 20 },

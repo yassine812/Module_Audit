@@ -99,6 +99,12 @@
                     <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Référence / Date</td>
                     <td style="padding: 10px; border: 1px solid black;">#{{ resultat.id }} | {{ resultat.date_audit|date:"d/m/Y" }}</td>
                 </tr>
+                {% if resultat.commentaire %}
+                <tr>
+                    <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Contexte de l'Audit</td>
+                    <td style="padding: 10px; border: 1px solid black; font-style: italic;">{{ resultat.commentaire }}</td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td style="padding: 10px; border: 1px solid black; font-weight: bold; background: white;">Performance Globale</td>
                     <td style="padding: 10px; border: 1px solid black; font-size: 20px; font-weight: bold;">{{ resultat.score_audit|floatformat:"-3" }} <span style="font-size: 16px; color: #666; margin-left: 10px;">({{ resultat.score_percentage }}%)</span></td>
@@ -221,6 +227,12 @@
                     <div class="font-bold tracking-tight">Date :</div>
                     <div class="font-medium text-slate-800">{{ resultat.date_audit|date:"F j, Y" }}</div>
                 </div>
+                {% if resultat.commentaire %}
+                <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 mb-4">
+                    <div class="font-bold tracking-tight">Contexte de l'Audit :</div>
+                    <div class="font-medium text-slate-700 italic leading-relaxed">{{ resultat.commentaire }}</div>
+                </div>
+                {% endif %}
                 <div class="flex flex-col md:grid md:grid-cols-[250px_1fr] gap-1 md:gap-4 pt-6 mt-6 border-t-2 border-slate-900/10">
                     <div class="font-bold tracking-tight mt-1 text-black">Score :</div>
                     <div class="{% if resultat.score_audit >= 0.8 %}text-emerald-600{% elif resultat.score_audit >= 0.6 %}text-amber-500{% else %}text-rose-600{% endif %} font-black text-2xl flex items-center gap-3">

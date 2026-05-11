@@ -129,6 +129,9 @@ class ListeAudit(models.Model):
         }
         return status_map.get(status, 'Inconnu')
     
+    def get_reference(self):
+        return f"AUD-{self.number_audit:04d}"
+
     def save(self, *args, **kwargs):
         if not self.number_audit or self.number_audit == 0:
             last = ListeAudit.objects.order_by('-number_audit').first()

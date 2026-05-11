@@ -112,9 +112,9 @@ const UsersManagementScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.username}</Text></View>
       <View style={[styles.cell, { flex: 1.5 }]}><Text style={styles.cellText} numberOfLines={1}>{item.email || '-'}</Text></View>
       <View style={[styles.cell, { width: 70 }]}><Text style={styles.cellText} numberOfLines={1}>{item.role || 'User'}</Text></View>

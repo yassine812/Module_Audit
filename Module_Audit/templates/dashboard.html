@@ -11,96 +11,168 @@
     transition: transform 0.2s ease-out;
     display: inline-block;
   }
-  
+
   /* Mobile Optimization: Zero-Scroll Pattern */
   @media (max-width: 576px) {
-    .content-header { display: none !important; } /* Hide page title to save space */
-    .content-wrapper { padding: 4px !important; }
-    
+    .content-header {
+      display: none !important;
+    }
+
+    /* Hide page title to save space */
+    .content-wrapper {
+      padding: 4px !important;
+    }
+
     /* Grid Spacing */
-    .row { margin-left: -4px !important; margin-right: -4px !important; }
-    .row > [class*="col-"] { padding-left: 4px !important; padding-right: 4px !important; }
-    
+    .row {
+      margin-left: -4px !important;
+      margin-right: -4px !important;
+    }
+
+    .row>[class*="col-"] {
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+    }
+
     /* Statistics Cards: 2x2 Grid */
-    .small-box { margin-bottom: 8px !important; border-radius: 8px !important; }
-    .small-box .inner { padding: 10px !important; min-height: 65px; }
-    .small-box h3 { font-size: 1.2rem !important; margin-bottom: 2px !important; }
-    .small-box p { font-size: 0.65rem !important; margin-bottom: 0 !important; font-weight: 600; }
-    .small-box .icon { display: none !important; }
-    .small-box-footer { font-size: 0.6rem !important; padding: 2px 0 !important; background: rgba(0,0,0,0.05) !important; }
+    .small-box {
+      margin-bottom: 8px !important;
+      border-radius: 8px !important;
+    }
+
+    .small-box .inner {
+      padding: 10px !important;
+      min-height: 65px;
+    }
+
+    .small-box h3 {
+      font-size: 1.2rem !important;
+      margin-bottom: 2px !important;
+    }
+
+    .small-box p {
+      font-size: 0.65rem !important;
+      margin-bottom: 0 !important;
+      font-weight: 600;
+    }
+
+    .small-box .icon {
+      display: none !important;
+    }
+
+    .small-box-footer {
+      font-size: 0.6rem !important;
+      padding: 2px 0 !important;
+      background: rgba(0, 0, 0, 0.05) !important;
+    }
 
     /* Cards & Content */
-    .card { margin-bottom: 8px !important; border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; }
-    .card-header { padding: 6px 12px !important; border-bottom: 1px solid rgba(0,0,0,0.05); }
-    .card-title { font-size: 0.85rem !important; }
-    .card-body { padding: 8px !important; }
-    
+    .card {
+      margin-bottom: 8px !important;
+      border-radius: 8px !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card-header {
+      padding: 6px 12px !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .card-title {
+      font-size: 0.85rem !important;
+    }
+
+    .card-body {
+      padding: 8px !important;
+    }
+
     /* Timeline Area */
-    .timeline { max-height: 180px !important; }
-    .timeline-item { margin-left: 35px !important; }
-    .timeline-header { font-size: 0.75rem !important; padding: 6px !important; }
-    .time-label span { font-size: 0.6rem !important; padding: 2px 6px !important; }
-    
+    .timeline {
+      max-height: 180px !important;
+    }
+
+    .timeline-item {
+      margin-left: 35px !important;
+    }
+
+    .timeline-header {
+      font-size: 0.75rem !important;
+      padding: 6px !important;
+    }
+
+    .time-label span {
+      font-size: 0.6rem !important;
+      padding: 2px 6px !important;
+    }
+
     /* Chart Area */
-    .chart { height: 160px !important; }
-    
+    .chart {
+      height: 160px !important;
+    }
+
     /* Buttons */
-    .btn-sm { font-size: 0.75rem !important; padding: 6px 10px !important; }
-    
+    .btn-sm {
+      font-size: 0.75rem !important;
+      padding: 6px 10px !important;
+    }
+
     /* Force 100vh behavior */
-    .content { padding: 0 !important; }
+    .content {
+      padding: 0 !important;
+    }
   }
 
   /* Dashboard Filter Fixes */
   #monthPickerBtn::after {
-      display: none !important; /* Hide default bootstrap caret */
+    display: none !important;
+    /* Hide default bootstrap caret */
   }
-  
+
   #monthPickerBtn {
-      display: flex !important;
-      align-items: center;
-      justify-content: space-between;
-      padding-right: 12px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 12px !important;
   }
 
   #monthPickerBtn::before {
-      content: '';
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 5px solid #6c757d;
-      order: 2;
-      margin-left: 8px;
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #6c757d;
+    order: 2;
+    margin-left: 8px;
   }
 
   #filterYear {
-      -webkit-appearance: none !important;
-      -moz-appearance: none !important;
-      appearance: none !important;
-      background-image: none !important;
-      padding-right: 25px !important;
-      position: relative;
-      cursor: pointer;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+    padding-right: 25px !important;
+    position: relative;
+    cursor: pointer;
   }
 
   .year-select-container {
-      position: relative;
-      display: inline-block;
+    position: relative;
+    display: inline-block;
   }
 
   .year-select-container::after {
-      content: '';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 5px solid #6c757d;
-      pointer-events: none;
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #6c757d;
+    pointer-events: none;
   }
 </style>
 <div class="row">
@@ -176,17 +248,20 @@
       <div class="card-body p-3">
         <div class="row g-2">
           <div class="col-12 col-sm-6 col-lg-12 mb-2">
-            <button onclick="openTypeAuditModal('{% url 'typeaudit_create' %}')" class="btn btn-primary btn-block btn-sm text-left py-2 d-flex align-items-center">
+            <button onclick="openTypeAuditModal('{% url 'typeaudit_create' %}')"
+              class="btn btn-primary btn-block btn-sm text-left py-2 d-flex align-items-center">
               <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Nouveau Type d'Audit
             </button>
           </div>
           <div class="col-12 col-sm-6 col-lg-12 mb-2">
-            <a href="{% url 'formulaire_create' %}" class="btn btn-success btn-block btn-sm text-left py-2 d-flex align-items-center">
+            <a href="{% url 'formulaire_create' %}"
+              class="btn btn-success btn-block btn-sm text-left py-2 d-flex align-items-center">
               <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Nouveau Formulaire
             </a>
           </div>
           <div class="col-12 col-sm-12 col-lg-12 mb-2">
-            <a href="{% url 'liste_audit_create' %}" class="btn btn-warning btn-block btn-sm text-left py-2 d-flex align-items-center">
+            <a href="{% url 'liste_audit_create' %}"
+              class="btn btn-warning btn-block btn-sm text-left py-2 d-flex align-items-center">
               <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Planifier Audit
             </a>
           </div>
@@ -204,44 +279,44 @@
       <div class="card-body p-0">
         <div class="timeline timeline-inverse m-0 p-3" style="max-height: 400px; overflow-y: auto;">
           {% for activity in recent_activities %}
-            {% if request.user.is_superuser %}
-              <div class="time-label">
-                <span class="bg-info" style=" padding: 2px 8px;">{{ activity.action_time|date:"d M Y" }}</span>
-              </div>
-              <div class="mb-3">
-                {% if activity.action_flag == 1 %}
-                  <i data-lucide="plus-circle" class="bg-success text-white p-1 rounded-circle" ></i>
-                {% elif activity.action_flag == 2 %}
-                  <i data-lucide="edit" class="bg-warning text-white p-1 rounded-circle" ></i>
-                {% else %}
-                  <i data-lucide="trash-2" class="bg-danger text-white p-1 rounded-circle" ></i>
-                {% endif %}
-                <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
-                  <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.action_time|timesince }} ago</span>
-                  <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
-                    {% if activity.action_flag == 1 %}Création de{% elif activity.action_flag == 2 %}Modification de{% else %}Suppression de{% endif %} 
-                    {{ activity.content_type.name }} : <b class="text-primary">{{ activity.object_repr }}</b>
-                  </h3>
-                </div>
-              </div>
+          {% if request.user.is_superuser %}
+          <div class="time-label">
+            <span class="bg-info" style=" padding: 2px 8px;">{{ activity.action_time|date:"d M Y" }}</span>
+          </div>
+          <div class="mb-3">
+            {% if activity.action_flag == 1 %}
+            <i data-lucide="plus-circle" class="bg-success text-white p-1 rounded-circle"></i>
+            {% elif activity.action_flag == 2 %}
+            <i data-lucide="edit" class="bg-warning text-white p-1 rounded-circle"></i>
             {% else %}
-              <div class="time-label">
-                <span class="bg-info" style=" padding: 2px 8px;">{{ activity.date|date:"d M Y" }}</span>
-              </div>
-              <div class="mb-3">
-                <i data-lucide="clipboard-check" class="bg-primary text-white p-1 rounded-circle" ></i>
-                <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
-                  <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.date|timesince }} ago</span>
-                  <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
-                    <b>Nouvel audit :</b>
-                    <a href="{% url 'liste_audit_list' %}" class="text-primary">{{ activity.formulaire_audit.name }}</a>
-                  </h3>
-                  <div class="timeline-body " style="padding: 0 10px 10px; ">
-                    Audit prévu le {{ activity.date|date:"d/m/Y" }} {% if activity.site %}au site {{ activity.site }}{% endif %}.
-                  </div>
-                </div>
-              </div>
+            <i data-lucide="trash-2" class="bg-danger text-white p-1 rounded-circle"></i>
             {% endif %}
+            <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
+              <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.action_time|timesince }} ago</span>
+              <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
+                {% if activity.action_flag == 1 %}Création de{% elif activity.action_flag == 2 %}Modification de{% else %}Suppression de{% endif %}
+                {{ activity.content_type.name }} : <b class="text-primary">{{ activity.object_repr }}</b>
+              </h3>
+            </div>
+          </div>
+          {% else %}
+          <div class="time-label">
+            <span class="bg-info" style=" padding: 2px 8px;">{{ activity.date|date:"d M Y" }}</span>
+          </div>
+          <div class="mb-3">
+            <i data-lucide="clipboard-check" class="bg-primary text-white p-1 rounded-circle"></i>
+            <div class="timeline-item shadow-none border-0 bg-light rounded-lg ml-5">
+              <span class="time " style="font-size: 0.65rem;"><i data-lucide="clock" class="w-3 h-3 inline"></i> {{ activity.date|timesince }} ago</span>
+              <h3 class="timeline-header no-border" style="font-size: 0.85rem; padding: 10px;">
+                <b>Nouvel audit :</b>
+                <a href="{% url 'liste_audit_list' %}" class="text-primary">{{ activity.formulaire_audit.name }}</a>
+              </h3>
+              <div class="timeline-body " style="padding: 0 10px 10px; ">
+                Audit prévu le {{ activity.date|date:"d/m/Y" }} {% if activity.site %}au site {{ activity.site }}{% endif %}.
+              </div>
+            </div>
+          </div>
+          {% endif %}
           {% empty %}
           <div class="text-center py-5">
             <i data-lucide="inbox" class="w-10 h-10  mb-2 opacity-50"></i>
@@ -271,13 +346,14 @@
             <div class="dropdown-menu p-3 shadow-lg border-0" id="monthPickerMenu"
               style="display:none; position:absolute; top:100%; right:0; z-index:9999; min-width:240px; border-radius:12px;">
               <div class="px-1 pb-2 d-flex justify-content-between align-items-center border-bottom mb-2">
-                <small class=" font-weight-bold uppercase tracking-wider" style="font-size: 10px;">Sélectionner des mois</small>
+                <small class=" font-weight-bold uppercase tracking-wider" style="font-size: 10px;">Sélectionner des
+                  mois</small>
                 <a href="#" id="clearMonths" class="text-xs text-danger font-weight-bold">Effacer</a>
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                 {% for m_val, m_label in month_choices %}
                 <label class="dropdown-item py-1 px-2 d-flex align-items-center rounded"
-                   style="cursor:pointer; font-size:0.85rem; gap:8px;">
+                  style="cursor:pointer; font-size:0.85rem; gap:8px;">
                   <input type="checkbox" class="month-checkbox" value="{{ m_val }}"> {{ m_label }}
                 </label>
                 {% endfor %}
@@ -286,7 +362,8 @@
           </div>
 
           <div class="year-select-container">
-            <select id="filterYear" class="form-control form-control-sm" style="width:90px; border-radius: 6px;"></select>
+            <select id="filterYear" class="form-control form-control-sm"
+              style="width:90px; border-radius: 6px;"></select>
           </div>
         </div>
       </div>
@@ -300,16 +377,16 @@
 </div>
 <!-- Modal Container -->
 <div class="modal fade" id="typeAuditModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div id="modalBodyContent">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2  ">Chargement...</p>
-                </div>
-            </div>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+      <div id="modalBodyContent">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2  ">Chargement...</p>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -317,66 +394,67 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function openTypeAuditModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
-        $('#typeAuditModal').modal('show');
-        $.ajax({
-            url: url,
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#modalBodyContent').html(data);
-                initModalBehaviors();
-            }
-        });
-    }
+  function openTypeAuditModal(url) {
+    $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+    $('#typeAuditModal').modal('show');
+    $.ajax({
+      url: url,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      success: function (data) {
+        $('#modalBodyContent').html(data);
+        initModalBehaviors();
+      }
+    });
+  }
 
-    function initModalBehaviors() {
-        $('#typeAuditModalForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            $.ajax({
-                type:"POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                success: function(response) {
-                    if (response.success) {
-                        $('#typeAuditModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Succès',
-                            text: response.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        $('#modalBodyContent').html(response);
-                        initModalBehaviors();
-                    }
-                },
-                error: function(xhr) {
-                    $('#modalBodyContent').html(xhr.responseText);
-                    initModalBehaviors();
-                }
+  function initModalBehaviors() {
+    $('#typeAuditModalForm').off('submit').on('submit', function (e) {
+      e.preventDefault();
+      const form = $(this);
+      $.ajax({
+        type: "POST",
+        url: form.attr('action'),
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (response) {
+          if (response.success) {
+            $('#typeAuditModal').modal('hide');
+            Swal.fire({
+              icon: 'success',
+              title: 'Succès',
+              text: response.message,
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
             });
-        });
-    }
+          } else {
+            $('#modalBodyContent').html(response);
+            initModalBehaviors();
+          }
+        },
+        error: function (xhr) {
+          $('#modalBodyContent').html(xhr.responseText);
+          initModalBehaviors();
+        }
+      });
+    });
+  }
 </script>
 <script>
   (function () {
-    const CHART_API_URL ="{% url 'chart_data' %}";
+    const CHART_API_URL = "{% url 'chart_data' %}";
 
     // -- Year dropdown --
     const yearSelect = document.getElementById('filterYear');
-    const availableYears = {{ available_years|safe }};
-    availableYears.forEach(y => {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = y;
-      yearSelect.appendChild(opt);
-    });
-    yearSelect.value = {{ current_year }};
+    const availableYears = {{ available_years| safe
+  }};
+  availableYears.forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    yearSelect.appendChild(opt);
+  });
+  yearSelect.value = {{ current_year }};
 
   // -- Multi-month picker toggle --
   const pickBtn = document.getElementById('monthPickerBtn');
@@ -443,9 +521,9 @@
           }
         },
         tooltip: {
-            padding: 10,
-            cornerRadius: 8,
-            usePointStyle: true
+          padding: 10,
+          cornerRadius: 8,
+          usePointStyle: true
         }
       },
       scales: {
@@ -460,9 +538,9 @@
           }
         },
         y: {
-          grid: { 
-              color: 'rgba(0,0,0,0.03)',
-              drawBorder: false
+          grid: {
+            color: 'rgba(0,0,0,0.03)',
+            drawBorder: false
           },
           beginAtZero: true,
           ticks: {
@@ -480,7 +558,7 @@
   function buildDatasets(data) {
     const baseConfig = { borderWidth: 3, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 };
     return [
-      { ...baseConfig, label:"Types d'Audit", data: data.datasets.types_audit, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)' },
+      { ...baseConfig, label: "Types d'Audit", data: data.datasets.types_audit, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)' },
       { ...baseConfig, label: 'Formulaires', data: data.datasets.formulaires, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
       { ...baseConfig, label: 'Audits Planifiés', data: data.datasets.audits_planifies, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.05)' },
       { ...baseConfig, label: 'Résultats', data: data.datasets.resultats, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)' }
@@ -508,15 +586,15 @@
           { id: 'total-audits-planifies', val: data.totals.audits_planifies },
           { id: 'total-resultats', val: data.totals.resultats }
         ];
-        
+
         stats.forEach(item => {
           const el = document.getElementById(item.id);
           if (el && el.textContent != item.val) {
             el.textContent = item.val;
             el.animate([
-                { transform: 'scale(1)', opacity: 1 },
-                { transform: 'scale(1.2)', opacity: 0.8 },
-                { transform: 'scale(1)', opacity: 1 }
+              { transform: 'scale(1)', opacity: 1 },
+              { transform: 'scale(1.2)', opacity: 0.8 },
+              { transform: 'scale(1)', opacity: 1 }
             ], { duration: 300 });
           }
         });
@@ -529,4 +607,3 @@
   }) ();
 </script>
 {% endblock %}
-

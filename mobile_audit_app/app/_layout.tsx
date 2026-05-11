@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { SidebarProvider, useSidebar } from '../src/context/SidebarContext';
 
 function RootLayoutContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { sidebarVisible, closeSidebar } = useSidebar();
   const router = useRouter();
   const pathname = usePathname();
@@ -16,6 +16,20 @@ function RootLayoutContent() {
 
   const isMobile = width < 768;
   const isLoginPage = pathname === '/login';
+
+  React.useEffect(() => {
+    if (authLoading) return;
+
+    if (user && isLoginPage) {
+      router.replace('/');
+    } else if (!user && !isLoginPage) {
+      router.replace('/login');
+    }
+  }, [user, isLoginPage, authLoading]);
+
+  if (authLoading) {
+    return null; // Or a splash screen
+  }
 
   return (
     <View style={styles.container}>

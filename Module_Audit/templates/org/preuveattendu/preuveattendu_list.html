@@ -148,9 +148,9 @@
                  <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Modifier">
                    <i data-lucide="edit" style="width: 18px;"></i>
                  </button>
-                 <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Supprimer">
-                   <i data-lucide="trash-2" style="width: 18px;"></i>
-                 </button>
+                  <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}', '{{ preuve.name|escapejs }}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Supprimer">
+                    <i data-lucide="trash-2" style="width: 18px;"></i>
+                  </button>
                </div>
              </div>
              {% endfor %}
@@ -200,9 +200,9 @@
                         <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                           <i data-lucide="edit"></i>
                         </button>
-                        <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                          <i data-lucide="trash-2"></i>
-                        </button>
+                         <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}', '{{ preuve.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                           <i data-lucide="trash-2"></i>
+                         </button>
                       </div>
                     </td>
                   </tr>
@@ -292,9 +292,6 @@
 </div>
 
 
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}

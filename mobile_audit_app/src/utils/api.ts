@@ -1,6 +1,6 @@
 // export const TUNNEL_URL = 'https://bids-deborah-florists-carefully.trycloudflare.com'; // Public Localtunnel (Permanent name)
 // export const TUNNEL_URL = 'http://10.0.2.2:8000'; // emulator
-export const TUNNEL_URL = 'http://192.168.1.189:8000'; // Physical device or local network
+export const TUNNEL_URL = 'http://192.168.1.17:8000'; // Physical device or local network
 // export const TUNNEL_URL = 'https://0a69-105-159-204-58.ngrok-free.app'; // ngrok
 
 export const getApiUrl = (path: string) => {
@@ -12,6 +12,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: TUNNEL_URL,
   timeout: 30000,
+  withCredentials: true,
 });
 
 export default api;
@@ -21,6 +22,7 @@ export const API_PATHS = {
   REGISTER: '/audit/api/register/',
   PROFILE: '/audit/api/profile/',
   LOGOUT: '/audit/api/logout/',
+  CHANGE_PASSWORD: '/audit/api/change-password/',
   USERS: '/audit/api/users/',
   AUDITS: '/audit/api/audits/',
   LISTE_AUDIT: '/audit/api/liste-audit/',

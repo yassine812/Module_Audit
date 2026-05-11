@@ -13,10 +13,15 @@ import { useRouter, usePathname } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '../context/AuthContext';
+
 const Sidebar = ({ onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
   const [expandedGroup, setExpandedGroup] = useState(null);
+
+  const isAuditor = user?.role === 'Auditeur' || user?.role === 'Participant';
 
   const menuItems = [
     {
@@ -27,28 +32,29 @@ const Sidebar = ({ onClose }) => {
         { label: 'Section', path: '/sections' },
         { label: 'Processus', path: '/processus' },
       ],
+      adminOnly: true
     },
     {
       title: 'Référentiel',
-      icon: <Feather name="book" size={20} color="#475569" />,
+      icon: <MaterialCommunityIcons name="book-outline" size={20} color="#475569" />,
       items: [
-        { label: 'Textes de Référence', path: '/textref' },
-        { label: 'Chapitres', path: '/chapitres' },
         { label: 'Critères', path: '/critere' },
-        { label: 'Sous-Critères', path: '/sous-critere' },
-        { label: 'Cotations', path: '/cotation' },
-        { label: 'Niveaux Attendus', path: '/niveau-attendu' },
-        { label: 'Types de Cotation', path: '/typecotation' },
+        { label: 'Textes de Référence', path: '/textref', adminOnly: true },
+        { label: 'Chapitres', path: '/chapitres', adminOnly: true },
+        { label: 'Sous-Critères', path: '/sous-critere', adminOnly: true },
+        { label: 'Cotations', path: '/cotation', adminOnly: true },
+        { label: 'Niveaux Attendus', path: '/niveau-attendu', adminOnly: true },
+        { label: 'Types de Cotation', path: '/typecotation', adminOnly: true },
       ],
     },
     {
       title: 'Audit',
-      icon: <Feather name="edit-3" size={20} color="#475569" />,
+      icon: <MaterialCommunityIcons name="clipboard-check-outline" size={20} color="#475569" />,
       items: [
-        { label: 'Types d\'Audit', path: '/type-audit' },
-        { label: 'Formulaires', path: '/formulaire' },
+        { label: 'Formulaires d\'Audit', path: '/formulaire' },
         { label: 'Listes d\'Audits', path: '/liste-audit' },
         { label: 'Résultats d\'Audits', path: '/resultat' },
+        { label: 'Types d\'Audit', path: '/type-audit', adminOnly: true },
       ],
     },
     {
@@ -58,14 +64,15 @@ const Sidebar = ({ onClose }) => {
         { label: 'Types de Preuves', path: '/type-preuve' },
         { label: 'Preuves Attendues', path: '/preuve-attendue' },
       ],
+      adminOnly: true
     },
     {
       title: 'Ressources',
-      icon: <Feather name="package" size={20} color="#475569" />,
+      icon: <MaterialCommunityIcons name="package-variant" size={20} color="#475569" />,
       items: [
-        { label: 'Documents', path: '/documents' },
-        { label: 'Equipements', path: '/equipements' },
-        { label: 'Types d\'Equipements', path: '/types-equipements' },
+        { label: 'Équipements', path: '/equipements' },
+        { label: 'Documents', path: '/documents', adminOnly: true },
+        { label: 'Types d\'Equipements', path: '/types-equipements', adminOnly: true },
       ],
     },
     {
@@ -74,8 +81,17 @@ const Sidebar = ({ onClose }) => {
       items: [
         { label: 'Utilisateurs', path: '/users' },
       ],
+      adminOnly: true
     },
   ];
+
+  const filteredMenuItems = menuItems
+    .filter(group => !isAuditor || !group.adminOnly)
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => !isAuditor || !item.adminOnly)
+    }))
+    .filter(group => group.items.length > 0);
 
   const toggleGroup = (title) => {
     setExpandedGroup(expandedGroup === title ? null : title);
@@ -119,23 +135,29 @@ const Sidebar = ({ onClose }) => {
       </View>
 
       <ScrollView style={styles.menuScroll}>
-        {menuItems.map((group, idx) => (
+        {filteredMenuItems.map((group, idx) => (
           <View key={idx} style={styles.groupContainer}>
             <TouchableOpacity 
-              style={styles.groupHeader} 
+              style={[
+                styles.groupHeader,
+                expandedGroup === group.title && styles.groupHeaderActive
+              ]} 
               onPress={() => toggleGroup(group.title)}
             >
               <View style={styles.groupHeaderLeft}>
                 <View style={styles.iconContainer}>
                   {group.icon}
                 </View>
-                <Text style={styles.groupTitle}>{group.title}</Text>
+                <Text style={[
+                  styles.groupTitle,
+                  expandedGroup === group.title && styles.groupTitleActive
+                ]}>{group.title}</Text>
               </View>
               {group.items.length > 0 && (
                 <Feather 
                   name={expandedGroup === group.title ? 'chevron-down' : 'chevron-right'} 
                   size={16} 
-                  color="#94a3b8" 
+                  color={expandedGroup === group.title ? '#2563eb' : '#94a3b8'} 
                 />
               )}
             </TouchableOpacity>
@@ -257,6 +279,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 20,
+    borderRadius: 8,
+    marginHorizontal: 10,
+  },
+  groupHeaderActive: {
+    backgroundColor: '#eff6ff',
   },
   groupHeaderLeft: {
     flexDirection: 'row',
@@ -271,6 +298,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#334155',
+  },
+  groupTitleActive: {
+    color: '#2563eb',
+    fontWeight: '700',
   },
   subItemsContainer: {
     backgroundColor: '#f8fafc',

@@ -10,6 +10,14 @@
     margin-top: 1rem;
   }
 
+  /* Keep section multi-select compact like a single-line input */
+  #id_section + .select2-container .select2-selection--multiple,
+  [id$="_section"] + .select2-container .select2-selection--multiple {
+    min-height: 45px !important;
+    max-height: 45px !important;
+    overflow: hidden !important;
+  }
+
   /* MOBILE - FIT ENTIRE PAGE WITHOUT SCROLLING (OPTIMIZED) */
   @media (max-width: 576px) {
 
@@ -522,7 +530,7 @@
               </div>
 
               <!-- Row 3: Section -->
-              <div class="col-md-12">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="{{ form.section.id_for_label }}"
                     class="form-label fw-bold  text-dark opacity-75 mb-2">Section concernée</label>

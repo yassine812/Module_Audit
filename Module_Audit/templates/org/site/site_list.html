@@ -104,7 +104,7 @@
                       <button onclick="openSiteModal('{% url 'site_update' site.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit" ></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'site_delete' site.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <button onclick="openDeleteModal('{% url 'site_delete' site.id %}', '{{ site.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                         <i data-lucide="trash-2" ></i>
                       </button>
                     </div>
@@ -195,10 +195,6 @@
 </div>
 
 
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -260,7 +256,7 @@
         });
     }
 
-    function confirmDelete(url, name) {
+    function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -306,19 +302,6 @@
                     }
                 });
             }
-        });
-    },
-                error: function(xhr) {
-                    const response = xhr.responseJSON;
-                    if (response && response.message) {
-                        $('#deleteErrorMessage').text(response.message).fadeIn();
-                        // Gold Standard UI: Hide the delete button if deletion is blocked
-                        form.find('button[type="submit"]').fadeOut();
-                    } else {
-                        alert("Une erreur imprévue est survenue.");
-                    }
-                }
-            });
         });
     }
 

@@ -158,4 +158,19 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Allow framing for PDF preview
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Permissive for local dev connection issues
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000', 
+    'http://127.0.0.1:8000',
+    'http://192.168.1.17:8000'
+]
+
+# Session and Cookie settings for Mobile/CORS
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+# CORS settings (for django-cors-headers if ever installed, though we use custom middleware)
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True # Middleware handles this more specifically but good to have

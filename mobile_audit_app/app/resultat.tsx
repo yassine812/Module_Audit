@@ -56,12 +56,12 @@ const ResultatAuditListScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     const isTermine = !item.en_cours;
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+        <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>{index + 1}</Text></View>
         <View style={[styles.cell, { flex: 1.8 }]}>
             <Text style={[styles.cellText, { fontWeight: '700' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
             <Text style={[styles.cellText, { fontSize: 7, color: '#94a3b8' }]}>{item.ref_audit || item.id}</Text>

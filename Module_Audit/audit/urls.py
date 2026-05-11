@@ -2,7 +2,7 @@ from django.urls import path
 from .views import *
 from .auth import LoginView, LogoutView
 from .api_views import (
-    LoginAPIView, LogoutAPIView, UserListAPIView, TypeAuditListAPIView, 
+    LoginAPIView, LogoutAPIView, ChangePasswordAPIView, UserListAPIView, TypeAuditListAPIView, 
     TypeAuditDetailAPIView, ChapitreNormeListAPIView, ChapitreNormeDetailAPIView, CritereListAPIView, 
     CritereDetailAPIView, TypeCotationListAPIView, TypeCotationDetailAPIView, SousCritereListAPIView, 
     SousCritereDetailAPIView, FormulaireAuditListAPIView, FormulaireAuditDetailAPIView, 
@@ -157,6 +157,7 @@ urlpatterns = [
     path("api/chart-data/", ChartDataAPIView.as_view(), name="chart_data"),
     path("api/login/", LoginAPIView.as_view(), name="api_login"),
     path("api/logout/", LogoutAPIView.as_view(), name="api_logout"),
+    path("api/change-password/", ChangePasswordAPIView.as_view(), name="api_change_password"),
     path("api/users/", UserListAPIView.as_view(), name="api_user_list"),
     path("api/activities/", ActivityAPIView.as_view(), name="api_activities"),
     path("api/dashboard-stats/", DashboardStatsAPIView.as_view(), name="api_dashboard_stats"),

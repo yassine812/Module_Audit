@@ -1,4 +1,6 @@
 from django.urls import reverse_lazy
+import os
+from django.conf import settings
 from django.views.generic import (
     ListView, CreateView, UpdateView,
     DeleteView, DetailView, View, TemplateView
@@ -135,6 +137,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
+            
+            # DEBUG LOGGING TO FILE
+            with open(os.path.join(settings.BASE_DIR, 'dashboard_debug.log'), 'a') as f:
+                f.write(f"--- DASHBOARD DEBUG ---\n")
+                f.write(f"User: {user.username} (ID: {user.id})\n")
+                f.write(f"Audits Assigned: {audits_assigned.count()}\n")
+                f.write(f"Planifies: {planifies}\n")
+                f.write(f"En cours: {en_cours}\n")
+                f.write(f"Termines: {termines}\n")
+                f.write(f"Score Moy: {score_moy}\n")
+                f.write(f"-----------------------\n")
+            
         return context
 
 @method_decorator(csrf_exempt, name='dispatch')

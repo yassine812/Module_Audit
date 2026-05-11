@@ -4,6 +4,9 @@ from django.views.generic import (
     DeleteView, DetailView, View, TemplateView
 )
 from django.contrib.auth.models import User
+import os
+from django.conf import settings
+
 from django.http import JsonResponse
 from .mixins import SuperuserRequiredMixin, AuditeurOrSuperuserRequiredMixin
 from django.shortcuts import redirect, get_object_or_404, render
@@ -129,10 +132,22 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
             
             context['planifies_count'] = planifies
-            en_cours_count = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
+            
+            # --- DEBUG LOGGING ---
+            log_file = os.path.join(settings.BASE_DIR, 'dashboard_debug_v2.log')
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"\n--- {timezone.now()} ---")
+                f.write(f"\nFile: Module_Audit/Module_Audit/audit/views.py")
+                f.write(f"\nUser: {user.username}")
+                f.write(f"\nAssigned total: {audits_assigned.count()}")
+                f.write(f"\nPlanifies: {planifies}")
+                f.write(f"\nEn cours: {en_cours}")
+                f.write(f"\nTermines: {termines}")
+                f.write(f"\nScore moy: {score_moy}")
+                f.write("\n------------------------\n")
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
         return context

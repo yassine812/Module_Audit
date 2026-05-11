@@ -10,12 +10,15 @@ import {
   FlatList,
   TextInput,
   Alert,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
 import { useSidebar } from '../src/context/SidebarContext';
+import { useAuth } from '../src/context/AuthContext';
 
 const ListeAuditScreen = () => {
   const router = useRouter();
@@ -25,11 +28,20 @@ const ListeAuditScreen = () => {
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Tous');
+  const [notifCount, setNotifCount] = useState(0);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { logout } = useAuth();
 
   const fetchData = async () => {
     try {
-      const res = await api.get(getApiUrl(API_PATHS.RESULTATS));
+      const [res, statsRes] = await Promise.all([
+        api.get(getApiUrl(API_PATHS.RESULTATS)),
+        api.get(getApiUrl(API_PATHS.STATS))
+      ]);
       setData(res.data.data || []);
+      if (statsRes.data.status === 'success') {
+        setNotifCount(statsRes.data.data.notifications_count || 0);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -42,16 +54,32 @@ const ListeAuditScreen = () => {
     fetchData();
   }, []);
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Voulez-vous vraiment vous déconnecter ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Déconnecter", 
+          style: "destructive", 
+          onPress: async () => {
+            await logout();
+            router.replace('/login');
+          } 
+        }
+      ]
+    );
+  };
+
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 20 }]}><Text style={styles.headerText}>N°</Text></View>
+      <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>N°</Text></View>
       <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>NOM AUDIT</Text></View>
-      <View style={[styles.headerCell, { width: 55 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DATE</Text></View>
-      <View style={[styles.headerCell, { width: 45 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>AUDIT.</Text></View>
-      <View style={[styles.headerCell, { width: 55 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>FORM.</Text></View>
-      <View style={[styles.headerCell, { width: 50 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>STATUT</Text></View>
-      <View style={[styles.headerCell, { width: 70 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>ACTIONS</Text></View>
+      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
+      <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DATE</Text></View>
+      <View style={[styles.headerCell, { width: 60 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>STATUT</Text></View>
+      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>ACTIONS</Text></View>
     </View>
   );
 
@@ -62,35 +90,29 @@ const ListeAuditScreen = () => {
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 20 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
+        <View style={[styles.cell, { width: 25 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
         <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text></View>
-        <View style={[styles.cell, { width: 55 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.departement_name || '-'}</Text></View>
-        <View style={[styles.cell, { width: 65, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
-            <Text style={[styles.cellText, { fontSize: 8 }]}>{item.date_audit ? item.date_audit.split('T')[0].substring(2) : '-'}</Text>
+        <View style={[styles.cell, { width: 65 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.departement_name || '-'}</Text></View>
+        <View style={[styles.cell, { width: 75, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+            <Text style={[styles.cellText, { fontSize: 9 }]}>{item.date_audit ? item.date_audit.split('T')[0].substring(2).split('-').reverse().join('/') : '-'}</Text>
         </View>
-        <View style={[styles.cell, { width: 45, alignItems: 'center' }]}>
-            <View style={styles.auditeurBadge}>
-                <Text style={styles.auditeurText} numberOfLines={1}>{item.auditeur_name || 'admin'}</Text>
-            </View>
-        </View>
-        <View style={[styles.cell, { width: 55 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.formulaire_name || 'form'}</Text></View>
-        <View style={[styles.cell, { width: 50, alignItems: 'center' }]}>
+        <View style={[styles.cell, { width: 60, alignItems: 'center' }]}>
             <View style={[styles.statusBadge, { 
               backgroundColor: isTermine ? '#10b981' : isEnCours ? '#3b82f6' : '#94a3b8' 
             }]}>
                 <Text style={styles.statusText}>{item.status_label}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 70, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
+        <View style={[styles.cell, { width: 85, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
             {isTermine ? (
                 <TouchableOpacity style={styles.rapportBtn}>
                     <Text style={styles.rapportBtnText}>Rapport</Text>
-                    <MaterialCommunityIcons name="file-document-outline" size={9} color="#64748b" />
+                    <MaterialCommunityIcons name="file-document-outline" size={10} color="#64748b" />
                 </TouchableOpacity>
             ) : isEnCours ? (
                 <TouchableOpacity style={styles.continuerBtn} onPress={() => router.push({ pathname: '/audit-form', params: { id: item.resultat_id || item.id } })}>
                     <Text style={styles.continuerBtnText}>Continuer</Text>
-                    <Ionicons name="chevron-forward" size={9} color="#fff" />
+                    <Ionicons name="chevron-forward" size={10} color="#fff" />
                 </TouchableOpacity>
             ) : (
                 <TouchableOpacity 
@@ -98,11 +120,11 @@ const ListeAuditScreen = () => {
                   onPress={() => router.push({ pathname: '/audit-schedule', params: { id: item.id } })}
                 >
                     <Text style={styles.continuerBtnText}>Modifier</Text>
-                    <Ionicons name="create-outline" size={9} color="#fff" />
+                    <Ionicons name="create-outline" size={10} color="#fff" />
                 </TouchableOpacity>
             )}
-            <TouchableOpacity style={{ marginLeft: 2 }} onPress={() => Alert.alert('Action', 'Options supplémentaires pour l\'audit #' + item.id)}>
-                <Entypo name="dots-three-horizontal" size={9} color="#3b82f6" />
+            <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => Alert.alert('Action', 'Options supplémentaires pour l\'audit #' + item.id)}>
+                <Entypo name="dots-three-horizontal" size={10} color="#3b82f6" />
             </TouchableOpacity>
         </View>
       </View>
@@ -121,11 +143,48 @@ const ListeAuditScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Liste de mes audits</Text>
         </View>
-        <TouchableOpacity style={styles.planifierBtn} onPress={() => router.push('/audit-schedule')}>
-          <Ionicons name="add" size={16} color="#fff" />
-          <Text style={styles.planifierBtnText}>Planifier Audit</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <Ionicons name="notifications-outline" size={20} color="#475569" />
+            {notifCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.badgeText}>{notifCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowUserMenu(true)}>
+            <Feather name="user" size={20} color="#475569" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.planifierBtn} onPress={() => router.push('/audit-schedule')}>
+            <Ionicons name="add" size={16} color="#fff" />
+            <Text style={styles.planifierBtnText}>Planifier</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <Modal visible={showUserMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowUserMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.userDropdown}>
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={() => { setShowUserMenu(false); router.push('/profile'); }}
+              >
+                <Feather name="user" size={18} color="#475569" />
+                <Text style={styles.dropdownText}>Profil</Text>
+              </TouchableOpacity>
+              <View style={styles.dropdownDivider} />
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={() => { setShowUserMenu(false); handleLogout(); }}
+              >
+                <Feather name="log-out" size={18} color="#ef4444" />
+                <Text style={[styles.dropdownText, { color: '#ef4444' }]}>Déconnexion</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
@@ -184,9 +243,19 @@ const styles = StyleSheet.create({
   menuBtn: { padding: 5, marginRight: 5 },
   backBtn: { padding: 5 },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginLeft: 5 },
-  planifierBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#22c55e', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  headerIconBtn: { padding: 6, marginLeft: 2, position: 'relative' },
+  notificationBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#ef4444', borderRadius: 7, width: 14, height: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
+  badgeText: { color: '#fff', fontSize: 7, fontWeight: '800' },
+  planifierBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#22c55e', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, marginLeft: 8 },
   planifierBtnText: { color: '#fff', fontSize: 10, fontWeight: '700', marginLeft: 4 },
   
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.05)' },
+  userDropdown: { position: 'absolute', top: 55, right: 15, backgroundColor: '#fff', borderRadius: 12, width: 160, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  dropdownItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
+  dropdownText: { fontSize: 15, color: '#475569', marginLeft: 12, fontWeight: '500' },
+  dropdownDivider: { height: 1, backgroundColor: '#f1f5f9', marginHorizontal: 8 },
+
   searchSection: { padding: 10, backgroundColor: '#f8fafc' },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 10, height: 36, borderWidth: 1, borderColor: '#e2e8f0' },
   searchInput: { flex: 1, marginLeft: 8, fontSize: 11, color: '#1e293b' },

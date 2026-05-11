@@ -36,6 +36,8 @@ class LoginAPIView(View):
                         'id': user.id,
                         'username': user.username,
                         'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
                         'role': role
                     }
                 })
@@ -55,6 +57,29 @@ class LogoutAPIView(View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class ChangePasswordAPIView(View):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Non authentifié'}, status=401)
+        try:
+            data = json.loads(request.body)
+            old_password = data.get('old_password')
+            new_password = data.get('new_password')
+            
+            if not request.user.check_password(old_password):
+                return JsonResponse({'status': 'error', 'message': 'Ancien mot de passe incorrect'}, status=400)
+            
+            request.user.set_password(new_password)
+            request.user.save()
+            # We need to re-login the user because changing password invalidates the session
+            login(request, request.user)
+            
+            return JsonResponse({'status': 'success', 'message': 'Mot de passe modifié avec succès'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class UserListAPIView(View):
     def get(self, request):
         from django.contrib.auth.models import User
@@ -71,6 +96,8 @@ class UserListAPIView(View):
                 'id': u.id,
                 'username': u.username,
                 'email': u.email,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
                 'role': role
             })
         return JsonResponse({'status': 'success', 'data': data})
@@ -624,6 +651,10 @@ class FormulaireAuditListAPIView(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class ListeAuditListAPIView(View):
     def get(self, request, pk=None):
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+
         if pk:
             try:
                 a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site').get(pk=pk)
@@ -636,7 +667,8 @@ class ListeAuditListAPIView(View):
                         'date_audit': a.date,
                         'section': a.section.id if a.section else None,
                         'departement_name': a.section.name if a.section else '-',
-                        'site': a.site.id if a.site else None,
+                        'site_id': a.site.id if a.site else None,
+                        'site_name': a.site.name if a.site else '-',
                         'formulaire_audit': a.formulaire_audit.id if a.formulaire_audit else None,
                         'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
                         'en_cours': a.get_audit_status() == 'en_cours',
@@ -648,7 +680,13 @@ class ListeAuditListAPIView(View):
             except ListeAudit.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
 
-        audits = ListeAudit.objects.all().select_related('section', 'formulaire_audit')
+        from django.db.models import Q
+        if user.is_superuser:
+            audits = ListeAudit.objects.all()
+        else:
+            audits = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
+            
+        audits = audits.select_related('section', 'formulaire_audit', 'site')
         data = []
         for a in audits:
             data.append({
@@ -657,6 +695,7 @@ class ListeAuditListAPIView(View):
                 'status': a.status,
                 'date_audit': a.date,
                 'departement_name': a.section.name if a.section else '-',
+                'site_name': a.site.name if a.site else '-',
                 'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
                 'en_cours': a.get_audit_status() == 'en_cours',
                 'statut_label': a.get_audit_status()
@@ -1032,13 +1071,37 @@ class ActivityAPIView(View):
 class DashboardStatsAPIView(View):
     def get(self, request):
         try:
-            stats = {
-                'type_audits': TypeAudit.objects.count(),
-                'text_refs': TextRef.objects.count(),
-                'formulaires': FormulaireAudit.objects.count(),
-                'liste_audits': ListeAudit.objects.count(),
-                'resultats': ResultatAudit.objects.count(),
-            }
+            user = request.user
+            if not user.is_authenticated:
+                return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+
+            if user.is_superuser:
+                stats = {
+                    'type_audits': TypeAudit.objects.count(),
+                    'text_refs': TextRef.objects.count(),
+                    'formulaires': FormulaireAudit.objects.count(),
+                    'liste_audits': ListeAudit.objects.count(),
+                    'resultats': ResultatAudit.objects.count(),
+                }
+            else:
+                from django.db.models import Avg, Q
+                # Include audits where user is Auditor OR Participant
+                audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
+                
+                planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
+                en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
+                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+                
+                # Score average remains for results where user is the lead Auditeur
+                score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
+                
+                stats = {
+                    'planifies': planifies,
+                    'en_cours': en_cours,
+                    'termines': termines,
+                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0"
+                }
+                
             return JsonResponse({'status': 'success', 'data': stats})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

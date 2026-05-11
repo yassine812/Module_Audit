@@ -89,7 +89,7 @@
                     <button onclick="openTypeCotationModal('{% url 'typecotation_update' typecotation.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                       <i data-lucide="edit" ></i>
                     </button>
-                    <button onclick="openDeleteModal('{% url 'typecotation_delete' typecotation.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                    <button onclick="openDeleteModal('{% url 'typecotation_delete' typecotation.id %}', '{{ typecotation.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                       <i data-lucide="trash-2" ></i>
                     </button>
                   </div>
@@ -178,10 +178,6 @@
     </div>
 </div>
 
-
-        </div>
-    </div>
-</div>
 
 {% endblock %}
 

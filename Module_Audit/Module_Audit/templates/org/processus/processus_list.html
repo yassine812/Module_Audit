@@ -9,41 +9,53 @@
 
 {% block extra_css %}
 <style>
-  .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  .card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 1rem;
+  }
 
   @media (max-width: 768px) {
+
     /* Mobile Cards View */
     .mobile-cards-container {
       display: block !important;
     }
+
     .desktop-table-container {
       display: none !important;
     }
+
     .btn-sm-block {
       width: 100%;
       border-radius: 25px !important;
       font-size: 16px !important;
     }
+
     .card-header-flex {
-        flex-direction: column !important;
-        align-items: stretch !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
     }
+
     .card-header-flex .ml-auto {
-        margin-left: 0 !important;
-        margin-top: 1rem;
+      margin-left: 0 !important;
+      margin-top: 1rem;
     }
   }
 
-  .mobile-cards-container { display: none; }
-  
+  .mobile-cards-container {
+    display: none;
+  }
+
   .processus-card {
     background: #fff;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid #f1f5f9;
   }
+
   .card-header-row {
     display: flex;
     justify-content: space-between;
@@ -51,11 +63,13 @@
     font-weight: bold;
     align-items: center;
   }
+
   .processus-card-body div {
     font-size: 14px;
     margin-bottom: 8px;
     color: #334155;
   }
+
   .processus-card-actions {
     display: flex;
     justify-content: flex-end;
@@ -67,26 +81,29 @@
 
   /* Responsive Pagination */
   .pagination-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
   }
+
   .pagination-info {
-      white-space: nowrap;
-      color: #64748b;
-      font-weight: 500;
+    white-space: nowrap;
+    color: #64748b;
+    font-weight: 500;
   }
+
   @media (max-width: 576px) {
-      .pagination-container {
-          flex-direction: column;
-          justify-content: center;
-      }
-      .pagination-info {
-          font-size: 0.9rem;
-          margin-bottom: 4px;
-      }
+    .pagination-container {
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .pagination-info {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
   }
 </style>
 {% endblock %}
@@ -96,9 +113,12 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
+        <div
+          class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
-            <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+            <a href="{% url 'dashboard' %}"
+              class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0"
+              style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
             </a>
             <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
@@ -107,7 +127,8 @@
           </div>
           {% if processus_list %}
           <div class="ml-auto mt-0">
-            <button onclick="openProcessusModal('{% url 'processus_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
+            <button onclick="openProcessusModal('{% url 'processus_create' %}')"
+              class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
               <i data-lucide="plus" class="mr-1"></i>
               Nouveau Processus
             </button>
@@ -119,26 +140,31 @@
           {% if processus_list %}
           <!-- Mobile Cards View -->
           <div class="mobile-cards-container p-3">
-             {% for processus in page_obj %}
-             <div class="processus-card">
-               <div class="card-header-row">
-                 <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
-               </div>
-               
-               <div class="processus-card-body">
-                 <div class="fw-bold text-dark" style="font-size: 16px;">{{ processus.name }}</div>
-               </div>
+            {% for processus in page_obj %}
+            <div class="processus-card">
+              <div class="card-header-row">
+                <span class="badge bg-light text-dark border">#{{
+                  page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+              </div>
 
-               <div class="processus-card-actions">
-                 <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
-                   <i data-lucide="edit" style="width: 18px;"></i>
-                 </button>
-                 <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;">
-                   <i data-lucide="trash-2" style="width: 18px;"></i>
-                 </button>
-               </div>
-             </div>
-             {% endfor %}
+              <div class="processus-card-body">
+                <div class="fw-bold text-dark" style="font-size: 16px;">{{ processus.name }}</div>
+              </div>
+
+              <div class="processus-card-actions">
+                <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')"
+                  class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center"
+                  style="min-height: 40px;">
+                  <i data-lucide="edit" style="width: 18px;"></i>
+                </button>
+                <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')"
+                  class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center"
+                  style="min-height: 40px;">
+                  <i data-lucide="trash-2" style="width: 18px;"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
           </div>
 
           <!-- Desktop Table View -->
@@ -155,16 +181,19 @@
                 <tbody>
                   {% for processus in page_obj %}
                   <tr>
-                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter
+                      }}</td>
                     <td class="col-name">
                       <strong class="text-dark">{{ processus.name }}</strong>
                     </td>
                     <td class="text-center col-actions">
                       <div class="d-flex justify-content-center align-items-center">
-                        <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                        <button onclick="openProcessusModal('{% url 'processus_update' processus.id %}')"
+                          class="btn btn-link text-warning p-1" title="Modifier">
                           <i data-lucide="edit"></i>
                         </button>
-                        <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                        <button onclick="openDeleteModal('{% url 'processus_delete' processus.id %}')"
+                          class="btn btn-link text-danger p-1" title="Supprimer">
                           <i data-lucide="trash-2"></i>
                         </button>
                       </div>
@@ -180,7 +209,8 @@
             <i data-lucide="layers" class="w-12 h-12 mb-3 opacity-25"></i>
             <h4 class="font-weight-bold">Aucun processus trouvé</h4>
             <p>Commencez par définir les processus clés pour vos audits.</p>
-            <button onclick="openProcessusModal('{% url 'processus_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <button onclick="openProcessusModal('{% url 'processus_create' %}')"
+              class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
               Créer un Processus
             </button>
@@ -192,40 +222,47 @@
         <div class="card-footer bg-white border-top-0 pt-3">
           <div class="pagination-container">
             <div class="pagination-info px-2">
-              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{
+              paginator.count }} éléments
             </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
                 {% if page_obj.has_previous %}
-                  <li class="page-item">
-                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
-                      <i data-lucide="chevrons-left" class="w-4 h-4"></i>
-                    </a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
-                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                    </a>
-                  </li>
+                <li class="page-item">
+                  <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
+                    <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}"
+                    aria-label="Précédent">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                  </a>
+                </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i
+                      data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
                 {% endif %}
 
-                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number
+                    }}</span></li>
 
                 {% if page_obj.has_next %}
-                   <li class="page-item">
-                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
-                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </a>
-                  </li>
-                  <li class="page-item">
-                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
-                      <i data-lucide="chevrons-right" class="w-4 h-4"></i>
-                    </a>
-                  </li>
+                <li class="page-item">
+                  <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}"
+                    aria-label="Suivant">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}"
+                    aria-label="Dernière">
+                    <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                  </a>
+                </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i
+                      data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
                 {% endif %}
               </ul>
             </nav>
@@ -233,7 +270,7 @@
         </div>
         {% elif page_obj %}
         <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
-           <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> processus</small>
+          <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> processus</small>
         </div>
         {% endif %}
       </div>
@@ -243,144 +280,119 @@
 
 <!-- Main Forms Modal -->
 <div class="modal fade" id="processusModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div id="modalBodyContent">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Chargement...</p>
-                </div>
-            </div>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+      <div id="modalBodyContent">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Chargement...</p>
         </div>
+      </div>
     </div>
-</div>
-
-
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
+  function openProcessusModal(url) {
+    $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
+    $('#processusModal').modal('show');
+    $.ajax({
+      url: url,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      success: function (data) {
+        $('#modalBodyContent').html(data);
+        initModalBehaviors();
+      },
+      error: function () {
+        $('#modalBodyContent').html('<div class="alert alert-danger m-3">Erreur lors du chargement du formulaire.</div>');
       }
-  });
-</script>
-<script>
-    function openProcessusModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
-        $('#processusModal').modal('show');
+    });
+  }
+
+  function initModalBehaviors() {
+    $('#processusModalForm').off('submit').on('submit', function (e) {
+      e.preventDefault();
+      const form = $(this);
+      $.ajax({
+        type: "POST",
+        url: form.attr('action'),
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (response) {
+          if (response.success) {
+            $('#processusModal').modal('hide');
+            Swal.fire({
+              icon: 'success',
+              title: 'Succès',
+              text: response.message || 'Opération réussie',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => location.reload());
+          } else {
+            $('#modalBodyContent').html(response);
+            initModalBehaviors();
+          }
+        },
+        error: function () {
+          alert("Une erreur est survenue lors de l'enregistrement.");
+        }
+      });
+    });
+  }
+
+  function openDeleteModal(url, name) {
+    Swal.fire({
+      title: 'Confirmer la suppression',
+      text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e74a3b',
+      cancelButtonColor: '#858796',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-4 shadow-lg border-0',
+        confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+        cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
         $.ajax({
-            url: url,
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#modalBodyContent').html(data);
-                initModalBehaviors();
-            },
-            error: function() {
-                $('#modalBodyContent').html('<div class="alert alert-danger m-3">Erreur lors du chargement du formulaire.</div>');
+          type: "POST",
+          url: url,
+          data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          success: function (response) {
+            if (response.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Supprimé',
+                text: response.message || "L'élément a été supprimé",
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => location.reload());
             }
-        });
-    }
-
-    function initModalBehaviors() {
-        $('#processusModalForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            $.ajax({
-                type:"POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                success: function(response) {
-                    if (response.success) {
-                        $('#processusModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Succès',
-                            text: response.message || 'Opération réussie',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload()); 
-                    } else {
-                        $('#modalBodyContent').html(response);
-                        initModalBehaviors();
-                    }
-                },
-                error: function() {
-                    alert("Une erreur est survenue lors de l'enregistrement.");
-                }
+          },
+          error: function (xhr) {
+            const response = xhr.responseJSON;
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: response ? response.message : "Une erreur est survenue lors de la suppression."
             });
+          }
         });
-    }
+      }
+    });
+  }
 
-                function openDeleteModal(url, name) {
-        Swal.fire({
-            title: 'Confirmer la suppression',
-            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e74a3b',
-            cancelButtonColor: '#858796',
-            confirmButtonText: 'Oui, supprimer',
-            cancelButtonText: 'Annuler',
-            reverseButtons: true,
-            customClass: {
-                popup: 'rounded-4 shadow-lg border-0',
-                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
-                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    headers: {'X-Requested-With': 'XMLHttpRequest'},
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Supprimé',
-                                text: response.message || "L'élément a été supprimé",
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => location.reload());
-                        }
-                    },
-                    error: function(xhr) {
-                        const response = xhr.responseJSON;
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erreur',
-                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
-                        });
-                    }
-                });
-            }
-        });
-    }
-    
-    // Alias for compatibility
-    function confirmDelete(url, name) {
-        openDeleteModal(url, name);
-    }
-
-
+  function confirmDelete(url, name) {
+    openDeleteModal(url, name);
+  }
 </script>
 {% endblock %}

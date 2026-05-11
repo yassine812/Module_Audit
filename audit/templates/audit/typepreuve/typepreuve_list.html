@@ -87,7 +87,7 @@
                       <button onclick="openTypePreuveModal('{% url 'typepreuve_update' typepreuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit" ></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'typepreuve_delete' typepreuve.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <button onclick="openDeleteModal('{% url 'typepreuve_delete' typepreuve.id %}', '{{ typepreuve.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                         <i data-lucide="trash-2" ></i>
                       </button>
                     </div>
@@ -178,9 +178,6 @@
 
 <!-- Modal Deletion -->
 
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
