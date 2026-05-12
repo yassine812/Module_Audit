@@ -938,19 +938,34 @@
         });
       },
       (formNode) => {
-        // Hide the Sous-Critères tab and header
         const modalBody = formNode.closest('.modal-body') || document;
-        const tabsContainer = modalBody.querySelector('#critereTabs');
-        if (tabsContainer) {
-          const tabsHeader = tabsContainer.closest('.px-4');
-          if (tabsHeader) tabsHeader.style.setProperty('display', 'none', 'important');
+
+        /* REMOVE ONLY THE TAB NAVIGATION */
+        modalBody.querySelectorAll(
+          '#critereTabs, .nav-tabs, .nav-pills'
+        ).forEach(el => {
+          el.remove();
+        });
+
+        /* REMOVE ONLY SOUS-CRITÈRES PANE */
+        modalBody.querySelectorAll('#souscritere').forEach(el => {
+          el.remove();
+        });
+
+        /* KEEP GENERAL CONTENT VISIBLE */
+        const generalPane = modalBody.querySelector('#general');
+
+        if (generalPane) {
+          generalPane.style.display = 'block';
+          generalPane.classList.add('show', 'active');
         }
-        const sousCriterePane = modalBody.querySelector('#souscritere');
-        if (sousCriterePane) {
-          sousCriterePane.style.setProperty('display', 'none', 'important');
-          // Remove from DOM to prevent any validation/submission issues
-          sousCriterePane.remove();
-        }
+
+        /* REMOVE HIDDEN/BOOTSTRAP CLASSES THAT HIDE CONTENT */
+        modalBody.querySelectorAll('.tab-pane').forEach(pane => {
+          if (pane.id !== 'general') {
+            pane.remove();
+          }
+        });
 
         // Set values for context fields if they exist
         const typeAuditField = formNode.querySelector('[name="type_audit"]');
@@ -996,18 +1011,19 @@
       () => btnSync.click(),
       (formNode) => {
         // Hide the Sous-Critères tab and header
-        const modalBody = formNode.closest('.modal-body') || document;
-        const tabsContainer = modalBody.querySelector('#critereTabs');
-        if (tabsContainer) {
-          const tabsHeader = tabsContainer.closest('.px-4');
-          if (tabsHeader) tabsHeader.style.setProperty('display', 'none', 'important');
-        }
-        const sousCriterePane = modalBody.querySelector('#souscritere');
-        if (sousCriterePane) {
-          sousCriterePane.style.setProperty('display', 'none', 'important');
-          // Remove from DOM to prevent any validation/submission issues
-          sousCriterePane.remove();
-        }
+        // Robustly remove the Sous-Critères tab and its header
+        // Robustly remove the Sous-Critères tab system
+        const $form = $(formNode);
+        const $modalBody = $form.closest('.modal-body');
+        
+        // Remove the tab navigation header (the pill buttons)
+        $modalBody.find('#critereTabs').parent().remove();
+        
+        // Remove the Sous-Critères content pane
+        $modalBody.find('#souscritere').remove();
+        
+        // Ensure the General tab content is visible and active
+        $modalBody.find('#general').addClass('active show').show();
 
         // Hide context fields during edit too
         ['type_audit', 'formulaire', 'ciblage'].forEach(name => {
@@ -1374,6 +1390,14 @@
   .custom-checkbox:checked {
     background-color: #1a56db;
     border-color: #1a56db;
+  }
+
+  /* Force hide tab system in AJAX Modal */
+  #ajaxFormModal .nav,
+  #ajaxFormModal .nav-tabs,
+  #ajaxFormModal .nav-pills,
+  #ajaxFormModal #critereTabs {
+      display: none !important;
   }
 
   .hover-bg-light:hover {
