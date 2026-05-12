@@ -19,10 +19,17 @@ class ChapitreNormeForm(forms.ModelForm):
 class TypeAuditForm(forms.ModelForm):
     class Meta:
         model = TypeAudit
-        fields = ['name']
+        fields = ['name', 'section']
         widgets = {
-            'name': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'name': forms.Select(attrs={'class': 'form-control border-0 py-2'}),
+            'section': forms.SelectMultiple(attrs={'class': 'form-control border-0 py-2 select2-modal'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from Organisation.models import Section
+        self.fields['section'].queryset = Section.objects.all()
+        self.fields['section'].required = False
 
 class TypeCotationForm(forms.ModelForm):
     class Meta:

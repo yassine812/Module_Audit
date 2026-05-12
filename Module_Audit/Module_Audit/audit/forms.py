@@ -101,9 +101,14 @@ class TypeAuditForm(forms.ModelForm):
         model = TypeAudit
         fields = ["name", "section"]
         widgets = {
-            'name': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'section': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-modal'}),
+            'name': forms.Select(attrs={'class': 'form-control border-0 py-2'}),
+            'section': forms.SelectMultiple(attrs={'class': 'form-control border-0 py-2 select2-modal'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['section'].queryset = Section.objects.all()
+        self.fields['section'].required = False
 
 class TypePreuveForm(forms.ModelForm):
     class Meta:
