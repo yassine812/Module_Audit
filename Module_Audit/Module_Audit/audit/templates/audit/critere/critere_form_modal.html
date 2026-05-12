@@ -103,15 +103,28 @@
                             </div>
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Ciblage (Type Audit)</label>
+                            <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Ciblage (Type Audit) [VERIFIED]</label>
                             <div class="select2-normal">
-                                <!-- data-selected stores current value for JS pre-selection -->
-                                <select name="ciblage" id="id_ciblage" class="custom-input select2-modal"
-                                    data-selected="{{ form.instance.type_audit.first.id|default:'' }}">
-                                    <option value="">Chargement...</option>
+                                <select name="ciblage" id="id_ciblage" class="custom-input select2-modal" data-options-count="{% if audit_types %}{{ audit_types|length }}{% else %}0{% endif %}">
+                                    <option value="">Sélectionnez...</option>
+                                    {% if audit_types %}
+                                        {% for ta in audit_types %}
+                                            <option value="{{ ta.id }}" 
+                                                {% if ta.id|slugify == form.ciblage.value|slugify or ta.id|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                                {{ ta.name }}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for choice in form.ciblage.field.choices %}
+                                            {% if choice.0 %}
+                                                <option value="{{ choice.0 }}" 
+                                                    {% if choice.0|slugify == form.ciblage.value|slugify or choice.0|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                                    {{ choice.1 }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
                                 </select>
-                                <!-- Compatibility fallback for other scripts -->
-                                <input type="hidden" name="type_audit" id="id_type_audit_hidden">
                             </div>
                         </div>
                     </div>
@@ -433,17 +446,20 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         function initSelect2ForElement(el) {
-            var $modal = $(el).closest('.modal');
-            $(el).select2({
+            var $el = $(el);
+            var $modal = $el.closest('.modal');
+            var optionCount = $el.find('option').length;
+            console.log('Initializing Select2 for:', el.id, 'with', optionCount, 'options');
+
+            $el.select2({
                 theme: 'bootstrap4',
                 width: '100%',
                 dropdownParent: $modal.length ? $modal : $('body'),
                 placeholder: "Sélectionnez...",
-                allowClear: true,
-                minimumResultsForSearch: Infinity
+                allowClear: true
             });
             // Ensure the value is reflected visually
-            $(el).trigger('change.select2');
+            $el.trigger('change.select2');
         }
 
         function initSelect2Fields($container) {
@@ -465,89 +481,17 @@
         // Initialize immediately
         initSelect2Fields();
 
-        // Compatibility sync
-        function syncCompatibilityFields() {
-            const val = $('#id_ciblage').val();
-            $('#id_type_audit_hidden').val(val);
-        }
-
-        // ─── DEFINITIVE FIX: Load Ciblage options via AJAX ───────────────────────
-        (function loadCiblageOptions() {
-            const $ciblage = $('#id_ciblage');
-            if (!$ciblage.length) return;
-
-            const selectedId = $ciblage.data('selected');
-            // Cache busting to ensure we get fresh data
-            const apiUrl = '/audit/api/type-audits/?t=' + new Date().getTime();
-            
-            console.log('Fetching Ciblage from:', apiUrl, 'Selected ID:', selectedId);
-            $ciblage.empty().append('<option value="">Chargement en cours...</option>');
-
-            $.ajax({
-                url: apiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    // Clear and add default
-                    $ciblage.empty().append('<option value="">Sélectionnez...</option>');
-
-                    const items = Array.isArray(data) ? data : (data.results || data);
-                    if (!items || items.length === 0) {
-                        console.warn('No TypeAudit records found in API.');
-                        $ciblage.append('<option value="">Aucun type trouvé</option>');
-                        return;
-                    }
-
-                    items.forEach(function(ta) {
-                        const isSelected = String(ta.id) === String(selectedId);
-                        $ciblage.append(new Option(ta.name, ta.id, isSelected, isSelected));
-                    });
-
-                    console.log('Ciblage loaded successfully:', items.length, 'records.');
-
-                    // Initialize Select2 AFTER the options are in the DOM
-                    $ciblage.select2({
-                        theme: 'bootstrap4',
-                        dropdownParent: $('#critereModal').length ? $('#critereModal') : $('#ajaxFormModal'),
-                        width: '100%',
-                        placeholder: 'Sélectionnez...',
-                        allowClear: true
-                    });
-                    
-                    syncCompatibilityFields();
-                    $ciblage.trigger('change');
-                },
-                error: function(xhr, status, error) {
-                    console.error('CRITICAL: Failed to load TypeAudit API!', status, error, xhr.responseText);
-                    $ciblage.empty().append('<option value="">Erreur de chargement (Check console)</option>');
-                    
-                    // Fallback to select2 anyway so it doesn't look broken
-                    $ciblage.select2({
-                        theme: 'bootstrap4',
-                        dropdownParent: $('#critereModal').length ? $('#critereModal') : $('#ajaxFormModal'),
-                        width: '100%'
-                    });
-                }
-            });
-        })();
-
-        // Re-initialize once the modal is shown
-        $('.modal').on('shown.bs.modal', function () {
-            initSelect2Fields();
-        });
-
         function toggleChapitreNorme() {
-            const selectedTexts = $('#id_ciblage').find('option:selected').map(function () {
-                return $(this).text().toLowerCase();
-            }).get();
+            const selectedVal = $('#id_ciblage').val();
+            const selectedText = $('#id_ciblage').find('option:selected').text().toLowerCase();
 
-            const shouldHide = selectedTexts.some(text => text.includes('poste'));
+            // Example logic: hide if 'poste' is selected
+            const shouldHide = selectedText.includes('poste');
             if (shouldHide) {
                 $('#chapitre-norme-container').fadeOut(300);
             } else {
                 $('#chapitre-norme-container').fadeIn(300);
             }
-            syncCompatibilityFields();
         }
 
         $('#id_ciblage').on('change', toggleChapitreNorme);

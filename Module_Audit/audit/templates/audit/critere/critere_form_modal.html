@@ -74,12 +74,27 @@
                     <div class="col-12">
                         <div class="form-group">
                             <label class="form-label d-flex align-items-center gap-2">
-                                <i data-lucide="crosshair" class="w-4 h-4 text-primary"></i> Ciblage (Type Audit)
+                                <i data-lucide="crosshair" class="w-4 h-4 text-primary"></i> Ciblage (Type Audit) [VERIFIED]
                             </label>
-                            <select name="type_audit" id="id_type_audit" class="form-control-modern w-100 select2-modal" multiple>
-                                {% for choice in form.type_audit.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0 in form.type_audit.value %}selected{% endif %}>{{ choice.1 }}</option>
-                                {% endfor %}
+                            <select name="ciblage" id="id_ciblage" class="form-control-modern w-100 select2-modal">
+                                <option value="">Sélectionnez...</option>
+                                {% if audit_types %}
+                                    {% for ta in audit_types %}
+                                        <option value="{{ ta.id }}" 
+                                            {% if ta.id|slugify == form.ciblage.value|slugify or ta.id|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                            {{ ta.name }}
+                                        </option>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for choice in form.ciblage.field.choices %}
+                                        {% if choice.0 %}
+                                            <option value="{{ choice.0 }}" 
+                                                {% if choice.0|slugify == form.ciblage.value|slugify or choice.0|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                                {{ choice.1 }}
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                     </div>
@@ -478,8 +493,7 @@
                 width: '100%',
                 dropdownParent: $el.closest('.modal').length ? $el.closest('.modal') : $('body'),
                 placeholder: "Sélectionnez...",
-                allowClear: true,
-                minimumResultsForSearch: Infinity
+                allowClear: true
             });
         }
 
