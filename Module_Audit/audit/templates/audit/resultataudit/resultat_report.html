@@ -14,7 +14,10 @@
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
     .content-wrapper { padding: 0 !important; margin-top: 0 !important; min-height: 0 !important; }
@@ -82,27 +85,27 @@
         <div class="report-paper p-8 md:p-12 text-black" id="actual-paper-content">
             
             <!-- HEADER -->
-            <div class="w-full flex border-[3px] border-[#93c5fd] mb-6 h-28 overflow-hidden bg-white shadow-sm" style="page-break-inside: avoid; break-inside: avoid;">
-                <div class="w-[12%] border-r-[3px] border-[#93c5fd] flex items-center justify-start pl-4 py-4">
-                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-12 w-auto object-contain">
+            <div class="pdf-section w-full flex border-[3px] border-[#93c5fd] mb-8 h-36 overflow-hidden bg-white shadow-sm">
+                <div class="w-[12%] border-r-[3px] border-[#93c5fd] flex items-center justify-start pl-6 py-6">
+                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-16 w-auto object-contain">
                 </div>
                 <div class="w-[76%] bg-[#93c5fd] text-[#1e3a8a] flex flex-col items-center justify-center text-center relative">
-                    <h1 class="font-black text-[28px] uppercase tracking-[0.2em] m-0">Rapport d'Audit</h1>
+                    <h1 class="font-black text-[34px] uppercase tracking-[0.25em] m-0">Rapport d'Audit</h1>
                 </div>
                 <div class="w-[12%] border-l-[1px] border-[#93c5fd] flex flex-col bg-white">
-                    <div class="flex-1 border-b-[3px] border-[#93c5fd] flex flex-col justify-center px-3">
-                        <span class="text-[8px] font-black text-[#1e3a8a] uppercase tracking-widest">Date</span>
-                        <span class="text-[11px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
+                    <div class="flex-1 border-b-[3px] border-[#93c5fd] flex flex-col justify-center px-4">
+                        <span class="text-[9px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
+                        <span class="text-[13px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
                     </div>
-                    <div class="flex-1 flex flex-col justify-center px-3">
-                        <span class="text-[8px] font-black text-[#1e3a8a] uppercase tracking-widest">Auditeur</span>
-                        <span class="text-[11px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
+                    <div class="flex-1 flex flex-col justify-center px-4">
+                        <span class="text-[9px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Auditeur</span>
+                        <span class="text-[13px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- SCORE GLOBAL -->
-            <div class="mb-8 flex items-center gap-6 bg-white border-2 border-[#93c5fd] p-6 rounded-lg shadow-sm" style="page-break-inside: avoid; break-inside: avoid;">
+            <div class="pdf-section mb-8 flex items-center gap-6 bg-white border-2 border-[#93c5fd] p-6 rounded-lg shadow-sm">
                 <div class="flex-1">
                     <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global</div>
                     <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
@@ -112,13 +115,13 @@
             </div>
 
             <!-- COMMENTAIRE -->
-            <div class="mb-8" style="page-break-inside: avoid; break-inside: avoid;">
+            <div class="pdf-section mb-8">
                 <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
                 <div class="border-2 border-[#93c5fd] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
             </div>
 
             <!-- SYNTHESE -->
-            <div class="mb-6 overflow-hidden rounded-lg shadow-sm border-2 border-[#93c5fd]" style="page-break-inside: avoid; break-inside: avoid;">
+            <div class="pdf-section mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#93c5fd]">
                 <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
                     <div class="border-b-2 md:border-r-2 border-[#93c5fd] p-6 min-h-[140px]">
@@ -141,18 +144,18 @@
             </div>
 
             <!-- EVALUATION LIST (TABLE BASED) -->
-            <div class="mt-4">
+            <div class="mt-8">
                 <style>
                     .audit-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; border: 2px solid #000; table-layout: fixed; }
                     .audit-table thead { display: table-header-group; }
                     .audit-table th { background: #93c5fd; color: #1e3a8a; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 15px; border: 1px solid #000; text-align: left; }
                     
                     /* Criteria Row */
-                    .critere-row { background: #f1f5f9; page-break-inside: avoid; break-inside: avoid; }
+                    .critere-row { background: #f1f5f9; }
                     .critere-row td { padding: 10px 15px; border: 1px solid #000; font-weight: 900; color: #1e3a8a; }
                     
                     /* Indivisible Group */
-                    .critere-group { page-break-inside: avoid; break-inside: avoid; display: table-row-group; }
+                    .critere-group { display: table-row-group; }
 
                     /* Sub-rows */
                     .sc-row td { border: 1px solid #000; padding: 0; vertical-align: top; }
@@ -167,15 +170,15 @@
 
                     .txt-main { font-size: 12px; font-weight: 700; color: #1e293b; line-height: 1.4; }
                     .txt-obs { font-size: 11px; color: #475569; font-style: italic; line-height: 1.4; }
-                    .just-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; width: 100%; break-inside: avoid; }
-                    .just-item { flex: 0 0 auto; width: 170px; max-width: 100%; break-inside: avoid; }
+                    .just-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; width: 100%; }
+                    .just-item { flex: 0 0 auto; width: 170px; max-width: 100%; }
                     .just-item img { max-width: 100%; height: auto; object-fit: contain; border-radius: 6px; border: 1.2px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: block; }
                     .pdf-btn { width: 100%; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #fca5a5; background: #fff5f5; gap: 8px; }
                     .no-data { color: #e2e8f0; font-size: 11px; font-weight: 500; }
                 </style>
 
                 <table class="audit-table">
-                    <thead>
+                    <thead id="audit-table-head">
                         <tr>
                             <th style="width: 45px; text-align: center;">#</th>
                             <th>Critères &amp; Évaluations</th>
@@ -183,7 +186,7 @@
                         </tr>
                     </thead>
                     {% for group in grouped_results %}
-                    <tbody class="critere-group">
+                    <tbody class="critere-group pdf-section">
                         <tr class="critere-row">
                             <td style="text-align: center;">{{ forloop.counter }}</td>
                             <td style="text-transform: uppercase;">
@@ -253,60 +256,99 @@
     function openEmailModal() { document.getElementById('emailModal').classList.remove('hidden'); lucide.createIcons(); }
     function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
 
-    function generatePDF() {
+    async function generatePDF() {
         const btn = document.getElementById('downloadPdfBtn');
-        const exportContainer = document.getElementById('pdf-export-container');
-        const contentToClone = document.getElementById('actual-paper-content');
-
         btn.disabled = true;
-        btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i>Export...';
+        btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i>Génération...';
         lucide.createIcons();
 
-        // 1. Prepare Shadow DOM (Full A4 210mm Wrapper)
-        exportContainer.innerHTML = '';
-        const pdfPage = document.createElement('div');
-        pdfPage.className = 'pdf-page';
-        
-        const innerContent = document.createElement('div');
-        innerContent.className = 'pdf-content';
-        
-        const clone = contentToClone.cloneNode(true);
-        // Optimize for Full Page Usage
-        clone.style.padding = '0';
-        clone.style.border = 'none';
-        clone.style.boxShadow = 'none';
-        clone.style.width = '100%'; 
-        innerContent.appendChild(clone);
-        pdfPage.appendChild(innerContent);
-        exportContainer.appendChild(pdfPage);
+        try {
+            // Detect jsPDF global correctly
+            let JsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+            if (!JsPDFLib && typeof html2pdf !== 'undefined') {
+                // html2pdf bundle sometimes hides it, try to get it from a dummy worker
+                const worker = html2pdf().from(document.createElement('div')).toPdf().get('pdf');
+                const pdfObj = await worker;
+                JsPDFLib = pdfObj.constructor;
+            }
 
-        // 2. Fast HD Configuration (A4 Portrait)
-        const opt = {
-            margin: [3, 3, 3, 3],
-            filename: 'Rapport_Audit_Optimise_{{ resultat.id }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                letterRendering: true,
-                logging: false,
-                scrollY: 0,
-                scrollX: 0
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { 
-                mode: ['css', 'legacy'],
-                avoid: ['.critere-group', '.sc-row', '.just-gallery']
-            } 
-        };
+            if (!JsPDFLib) throw new Error("Bibliothèque jsPDF introuvable.");
 
-        // 3. Execution
-        html2pdf().set(opt).from(pdfPage).save().then(() => {
-            exportContainer.innerHTML = '';
+            const pdf = new JsPDFLib({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
+
+            const pageWidth = 210;
+            const pageHeight = 297;
+            const margin = 10;
+            const contentWidth = 190; // mm
+            let currentY = margin;
+
+            const sections = document.querySelectorAll('.pdf-section');
+            const tableHead = document.getElementById('audit-table-head');
+            
+            // 1. Capture Header
+            let headImg = null;
+            let headHeightMm = 0;
+            if (tableHead) {
+                const headCanvas = await html2canvas(tableHead, { scale: 2, useCORS: true });
+                if (headCanvas.width > 0) {
+                    headImg = headCanvas.toDataURL('image/jpeg', 0.95);
+                    headHeightMm = (headCanvas.height * contentWidth) / headCanvas.width;
+                }
+            }
+
+            let headerOnThisPage = false;
+
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const isCriteria = section.classList.contains('critere-group');
+
+                const canvas = await html2canvas(section, { 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                if (canvas.width === 0) continue;
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                const sectionHeightMm = (canvas.height * contentWidth) / canvas.width;
+
+                // Space check
+                const spaceNeeded = (isCriteria && !headerOnThisPage && headImg) ? (sectionHeightMm + headHeightMm) : sectionHeightMm;
+
+                if (currentY + spaceNeeded > pageHeight - margin) {
+                    pdf.addPage();
+                    currentY = margin;
+                    headerOnThisPage = false;
+                }
+
+                // Add Table Header if starting criteria
+                if (isCriteria && !headerOnThisPage && headImg) {
+                    pdf.addImage(headImg, 'JPEG', margin, currentY, contentWidth, headHeightMm);
+                    currentY += headHeightMm;
+                    headerOnThisPage = true;
+                }
+
+                pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, sectionHeightMm);
+                currentY += sectionHeightMm + 2; 
+            }
+
+            pdf.save(`Rapport_Audit_{{ resultat.id }}.pdf`);
+
+        } catch (error) {
+            console.error('PDF Generation Detailed Error:', error);
+            alert('Erreur lors de la génération du PDF : ' + error.message);
+        } finally {
             btn.disabled = false;
             btn.innerHTML = '<i data-lucide="file-down" class="w-5 h-5"></i>';
             lucide.createIcons();
-        });
+        }
     }
 
     function sendEmail() {
