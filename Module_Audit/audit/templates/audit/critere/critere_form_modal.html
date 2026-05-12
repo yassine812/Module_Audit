@@ -2,13 +2,14 @@
 
 <!-- ORIGINAL DESKTOP MODAL HEADER -->
 <div class="modal-header d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center gap-3">
-        <div class="bg-primary text-white p-2 rounded-lg shadow-sm">
-            <i data-lucide="{% if object %}edit-3{% else %}plus-circle{% endif %}" class="w-6 h-6"></i>
+    <div class="d-flex align-items-center" style="gap: 16px;">
+        <div class="bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" 
+             style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px;">
+            <i data-lucide="{% if object %}edit-3{% else %}plus-circle{% endif %}" style="width: 22px; height: 22px;"></i>
         </div>
-        <div>
-            <h5 class="modal-title fw-bold text-dark mb-0">{% if object %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
-            <p class="text-muted mb-0 small">{% if object %}Modifiez les détails du critère sélectionné.{% else %}Créez un nouveau critère pour votre audit.{% endif %}</p>
+        <div class="min-w-0">
+            <h5 class="modal-title fw-bold text-dark mb-0" style="font-size: 1.1rem; line-height: 1.2;">{% if object %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
+            <p class="text-muted mb-0 small text-truncate" style="max-width: 250px;">{% if object %}Modifiez les détails du critère sélectionné.{% else %}Créez un nouveau critère pour votre audit.{% endif %}</p>
         </div>
     </div>
     <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
@@ -453,7 +454,7 @@
         .mobile-sc-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; padding: 0 12px; }
         .active-mobile-card .mobile-sc-body { max-height: 600px; padding-bottom: 12px; }
         
-        .mobile-sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .mobile-sc-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .mobile-field { display: flex; flex-direction: column; gap: 4px; }
         .mobile-field label { font-size: 11px; font-weight: 600; color: #64748b; margin: 0; }
         .mobile-field .form-control, .mobile-field select { height: 36px !important; border-radius: 8px !important; font-size: 13px !important; padding: 0 8px !important; border: 1px solid #e2e8f0; }

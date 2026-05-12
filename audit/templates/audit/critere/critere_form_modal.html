@@ -1,13 +1,14 @@
 {% load static %}
 
 <div class="modal-header border-bottom-0 p-3 px-4">
-    <div class="d-flex align-items-center gap-3">
-        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
-            <i data-lucide="check-square" class="w-6 h-6"></i>
+    <div class="d-flex align-items-center" style="gap: 16px;">
+        <div class="bg-indigo-100 text-indigo-600 d-flex align-items-center justify-content-center shadow-sm" 
+             style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px;">
+            <i data-lucide="check-square" style="width: 22px; height: 22px;"></i>
         </div>
         <div>
-            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.1rem;">{% if object %}Modifier Critère{%
-                else %}Nouveau Critère{% endif %}</h5>
+            <h5 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 1.1rem; line-height: 1.2;">{% if object %}Modifier Critère{% else %}Nouveau Critère{% endif %}</h5>
+            <p class="text-muted mb-0 small">Détaillez les paramètres du critère d'évaluation.</p>
         </div>
     </div>
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"
@@ -139,31 +140,24 @@
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
 
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <label class="text-uppercase mb-2 d-block"
-                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description
-                                        détaillée <span class="text-danger">*</span></label>
-                                    {{ sc_form.content }}
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description détaillée <span class="text-danger">*</span></label>
+                                        {{ sc_form.content }}
+                                    </div>
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
+                                        {{ sc_form.type_cotation }}
+                                    </div>
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves Attendues</label>
+                                        {{ sc_form.preuve_attendu }}
+                                    </div>
+                                    <div class="col-12 mb-2">
+                                        <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction attendue</label>
+                                        {{ sc_form.reaction }}
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="text-uppercase mb-2 d-block"
-                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
-                                    {{ sc_form.type_cotation }}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="text-uppercase mb-2 d-block"
-                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves
-                                        Attendues</label>
-                                    {{ sc_form.preuve_attendu }}
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="text-uppercase mb-2 d-block"
-                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction
-                                        attendue (En cas de déviation)</label>
-                                    {{ sc_form.reaction }}
-                                </div>
-                            </div>
                         </div>
                         {% endfor %}
                     </div>
@@ -186,27 +180,20 @@
             </button>
 
             <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label class="text-uppercase mb-2 d-block"
-                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description
-                        détaillée <span class="text-danger">*</span></label>
+                <div class="col-12 mb-3">
+                    <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description détaillée <span class="text-danger">*</span></label>
                     {{ sous_criteres.empty_form.content }}
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="text-uppercase mb-2 d-block"
-                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
                     {{ sous_criteres.empty_form.type_cotation }}
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="text-uppercase mb-2 d-block"
-                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves
-                        Attendues</label>
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves Attendues</label>
                     {{ sous_criteres.empty_form.preuve_attendu }}
                 </div>
-                <div class="col-md-12">
-                    <label class="text-uppercase mb-2 d-block"
-                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction
-                        attendue (En cas de déviation)</label>
+                <div class="col-12 mb-2">
+                    <label class="text-uppercase mb-1 d-block" style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction attendue</label>
                     {{ sous_criteres.empty_form.reaction }}
                 </div>
             </div>
