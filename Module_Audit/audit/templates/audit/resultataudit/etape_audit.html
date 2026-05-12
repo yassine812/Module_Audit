@@ -8,31 +8,78 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   /* ── Scope to content area only – do NOT touch sidebar/navbar ── */
-  .content-wrapper{overflow:hidden!important;height:calc(100vh - 57px)!important;display:flex!important;flex-direction:column!important;background:#f5f7fb!important;padding:0!important;}
-  .content-wrapper > .content{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important;}
-  .content-wrapper > .content > .container-fluid{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important;}
+  .content-wrapper {
+    overflow: hidden !important;
+    height: calc(100vh - 57px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #f5f7fb !important;
+    padding: 0 !important;
+  }
+
+  .content-wrapper>.content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .content-wrapper>.content>.container-fluid {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
 
   /* ── Page wrapper fills space beside sidebar ── */
-  .audit-page-wrapper{
-    display:flex;flex-direction:column;flex:1;min-height:0;
-    padding:16px 24px;background:#f5f7fb;box-sizing:border-box;overflow:hidden;
+  .audit-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 16px 24px;
+    background: #f5f7fb;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   /* ── Single audit card ── */
-  .audit-card{
-    width:100%;border-radius:16px;overflow:hidden;
-    background:#fff;border:1px solid #e4e7ec;
-    box-shadow:0 2px 10px rgba(15,23,42,.05);
-    display:flex;flex-direction:column;flex:1;min-height:0;
+  .audit-card {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e4e7ec;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .05);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: auto !important;
   }
 
   /* ── Section 1: top header grid ── */
-  .audit-top-grid{
-    display:grid;grid-template-columns:1fr auto;
-    border-bottom:1px solid #e4e7ec;flex-shrink:0;
+  .audit-top-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-bottom: 1px solid #e4e7ec;
+    flex-shrink: 0;
   }
-  .top-left{padding:18px 24px;border-right:1px solid #e4e7ec;}
-  .top-right{padding:18px 28px;display:flex;gap:48px;align-items:flex-start;}
+
+  .top-left {
+    padding: 18px 24px;
+    border-right: 1px solid #e4e7ec;
+  }
+
+  .top-right {
+    padding: 18px 28px;
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+  }
+
   .lbl {
     font-size: 13px !important;
     font-weight: 800 !important;
@@ -45,25 +92,75 @@
     line-height: 1.2 !important;
     font-family: 'Inter', sans-serif;
   }
-  .norme-link{display:inline-flex;align-items:center;gap:8px;color:#2563eb;font-size:18px;font-weight:800;text-decoration:none;margin-top:2px;}
-  .norme-link:hover{color:#1d4ed8;}
-  .hdr-person{font-weight:700;color:#1e293b;font-size:15px;}
+
+  .norme-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #2563eb;
+    font-size: 18px;
+    font-weight: 800;
+    text-decoration: none;
+    margin-top: 2px;
+  }
+
+  .norme-link:hover {
+    color: #1d4ed8;
+  }
+
+  .hdr-person {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
+  }
 
   /* ── Section 2: body grid ── */
-  .audit-body-grid{
-    display:grid;grid-template-columns:6.5fr 3.5fr;
-    border-bottom:1px solid #e4e7ec;flex:1;min-height:0;overflow:visible;
+  .audit-body-grid {
+    display: grid;
+    grid-template-columns: 6.5fr 3.5fr;
+    border-bottom: 1px solid #e4e7ec;
+    flex: 1;
+    min-height: 0;
+    overflow: visible;
   }
-  .body-left{padding:20px 24px;border-right:1px solid #e4e7ec;display:flex;flex-direction:column;overflow:hidden;}
-  .body-right{padding:20px 24px;display:flex;flex-direction:column;background:#f9fafb;overflow-y:auto;max-height:400px;}
-  .critere-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;}
+
+  .body-left {
+    padding: 24px 32px 30px !important;
+    border-right: 1px solid #e4e7ec;
+    overflow: visible !important;
+  }
+
+  .body-right {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+
+  .critere-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+
   .critere-title {
     font-size: 22px !important;
     font-weight: 900 !important;
     color: #0f172a !important;
     letter-spacing: -0.01em !important;
   }
-  .score-txt{font-size:14px;font-weight:900;color:#2563eb;letter-spacing:0.05em;}
+
+  .score-txt {
+    font-size: 14px;
+    font-weight: 900;
+    color: #2563eb;
+    letter-spacing: 0.05em;
+  }
+
   .desc-text {
     color: #334155 !important;
     font-size: 16px !important;
@@ -71,15 +168,23 @@
     line-height: 1.5 !important;
     margin-bottom: 12px !important;
   }
+
   .preuve-text {
     color: #475569 !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-    line-height: 1.5 !important;
+    line-height: 1.6 !important;
   }
 
   /* ── Justif buttons ── */
-  .justif-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;flex-shrink:0;}
+  .justif-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+
   .justif-btn {
     border: 1.5px dashed #e2e8f0;
     border-radius: 10px;
@@ -96,11 +201,13 @@
     transition: all 0.2s ease;
     overflow: hidden;
   }
+
   .justif-btn:hover {
     border-color: #3b82f6;
     background: #f8faff;
     transform: scale(1.01);
   }
+
   .justif-btn svg {
     width: 20px !important;
     height: 20px !important;
@@ -109,6 +216,7 @@
     flex-shrink: 0 !important;
     color: #3b82f6;
   }
+
   .justif-btn span {
     font-size: 10px;
     font-weight: 700;
@@ -117,6 +225,7 @@
     text-align: center;
     letter-spacing: 0.01em;
   }
+
   .lbl {
     font-size: 16px !important;
     font-weight: 800 !important;
@@ -127,7 +236,10 @@
     display: block !important;
     font-family: 'Inter', sans-serif !important;
   }
-  .hdr-person, .desc-text, .preuve-text {
+
+  .hdr-person,
+  .desc-text,
+  .preuve-text {
     font-size: 14px !important;
     font-weight: 600 !important;
     color: #0f172a !important;
@@ -143,6 +255,7 @@
     margin-bottom: 12px;
     flex-shrink: 0;
   }
+
   .trigger-card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -158,19 +271,22 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
     position: relative;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   }
+
   .trigger-card:hover {
     border-color: #cbd5e1;
     background: #fbfcfe;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
+
   .trigger-card.active {
     border-color: #3b82f6;
     background: #f0f7ff;
     box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
   }
+
   .trigger-card span {
     font-size: 13px !important;
     font-weight: 600 !important;
@@ -180,9 +296,11 @@
     font-family: 'Inter', sans-serif;
     transition: color 0.2s;
   }
+
   .trigger-card.active span {
     color: #2563eb !important;
   }
+
   .trigger-card .card-icon {
     width: 18px !important;
     height: 18px !important;
@@ -192,10 +310,12 @@
     color: #64748b;
     transition: all 0.2s;
   }
+
   .trigger-card.active .card-icon {
     color: #3b82f6;
     transform: scale(1.05);
   }
+
   .trigger-card .chevron {
     position: absolute;
     top: 8px;
@@ -206,6 +326,7 @@
     color: #94a3b8;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
   .trigger-card.active .chevron {
     transform: rotate(180deg);
     color: #3b82f6;
@@ -225,10 +346,12 @@
     opacity: 0;
     transition: opacity 0.3s ease;
   }
+
   .modal-overlay.active {
     display: flex;
     opacity: 1;
   }
+
   .modal-container {
     background: #fff;
     width: 90%;
@@ -241,9 +364,11 @@
     display: flex;
     flex-direction: column;
   }
+
   .modal-overlay.active .modal-container {
     transform: scale(1);
   }
+
   .modal-header {
     padding: 20px 24px;
     border-bottom: 1px solid #f1f5f9;
@@ -252,6 +377,7 @@
     justify-content: space-between;
     background: #fff;
   }
+
   .modal-title {
     font-size: 16px;
     font-weight: 800;
@@ -259,6 +385,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
+
   .modal-close {
     width: 32px;
     height: 32px;
@@ -272,15 +399,18 @@
     cursor: pointer;
     transition: all 0.2s;
   }
+
   .modal-close:hover {
     background: #fee2e2;
     color: #ef4444;
   }
+
   .modal-body {
     padding: 24px;
     max-height: 70vh;
     overflow-y: auto;
   }
+
   .modal-footer {
     padding: 16px 24px;
     border-top: 1px solid #f1f5f9;
@@ -289,6 +419,7 @@
     gap: 12px;
     background: #f8fafc;
   }
+
   .modal-btn {
     padding: 10px 24px;
     border-radius: 12px;
@@ -299,20 +430,23 @@
     border: none;
     font-family: 'Inter', sans-serif;
   }
+
   .modal-btn-cancel {
     background: #fff;
     color: #64748b;
     border: 1px solid #e2e8f0;
   }
+
   .modal-btn-save {
     background: #3b82f6;
     color: #fff;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
   }
+
   .modal-btn-save:hover {
     background: #2563eb;
   }
-  
+
   .obs-area-modal {
     width: 100%;
     border: 1.5px solid #e2e8f0;
@@ -328,22 +462,66 @@
     transition: border-color 0.2s;
     resize: none;
   }
-  .obs-area-modal:focus { border-color: #3b82f6; }
 
-  body.modal-open { overflow: hidden; }
+  .obs-area-modal:focus {
+    border-color: #3b82f6;
+  }
+
+  body.modal-open {
+    overflow: hidden;
+  }
 
   /* ── Section 3: Evaluation ── */
-  .evaluation-section{padding:16px 24px 24px;flex-shrink:0;background:#fff;}
-  .evaluation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;margin-top:16px;}
-  .eval-btn{
-    display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 12px;
-    background:transparent;border:1px solid transparent;cursor:pointer;border-radius:14px;
-    transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);width:100%;position:relative;
+  .evaluation-section {
+    padding: 16px 24px 24px;
+    flex-shrink: 0;
+    background: #fff;
   }
-  .eval-btn:hover{background:rgba(0,0,0,.02);transform:translateY(-1px);}
+
+  .evaluation-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .eval-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    border-radius: 14px;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    position: relative;
+  }
+
+  .eval-btn:hover {
+    background: rgba(0, 0, 0, .02);
+    transform: translateY(-1px);
+  }
 
   /* Status Colors */
-  .ic-green{background:#22c55e;} .ic-orange{background:#f97316;} .ic-red{background:#ef4444;} .ic-dark{background:#1e293b;}
+  .ic-green {
+    background: #22c55e;
+  }
+
+  .ic-orange {
+    background: #f97316;
+  }
+
+  .ic-red {
+    background: #ef4444;
+  }
+
+  .ic-dark {
+    background: #1e293b;
+  }
 
   /* Premium Selected States */
   .eval-btn.selected-conforme {
@@ -352,18 +530,22 @@
     box-shadow: 0 6px 18px rgba(34, 197, 94, 0.12) !important;
     transform: translateY(-1px);
   }
-  .eval-btn.selected-partiellement-conforme, .eval-btn.selected-partielllement-conforme {
+
+  .eval-btn.selected-partiellement-conforme,
+  .eval-btn.selected-partielllement-conforme {
     background: rgba(249, 115, 22, 0.10) !important;
     border: 1px solid rgba(249, 115, 22, 0.35) !important;
     box-shadow: 0 6px 18px rgba(249, 115, 22, 0.12) !important;
     transform: translateY(-1px);
   }
+
   .eval-btn.selected-non-conforme {
     background: rgba(239, 68, 68, 0.10) !important;
     border: 1px solid rgba(239, 68, 68, 0.35) !important;
     box-shadow: 0 6px 18px rgba(239, 68, 68, 0.12) !important;
     transform: translateY(-1px);
   }
+
   .eval-btn.selected-non-applicable {
     background: rgba(15, 23, 42, 0.08) !important;
     border: 1px solid rgba(15, 23, 42, 0.25) !important;
@@ -371,61 +553,364 @@
     transform: translateY(-1px);
   }
 
-  .eval-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto;}
-  .eval-icon svg{width:24px;height:24px;color:#fff;}
-  .eval-title{font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;text-align:center;}
-  .eval-sub{font-size:10px;font-weight:600;text-align:center;}
-  .cl-green{color:#22c55e;} .cl-orange{color:#f97316;} .cl-red{color:#ef4444;} .cl-dark{color:#1e293b;}
+  .eval-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .eval-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #fff;
+  }
+
+  .eval-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .eval-sub {
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .cl-green {
+    color: #22c55e;
+  }
+
+  .cl-orange {
+    color: #f97316;
+  }
+
+  .cl-red {
+    color: #ef4444;
+  }
+
+  .cl-dark {
+    color: #1e293b;
+  }
 
   /* ── Footer nav ── */
-  .audit-footer{
-    flex-shrink:0;background:#fff;border-top:1px solid #e5e7eb;
-    padding:10px 24px;display:flex;justify-content:space-between;align-items:center;
+  .audit-footer {
+    flex-shrink: 0;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .btn-prev{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#fff;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-weight:700;color:#475569;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
-  .btn-prev:hover{background:#f8fafc;}
-  .btn-prev:disabled{opacity:.4;cursor:not-allowed;}
-  .btn-next{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:#1e3a6e;border:none;border-radius:10px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s;}
-  .btn-next:hover{background:#1e40af;}
-  .btn-finish{display:none;align-items:center;gap:8px;padding:11px 28px;background:#16a34a;border:none;border-radius:10px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;}
-  .save-ind{display:none;align-items:center;gap:6px;color:#3b82f6;font-size:12px;font-weight:700;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .spin-icon{animation:spin 1s linear infinite;}
 
-  /* ── Responsive ── */
-  @media(max-width:992px){
-    .content-wrapper{overflow:hidden!important;height:calc(100vh - 57px)!important;}
-    .audit-page-wrapper{padding:8px;height:100%;display:flex;flex-direction:column;box-sizing:border-box;}
-    .audit-card{flex:1;display:flex;flex-direction:column;min-height:0;border-radius:12px;}
-    .audit-top-grid{display:block;flex-shrink:0;}
-    .top-left{padding:8px 12px 4px;}
-    .top-right{padding:6px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f8fafc;margin:0 12px 8px;border-radius:8px;border:1px solid #e4e7ec;}
-    .top-right > div{padding:0;}
-    .audit-body-grid{display:block;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
-    .body-left{padding:0 12px 8px;flex-shrink:0;}
-    .body-right{padding:0 12px 8px;flex:1;display:flex;flex-direction:column;min-height:0;}
-    .justif-row{margin-bottom:8px;gap:6px;}
-    .justif-btn{padding:8px 4px;gap:4px;}
-    .justif-btn svg{width:16px;height:16px;}
-    .obs-area{height:60px!important;flex:1;min-height:40px;}
-    .evaluation-section{padding:8px 12px;border-top:1px solid #e4e7ec;flex-shrink:0;}
-    .evaluation-grid{grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;}
-    .eval-btn{background:#fff;border:1px solid #e4e7ec;box-shadow:0 1px 3px rgba(0,0,0,.02);border-radius:10px;padding:8px 4px;}
-    .eval-icon{width:32px;height:32px;border-radius:8px;}
-    .audit-footer{padding:8px 12px;box-shadow:0 -2px 10px rgba(0,0,0,.04);}
-    .btn-prev,.btn-next,.btn-finish{padding:8px 16px;font-size:13px;border-radius:8px;}
-    .lbl { font-size: 18px !important; margin-top: 16px !important; margin-bottom: 8px !important; }
-    .critere-title { font-size: 24px !important; }
-    .desc-text { font-size: 16px !important; -webkit-line-clamp: 5 !important; }
-    .preuve-text { font-size: 16px !important; }
+  .btn-prev {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all .2s;
   }
-  @media(max-width:370px){
-    .top-right{margin:0 8px 6px;gap:4px;}
-    .top-left,.body-left,.body-right,.evaluation-section{padding:8px 10px;}
-    .evaluation-grid{gap:4px;}
-    .eval-btn{padding:6px 2px;}
-    .eval-icon{width:28px;height:28px;}
-    .eval-title{font-size:10px;}
+
+  .btn-prev:hover {
+    background: #f8fafc;
+  }
+
+  .btn-prev:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+
+  .btn-next {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 28px;
+    background: #1e3a6e;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background .2s;
+  }
+
+  .btn-next:hover {
+    background: #1e40af;
+  }
+
+  .btn-finish {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 28px;
+    background: #16a34a;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .save-ind {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    color: #3b82f6;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spin-icon {
+    animation: spin 1s linear infinite;
+  }
+
+  /* PDF Modal Desktop Base Styles */
+  .pdf-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    z-index: 10;
+    color: #334155;
+  }
+  #pdf-canvas {
+    display: block;
+    height: 95vh;
+    max-height: 95vh;
+    width: auto;
+  }
+
+  /* 📱 EXTREME MOBILE REDESIGN (370x615) - NON-COMPRESSED WORKSTATION */
+  @media (max-width: 767.98px) {
+    body, html {
+      overflow: hidden !important;
+      height: 100dvh !important;
+      background: #F8FAFC !important;
+    }
+
+    .content-wrapper { height: auto !important; min-height: 0 !important; }
+    .audit-page-wrapper { 
+      padding: 0 !important; 
+      height: calc(100dvh - 65px) !important; 
+      overflow: hidden !important; 
+      display: flex !important;
+      flex-direction: column !important;
+      background: #fff !important;
+      position: relative !important;
+    }
+    .audit-card { 
+      border-radius: 0 !important; 
+      border: none !important; 
+      box-shadow: none !important; 
+      flex: 1 !important; 
+      display: flex !important; 
+      flex-direction: column !important;
+      min-height: 0 !important;
+    }
+
+    /* 1. SLIM TOP BAR */
+    .audit-top-grid { display: block !important; flex-shrink: 0 !important; border-bottom: none !important; }
+    .top-left { padding: 8px 16px 4px !important; border-right: none !important; }
+    .top-right { 
+      display: flex !important; 
+      padding: 6px 16px !important; 
+      background: #f8fafc !important; 
+      margin: 0 !important; 
+      gap: 12px !important;
+      border-top: 1px solid #f1f5f9 !important;
+      border-bottom: none !important;
+      border-radius: 0 !important;
+    }
+    .top-right > div { display: flex; flex-direction: column !important; align-items: flex-start !important; gap: 0 !important; }
+    .lbl { 
+      display: block !important; 
+      font-size: 9px !important; 
+      font-weight: 800 !important; 
+      color: #1e3a6e !important; 
+      text-transform: uppercase !important; 
+      margin-top: 4px !important;
+      margin-bottom: 2px !important; 
+      letter-spacing: 0.05em !important; 
+      opacity: 0.8;
+    } 
+    .hdr-person { font-size: 11px !important; color: #475569 !important; font-weight: 600 !important; }
+    .norme-link { font-size: 13px !important; margin-top: 0 !important; }
+
+    /* 2. MAIN CONTENT SCROLL AREA */
+    .audit-body-grid {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow-y: auto !important;
+      min-height: 0 !important;
+      padding: 12px 16px 8px !important;
+      background: #fff !important;
+    }
+    .body-left { padding: 0 !important; border: none !important; }
+    .body-right { 
+      display: block !important; 
+      padding: 0 !important; 
+      background: transparent !important; 
+      max-height: none !important; 
+      margin-top: 8px !important; 
+      flex: none !important;
+    }
+
+    /* Modern Typography */
+    .critere-row { margin-bottom: 4px !important; }
+    .critere-title { 
+      font-size: 1.1rem !important; 
+      font-weight: 900 !important; 
+      color: #1e293b !important;
+      line-height: 1.2 !important;
+      margin-bottom: 2px !important;
+    }
+    .score-txt { font-size: 9px !important; font-weight: 800 !important; }
+    .desc-text { 
+      font-size: 0.85rem !important; 
+      font-weight: 500 !important; 
+      color: #475569 !important;
+      line-height: 1.4 !important;
+      margin-bottom: 8px !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 4 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .preuve-text { font-size: 0.8rem !important; color: #64748b !important; margin-top: 4px !important; }
+
+    /* Interaction Row (Obs/Justif) */
+    .sidebar-cards-row {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+      margin: 4px 0 8px !important;
+      width: 100% !important;
+    }
+    .trigger-card {
+      height: 44px !important;
+      border-radius: 12px !important;
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+      padding: 6px !important;
+    }
+    .trigger-card span { font-size: 9px !important; font-weight: 800 !important; color: #475569 !important; }
+    .trigger-card .card-icon { width: 14px !important; height: 14px !important; }
+
+    /* Evaluation Grid 2x2 */
+    .evaluation-section { 
+      flex: 0 0 auto !important; 
+      padding: 8px 16px 8px !important; 
+      border-top: 1px solid #f1f5f9 !important;
+      background: #fff !important;
+    }
+    .evaluation-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 8px !important;
+      margin-top: 4px !important;
+    }
+    .eval-btn {
+      height: 60px !important;
+      border-radius: 14px !important;
+      border: 1px solid #e2e8f0 !important;
+      background: #fff !important;
+      padding: 4px !important;
+      flex-direction: column !important;
+    }
+    .eval-icon { width: 24px !important; height: 24px !important; margin-bottom: 2px !important; }
+    .eval-icon svg { width: 12px !important; height: 12px !important; }
+    .eval-title { font-size: 9px !important; line-height: 1.1 !important; }
+
+    /* 3. FIXED BOTTOM NAVIGATION */
+    .audit-footer {
+      flex: 0 0 auto !important;
+      padding: 8px 16px 12px !important;
+      background: white !important;
+      border-top: 1px solid #e2e8f0 !important;
+      z-index: 100 !important;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.03) !important;
+    }
+    .btn-prev, .btn-next, .btn-finish {
+      height: 38px !important;
+      border-radius: 10px !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      padding: 0 10px !important;
+    }
+    .btn-prev { background: #f8fafc !important; }
+    #step-counter { font-size: 10px !important; padding: 4px 8px !important; }
+    /* 4. PDF MODAL MOBILE OPTIMIZATION */
+    #pdf-modal { padding: 0 !important; background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(5px); }
+    #pdf-paper-wrapper { 
+      width: 100% !important; 
+      height: 100% !important; 
+      max-height: 100% !important; 
+      border-radius: 0 !important; 
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+    }
+    #pdf-canvas { 
+      width: 100% !important; 
+      height: auto !important; 
+      max-height: 90vh !important; 
+      object-fit: contain !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .pdf-close-btn {
+      position: fixed !important;
+      top: 16px !important;
+      right: 16px !important;
+      background: rgba(255,255,255,0.9) !important;
+      backdrop-filter: blur(4px);
+      border: none !important;
+      border-radius: 50% !important;
+      width: 44px !important;
+      height: 44px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+      z-index: 10000 !important;
+      color: #1e293b !important;
+    }
   }
 </style>
 {% endblock %}
@@ -442,7 +927,11 @@
         <span class="lbl">NORME</span>
         <a id="item-chapitre-link" href="javascript:void(0)" class="norme-link">
           <span id="item-chapitre">--</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
         </a>
         <div id="item-norme" style="font-size:11px;color:#94a3b8;margin-top:2px;"></div>
       </div>
@@ -455,10 +944,11 @@
           <span class="lbl">PARTICIPANT</span>
           <div class="hdr-person">
             {% for p in resultat.audit.participants.all %}
-              {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %}, {% endif %}
+            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %},
+            {% endif %}
             {% endfor %}
             {% if resultat.audit.participants_externes %}
-              {{ resultat.audit.participants_externes }}
+            {{ resultat.audit.participants_externes }}
             {% endif %}
             {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}--{% endif %}
           </div>
@@ -469,27 +959,39 @@
     <!-- Section 2: Body -->
     <div class="audit-body-grid">
       <div class="body-left">
+        <span class="lbl d-md-none">CRITÈRE</span>
         <div class="critere-row">
           <div class="critere-title" id="item-title">Critère</div>
           <div class="score-txt">SCORE: <span id="current-score">--</span></div>
         </div>
-        <span class="lbl">SOUS-CRITÈRE</span>
+        <span class="lbl d-md-none">SOUS-CRITÈRE</span>
         <p class="desc-text" id="item-description"></p>
-        <span class="lbl">PREUVE ATTENDUE</span>
+        <span class="lbl d-md-none">PREUVE ATTENDUE</span>
         <p class="preuve-text" id="item-preuve"></p>
       </div>
       <div class="body-right">
         <!-- Card Triggers -->
         <div class="sidebar-cards-row">
           <div class="trigger-card" id="trigger-justif" onclick="openModal('justif')">
-            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
             <span>JUSTIFICATIF</span>
-            <div id="justif-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#10b981;border-radius:50%;border:2px solid #fff;"></div>
+            <div id="justif-badge" class="hidden"
+              style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#10b981;border-radius:50%;border:2px solid #fff;">
+            </div>
           </div>
           <div class="trigger-card" id="trigger-obs" onclick="openModal('obs')">
-            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
             <span>OBSERVATIONS</span>
-            <div id="obs-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid #fff;"></div>
+            <div id="obs-badge" class="hidden"
+              style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid #fff;">
+            </div>
           </div>
         </div>
 
@@ -498,16 +1000,33 @@
 
     <!-- Section 3: Evaluation -->
     <div class="evaluation-section">
-      <span class="lbl">ÉVALUATION DE CONFORMITÉ</span>
+      <span class="lbl d-md-none">ÉVALUATION DE CONFORMITÉ</span>
       <div class="evaluation-grid">
         {% for cot in cotations %}
-        <button type="button" class="eval-btn" data-status="{{ cot.content|escapejs }}" data-value="{{ cot.valeur|stringformat:'f' }}"
+        <button type="button" class="eval-btn" data-status="{{ cot.content|escapejs }}"
+          data-value="{{ cot.valeur|stringformat:'f' }}"
           onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',', '.')))">
-          <div class="eval-icon {% if forloop.counter == 1 %}ic-green{% elif forloop.counter == 2 %}ic-orange{% elif forloop.counter == 3 %}ic-red{% else %}ic-dark{% endif %}">
-            {% if forloop.counter == 1 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            {% elif forloop.counter == 2 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            {% elif forloop.counter == 3 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>{% endif %}
+          <div
+            class="eval-icon {% if forloop.counter == 1 %}ic-green{% elif forloop.counter == 2 %}ic-orange{% elif forloop.counter == 3 %}ic-red{% else %}ic-dark{% endif %}">
+            {% if forloop.counter == 1 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {% elif forloop.counter == 2 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            {% elif forloop.counter == 3 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>{% endif %}
           </div>
           <div class="eval-title">{{ cot.content }}</div>
         </button>
@@ -521,25 +1040,41 @@
   <div class="audit-footer">
     <div style="display:flex; align-items:center; gap:16px;">
       <button id="prevBtn" class="btn-prev" onclick="changeStep(-1)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
         Précédent
       </button>
-      <div id="step-counter" style="font-size:13px; font-weight:700; color:#64748b; background:#f1f5f9; padding:4px 12px; border-radius:20px;">
+      <div id="step-counter"
+        style="font-size:13px; font-weight:700; color:#64748b; background:#f1f5f9; padding:4px 12px; border-radius:20px;">
         Étape <span id="current-idx">1</span> / <span id="total-idx">1</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <div id="save-indicator" class="save-ind">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="spin-icon">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
         Sauvegarde...
       </div>
       <button id="nextBtn" class="btn-next" onclick="changeStep(1)">
         Suivant
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
       </button>
       <button id="finishBtn" class="btn-finish" onclick="finalizeAudit()">
         Finaliser
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
       </button>
     </div>
   </div>
@@ -547,15 +1082,23 @@
 </div><!-- end audit-page-wrapper -->
 
 <!-- PDF Modal -->
-<div id="pdf-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px;">
-  <button onclick="closePdfModal()" style="position:absolute;top:16px;right:16px;background:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:10;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<div id="pdf-modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+  <button class="pdf-close-btn" onclick="closePdfModal()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
   </button>
   <div id="pdf-paper-wrapper" style="background:#fff;border-radius:8px;overflow:hidden;max-height:95vh;position:relative;">
-    <div id="pdf-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:10;">
-      <div style="width:36px;height:36px;border:4px solid #3b82f6;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+    <div id="pdf-loading"
+      style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:10;">
+      <div
+        style="width:36px;height:36px;border:4px solid #3b82f6;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;">
+      </div>
     </div>
-    <canvas id="pdf-canvas" style="display:block;height:95vh;max-height:95vh;width:auto;"></canvas>
+    <canvas id="pdf-canvas" style="display:block; max-width:100%;"></canvas>
   </div>
 </div>
 
@@ -568,24 +1111,41 @@
     <div class="modal-header">
       <h3 class="modal-title">Ajouter un Justificatif</h3>
       <button class="modal-close" onclick="closeModal('justif')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
     <div class="modal-body">
       <div class="justif-row" style="margin-bottom:20px;">
         <label class="justif-btn" style="height:120px !important;">
-          <div style="width:48px; height:48px; background:#f5f3ff; color:#7c3aed; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <div
+            style="width:48px; height:48px; background:#f5f3ff; color:#7c3aed; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
           </div>
           <span style="font-size:12px;">PRENDRE UNE PHOTO</span>
-          <input type="file" accept="image/*" capture="camera" multiple style="display:none" onchange="handleFileUpload(this)">
+          <input type="file" accept="image/*" capture="camera" multiple style="display:none"
+            onchange="handleFileUpload(this)">
         </label>
         <label class="justif-btn" style="height:120px !important;">
-          <div style="width:48px; height:48px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div
+            style="width:48px; height:48px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
           </div>
           <span style="font-size:12px;">TÉLÉVERSER UN FICHIER</span>
-          <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handleFileUpload(this)">
+          <input type="file" accept="image/*,application/pdf" multiple style="display:none"
+            onchange="handleFileUpload(this)">
         </label>
       </div>
 
@@ -593,12 +1153,19 @@
       <div id="file-preview-container" class="hidden" style="margin-top:20px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
           <span class="lbl" style="margin:0 !important; font-size:12px !important;">Preuves jointes</span>
-          <button onclick="clearFile(event)" style="background:#fee2e2; color:#ef4444; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition: all 0.2s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          <button onclick="clearFile(event)"
+            style="background:#fee2e2; color:#ef4444; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition: all 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            </svg>
             TOUT SUPPRIMER
           </button>
         </div>
-        <div id="evidence-gallery" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:12px;">
+        <div id="evidence-gallery"
+          style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:12px;">
           <!-- Items will be injected here -->
         </div>
       </div>
@@ -615,7 +1182,11 @@
     <div class="modal-header">
       <h3 class="modal-title">Observations & Commentaires</h3>
       <button class="modal-close" onclick="closeModal('obs')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
     <div class="modal-body">
@@ -632,7 +1203,7 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
   let detailsData = [];
   let libraryData = [];
   let currentStep = 0;
@@ -648,10 +1219,10 @@
     } catch (e) {
       console.error("JSON Parse Error:", e);
     }
-    
+
     totalSteps = detailsData.length;
     if (totalSteps === 0) { renderStep(); return; }
-    
+
     const last = localStorage.getItem('audit_{{ resultat.id }}_last_edited');
     if (last !== null) currentStep = parseInt(last);
     if (currentStep >= totalSteps) currentStep = 0;
@@ -700,7 +1271,7 @@
     const d = detailsData[currentStep];
     const justifBadge = document.getElementById('justif-badge');
     const obsBadge = document.getElementById('obs-badge');
-    
+
     if (justifBadge) {
       const count = (d.evidences ? d.evidences.length : 0);
       const hasEv = count > 0;
@@ -722,56 +1293,56 @@
   }
 
   function toggleSidebarSection(type) {
-     // Legacy function kept for safety but replaced by openModal
-     openModal(type);
+    // Legacy function kept for safety but replaced by openModal
+    openModal(type);
   }
 
   // Core Rendering Logic
-  function renderStep(){
-    const prevBtn=document.getElementById('prevBtn');
-    const nextBtn=document.getElementById('nextBtn');
-    const finishBtn=document.getElementById('finishBtn');
-    if(prevBtn) prevBtn.disabled=(currentStep===0);
-    if(nextBtn) nextBtn.style.display=(currentStep===totalSteps-1)?'none':'inline-flex';
-    if(finishBtn) finishBtn.style.display=(currentStep===totalSteps-1)?'inline-flex':'none';
-    if(!detailsData||totalSteps===0) return;
-    const d=detailsData[currentStep];
+  function renderStep() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const finishBtn = document.getElementById('finishBtn');
+    if (prevBtn) prevBtn.disabled = (currentStep === 0);
+    if (nextBtn) nextBtn.style.display = (currentStep === totalSteps - 1) ? 'none' : 'inline-flex';
+    if (finishBtn) finishBtn.style.display = (currentStep === totalSteps - 1) ? 'inline-flex' : 'none';
+    if (!detailsData || totalSteps === 0) return;
+    const d = detailsData[currentStep];
     console.log(`Rendering Step ${currentStep + 1} (ID: ${d.id})`);
-    
+
     // Update Step Counter
     const curIdx = document.getElementById('current-idx');
     const totIdx = document.getElementById('total-idx');
     if (curIdx) curIdx.textContent = currentStep + 1;
     if (totIdx) totIdx.textContent = totalSteps;
 
-    const chapLink=document.getElementById('item-chapitre-link');
-    const chapEl=document.getElementById('item-chapitre');
-    const normeEl=document.getElementById('item-norme');
-    if(chapEl) chapEl.textContent=d.chapitre||'--';
-    if(normeEl) normeEl.textContent=d.norme||'';
-    if(chapLink&&d.text_ref_url){
-      chapLink.onclick=(e)=>{e.preventDefault();openPdfModal(d.text_ref_url,d.chapitre||d.norme,d.pdf_page);};
+    const chapLink = document.getElementById('item-chapitre-link');
+    const chapEl = document.getElementById('item-chapitre');
+    const normeEl = document.getElementById('item-norme');
+    if (chapEl) chapEl.textContent = d.chapitre || '--';
+    if (normeEl) normeEl.textContent = d.norme || '';
+    if (chapLink && d.text_ref_url) {
+      chapLink.onclick = (e) => { e.preventDefault(); openPdfModal(d.text_ref_url, d.chapitre || d.norme, d.pdf_page); };
     }
-    const titleEl=document.getElementById('item-title');
-    const descEl=document.getElementById('item-description');
-    const preuveEl=document.getElementById('item-preuve');
-    const obsEl=document.getElementById('observation-input');
-    const scoreEl=document.getElementById('current-score');
-    if(titleEl) titleEl.textContent=d.critere||'--';
-    if(descEl) descEl.textContent=d.sous_critere||'';
-    if(preuveEl) preuveEl.textContent=(d.preuves_attendues && d.preuves_attendues.length > 0) ? d.preuves_attendues.join(', ') : '';
-    if(obsEl) obsEl.value=(d.commentaire&&d.commentaire!=='None')?d.commentaire:'';
-    if(scoreEl) scoreEl.textContent=(d.value!==undefined&&d.value!==null)?parseFloat(d.value).toFixed(1):'--';
-    if(d.cotation){
-      const ab=document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
-      if(ab) {
+    const titleEl = document.getElementById('item-title');
+    const descEl = document.getElementById('item-description');
+    const preuveEl = document.getElementById('item-preuve');
+    const obsEl = document.getElementById('observation-input');
+    const scoreEl = document.getElementById('current-score');
+    if (titleEl) titleEl.textContent = d.critere || '--';
+    if (descEl) descEl.textContent = d.sous_critere || '';
+    if (preuveEl) preuveEl.textContent = (d.preuves_attendues && d.preuves_attendues.length > 0) ? d.preuves_attendues.join(', ') : '';
+    if (obsEl) obsEl.value = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
+    if (scoreEl) scoreEl.textContent = (d.value !== undefined && d.value !== null) ? parseFloat(d.value).toFixed(1) : '--';
+    if (d.cotation) {
+      const ab = document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
+      if (ab) {
         // Clear all others first to be safe
         document.querySelectorAll('.eval-btn').forEach(btn => {
-            const classes = [...btn.classList];
-            classes.forEach(c => { if(c.startsWith('selected-')) btn.classList.remove(c); });
+          const classes = [...btn.classList];
+          classes.forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
         });
-        const safe=d.cotation.toLowerCase().trim().replace(/ /g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-        ab.classList.add('selected-'+safe);
+        const safe = d.cotation.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        ab.classList.add('selected-' + safe);
       }
     }
 
@@ -788,7 +1359,7 @@
           const isPdf = url.toLowerCase().endsWith('.pdf');
           const item = document.createElement('div');
           item.style = "position:relative; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; aspect-ratio:1; background:#f8fafc; group;";
-          
+
           let content = '';
           if (isPdf) {
             content = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;" onclick="window.open('${url}', '_blank')">
@@ -798,12 +1369,12 @@
           } else {
             content = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${url}', '_blank')">`;
           }
-          
+
           const delBtn = document.createElement('button');
           delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
           delBtn.style = "position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:6px; background:rgba(239,68,68,0.9); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:10;";
           delBtn.onclick = (e) => { e.stopPropagation(); deleteSpecificEvidence(ev.id); };
-          
+
           item.innerHTML = content;
           item.appendChild(delBtn);
           gallery.appendChild(item);
@@ -815,44 +1386,44 @@
     updateBadges();
   }
 
-  function updateGlobalScoreDisplay(){
+  function updateGlobalScoreDisplay() {
     // Function kept for backward compatibility if needed, but removed from UI
   }
 
-  async function changeStep(delta){
+  async function changeStep(delta) {
     await saveStep(false);
-    currentStep+=delta;
-    if(currentStep<0) currentStep=0;
-    if(currentStep>=totalSteps) currentStep=totalSteps-1;
+    currentStep += delta;
+    if (currentStep < 0) currentStep = 0;
+    if (currentStep >= totalSteps) currentStep = totalSteps - 1;
     renderStep();
   }
 
-  async function setStatus(status,value){
-    const d=detailsData[currentStep];
+  async function setStatus(status, value) {
+    const d = detailsData[currentStep];
     const trimmedStatus = status.trim();
 
     // Toggle logic
     if (d.cotation === trimmedStatus) {
-        d.cotation = null; d.value = null;
+      d.cotation = null; d.value = null;
     } else {
-        d.cotation = trimmedStatus; d.value = value;
+      d.cotation = trimmedStatus; d.value = value;
     }
 
     // Clear all visual states
     document.querySelectorAll('.eval-btn').forEach(btn => {
-        const classes = [...btn.classList];
-        classes.forEach(c => { if(c.startsWith('selected-')) btn.classList.remove(c); });
+      const classes = [...btn.classList];
+      classes.forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
     });
 
     if (d.cotation) {
-        const ab=document.querySelector(`.eval-btn[data-status="${status}"]`);
-        if(ab) {
-            const safe=status.toLowerCase().trim().replace(/ /g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-            ab.classList.add('selected-'+safe);
-        }
+      const ab = document.querySelector(`.eval-btn[data-status="${status}"]`);
+      if (ab) {
+        const safe = status.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        ab.classList.add('selected-' + safe);
+      }
     }
-    const scoreEl=document.getElementById('current-score');
-    if(scoreEl) scoreEl.textContent=value.toFixed(1);
+    const scoreEl = document.getElementById('current-score');
+    if (scoreEl) scoreEl.textContent = value.toFixed(1);
     updateGlobalScoreDisplay();
     await saveStep(false);
   }
@@ -864,40 +1435,40 @@
     renderStep();
   }
 
-  async function saveStep(isNav){
-    const d=detailsData[currentStep];
-    const obsEl=document.getElementById('observation-input');
-    const finalObs=obsEl?obsEl.value:(d.commentaire||'');
-    const fd=new FormData();
-    fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
-    fd.append('commentaire',finalObs);
-    fd.append('cotation',d.cotation||'');
-    fd.append('value',d.value||0);
-    const ind=document.getElementById('save-indicator');
-    if(ind) ind.style.display='flex';
-    try{
-      const resp=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});
-      const data=await resp.json();
-      if(data.status==='success'){
-        d.commentaire=finalObs;
+  async function saveStep(isNav) {
+    const d = detailsData[currentStep];
+    const obsEl = document.getElementById('observation-input');
+    const finalObs = obsEl ? obsEl.value : (d.commentaire || '');
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fd.append('commentaire', finalObs);
+    fd.append('cotation', d.cotation || '');
+    fd.append('value', d.value || 0);
+    const ind = document.getElementById('save-indicator');
+    if (ind) ind.style.display = 'flex';
+    try {
+      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (data.status === 'success') {
+        d.commentaire = finalObs;
         if (data.evidences) d.evidences = data.evidences;
-        localStorage.setItem('audit_{{ resultat.id }}_last_edited',currentStep);
+        localStorage.setItem('audit_{{ resultat.id }}_last_edited', currentStep);
       }
-    }catch(e){console.error('Save error:',e);}
-    if(ind) ind.style.display='none';
+    } catch (e) { console.error('Save error:', e); }
+    if (ind) ind.style.display = 'none';
   }
 
   async function handleFileUpload(input) {
     if (!input.files || input.files.length === 0) return;
-    
+
     const d = detailsData[currentStep];
     const formData = new FormData();
     formData.append("id", d.id);
-    
+
     for (let i = 0; i < input.files.length; i++) {
-        formData.append("justificatif", input.files[i]);
+      formData.append("justificatif", input.files[i]);
     }
-    
+
     Swal.fire({
       title: 'Téléversement...',
       text: 'Veuillez patienter',
@@ -913,7 +1484,7 @@
       });
       const result = await resp.json();
       Swal.close();
-      
+
       if (result.status === "success") {
         d.evidences = result.evidences;
         d.has_file = true;
@@ -922,16 +1493,16 @@
       } else {
         Swal.fire('Erreur', result.message || 'Échec de l\'envoi.', 'error');
       }
-    } catch(e) { 
+    } catch (e) {
       Swal.close();
       console.error('Upload error:', e);
-      Swal.fire('Erreur', 'Échec de la connexion au serveur.', 'error'); 
+      Swal.fire('Erreur', 'Échec de la connexion au serveur.', 'error');
     }
     input.value = ''; // Reset input to allow re-uploading same file
   }
 
   async function clearFile(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const d = detailsData[currentStep];
     const fd = new FormData();
     fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
@@ -939,43 +1510,43 @@
 
     try {
       const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {
-        method:'POST', 
-        body:fd
+        method: 'POST',
+        body: fd
       });
       const data = await resp.json();
-      if(data.status === 'success') {
+      if (data.status === 'success') {
         d.evidences = [];
         d.has_file = false;
         renderStep();
         Swal.fire({ icon: 'success', title: 'Galerie vidée', timer: 800, showConfirmButton: false });
       }
-    } catch(e) { console.error('Clear error:', e); }
+    } catch (e) { console.error('Clear error:', e); }
   }
 
   async function deleteSpecificEvidence(evId) {
     if (evId === 'legacy1' || evId === 'legacy2') {
-       Swal.fire('Info', 'Format ancien : utilisez "Tout Supprimer".', 'info');
-       return;
+      Swal.fire('Info', 'Format ancien : utilisez "Tout Supprimer".', 'info');
+      return;
     }
-    
+
     try {
       const resp = await fetch(`/audit/evidence/${evId}/delete/`, {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}' }
       });
       const data = await resp.json();
-      if(data.status === 'success') {
+      if (data.status === 'success') {
         const d = detailsData[currentStep];
         d.evidences = d.evidences.filter(ev => ev.id !== evId);
         if (d.evidences.length === 0) d.has_file = false;
         renderStep();
       }
-    } catch(e) { console.error('Delete error:', e); }
+    } catch (e) { console.error('Delete error:', e); }
   }
 
-  async function finalizeAudit(){
+  async function finalizeAudit() {
     await saveStep(false);
-    
+
     // Show initial loading for AI generation
     Swal.fire({
       title: 'Analyse IA en cours...',
@@ -1054,15 +1625,15 @@
       fd.append('risque', formValues.risque);
       fd.append('opportunite', formValues.opportunite);
 
-      const resp = await fetch(`/audit/resultat/{{ resultat.id }}/close/`, {method: 'POST', body: fd});
+      const resp = await fetch(`/audit/resultat/{{ resultat.id }}/close/`, { method: 'POST', body: fd });
       const data = await resp.json();
-      
-      if(data.status === 'success') {
+
+      if (data.status === 'success') {
         Swal.fire({
-          icon: 'success', 
-          title: 'Audit terminé !', 
-          text: 'Redirection vers le rapport...', 
-          timer: 2000, 
+          icon: 'success',
+          title: 'Audit terminé !',
+          text: 'Redirection vers le rapport...',
+          timer: 2000,
           showConfirmButton: false
         }).then(() => {
           window.location.href = data.redirect_url;
@@ -1070,47 +1641,47 @@
       } else {
         throw new Error('Close failed');
       }
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       Swal.fire('Erreur', 'Une erreur est survenue lors de la finalisation.', 'error');
     }
   }
 
-  function openPdfModal(url,title,page){
-    const modal=document.getElementById('pdf-modal');
-    const loading=document.getElementById('pdf-loading');
-    modal.style.display='flex';
-    document.body.style.overflow='hidden';
-    if(loading) loading.style.display='flex';
-    let cleanPath=url.replace(/.*processus_docs\//,'');
-    let path1='/processus_docs/'+cleanPath;
-    let path2=url.startsWith('/')?url:'/'+url;
-    const tryFetch=(targetUrl)=>{
-      fetch(targetUrl).then(r=>{if(!r.ok) throw new Error('Not found');return r.blob();})
-        .then(async blob=>{
-          const ab=await blob.arrayBuffer();
-          const pdf=await pdfjsLib.getDocument({data:ab}).promise;
-          const pdfPage=await pdf.getPage(parseInt(page)||1);
-          const viewport=pdfPage.getViewport({scale:2.0});
-          const canvas=document.getElementById('pdf-canvas');
-          const ctx=canvas.getContext('2d');
-          canvas.height=viewport.height;canvas.width=viewport.width;
-          await pdfPage.render({canvasContext:ctx,viewport}).promise;
-          if(loading) loading.style.display='none';
+  function openPdfModal(url, title, page) {
+    const modal = document.getElementById('pdf-modal');
+    const loading = document.getElementById('pdf-loading');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    if (loading) loading.style.display = 'flex';
+    let cleanPath = url.replace(/.*processus_docs\//, '');
+    let path1 = '/processus_docs/' + cleanPath;
+    let path2 = url.startsWith('/') ? url : '/' + url;
+    const tryFetch = (targetUrl) => {
+      fetch(targetUrl).then(r => { if (!r.ok) throw new Error('Not found'); return r.blob(); })
+        .then(async blob => {
+          const ab = await blob.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+          const pdfPage = await pdf.getPage(parseInt(page) || 1);
+          const viewport = pdfPage.getViewport({ scale: 2.0 });
+          const canvas = document.getElementById('pdf-canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.height = viewport.height; canvas.width = viewport.width;
+          await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+          if (loading) loading.style.display = 'none';
         })
-        .catch(err=>{
-          if(targetUrl===path1) tryFetch(path2);
-          else{console.error('PDF:',err);if(loading) loading.style.display='none';}
+        .catch(err => {
+          if (targetUrl === path1) tryFetch(path2);
+          else { console.error('PDF:', err); if (loading) loading.style.display = 'none'; }
         });
     };
     tryFetch(path1);
   }
 
-  function closePdfModal(){
-    document.getElementById('pdf-modal').style.display='none';
-    document.body.style.overflow='';
+  function closePdfModal() {
+    document.getElementById('pdf-modal').style.display = 'none';
+    document.body.style.overflow = '';
   }
 
-  window.onload=init;
+  window.onload = init;
 </script>
 {% endblock %}

@@ -44,41 +44,33 @@
       padding: 0.5rem 0.8rem !important;
     }
 
-    /* 50% width for the first 4 fields */
+    /* 100% width for the first 4 fields */
     #step-1 .row {
       display: flex !important;
-      flex-wrap: wrap !important;
-      margin-left: -4px !important;
-      margin-right: -4px !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
     }
 
-    #step-1 .col-md-6,
-    #step-1 .col-md-12 {
-      padding-left: 4px !important;
-      padding-right: 4px !important;
-    }
-
-    #step-1 .col-md-6 {
-      flex: 0 0 50% !important;
-      max-width: 50% !important;
-    }
-
-    #step-1 .col-md-12 {
+    #step-1 [class*="col-"] {
       flex: 0 0 100% !important;
       max-width: 100% !important;
+      width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
 
     .form-group {
-      margin-bottom: 0.5rem !important;
+      margin-bottom: 1rem !important;
     }
-
+    
     .form-label {
-      font-size: 0.75rem !important;
-      margin-bottom: 4px !important;
+      font-size: 0.8rem !important;
+      margin-bottom: 6px !important;
       font-weight: 700 !important;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      color: #334155 !important;
     }
 
     /* Inputs: big enough to read, but compact */
@@ -86,15 +78,16 @@
     .form-select,
     .custom-input,
     .select2-container--bootstrap4 .select2-selection--single {
-      height: 38px !important;
-      min-height: 38px !important;
-      font-size: 0.85rem !important;
-      padding: 6px 10px !important;
+      height: 42px !important;
+      min-height: 42px !important;
+      font-size: 0.9rem !important;
+      padding: 8px 12px !important;
+      border-radius: 10px !important;
     }
 
     .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
-      line-height: 36px !important;
-      padding-left: 10px !important;
+      line-height: 40px !important;
+      padding-left: 12px !important;
     }
 
     /* Button */
@@ -121,7 +114,23 @@
       font-size: 0.95rem !important;
     }
 
-    /* Footer bar fixed at bottom */
+    /* Modal Mobile Refinement */
+    #ajaxFormModal .modal-dialog {
+      margin: 10px !important;
+      max-width: calc(100% - 20px) !important;
+    }
+    #ajaxFormModal .modal-content {
+      max-height: 85vh !important;
+      height: auto !important;
+    }
+    #ajaxFormModalBody {
+      flex: 0 1 auto !important;
+      max-height: 60vh !important;
+    }
+    .modal-header { padding: 1rem !important; }
+    .modal-footer { padding: 0.8rem !important; }
+    .modal-title { font-size: 1rem !important; }
+    
     .footer-bar,
     .page-footer {
       position: fixed !important;
@@ -594,6 +603,15 @@
                 </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- MOBILE ADD CRITERIA BUTTON -->
+        <div class="d-md-none mb-3 px-1">
+            <button type="button" class="btn btn-primary w-100 py-3 rounded-4 shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" 
+                    onclick="openAddCritereModal()" style="background-color: #007bff !important; border: none !important;">
+                <i class="fas fa-plus-circle fa-lg"></i>
+                <span class="text-uppercase tracking-wider">Ajouter un critère</span>
+            </button>
         </div>
 
         <!-- MOBILE CARDS CONTAINER -->

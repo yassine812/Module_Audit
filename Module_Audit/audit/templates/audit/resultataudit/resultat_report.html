@@ -51,6 +51,115 @@
 
     * { box-sizing: border-box; }
 
+    /* High-Fidelity Mobile Responsive Overrides (370x615) */
+    @media (max-width: 480px) {
+        body { overflow-x: hidden !important; width: 100vw !important; }
+        
+        #report-container { 
+            width: 100% !important; 
+            max-width: 100vw !important; 
+            padding: 8px !important; 
+            margin: 0 !important; 
+            box-sizing: border-box !important;
+            overflow: visible !important;
+        }
+        
+        .report-paper { 
+            padding: 15px !important; 
+            border-radius: 0 !important; 
+            box-shadow: none !important; 
+            width: 100% !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            overflow: visible !important;
+        }
+
+        /* HEADER RECONSTRUCTION */
+        .pdf-section.w-full.flex.h-36 { 
+            height: auto !important; 
+            flex-direction: column !important; 
+            border: 2px solid #93c5fd !important;
+            overflow: visible !important;
+        }
+        .w-\[12\%\], .w-\[76\%\] { 
+            width: 100% !important; 
+            border: none !important; 
+            padding: 15px !important;
+            text-align: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .w-\[76\%\] { background: #93c5fd !important; min-height: 80px !important; }
+        .text-\[34px\] { 
+            font-size: 1.5rem !important; 
+            letter-spacing: 0.1em !important; 
+            line-height: 1.2 !important;
+        }
+        
+        /* SCORE SECTION RECONSTRUCTION */
+        .pdf-section.flex.items-center.gap-6 { 
+            flex-direction: column !important; 
+            text-align: center !important;
+            padding: 20px !important;
+            gap: 15px !important;
+        }
+        .w-px.h-12.bg-slate-200 { display: none !important; }
+        .text-3xl { font-size: 1.25rem !important; }
+        .text-5xl { font-size: 2.5rem !important; }
+
+        /* SYNTHESE GRID */
+        .grid.grid-cols-1.md\:grid-cols-2 { 
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .min-h-\[140px\] { min-height: auto !important; padding: 15px !important; }
+        
+        /* Tables & Evaluation Cards */
+        .pdf-section { 
+            width: 100% !important; 
+            max-width: 100% !important;
+            overflow-x: hidden !important; /* Switch from scroll to fit */
+            margin-bottom: 12px !important;
+        }
+        .audit-table { 
+            min-width: 0 !important; 
+            width: 100% !important;
+            table-layout: auto !important; 
+        }
+        
+        /* Criterion Header Row */
+        .critere-row td:first-child { width: 35px !important; padding: 5px !important; text-align: center !important; }
+        .critere-row td:last-child { font-size: 13px !important; padding: 8px 10px !important; }
+
+        /* Sub-criterion Metadata (Bullet) */
+        .sc-meta-cell { width: 20px !important; padding: 0 !important; display: table-cell !important; }
+        
+        /* Sub-criterion Score */
+        .sc-score-cell { width: 65px !important; padding: 5px !important; }
+        .sc-score-val { font-size: 16px !important; }
+        .sc-score-label { font-size: 7px !important; }
+
+        /* Sub-criterion Content */
+        .sc-sub-head { font-size: 8px !important; padding: 3px 8px !important; }
+        .sc-sub-body { padding: 4px 8px 6px 8px !important; }
+        .txt-main { font-size: 12px !important; }
+        
+        /* Justificatifs / Images */
+        .just-gallery img { 
+            max-width: 100% !important; 
+            height: auto !important; 
+            border-radius: 4px !important;
+        }
+
+        /* Action Buttons */
+        .flex.justify-center.gap-4 { 
+            flex-wrap: wrap !important; 
+            gap: 10px !important; 
+        }
+    }
+
     @media print {
         .no-print, nav, footer, header, .sidebar, .navbar, [data-html2canvas-ignore] { display: none !important; }
         body { background: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }

@@ -427,248 +427,161 @@
         line-height: 1.6 !important;
     }
 
-    /* EXTREME MOBILE ZERO-SCROLL OVERRIDES */
+    /* 📱 EXTREME MOBILE REDESIGN (370x615) - NON-COMPRESSED WORKSTATION */
     @media (max-width: 767.98px) {
-
-        body,
-        html {
+        body, html {
             overflow: hidden !important;
             height: 100dvh !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overscroll-behavior-y: none; /* Prevent browser swipe-to-refresh */
+            background: #F8FAFC !important;
         }
 
         .wizard-container {
-            height: calc(100dvh - 57px) !important; /* Subtract navbar height */
-            min-height: calc(100dvh - 57px) !important;
-            padding: 0.2rem !important;
+            height: 100dvh !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
-            overflow: hidden !important;
         }
 
         .max-w-6xl {
             height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
-            justify-content: space-between !important;
             margin: 0 !important;
-            max-width: 100% !important;
+            gap: 0 !important;
         }
 
-        /* Compress Header */
-        .standard-card.flex-col {
-            padding: 0.2rem 0.5rem !important;
-            flex-direction: row !important;
-            /* Force row on mobile */
-            gap: 0.25rem !important;
-            border-radius: 8px !important;
-        }
-
-        .standard-card h1 {
-            font-size: 1rem !important;
+        /* 1. SLIM TOP BAR */
+        .standard-card.p-4.md\:p-6.flex {
+            padding: 0.75rem 1rem !important;
+            border-radius: 0 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            background: white !important;
+            flex-shrink: 0 !important;
             margin-bottom: 0 !important;
         }
+        .standard-card.flex.items-center.justify-between { gap: 0.5rem !important; }
+        .standard-card h1 { font-size: 0.9rem !important; font-weight: 800 !important; }
+        #global-score { font-size: 1.1rem !important; }
+        .standard-card p, .text-\[10px\] { font-size: 7px !important; }
 
-        .standard-card p {
-            font-size: 0.65rem !important;
-            margin-bottom: 0 !important;
+        /* 2. SLIM STEPPER */
+        .relative.py-2.px-2 {
+            padding: 0.4rem 1rem !important;
+            background: #fff !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            flex-shrink: 0 !important;
         }
 
-        #global-score {
-            font-size: 1.25rem !important;
-        }
-
-        .text-\[10px\] {
-            font-size: 8px !important;
-        }
-
-        /* Compress Stepper */
-        .relative.py-4 {
-            padding-top: 0.2rem !important;
-            padding-bottom: 0.2rem !important;
-        }
-
-        .step-indicator {
-            width: 18px !important;
-            height: 18px !important;
-            font-size: 9px !important;
-        }
-
-        /* Criteria Container */
+        /* 3. MAIN CONTENT SCROLL AREA */
         #criteria-container {
-            flex-grow: 1 !important;
-            min-height: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
+            flex: 1 !important;
             overflow-y: auto !important;
-            overflow-x: hidden !important;
+            padding: 1rem !important;
+            background: #F8FAFC !important;
         }
 
-        #criteria-container>div {
-            flex-grow: 1 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            margin-bottom: 0 !important;
-            border-radius: 12px !important;
+        .standard-card.shadow-sm.overflow-hidden {
+            border-radius: 16px !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
+            margin-bottom: 1rem !important;
+            background: white !important;
         }
 
-        .grid-cols-1.lg\:grid-cols-12 {
-            display: flex !important;
-            flex-direction: column !important;
-            height: auto !important;
-            min-height: 0 !important;
-            justify-content: flex-start !important;
+        .lg\:grid-cols-12 { display: block !important; }
+        .lg\:col-span-8 { padding: 1.25rem !important; }
+
+        /* Hide bulky labels */
+        .section-label { 
+            display: none !important; 
         }
 
-        .lg\:col-span-8 {
-            padding: 0.75rem !important;
-            flex-grow: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-start !important;
+        /* Compact Context Bar (Norme/Chapter) */
+        .flex.flex-wrap.items-center.gap-2 {
+            margin-bottom: 1rem !important;
+        }
+        #item-chapitre, #item-norme-badge {
+            font-size: 9px !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
         }
 
-        .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
-        .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.2rem !important; }
-        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
-
-        #item-title { font-size: 1.75rem !important; font-weight: 900 !important; margin-top: 0 !important; margin-bottom: 0.75rem !important; }
-        #item-description { font-size: 1.25rem !important; font-weight: 600 !important; line-height: 1.4 !important; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.75rem !important; }
-        .section-label { font-size: 18px !important; margin-top: 1rem !important; margin-bottom: 0.5rem !important; }
-
-        hr.border-slate-50 { display: none !important; }
-        label.text-\[10px\] { display: none !important; }
-
-        /* Glassmorphism Info Boxes - COMPACT (Participant & Preuves) */
-        .mb-4.bg-indigo-50\/50, #preuve-attendu-container {
-            margin-bottom: 0.2rem !important;
-            padding: 0.3rem 0.5rem !important;
-            border-radius: 10px !important;
-            backdrop-filter: blur(4px) !important;
-            background: rgba(238, 242, 255, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        /* Modern Typography */
+        #item-title { 
+            font-size: 1.25rem !important; 
+            font-weight: 900 !important; 
+            color: #1e293b !important;
+            line-height: 1.2 !important;
+            margin-bottom: 0.75rem !important;
         }
-        #preuve-attendu-container {
-            gap: 0.3rem !important;
+        #item-description { 
+            font-size: 0.95rem !important; 
+            font-weight: 500 !important; 
+            color: #475569 !important;
+            line-height: 1.5 !important;
+            margin-bottom: 1.5rem !important;
         }
-        
-        .mb-4.bg-indigo-50\/50 .w-8, #preuve-attendu-container .w-8 { width: 20px !important; height: 20px !important; flex-shrink: 0 !important; }
-        #preuve-attendu-container .w-8 i { width: 12px !important; height: 12px !important; }
-        
-        .mb-4.bg-indigo-50\/50 p.text-\[10px\], #preuve-attendu-container p.text-\[10px\] { font-size: 7px !important; margin-bottom: -2px !important; }
-        .mb-4.bg-indigo-50\/50 p.text-sm { font-size: 0.75rem !important; font-weight: 600 !important; margin-bottom: 0 !important; }
 
-        /* Small Square Cotation Buttons */
-        .grid.grid-cols-2 {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 0.5rem !important;
-            justify-content: flex-start !important;
-            width: 100% !important;
+        /* Evaluation Grid 2x2 */
+        .grid.grid-cols-2.lg\:grid-cols-4 {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+            margin-top: 1rem !important;
         }
 
         .status-btn {
-            padding: 0.2rem !important;
-            width: 65px !important;
-            height: 65px !important;
-            border-radius: 12px !important;
-            justify-content: center !important;
-            flex-direction: column !important;
-            gap: 0.1rem !important;
-            align-items: center !important;
-            min-height: 0 !important;
-            outline: none !important;
-            background-color: #ffffff;
-            border: 1px solid #f1f5f9;
-            flex: 0 0 65px !important;
-            cursor: pointer !important;
-            -webkit-tap-highlight-color: transparent !important;
-        }
-
-        .icon-box { 
-            width: 22px !important; 
-            height: 22px !important; 
-            margin-bottom: 0 !important; 
-            border-radius: 6px !important;
-            background: #f8fafc !important;
-        }
-        .icon-box svg { width: 12px !important; height: 12px !important; }
-        .status-btn span.font-bold { font-size: 0.65rem !important; line-height: 1 !important; color: #334155 !important; }
-        .status-btn span.text-\[10px\] { font-size: 7px !important; color: #94a3b8 !important; }
-
-        /* Custom Range Slider Styling */
-        #step-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: #2563eb;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-            border: 3px solid white;
-        }
-
-        #step-range::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: #2563eb;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-            border: 3px solid white;
-        }
-
-        .lg\:col-span-4 {
+            height: 80px !important;
+            border-radius: 16px !important;
+            border: 1px solid #e2e8f0 !important;
             padding: 0.5rem !important;
-            background: #f8fafc !important;
-            border-top: 1px solid #e2e8f0 !important;
-            flex-grow: 0 !important;
+            background: #fff !important;
         }
-
-        /* Action Buttons Row on Mobile */
-        #action-buttons-wrapper {
-            flex-direction: row !important;
-            gap: 0.4rem !important;
+        .status-btn .icon-box { 
+            width: 28px !important; 
+            height: 28px !important; 
+            margin-bottom: 4px !important; 
+            border-radius: 8px !important;
         }
+        .status-btn .icon-box svg { width: 14px !important; height: 14px !important; }
+        .status-btn span.block.font-bold { font-size: 0.75rem !important; line-height: 1.1 !important; }
+        .status-btn span.text-\[10px\] { font-size: 8px !important; }
 
+        /* Observation/Justif Buttons */
+        .flex.gap-2.mt-3.md\:hidden {
+            margin-top: 1.5rem !important;
+            gap: 0.75rem !important;
+        }
         .action-panel-btn {
-            flex: 1 !important;
-            padding: 0.5rem !important;
-            border-radius: 10px !important;
-            min-height: 40px !important;
-            justify-content: center !important;
-            border-width: 1px !important;
-            background-color: #fff !important;
+            height: 48px !important;
+            border-radius: 12px !important;
+            background: #f1f5f9 !important;
+            border: none !important;
         }
+        .action-panel-btn span { font-size: 0.8rem !important; font-weight: 700 !important; }
 
-        .action-panel-btn .w-8 { display: none !important; } /* Hide circle to save space */
-        .action-panel-btn span.font-bold { font-size: 0.85rem !important; margin-left: 0 !important; }
-        #comment-chevron, #proof-chevron { display: none !important; }
-
+        /* 4. FIXED BOTTOM NAVIGATION */
         #bottom-nav-container {
-            margin-top: 0.5rem !important;
-            padding: 0 !important;
-            background: transparent !important;
-            border-top: none !important;
             flex-shrink: 0 !important;
-            gap: 0.5rem !important;
+            padding: 0.75rem 1rem 1.5rem !important;
+            background: white !important;
+            border-top: 1px solid #e2e8f0 !important;
+            margin-top: 0 !important;
+            z-index: 100 !important;
         }
-        
-        button#prevBtn, button#nextBtn, button#finishBtn {
-            padding: 0.6rem 1rem !important;
+
+        #bottom-nav-container button {
+            height: 48px !important;
+            border-radius: 12px !important;
             font-size: 0.9rem !important;
-            border-radius: 10px !important;
-            height: 42px !important;
-            flex: 1 !important;
-            justify-content: center !important;
+            font-weight: 800 !important;
+            box-shadow: none !important;
         }
-        button#prevBtn svg, button#nextBtn svg, button#finishBtn svg { width: 16px !important; height: 16px !important; }
-        
-        #save-indicator { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem !important; }
+        #prevBtn { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; color: #64748b !important; }
+        #nextBtn, #finishBtn { flex: 2 !important; }
+
+        /* Hide redundant desktop elements */
+        #saved-preview-strip { margin-top: 1rem !important; }
+        .mt-10 { margin-top: 1.5rem !important; }
     }
 </style>
 {% endblock %}
