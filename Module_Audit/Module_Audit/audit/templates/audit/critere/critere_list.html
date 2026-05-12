@@ -353,31 +353,9 @@
     }
 
     function initModalBehaviors() {
-        $('#critereModalForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            $.ajax({
-                type:"POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                success: function(response) {
-                    if (response.success) {
-                        $('#critereModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Succès',
-                            text: response.message || 'Opération réussie',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload()); 
-                    } else {
-                        $('#modalBodyContent').html(response);
-                        initModalBehaviors();
-                    }
-                }
-            });
-        });
+        // Modal behaviors are now primarily handled within the loaded HTML (critere_form_modal.html)
+        // for better encapsulation and specialized logging.
+        // This function can be used for any list-specific initializations if needed.
     }
 
                 function openDeleteModal(url, name) {

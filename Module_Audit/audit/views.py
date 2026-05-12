@@ -538,6 +538,7 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
+        data['audit_types'] = TypeAudit.objects.all()
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST, instance=self.object)
         else:
@@ -549,11 +550,19 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         sous_criteres = context['sous_criteres']
         if sous_criteres.is_valid():
             self.object = form.save()
+            # Ensure M2M is saved before we access it
+            form.save_m2m() 
+            
             saved_scs = sous_criteres.save()
             
             # Sync Type Audit from Parent to Children
             parent_types = list(self.object.type_audit.all())
             for sc in saved_scs:
+                sc.type_audit.set(parent_types)
+            
+            # Also sync existing ones if they changed? 
+            # Usually only newly saved ones are returned by sous_criteres.save()
+            for sc in self.object.souscritere_set.all():
                 sc.type_audit.set(parent_types)
 
             if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -2703,9 +2712,21 @@ def update_critere_inline(request, pk):
                 critere.formulaire_id = formulaire_id
             critere.save()
 
-            type_audits = request.POST.getlist("type_audit")
-            if type_audits:
-                critere.type_audit.set(type_audits)
+            critere.save()
+
+            # Handle ManyToMany type_audit/ciblage robustly (Single or Multiple)
+            type_audit_ids = request.POST.getlist("type_audit") or request.POST.getlist("type_audit[]") or \
+                           request.POST.getlist("ciblage") or request.POST.getlist("ciblage[]") or \
+                           [request.POST.get("type_audit")] or [request.POST.get("ciblage")]
+            
+            if any(k in request.POST for k in ["type_audit", "type_audit[]", "ciblage", "ciblage[]"]):
+                # Filter out empty values and set
+                valid_ids = [tid for tid in type_audit_ids if tid and tid != 'None']
+                if valid_ids:
+                    critere.type_audit.set(valid_ids)
+                else:
+                    critere.type_audit.clear()
+            
             return JsonResponse({"status": "success", "id": critere.id, "name": critere.name})
         except Critere.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Critère not found"}, status=404)

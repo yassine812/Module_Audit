@@ -9,13 +9,13 @@
 <style>
   /* ── Scope to content area only – do NOT touch sidebar/navbar ── */
   .content-wrapper{overflow:hidden!important;height:calc(100vh - 57px)!important;display:flex!important;flex-direction:column!important;background:#f5f7fb!important;padding:0!important;}
-  .content-wrapper > .content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-  .content-wrapper > .content > .container-fluid{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
+  .content-wrapper > .content{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important;}
+  .content-wrapper > .content > .container-fluid{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important;}
 
   /* ── Page wrapper fills space beside sidebar ── */
   .audit-page-wrapper{
     display:flex;flex-direction:column;flex:1;min-height:0;
-    padding:20px 24px 0;background:#f5f7fb;box-sizing:border-box;overflow:hidden;
+    padding:16px 24px;background:#f5f7fb;box-sizing:border-box;overflow:hidden;
   }
 
   /* ── Single audit card ── */
@@ -33,44 +33,253 @@
   }
   .top-left{padding:18px 24px;border-right:1px solid #e4e7ec;}
   .top-right{padding:18px 28px;display:flex;gap:48px;align-items:flex-start;}
-  .lbl{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px;}
-  .norme-link{display:inline-flex;align-items:center;gap:8px;color:#2563eb;font-size:20px;font-weight:800;text-decoration:none;margin-top:2px;}
+  .lbl {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1e3a5f !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    display: block !important;
+    margin-top: 12px !important;
+    margin-bottom: 4px !important;
+    line-height: 1.2 !important;
+    font-family: 'Inter', sans-serif;
+  }
+  .norme-link{display:inline-flex;align-items:center;gap:8px;color:#2563eb;font-size:18px;font-weight:800;text-decoration:none;margin-top:2px;}
   .norme-link:hover{color:#1d4ed8;}
-  .hdr-person{font-weight:600;color:#1e293b;font-size:14px;}
+  .hdr-person{font-weight:700;color:#1e293b;font-size:15px;}
 
   /* ── Section 2: body grid ── */
   .audit-body-grid{
-    display:grid;grid-template-columns:1fr 280px;
-    border-bottom:1px solid #e4e7ec;flex:1;min-height:0;overflow:hidden;
+    display:grid;grid-template-columns:6.5fr 3.5fr;
+    border-bottom:1px solid #e4e7ec;flex:1;min-height:0;overflow:visible;
   }
   .body-left{padding:20px 24px;border-right:1px solid #e4e7ec;display:flex;flex-direction:column;overflow:hidden;}
-  .body-right{padding:16px 20px;display:flex;flex-direction:column;overflow:hidden;}
+  .body-right{padding:20px 24px;display:flex;flex-direction:column;background:#f9fafb;overflow:visible;height:auto;}
   .critere-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;}
-  .critere-title{font-size:17px;font-weight:800;color:#1e293b;}
-  .score-txt{font-size:13px;font-weight:700;color:#2563eb;}
-  .desc-text{color:#475569;font-size:13px;line-height:1.55;margin-bottom:14px;}
-  .preuve-text{color:#64748b;font-size:12px;font-style:italic;line-height:1.5;}
+  .critere-title {
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.01em !important;
+  }
+  .score-txt{font-size:14px;font-weight:900;color:#2563eb;letter-spacing:0.05em;}
+  .desc-text {
+    color: #334155 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+    margin-bottom: 12px !important;
+  }
+  .preuve-text {
+    color: #475569 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+  }
 
   /* ── Justif buttons ── */
-  .justif-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;flex-shrink:0;}
-  .justif-btn{border:2px dashed #cbd5e1;border-radius:8px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:#f8fafc;width:100%;transition:border-color .2s;}
-  .justif-btn:hover{border-color:#94a3b8;}
-  .justif-btn svg{color:#64748b;width:20px;height:20px;}
-  .justif-btn span{font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.07em;text-align:center;line-height:1.3;}
-  .obs-area{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;color:#475569;font-family:'Inter',sans-serif;resize:none;outline:none;background:#fff;box-sizing:border-box;flex:1;min-height:0;}
-  .obs-area:focus{border-color:#93c5fd;}
+  .justif-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;flex-shrink:0;}
+  .justif-btn {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    background: #fff;
+    width: 100%;
+    height: 90px !important;
+    transition: all 0.2s ease;
+    overflow: hidden;
+  }
+  .justif-btn:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+  }
+  .justif-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    flex-shrink: 0 !important;
+    color: #3b82f6;
+  }
+  .justif-btn span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .lbl {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #163b68 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .06em !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+  .hdr-person, .desc-text, .preuve-text {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin-bottom: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Sidebar Card Triggers ── */
+  .sidebar-cards-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .trigger-card {
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    height: 78px !important; /* Compact size */
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+  }
+  .trigger-card:hover {
+    border-color: #3b82f6;
+    background: #f8faff;
+  }
+  .trigger-card.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.05);
+  }
+  .trigger-card span {
+    font-size: 16px;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-family: 'Inter', sans-serif;
+  }
+  .trigger-card .card-icon {
+    width: 22px !important;
+    height: 22px !important;
+    max-width: 22px !important;
+    max-height: 22px !important;
+    flex-shrink: 0 !important;
+    color: #64748b;
+    transition: all 0.2s;
+  }
+  .trigger-card.active .card-icon,
+  .trigger-card.active span {
+    color: #2563eb;
+  }
+  .trigger-card .chevron {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0 !important;
+    color: #cbd5e1;
+    transition: transform 0.3s;
+  }
+  .trigger-card.active .chevron {
+    transform: rotate(180deg);
+    color: #2563eb;
+  }
+
+  /* ── Sidebar Content Areas ── */
+  .sidebar-section-content {
+    display: none;
+    opacity: 0;
+    margin-top: 12px;
+  }
+  .sidebar-section-content.active {
+    display: block;
+    opacity: 1;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .obs-area {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.5;
+    font-family: 'Inter', sans-serif;
+    resize: none !important;
+    outline: none;
+    background: #fff;
+    box-sizing: border-box;
+    height: 130px !important; /* Fixed height as requested */
+    transition: all 0.2s ease;
+  }
+  .obs-area:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  }
 
   /* ── Section 3: Evaluation ── */
-  .evaluation-section{padding:16px 24px 14px;flex-shrink:0;}
-  .evaluation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-top:12px;}
-  .eval-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;background:transparent;border:none;cursor:pointer;border-radius:10px;transition:background .2s;width:100%;}
-  .eval-btn:hover{background:rgba(0,0,0,.04);}
-  .eval-btn.selected{background:rgba(0,0,0,.06);}
+  .evaluation-section{padding:16px 24px 24px;flex-shrink:0;background:#fff;}
+  .evaluation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;margin-top:16px;}
+  .eval-btn{
+    display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 12px;
+    background:transparent;border:1px solid transparent;cursor:pointer;border-radius:14px;
+    transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);width:100%;position:relative;
+  }
+  .eval-btn:hover{background:rgba(0,0,0,.02);transform:translateY(-1px);}
+
+  /* Status Colors */
+  .ic-green{background:#22c55e;} .ic-orange{background:#f97316;} .ic-red{background:#ef4444;} .ic-dark{background:#1e293b;}
+
+  /* Premium Selected States */
+  .eval-btn.selected-conforme {
+    background: rgba(34, 197, 94, 0.10) !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.12) !important;
+    transform: translateY(-1px);
+  }
+  .eval-btn.selected-partiellement-conforme, .eval-btn.selected-partielllement-conforme {
+    background: rgba(249, 115, 22, 0.10) !important;
+    border: 1px solid rgba(249, 115, 22, 0.35) !important;
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.12) !important;
+    transform: translateY(-1px);
+  }
+  .eval-btn.selected-non-conforme {
+    background: rgba(239, 68, 68, 0.10) !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.12) !important;
+    transform: translateY(-1px);
+  }
+  .eval-btn.selected-non-applicable {
+    background: rgba(15, 23, 42, 0.08) !important;
+    border: 1px solid rgba(15, 23, 42, 0.25) !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10) !important;
+    transform: translateY(-1px);
+  }
+
   .eval-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto;}
   .eval-icon svg{width:24px;height:24px;color:#fff;}
   .eval-title{font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;text-align:center;}
   .eval-sub{font-size:10px;font-weight:600;text-align:center;}
-  .ic-green{background:#22c55e;} .ic-orange{background:#f97316;} .ic-red{background:#ef4444;} .ic-dark{background:#1e293b;}
   .cl-green{color:#22c55e;} .cl-orange{color:#f97316;} .cl-red{color:#ef4444;} .cl-dark{color:#1e293b;}
 
   /* ── Footer nav ── */
@@ -108,15 +317,12 @@
     .evaluation-grid{grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;}
     .eval-btn{background:#fff;border:1px solid #e4e7ec;box-shadow:0 1px 3px rgba(0,0,0,.02);border-radius:10px;padding:8px 4px;}
     .eval-icon{width:32px;height:32px;border-radius:8px;}
-    .eval-icon svg{width:18px;height:18px;}
-    .eval-title{font-size:11px;}
-    .eval-btn.selected{border-color:#2563eb;background:#f0f7ff;}
     .audit-footer{padding:8px 12px;box-shadow:0 -2px 10px rgba(0,0,0,.04);}
     .btn-prev,.btn-next,.btn-finish{padding:8px 16px;font-size:13px;border-radius:8px;}
-    .norme-link{font-size:16px;}
-    .critere-title{font-size:15px;}
-    .desc-text{font-size:12px;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-    .preuve-text{font-size:11px;}
+    .lbl { font-size: 18px !important; margin-top: 16px !important; margin-bottom: 8px !important; }
+    .critere-title { font-size: 24px !important; }
+    .desc-text { font-size: 16px !important; -webkit-line-clamp: 5 !important; }
+    .preuve-text { font-size: 16px !important; }
   }
   @media(max-width:370px){
     .top-right{margin:0 8px 6px;gap:4px;}
@@ -178,21 +384,40 @@
         <p class="preuve-text" id="item-preuve"></p>
       </div>
       <div class="body-right">
-        <span class="lbl">JUSTIFICATIF</span>
-        <div class="justif-row">
-          <label class="justif-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>PRENDRE UNE PHOTO</span>
-            <input type="file" accept="image/*" capture="camera" style="display:none" onchange="handleFileUpload(this)">
-          </label>
-          <label class="justif-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span>TÉLÉVERSER</span>
-            <input type="file" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this)">
-          </label>
+        <!-- Card Triggers -->
+        <div class="sidebar-cards-row">
+          <div class="trigger-card active" id="trigger-justif" onclick="toggleSidebarSection('justif')">
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <span>JUSTIFICATIF</span>
+          </div>
+          <div class="trigger-card" id="trigger-obs" onclick="toggleSidebarSection('obs')">
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>OBSERVATIONS</span>
+          </div>
         </div>
-        <span class="lbl">OBSERVATIONS</span>
-        <textarea id="observation-input" class="obs-area" placeholder="Commentaires..." onchange="saveStep(false)"></textarea>
+
+        <!-- Content Area: JUSTIFICATIF -->
+        <div class="sidebar-section-content active" id="content-justif">
+          <div class="justif-row">
+            <label class="justif-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>PRENDRE UNE PHOTO</span>
+              <input type="file" accept="image/*" capture="camera" style="display:none" onchange="handleFileUpload(this)">
+            </label>
+            <label class="justif-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>TÉLÉVERSER</span>
+              <input type="file" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Content Area: OBSERVATIONS -->
+        <div class="sidebar-section-content" id="content-obs">
+          <textarea id="observation-input" class="obs-area" placeholder="Commentaires..." onchange="saveStep(false)"></textarea>
+        </div>
       </div>
     </div>
 
@@ -267,6 +492,25 @@
   let currentStep=0;
   const totalSteps=detailsData.length;
 
+  function toggleSidebarSection(type) {
+    const triggerJustif = document.getElementById('trigger-justif');
+    const triggerObs = document.getElementById('trigger-obs');
+    const contentJustif = document.getElementById('content-justif');
+    const contentObs = document.getElementById('content-obs');
+    
+    if (type === 'justif') {
+      triggerJustif.classList.toggle('active');
+      contentJustif.classList.toggle('active');
+      triggerObs.classList.remove('active');
+      contentObs.classList.remove('active');
+    } else {
+      triggerObs.classList.toggle('active');
+      contentObs.classList.toggle('active');
+      triggerJustif.classList.remove('active');
+      contentJustif.classList.remove('active');
+    }
+  }
+
   function init(){
     if(!detailsData||totalSteps===0){renderStep();return;}
     const last=localStorage.getItem('audit_{{ resultat.id }}_last_edited');
@@ -304,7 +548,15 @@
     if(scoreEl) scoreEl.textContent=(d.value!==undefined&&d.value!==null)?parseFloat(d.value).toFixed(1):'--';
     if(d.cotation){
       const ab=document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
-      if(ab) ab.classList.add('selected');
+      if(ab) {
+        // Clear all others first to be safe
+        document.querySelectorAll('.eval-btn').forEach(btn => {
+            const classes = [...btn.classList];
+            classes.forEach(c => { if(c.startsWith('selected-')) btn.classList.remove(c); });
+        });
+        const safe=d.cotation.toLowerCase().trim().replace(/ /g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+        ab.classList.add('selected-'+safe);
+      }
     }
   }
 
@@ -322,10 +574,28 @@
 
   async function setStatus(status,value){
     const d=detailsData[currentStep];
-    d.cotation=status;d.value=value;
-    document.querySelectorAll('.eval-btn').forEach(btn=>btn.classList.remove('selected'));
-    const ab=document.querySelector(`.eval-btn[data-status="${status}"]`);
-    if(ab) ab.classList.add('selected');
+    const trimmedStatus = status.trim();
+
+    // Toggle logic
+    if (d.cotation === trimmedStatus) {
+        d.cotation = null; d.value = null;
+    } else {
+        d.cotation = trimmedStatus; d.value = value;
+    }
+
+    // Clear all visual states
+    document.querySelectorAll('.eval-btn').forEach(btn => {
+        const classes = [...btn.classList];
+        classes.forEach(c => { if(c.startsWith('selected-')) btn.classList.remove(c); });
+    });
+
+    if (d.cotation) {
+        const ab=document.querySelector(`.eval-btn[data-status="${status}"]`);
+        if(ab) {
+            const safe=status.toLowerCase().trim().replace(/ /g,'-').normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+            ab.classList.add('selected-'+safe);
+        }
+    }
     const scoreEl=document.getElementById('current-score');
     if(scoreEl) scoreEl.textContent=value.toFixed(1);
     updateGlobalScoreDisplay();

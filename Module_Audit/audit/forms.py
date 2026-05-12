@@ -52,15 +52,41 @@ class FormulaireAuditForm(forms.ModelForm):
         }
 
 class CritereForm(forms.ModelForm):
+    ciblage = forms.ModelChoiceField(
+        queryset=TypeAudit.objects.all(),
+        required=False,
+        empty_label="Sélectionnez...",
+        label="Ciblage (Type Audit)",
+        widget=forms.Select(attrs={'class': 'custom-input select2-modal', 'id': 'id_ciblage', 'name': 'ciblage'})
+    )
     class Meta:
         model = Critere
-        fields = ['name', 'chapitre_norme', 'formulaire', 'type_audit']
+        fields = ['name', 'chapitre_norme', 'formulaire', 'ciblage']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du critère...'}),
             'chapitre_norme': forms.Select(attrs={'class': 'custom-input form-select'}),
             'formulaire': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'type_audit': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['ciblage'].queryset = TypeAudit.objects.all()
+        if self.instance and self.instance.pk:
+            # For M2M, take the first one as initial for single select
+            self.fields['ciblage'].initial = self.instance.type_audit.first()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            if 'ciblage' in self.cleaned_data:
+                selected_type = self.cleaned_data['ciblage']
+                if selected_type:
+                    instance.type_audit.set([selected_type])
+                else:
+                    instance.type_audit.clear()
+            self.save_m2m()
+        return instance
 
 class SousCritereForm(forms.ModelForm):
     class Meta:
@@ -115,13 +141,12 @@ class PreuveAttenduForm(forms.ModelForm):
         }
 
 class ListeAuditForm(forms.ModelForm):
-    participants_externes = forms.MultipleChoiceField(
+    participants_externes = forms.CharField(
         required=False,
         widget=forms.SelectMultiple(attrs={
             'class': 'custom-input form-select select2-tags', 
-            'data-placeholder': 'Tapez un nom et appuyez sur Entrée...'
+            'data-placeholder': 'Ajouter des participants externes (tapez et Entrée)...'
         }),
-        choices=[]
     )
 
     class Meta:
@@ -147,20 +172,22 @@ class ListeAuditForm(forms.ModelForm):
         # Handle participants_externes tags
         if self.instance and self.instance.participants_externes:
             current_tags = [tag.strip() for tag in self.instance.participants_externes.split(',') if tag.strip()]
-            self.fields['participants_externes'].choices = [(tag, tag) for tag in current_tags]
+            # CharField doesn't have choices, but the SelectMultiple widget needs them to render existing values
+            self.fields['participants_externes'].widget.choices = [(tag, tag) for tag in current_tags]
             self.initial['participants_externes'] = current_tags
         else:
-            self.fields['participants_externes'].choices = []
+            self.fields['participants_externes'].widget.choices = []
             
         # Handle date formatting
         if self.instance and self.instance.date:
             self.initial['date'] = self.instance.date.strftime('%Y-%m-%dT%H:%M')
 
     def clean_participants_externes(self):
-        data = self.cleaned_data.get('participants_externes')
-        if isinstance(data, list):
-            return ", ".join(data)
-        return data
+        # Since it's a CharField with a SelectMultiple widget, we need to handle the list of values
+        val = self.data.getlist('participants_externes')
+        if val:
+            return ", ".join([v.strip() for v in val if v.strip()])
+        return ""
 
 # FormSets
 SousCritereFormSet = inlineformset_factory(

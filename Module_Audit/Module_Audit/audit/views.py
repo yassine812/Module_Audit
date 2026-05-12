@@ -482,6 +482,7 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
+        data['audit_types'] = TypeAudit.objects.all()
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST)
         else:
@@ -515,6 +516,7 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
                 'form': form,
+                'audit_types': TypeAudit.objects.all(),
                 'sous_criteres': context['sous_criteres']
             })
         return super().form_invalid(form)
@@ -533,6 +535,7 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
+        data['audit_types'] = TypeAudit.objects.all()
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST, instance=self.object)
         else:
@@ -565,6 +568,7 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
                 'form': form,
+                'audit_types': TypeAudit.objects.all(),
                 'object': self.get_object(),
                 'sous_criteres': context['sous_criteres']
             })
@@ -2431,9 +2435,12 @@ def save_critere_inline(request):
                 formulaire_id=formulaire_id if formulaire_id else None
             )
 
-            type_audits = request.POST.getlist("type_audit")
+            type_audits = request.POST.getlist("type_audit") or request.POST.getlist("ciblage")
             if type_audits:
-                critere.type_audit.set(type_audits)
+                # Remove empty strings
+                type_audits = [ta for ta in type_audits if ta]
+                if type_audits:
+                    critere.type_audit.set(type_audits)
             elif type_audit_id:
                 critere.type_audit.add(type_audit_id)
 
@@ -2493,9 +2500,13 @@ def update_critere_inline(request, pk):
                 critere.formulaire_id = formulaire_id
             critere.save()
 
-            type_audits = request.POST.getlist("type_audit")
+            # Handle both old 'type_audit' and new 'ciblage' field names
+            type_audits = request.POST.getlist("type_audit") or request.POST.getlist("ciblage")
             if type_audits:
-                critere.type_audit.set(type_audits)
+                # Remove empty strings if any
+                type_audits = [ta for ta in type_audits if ta]
+                if type_audits:
+                    critere.type_audit.set(type_audits)
             return JsonResponse({"status": "success", "id": critere.id, "name": critere.name})
         except Critere.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Critère not found"}, status=404)
@@ -2722,3 +2733,9 @@ def get_formulaire_type_audit(request, formulaire_id):
         'type_audit_id': formulaire.type_audit.id if formulaire.type_audit else None,
         'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
     })
+
+def get_type_audits_json(request):
+    """Simple JSON endpoint: returns all TypeAudit records for frontend dropdowns."""
+    data = list(TypeAudit.objects.values('id', 'name'))
+    return JsonResponse(data, safe=False)
+

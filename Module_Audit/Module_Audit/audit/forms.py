@@ -41,12 +41,41 @@ class FormulaireAuditForm(forms.ModelForm):
         return instance
 
 class CritereForm(forms.ModelForm):
+    ciblage = forms.ModelChoiceField(
+        queryset=TypeAudit.objects.all(),
+        required=False,
+        empty_label="Sélectionnez...",
+        label="Ciblage (Type Audit)",
+        widget=forms.Select(attrs={'class': 'custom-input select2-modal', 'id': 'id_ciblage', 'name': 'ciblage'})
+    )
     class Meta:
         model = Critere
-        fields = ['name', 'chapitre_norme', 'formulaire', 'type_audit']
+        fields = ['name', 'chapitre_norme', 'formulaire', 'ciblage']
         widgets = {
-            'type_audit': forms.SelectMultiple(attrs={'class': 'form-control select2-multiple', 'data-placeholder': 'Sélectionner les types d\'audit...'}),
+            'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du critère...'}),
+            'chapitre_norme': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'formulaire': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['ciblage'].queryset = TypeAudit.objects.all()
+        if self.instance and self.instance.pk:
+            # For M2M, take the first one as initial for single select
+            self.fields['ciblage'].initial = self.instance.type_audit.first()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            if 'ciblage' in self.cleaned_data:
+                selected_type = self.cleaned_data['ciblage']
+                if selected_type:
+                    instance.type_audit.set([selected_type])
+                else:
+                    instance.type_audit.clear()
+            self.save_m2m()
+        return instance
 
 class SousCritereForm(forms.ModelForm):
     class Meta:

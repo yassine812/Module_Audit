@@ -49,9 +49,17 @@
     <div class="p-4 custom-scrollbar modal-body-responsive" style="padding: 10px 30px 0 30px !important;">
         <div class="modal-body p-0 custom-scrollbar modal-body-responsive"
             style="padding: 10px 30px 0 30px !important;">
-            {% if form.non_field_errors %}
+            {% if form.errors %}
             <div class="alert alert-danger rounded-xl mb-4 text-sm font-weight-bold">
-                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                <p class="mb-1">Veuillez corriger les erreurs suivantes :</p>
+                <ul class="mb-0 pl-3">
+                    {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
             </div>
             {% endif %}
 
@@ -95,9 +103,15 @@
                             </div>
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Ciblage</label>
+                            <label class="font-weight-bold text-dark mb-1.5" style="font-size: 0.85rem;">Ciblage (Type Audit)</label>
                             <div class="select2-normal">
-                                {{ form.type_audit }}
+                                <!-- data-selected stores current value for JS pre-selection -->
+                                <select name="ciblage" id="id_ciblage" class="custom-input select2-modal"
+                                    data-selected="{{ form.instance.type_audit.first.id|default:'' }}">
+                                    <option value="">Chargement...</option>
+                                </select>
+                                <!-- Compatibility fallback for other scripts -->
+                                <input type="hidden" name="type_audit" id="id_type_audit_hidden">
                             </div>
                         </div>
                     </div>
@@ -428,6 +442,8 @@
                 allowClear: true,
                 minimumResultsForSearch: Infinity
             });
+            // Ensure the value is reflected visually
+            $(el).trigger('change.select2');
         }
 
         function initSelect2Fields($container) {
@@ -449,13 +465,79 @@
         // Initialize immediately
         initSelect2Fields();
 
+        // Compatibility sync
+        function syncCompatibilityFields() {
+            const val = $('#id_ciblage').val();
+            $('#id_type_audit_hidden').val(val);
+        }
+
+        // ─── DEFINITIVE FIX: Load Ciblage options via AJAX ───────────────────────
+        (function loadCiblageOptions() {
+            const $ciblage = $('#id_ciblage');
+            if (!$ciblage.length) return;
+
+            const selectedId = $ciblage.data('selected');
+            // Cache busting to ensure we get fresh data
+            const apiUrl = '/audit/api/type-audits/?t=' + new Date().getTime();
+            
+            console.log('Fetching Ciblage from:', apiUrl, 'Selected ID:', selectedId);
+            $ciblage.empty().append('<option value="">Chargement en cours...</option>');
+
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // Clear and add default
+                    $ciblage.empty().append('<option value="">Sélectionnez...</option>');
+
+                    const items = Array.isArray(data) ? data : (data.results || data);
+                    if (!items || items.length === 0) {
+                        console.warn('No TypeAudit records found in API.');
+                        $ciblage.append('<option value="">Aucun type trouvé</option>');
+                        return;
+                    }
+
+                    items.forEach(function(ta) {
+                        const isSelected = String(ta.id) === String(selectedId);
+                        $ciblage.append(new Option(ta.name, ta.id, isSelected, isSelected));
+                    });
+
+                    console.log('Ciblage loaded successfully:', items.length, 'records.');
+
+                    // Initialize Select2 AFTER the options are in the DOM
+                    $ciblage.select2({
+                        theme: 'bootstrap4',
+                        dropdownParent: $('#critereModal').length ? $('#critereModal') : $('#ajaxFormModal'),
+                        width: '100%',
+                        placeholder: 'Sélectionnez...',
+                        allowClear: true
+                    });
+                    
+                    syncCompatibilityFields();
+                    $ciblage.trigger('change');
+                },
+                error: function(xhr, status, error) {
+                    console.error('CRITICAL: Failed to load TypeAudit API!', status, error, xhr.responseText);
+                    $ciblage.empty().append('<option value="">Erreur de chargement (Check console)</option>');
+                    
+                    // Fallback to select2 anyway so it doesn't look broken
+                    $ciblage.select2({
+                        theme: 'bootstrap4',
+                        dropdownParent: $('#critereModal').length ? $('#critereModal') : $('#ajaxFormModal'),
+                        width: '100%'
+                    });
+                }
+            });
+        })();
+
         // Re-initialize once the modal is shown
         $('.modal').on('shown.bs.modal', function () {
             initSelect2Fields();
         });
 
         function toggleChapitreNorme() {
-            const selectedTexts = $('#id_type_audit').find('option:selected').map(function () {
+            const selectedTexts = $('#id_ciblage').find('option:selected').map(function () {
                 return $(this).text().toLowerCase();
             }).get();
 
@@ -465,9 +547,10 @@
             } else {
                 $('#chapitre-norme-container').fadeIn(300);
             }
+            syncCompatibilityFields();
         }
 
-        $('#id_type_audit').on('change', toggleChapitreNorme);
+        $('#id_ciblage').on('change', toggleChapitreNorme);
         // Run once on load
         toggleChapitreNorme();
 
@@ -541,6 +624,10 @@
 
             e.preventDefault();
             const form = $(this);
+            
+            // Log for debugging
+            console.log("Ciblage Value:", $('#id_ciblage').val());
+            
             const btn = form.find('button[type="submit"]');
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Enregistrement...');
 
@@ -568,12 +655,27 @@
                         }
                     }
                 },
-                error: function () {
+                error: function (xhr) {
                     btn.prop('disabled', false).html('<i data-lucide="save" class="mr-2"></i>Enregistrer');
-                    Swal.fire({ icon: 'error', title: 'Erreur', text: "Erreur serveur" });
+                    console.error("AJAX Error:", xhr.responseText);
+                    
+                    let response = xhr.responseJSON;
+                    if (response && response.errors) {
+                        console.log("Validation Errors:", response.errors);
+                        Object.keys(response.errors).forEach(field => {
+                            console.log(field, response.errors[field]);
+                        });
+                    }
+
+                    let errorMsg = "Erreur de validation. Consultez la console pour plus de détails.";
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if (res.message) errorMsg = res.message;
+                    } catch(e) {}
+                    
+                    Swal.fire({ icon: 'error', title: 'Erreur', text: errorMsg });
                 }
             });
         });
     });
 </script>
-</form>

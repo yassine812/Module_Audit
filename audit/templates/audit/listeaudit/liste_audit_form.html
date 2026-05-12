@@ -1912,6 +1912,25 @@ Créer un Audit
                     } else if (window.currentFormulaireTypeAuditId) {
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                     }
+
+                    /* 🚀 START: Tab Sanitization (Remove Sous-Critères from Modal) */
+                    const modal = document.querySelector('#ajaxFormModal');
+                    if (modal) {
+                        // Remove Sous-Critères Tab Button
+                        modal.querySelectorAll('[href="#souscritere"], [data-bs-target="#souscritere"]').forEach(el => el.remove());
+                        // Remove Sous-Critères Content Pane
+                        modal.querySelectorAll('#souscritere').forEach(el => el.remove());
+
+                        // Force Général Tab to be Active
+                        const generalTab = modal.querySelector('[href="#general"], [data-bs-target="#general"]');
+                        const generalPane = modal.querySelector('#general');
+                        if (generalTab) generalTab.classList.add('active');
+                        if (generalPane) {
+                            generalPane.classList.add('show', 'active');
+                            generalPane.style.display = 'block';
+                        }
+                    }
+                    /* 🚀 END: Tab Sanitization */
                 }
             );
         };
@@ -1933,6 +1952,22 @@ Créer un Audit
                         const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
+
+                    /* 🚀 START: Tab Sanitization (Remove Sous-Critères from Modal) */
+                    const modal = document.querySelector('#ajaxFormModal');
+                    if (modal) {
+                        modal.querySelectorAll('[href="#souscritere"], [data-bs-target="#souscritere"]').forEach(el => el.remove());
+                        modal.querySelectorAll('#souscritere').forEach(el => el.remove());
+
+                        const generalTab = modal.querySelector('[href="#general"], [data-bs-target="#general"]');
+                        const generalPane = modal.querySelector('#general');
+                        if (generalTab) generalTab.classList.add('active');
+                        if (generalPane) {
+                            generalPane.classList.add('show', 'active');
+                            generalPane.style.display = 'block';
+                        }
+                    }
+                    /* 🚀 END: Tab Sanitization */
                 }
             );
         };
@@ -3106,6 +3141,12 @@ Créer un Audit
 </script>
 
 <style>
+    /* 🚀 Tab Sanitization for AJAX Modals */
+    #ajaxFormModal .nav-tabs,
+    #ajaxFormModal .nav-pills {
+        display: none !important;
+    }
+
     body {
         background-color: #f8f9fa;
     }

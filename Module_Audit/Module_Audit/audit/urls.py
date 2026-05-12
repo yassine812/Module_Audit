@@ -206,4 +206,5 @@ urlpatterns = [
     path("sous-critere/<int:pk>/delete-inline/", delete_sous_critere_inline, name="delete_sous_critere_inline"),
     path("api/critere/<int:pk>/type-audits/", get_critere_type_audits, name="api_get_critere_type_audits"),
     path("get-formulaire-type/<int:formulaire_id>/", get_formulaire_type_audit, name="get_formulaire_type_audit"),
+    path("api/type-audits/", get_type_audits_json, name="get_type_audits_json"),
 ]
