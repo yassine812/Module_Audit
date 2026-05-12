@@ -55,7 +55,7 @@
     border-bottom:1px solid #e4e7ec;flex:1;min-height:0;overflow:visible;
   }
   .body-left{padding:20px 24px;border-right:1px solid #e4e7ec;display:flex;flex-direction:column;overflow:hidden;}
-  .body-right{padding:20px 24px;display:flex;flex-direction:column;background:#f9fafb;overflow:visible;height:auto;}
+  .body-right{padding:20px 24px;display:flex;flex-direction:column;background:#f9fafb;overflow-y:auto;max-height:400px;}
   .critere-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;}
   .critere-title {
     font-size: 22px !important;
@@ -211,40 +211,126 @@
     color: #3b82f6;
   }
 
-  /* ── Sidebar Content Areas ── */
-  .sidebar-section-content {
-    display: none;
-    opacity: 0;
-    margin-top: 12px;
-  }
-  .sidebar-section-content.active {
-    display: block;
-    opacity: 1;
-    animation: fadeIn 0.2s ease-out;
-  }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-  .obs-area {
+  /* ── Modal System ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.active {
+    display: flex;
+    opacity: 1;
+  }
+  .modal-container {
+    background: #fff;
+    width: 90%;
+    max-width: 550px;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-overlay.active .modal-container {
+    transform: scale(1);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+  .modal-body {
+    padding: 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f8fafc;
+  }
+  .modal-btn {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .modal-btn-cancel {
+    background: #fff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+  }
+  .modal-btn-save {
+    background: #3b82f6;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  }
+  .modal-btn-save:hover {
+    background: #2563eb;
+  }
+  
+  .obs-area-modal {
     width: 100%;
     border: 1.5px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 14px;
-    font-size: 14px;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 15px;
     font-weight: 500;
     color: #334155;
     line-height: 1.5;
     font-family: 'Inter', sans-serif;
-    resize: none !important;
+    min-height: 180px;
     outline: none;
-    background: #fff;
-    box-sizing: border-box;
-    height: 130px !important; /* Fixed height as requested */
-    transition: all 0.2s ease;
+    transition: border-color 0.2s;
+    resize: none;
   }
-  .obs-area:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
-  }
+  .obs-area-modal:focus { border-color: #3b82f6; }
+
+  body.modal-open { overflow: hidden; }
 
   /* ── Section 3: Evaluation ── */
   .evaluation-section{padding:16px 24px 24px;flex-shrink:0;background:#fff;}
@@ -395,38 +481,18 @@
       <div class="body-right">
         <!-- Card Triggers -->
         <div class="sidebar-cards-row">
-          <div class="trigger-card active" id="trigger-justif" onclick="toggleSidebarSection('justif')">
-            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="trigger-card" id="trigger-justif" onclick="openModal('justif')">
             <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
             <span>JUSTIFICATIF</span>
+            <div id="justif-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#10b981;border-radius:50%;border:2px solid #fff;"></div>
           </div>
-          <div class="trigger-card" id="trigger-obs" onclick="toggleSidebarSection('obs')">
-            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="trigger-card" id="trigger-obs" onclick="openModal('obs')">
             <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>OBSERVATIONS</span>
+            <div id="obs-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid #fff;"></div>
           </div>
         </div>
 
-        <!-- Content Area: JUSTIFICATIF -->
-        <div class="sidebar-section-content active" id="content-justif">
-          <div class="justif-row">
-            <label class="justif-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              <span>PRENDRE UNE PHOTO</span>
-              <input type="file" accept="image/*" capture="camera" style="display:none" onchange="handleFileUpload(this)">
-            </label>
-            <label class="justif-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>TÉLÉVERSER</span>
-              <input type="file" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this)">
-            </label>
-          </div>
-        </div>
-
-        <!-- Content Area: OBSERVATIONS -->
-        <div class="sidebar-section-content" id="content-obs">
-          <textarea id="observation-input" class="obs-area" placeholder="Commentaires..." onchange="saveStep(false)"></textarea>
-        </div>
       </div>
     </div>
 
@@ -436,7 +502,7 @@
       <div class="evaluation-grid">
         {% for cot in cotations %}
         <button type="button" class="eval-btn" data-status="{{ cot.content|escapejs }}" data-value="{{ cot.valeur|stringformat:'f' }}"
-          onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'))">
+          onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',', '.')))">
           <div class="eval-icon {% if forloop.counter == 1 %}ic-green{% elif forloop.counter == 2 %}ic-orange{% elif forloop.counter == 3 %}ic-red{% else %}ic-dark{% endif %}">
             {% if forloop.counter == 1 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             {% elif forloop.counter == 2 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -490,44 +556,172 @@
 
 {{ details_json|json_script:"details-data" }}
 {{ library_docs|json_script:"library-docs-data" }}
+
+<!-- 🔳 MODAL: JUSTIFICATIF -->
+<div id="modal-justif" class="modal-overlay" onclick="handleOutsideClick(event, 'justif')">
+  <div class="modal-container" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Ajouter un Justificatif</h3>
+      <button class="modal-close" onclick="closeModal('justif')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="justif-row" style="margin-bottom:20px;">
+        <label class="justif-btn" style="height:120px !important;">
+          <div style="width:48px; height:48px; background:#f5f3ff; color:#7c3aed; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span style="font-size:12px;">PRENDRE UNE PHOTO</span>
+          <input type="file" accept="image/*" capture="camera" multiple style="display:none" onchange="handleFileUpload(this)">
+        </label>
+        <label class="justif-btn" style="height:120px !important;">
+          <div style="width:48px; height:48px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <span style="font-size:12px;">TÉLÉVERSER UN FICHIER</span>
+          <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+
+      <!-- Evidence Gallery Area (Inside Modal) -->
+      <div id="file-preview-container" class="hidden" style="margin-top:20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <span class="lbl" style="margin:0 !important; font-size:12px !important;">Preuves jointes</span>
+          <button onclick="clearFile(event)" style="background:#fee2e2; color:#ef4444; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition: all 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            TOUT SUPPRIMER
+          </button>
+        </div>
+        <div id="evidence-gallery" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:12px;">
+          <!-- Items will be injected here -->
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-save" onclick="closeModal('justif')">Enregistrer et Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🔳 MODAL: OBSERVATIONS -->
+<div id="modal-obs" class="modal-overlay" onclick="handleOutsideClick(event, 'obs')">
+  <div class="modal-container" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Observations & Commentaires</h3>
+      <button class="modal-close" onclick="closeModal('obs')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <textarea id="observation-input" class="obs-area-modal" placeholder="Saisissez vos remarques ici..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal('obs')">Annuler</button>
+      <button class="modal-btn modal-btn-save" onclick="saveObsAndClose()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-  const detailsData=JSON.parse(document.getElementById('details-data').textContent);
-  const libraryData=JSON.parse(document.getElementById('library-docs-data').textContent);
-  let currentStep=0;
-  const totalSteps=detailsData.length;
+  let detailsData = [];
+  let libraryData = [];
+  let currentStep = 0;
+  let totalSteps = 0;
 
-  function toggleSidebarSection(type) {
-    const triggerJustif = document.getElementById('trigger-justif');
-    const triggerObs = document.getElementById('trigger-obs');
-    const contentJustif = document.getElementById('content-justif');
-    const contentObs = document.getElementById('content-obs');
-    
-    if (type === 'justif') {
-      triggerJustif.classList.toggle('active');
-      contentJustif.classList.toggle('active');
-      triggerObs.classList.remove('active');
-      contentObs.classList.remove('active');
-    } else {
-      triggerObs.classList.toggle('active');
-      contentObs.classList.toggle('active');
-      triggerJustif.classList.remove('active');
-      contentJustif.classList.remove('active');
+  function init() {
+    console.log("Audit Workstation Init...");
+    try {
+      const detailsEl = document.getElementById('details-data');
+      const libraryEl = document.getElementById('library-docs-data');
+      if (detailsEl) detailsData = JSON.parse(detailsEl.textContent);
+      if (libraryEl) libraryData = JSON.parse(libraryEl.textContent);
+    } catch (e) {
+      console.error("JSON Parse Error:", e);
     }
-  }
-
-  function init(){
-    if(!detailsData||totalSteps===0){renderStep();return;}
-    const last=localStorage.getItem('audit_{{ resultat.id }}_last_edited');
-    if(last!==null) currentStep=parseInt(last);
-    if(currentStep>=totalSteps) currentStep=0;
+    
+    totalSteps = detailsData.length;
+    if (totalSteps === 0) { renderStep(); return; }
+    
+    const last = localStorage.getItem('audit_{{ resultat.id }}_last_edited');
+    if (last !== null) currentStep = parseInt(last);
+    if (currentStep >= totalSteps) currentStep = 0;
     renderStep();
   }
 
+  function openModal(type) {
+    const modal = document.getElementById('modal-' + type);
+    if (modal) {
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
+      if (type === 'obs') {
+        const d = detailsData[currentStep];
+        const input = document.getElementById('observation-input');
+        if (input) input.value = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
+        if (input) input.focus();
+      }
+    }
+  }
+
+  function closeModal(type) {
+    const modal = document.getElementById('modal-' + type);
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    }
+  }
+
+  function handleOutsideClick(e, type) {
+    if (e.target.classList.contains('modal-overlay')) {
+      closeModal(type);
+    }
+  }
+
+  // Close on ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal('justif');
+      closeModal('obs');
+    }
+  });
+
+  // Interaction Helpers
+
+  function updateBadges() {
+    const d = detailsData[currentStep];
+    const justifBadge = document.getElementById('justif-badge');
+    const obsBadge = document.getElementById('obs-badge');
+    
+    if (justifBadge) {
+      const count = (d.evidences ? d.evidences.length : 0);
+      const hasEv = count > 0;
+      justifBadge.classList.toggle('hidden', !hasEv);
+      if (hasEv) {
+        justifBadge.textContent = count;
+        justifBadge.style.display = 'flex';
+        justifBadge.style.alignItems = 'center';
+        justifBadge.style.justifyContent = 'center';
+        justifBadge.style.color = '#fff';
+        justifBadge.style.fontSize = '9px';
+        justifBadge.style.fontWeight = 'bold';
+        justifBadge.style.width = '16px';
+        justifBadge.style.height = '16px';
+        justifBadge.style.background = '#10b981';
+      }
+    }
+    if (obsBadge) obsBadge.classList.toggle('hidden', !d.commentaire || d.commentaire === 'None' || d.commentaire.trim() === '');
+  }
+
+  function toggleSidebarSection(type) {
+     // Legacy function kept for safety but replaced by openModal
+     openModal(type);
+  }
+
+  // Core Rendering Logic
   function renderStep(){
     const prevBtn=document.getElementById('prevBtn');
     const nextBtn=document.getElementById('nextBtn');
@@ -567,6 +761,45 @@
         ab.classList.add('selected-'+safe);
       }
     }
+
+    // Evidence Gallery (Multiple)
+    const previewContainer = document.getElementById('file-preview-container');
+    const gallery = document.getElementById('evidence-gallery');
+    if (previewContainer && gallery) {
+      const evs = d.evidences || [];
+      if (evs.length > 0) {
+        previewContainer.classList.remove('hidden');
+        gallery.innerHTML = '';
+        evs.forEach(ev => {
+          const url = ev.url;
+          const isPdf = url.toLowerCase().endsWith('.pdf');
+          const item = document.createElement('div');
+          item.style = "position:relative; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; aspect-ratio:1; background:#f8fafc; group;";
+          
+          let content = '';
+          if (isPdf) {
+            content = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;" onclick="window.open('${url}', '_blank')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span style="font-size:9px; font-weight:800; color:#ef4444;">PDF</span>
+            </div>`;
+          } else {
+            content = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${url}', '_blank')">`;
+          }
+          
+          const delBtn = document.createElement('button');
+          delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+          delBtn.style = "position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:6px; background:rgba(239,68,68,0.9); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:10;";
+          delBtn.onclick = (e) => { e.stopPropagation(); deleteSpecificEvidence(ev.id); };
+          
+          item.innerHTML = content;
+          item.appendChild(delBtn);
+          gallery.appendChild(item);
+        });
+      } else {
+        previewContainer.classList.add('hidden');
+      }
+    }
+    updateBadges();
   }
 
   function updateGlobalScoreDisplay(){
@@ -611,6 +844,13 @@
     await saveStep(false);
   }
 
+  async function saveObsAndClose() {
+    await saveStep(false);
+    Swal.fire({ icon: 'success', title: 'Observations enregistrées', timer: 1000, showConfirmButton: false });
+    closeModal('obs');
+    renderStep();
+  }
+
   async function saveStep(isNav){
     const d=detailsData[currentStep];
     const obsEl=document.getElementById('observation-input');
@@ -627,24 +867,74 @@
       const data=await resp.json();
       if(data.status==='success'){
         d.commentaire=finalObs;
+        if (data.evidences) d.evidences = data.evidences;
         localStorage.setItem('audit_{{ resultat.id }}_last_edited',currentStep);
       }
     }catch(e){console.error('Save error:',e);}
     if(ind) ind.style.display='none';
   }
 
-  async function handleFileUpload(input){
-    if(!input.files[0]) return;
-    const d=detailsData[currentStep];
-    const fd=new FormData();
-    fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
-    fd.append('justificatif',input.files[0]);
-    Swal.fire({title:'Envoi en cours...',didOpen:()=>Swal.showLoading()});
-    try{
-      const resp=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});
-      const result=await resp.json();
-      if(result.status==='success') Swal.fire({icon:'success',title:'Fichier envoyé !',timer:1500,showConfirmButton:false});
-    }catch(e){Swal.fire('Erreur','Échec de l\'envoi.','error');}
+  async function handleFileUpload(input) {
+    if (!input.files || input.files.length === 0) return;
+    
+    const d = detailsData[currentStep];
+    const formData = new FormData();
+    formData.append("id", d.id);
+    
+    for (let i = 0; i < input.files.length; i++) {
+        formData.append("justificatif", input.files[i]);
+    }
+    
+    Swal.fire({
+      title: 'Téléversement...',
+      text: 'Veuillez patienter',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: formData
+      });
+      const result = await resp.json();
+      Swal.close();
+      
+      if (result.status === "success") {
+        d.evidences = result.evidences;
+        d.has_file = true;
+        renderStep();
+        Swal.fire({ icon: 'success', title: 'Enregistré', timer: 1000, showConfirmButton: false });
+      } else {
+        Swal.fire('Erreur', result.message || 'Échec de l\'envoi.', 'error');
+      }
+    } catch(e) { 
+      Swal.close();
+      console.error('Upload error:', e);
+      Swal.fire('Erreur', 'Échec de la connexion au serveur.', 'error'); 
+    }
+    input.value = ''; // Reset input to allow re-uploading same file
+  }
+
+  async function clearFile(e) {
+    if(e) e.stopPropagation();
+    const d = detailsData[currentStep];
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fd.append('delete_justificatif', 'true');
+    try {
+      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {method:'POST', body:fd});
+      const result = await resp.json();
+      if(result.status === 'success') {
+        d.file_url = null;
+        d.justificatif = null;
+        d.has_file = false;
+        detailsData[currentStep].evidence_urls = [];
+        detailsData[currentStep].has_file = false;
+        renderStep();
+      }
+    } catch(e) { console.error('Clear error:', e); }
   }
 
   async function finalizeAudit(){

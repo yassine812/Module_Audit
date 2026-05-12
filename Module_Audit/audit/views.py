@@ -37,6 +37,7 @@ from .models import (
     ResultatAudit,
     DetailResultatAudit,
     SousCritereTypeAudit,
+    EvidenceAudit,
 )
 from .forms import FormulaireAuditForm, CritereFormSet, SousCritereFormSet, TypeAuditForm, CritereForm, TypePreuveForm, PreuveAttenduForm, SousCritereStandaloneForm, ListeAuditForm
 from Organisation.models import Processus, TypeEquipement, Section
@@ -1494,8 +1495,9 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
                 "commentaire": d.commentaire,
                 "value": float(d.value) if d.value else 0.0,
                 "preuves_attendues": d.preuves_attendues,
-                "has_file": bool(d.justificatif),
+                "has_file": bool(d.justificatif or d.evidences.exists()),
                 "file_url": d.justificatif.url if d.justificatif else "",
+                "evidences": [{"id": e.id, "url": e.file.url} for e in d.evidences.all()] + ([{"id": "legacy1", "url": d.justificatif.url}] if d.justificatif else []) + ([{"id": "legacy2", "url": d.justificatif_bis.url}] if d.justificatif_bis else []),
                 "pdf_page": getattr(d, 'pdf_page', 1),
                 "text_ref_url": (d.dynamic_text_ref_url or d.text_ref_url or "").replace('http://127.0.0.1:8000', '').replace('http://localhost:8000', '').replace('/media/processus_docs/', '/processus_docs/')
             })
@@ -1572,45 +1574,84 @@ class DetailResultatAuditUpdateView(LoginRequiredMixin, View):
         if not request.user.is_superuser and resultat.auditeur != request.user:
             return HttpResponseForbidden()
 
-        detail.commentaire = request.POST.get("commentaire", "")
-        detail.cotation = request.POST.get("cotation", "")
-        detail.code = request.POST.get("code", "")
+        if "commentaire" in request.POST:
+            detail.commentaire = request.POST.get("commentaire")
+        if "cotation" in request.POST:
+            detail.cotation = request.POST.get("cotation")
+        if "code" in request.POST:
+            detail.code = request.POST.get("code")
 
-        try:
-            detail.value = float(request.POST.get("value", 0))
-        except ValueError:
-            detail.value = 0
+        if "value" in request.POST:
+            try:
+                detail.value = float(request.POST.get("value", 0))
+            except (ValueError, TypeError):
+                pass
 
-        if request.FILES.get("justificatif"):
-            detail.justificatif = request.FILES.get("justificatif")
-        elif request.POST.get("delete_justificatif") == "true":
-            detail.justificatif = None
-
-        if request.FILES.get("justificatif_bis"):
-            detail.justificatif_bis = request.FILES.get("justificatif_bis")
+        if "justificatif" in request.FILES:
+            files = request.FILES.getlist("justificatif")
+            for f in files:
+                EvidenceAudit.objects.create(detail=detail, file=f)
+        
+        if request.POST.get("delete_justificatif") == "true":
+            # If explicit delete requested, we clear all for now or a specific one?
+            # Let's clear all for simplicity or handle specific ID later.
+            EvidenceAudit.objects.filter(detail=detail).delete()
+            detail.justificatif = None # Legacy field
 
         detail.save()
-        
-        # Explicitly recalculate result score in the view
         resultat.recalculate_score()
 
-        # Calculate category score for the updated detail's critere (average of percentages)
-        crit_name = detail.critere
-        cat_details = DetailResultatAudit.objects.filter(resultat_audit=resultat, critere=crit_name)
-        percentages = []
-        for d in cat_details:
-            if d.value >= 0:
-                percentages.append(d.value)
-        category_score = (sum(percentages) / len(percentages)) if percentages else 0
+        # Get all evidence
+        evidences = []
+        for e in detail.evidences.all():
+            evidences.append({"id": e.id, "url": e.file.url})
+        
+        # Fallback to legacy fields (no ID for these as they are model fields)
+        if detail.justificatif: evidences.append({"id": "legacy1", "url": detail.justificatif.url})
+        if detail.justificatif_bis: evidences.append({"id": "legacy2", "url": detail.justificatif_bis.url})
 
         from django.utils.text import slugify
+        crit_name = detail.critere
+        cat_details = DetailResultatAudit.objects.filter(resultat_audit=resultat, critere=crit_name)
+        percentages = [d.value for d in cat_details if d.value >= 0]
+        category_score = (sum(percentages) / len(percentages)) if percentages else 0
 
         return JsonResponse({
             "status": "success",
             "score": round(float(resultat.score_audit), 1),
             "category_id": slugify(crit_name),
             "category_score": round(category_score, 1),
-            "file_url": detail.justificatif.url if detail.justificatif else ""
+            "evidences": evidences
+        })
+
+class DeleteEvidenceView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        # Handle legacy pseudo-IDs
+        if str(pk).startswith("legacy"):
+            # This is complex as it's a model field. For now, we clear them in clearFile bulk action.
+            # Or we could handle them specifically here if needed.
+            return JsonResponse({"status": "error", "message": "Legacy files can only be deleted via 'Clear All'"})
+
+        evidence = get_object_or_404(EvidenceAudit, pk=pk)
+        detail = evidence.detail
+        resultat = detail.resultat_audit
+
+        if not resultat.en_cours:
+            return HttpResponseForbidden()
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return HttpResponseForbidden()
+
+        evidence.delete()
+        
+        evidences = []
+        for e in detail.evidences.all():
+            evidences.append({"id": e.id, "url": e.file.url})
+        if detail.justificatif: evidences.append({"id": "legacy1", "url": detail.justificatif.url})
+        if detail.justificatif_bis: evidences.append({"id": "legacy2", "url": detail.justificatif_bis.url})
+
+        return JsonResponse({
+            "status": "success",
+            "evidences": evidences
         })
 
 

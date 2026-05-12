@@ -814,7 +814,7 @@
                         {% for cot in cotations %}
                         <button type="button" 
                             data-status="{{ cot.content|escapejs }}"
-                            onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'))"
+                            onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',', '.')))"
                             class="status-btn relative flex flex-col items-center justify-center p-3 md:p-4 transition-all group h-fit min-h-[80px] md:max-h-[120px]">
                             
                             <!-- Selection Checkmark Overlay -->
@@ -1470,13 +1470,16 @@
                 body: formData
             });
             const data = await response.json();
-            if (data.status === 'saved') {
-                document.getElementById('global-score').innerText = data.score.toFixed(1);
+            if (data.status === 'success' || data.status === 'saved') {
+                if (data.score !== undefined) {
+                    document.getElementById('global-score').innerText = data.score.toFixed(1);
+                }
                 // Update local state
                 if (selectedFile) {
                     d.has_file = true;
                     if (data.file_url) d.file_url = data.file_url;
                     mobileSelectedFile = null; // Clear after successful save
+                    document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                 }
                 d.commentaire = finalObs;
                 localStorage.setItem(`audit_{{ resultat.id }}_last_edited`, currentStep);

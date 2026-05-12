@@ -262,7 +262,7 @@
                 <hr class="border-slate-50">
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {% for cot in cotations %}
-                    <button type="button" data-status="{{ cot.content|escapejs }}" onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'))"
+                    <button type="button" data-status="{{ cot.content|escapejs }}" onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',', '.')))"
                         class="status-btn flex flex-col items-center justify-center p-4 transition-all h-fit min-h-[100px]">
                         <span class="block font-bold text-slate-900 text-sm leading-tight text-center">{{ cot.content }}</span>
                         <span class="block text-[10px] font-medium text-slate-400 uppercase tracking-tighter">{{ cot.valeur|floatformat:"-1" }} PTS</span>
@@ -416,8 +416,10 @@
         try {
             const response = await fetch(`/audit/resultat/${d.id}/update-detail/`, { method: 'POST', body: formData });
             const data = await response.json();
-            if (data.status === 'saved') {
-                document.getElementById('global-score').innerText = data.score.toFixed(1);
+            if (data.status === 'success' || data.status === 'saved') {
+                if (data.score !== undefined) {
+                    document.getElementById('global-score').innerText = data.score.toFixed(1);
+                }
                 d.commentaire = finalObs;
                 localStorage.setItem(`audit_{{ resultat.id }}_last_edited`, currentStep);
             }

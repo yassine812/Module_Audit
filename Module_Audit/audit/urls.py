@@ -146,6 +146,7 @@ urlpatterns = [
     path("resultat/", ResultatAuditListView.as_view(), name="resultat_list"),
     path("resultat/<int:pk>/", ResultatAuditDetailView.as_view(), name="resultat_detail"),
     path("resultat/<int:pk>/update-detail/", DetailResultatAuditUpdateView.as_view(), name="detail_update"),
+    path("evidence/<int:pk>/delete/", DeleteEvidenceView.as_view(), name="evidence_delete"),
     path("resultat/<int:pk>/etapes/", EtapeAuditView.as_view(), name="etape_audit"),
     path("resultat/<int:pk>/close/", CloseAuditView.as_view(), name="resultat_close"),
     path("resultat/<int:pk>/ai-suggestions/", AuditAISuggestionsView.as_view(), name="ai_suggestions"),

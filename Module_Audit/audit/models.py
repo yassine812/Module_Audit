@@ -245,8 +245,14 @@ class DetailResultatAudit(models.Model):
     code = models.CharField(max_length=3, blank=True, null=True)
     value = models.FloatField(default=0)
     value_max = models.FloatField(default=1)
+class EvidenceAudit(models.Model):
+    detail = models.ForeignKey(DetailResultatAudit, on_delete=models.CASCADE, related_name='evidences')
+    file = models.FileField(upload_to='evidence/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return f"Detail {self.critere} - {self.norme}"
+        return f"Evidence for {self.detail.critere} - {self.uploaded_at}"
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.resultat_audit.recalculate_score()
+        if self.detail and self.detail.resultat_audit:
+            self.detail.resultat_audit.recalculate_score()
