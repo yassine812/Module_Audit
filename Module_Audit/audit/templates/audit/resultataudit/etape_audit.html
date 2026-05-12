@@ -519,10 +519,15 @@
 
   <!-- ── Footer Nav ── -->
   <div class="audit-footer">
-    <button id="prevBtn" class="btn-prev" onclick="changeStep(-1)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Précédent
-    </button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <button id="prevBtn" class="btn-prev" onclick="changeStep(-1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Précédent
+      </button>
+      <div id="step-counter" style="font-size:13px; font-weight:700; color:#64748b; background:#f1f5f9; padding:4px 12px; border-radius:20px;">
+        Étape <span id="current-idx">1</span> / <span id="total-idx">1</span>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <div id="save-indicator" class="save-ind">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -731,6 +736,14 @@
     if(finishBtn) finishBtn.style.display=(currentStep===totalSteps-1)?'inline-flex':'none';
     if(!detailsData||totalSteps===0) return;
     const d=detailsData[currentStep];
+    console.log(`Rendering Step ${currentStep + 1} (ID: ${d.id})`);
+    
+    // Update Step Counter
+    const curIdx = document.getElementById('current-idx');
+    const totIdx = document.getElementById('total-idx');
+    if (curIdx) curIdx.textContent = currentStep + 1;
+    if (totIdx) totIdx.textContent = totalSteps;
+
     const chapLink=document.getElementById('item-chapitre-link');
     const chapEl=document.getElementById('item-chapitre');
     const normeEl=document.getElementById('item-norme');
@@ -766,10 +779,10 @@
     const previewContainer = document.getElementById('file-preview-container');
     const gallery = document.getElementById('evidence-gallery');
     if (previewContainer && gallery) {
+      gallery.innerHTML = ''; // ALWAYS CLEAR FIRST
       const evs = d.evidences || [];
       if (evs.length > 0) {
         previewContainer.classList.remove('hidden');
-        gallery.innerHTML = '';
         evs.forEach(ev => {
           const url = ev.url;
           const isPdf = url.toLowerCase().endsWith('.pdf');
@@ -918,23 +931,46 @@
   }
 
   async function clearFile(e) {
-    if(e) e.stopPropagation();
+    if(e) e.preventDefault();
     const d = detailsData[currentStep];
     const fd = new FormData();
     fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     fd.append('delete_justificatif', 'true');
+
     try {
-      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {method:'POST', body:fd});
-      const result = await resp.json();
-      if(result.status === 'success') {
-        d.file_url = null;
-        d.justificatif = null;
+      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {
+        method:'POST', 
+        body:fd
+      });
+      const data = await resp.json();
+      if(data.status === 'success') {
+        d.evidences = [];
         d.has_file = false;
-        detailsData[currentStep].evidence_urls = [];
-        detailsData[currentStep].has_file = false;
         renderStep();
+        Swal.fire({ icon: 'success', title: 'Galerie vidée', timer: 800, showConfirmButton: false });
       }
     } catch(e) { console.error('Clear error:', e); }
+  }
+
+  async function deleteSpecificEvidence(evId) {
+    if (evId === 'legacy1' || evId === 'legacy2') {
+       Swal.fire('Info', 'Format ancien : utilisez "Tout Supprimer".', 'info');
+       return;
+    }
+    
+    try {
+      const resp = await fetch(`/audit/evidence/${evId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await resp.json();
+      if(data.status === 'success') {
+        const d = detailsData[currentStep];
+        d.evidences = d.evidences.filter(ev => ev.id !== evId);
+        if (d.evidences.length === 0) d.has_file = false;
+        renderStep();
+      }
+    } catch(e) { console.error('Delete error:', e); }
   }
 
   async function finalizeAudit(){

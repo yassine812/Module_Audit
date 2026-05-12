@@ -114,26 +114,82 @@
                 <table class="w-full border-collapse text-black text-[10px] md:text-[11px] border-2 border-black">
                     <thead>
                         <tr class="bg-[#1e3a8a] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-3 w-12">#</th>
-                            <th class="border border-black p-3 text-left uppercase">Critères & Sous-Critères</th>
-                            <th class="border border-black p-3 w-16 text-right">Score</th>
+                            <th class="border border-black p-3 w-10">#</th>
+                            <th class="border border-black p-3 text-left uppercase">Critères &amp; Sous-Critères</th>
+                            <th class="border border-black p-3 text-left uppercase" style="width:22%">Observations</th>
+                            <th class="border border-black p-3 text-left uppercase" style="width:18%">Justificatifs</th>
+                            <th class="border border-black p-3 w-14 text-right">Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for group in grouped_results %}
+                        {# Critère header row #}
                         <tr class="bg-slate-100 font-black">
                             <td class="border border-black p-3 text-center align-middle">{{ forloop.counter }}</td>
-                            <td class="border border-black p-3 uppercase align-middle"><span class="text-[#1e3a8a] mr-2">Critère :</span> {{ group.critere.text_ref }}</td>
+                            <td class="border border-black p-3 uppercase align-middle" colspan="3">
+                                <span class="text-[#1e3a8a] mr-2">Critère :</span> {{ group.critere.text_ref }}
+                            </td>
                             <td class="border border-black p-3 text-right align-middle text-blue-800">{{ group.score|floatformat:"-1" }}</td>
                         </tr>
+                        {# Sous-Critère rows #}
                         {% for d in group.details %}
                         <tr>
-                            <td class="border border-black p-2 text-center text-slate-300 align-middle">•</td>
-                            <td class="border border-black p-2 align-middle">
-                                <div class="font-bold text-slate-800 text-[13px]"><span class="text-[9px] uppercase text-slate-400 font-black mr-2">Sous-Critère :</span> {{ d.sous_critere }}</div>
-                                {% if d.commentaire %}<div class="text-[10px] text-slate-500 italic mt-1 border-l-2 border-blue-200 pl-2">{{ d.commentaire }}</div>{% endif %}
+                            <td class="border border-black p-2 text-center text-slate-300 align-top">•</td>
+
+                            {# Sous-critère name #}
+                            <td class="border border-black p-2 align-top">
+                                <div class="font-semibold text-slate-800 text-[12px]">
+                                    <span class="text-[9px] uppercase text-slate-400 font-black mr-1">Sous-Critère :</span>
+                                    {{ d.sous_critere }}
+                                </div>
                             </td>
-                            <td class="border border-black p-2 text-right font-black align-middle tabular-nums bg-slate-50">{% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}</td>
+
+                            {# Observations / Commentaire #}
+                            <td class="border border-black p-2 align-top">
+                                {% if d.commentaire and d.commentaire != 'None' %}
+                                    <div class="text-[11px] text-slate-700 italic leading-relaxed border-l-2 border-blue-300 pl-2">{{ d.commentaire }}</div>
+                                {% else %}
+                                    <span class="text-slate-300 text-[10px]">—</span>
+                                {% endif %}
+                            </td>
+
+                            {# Justificatifs (thumbnails) #}
+                            <td class="border border-black p-2 align-top">
+                                {% with evs=d.evidences.all %}
+                                {% if evs or d.justificatif or d.justificatif_bis %}
+                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                        {% for ev in evs %}
+                                            <a href="{{ ev.file.url }}" target="_blank" title="Voir le fichier">
+                                                {% if ev.file.name|lower|slice:"-4:" == ".pdf" %}
+                                                    <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid #fca5a5;background:#fff5f5;">
+                                                        <span style="font-size:8px;font-weight:900;color:#ef4444;">PDF</span>
+                                                    </div>
+                                                {% else %}
+                                                    <img src="{{ ev.file.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif">
+                                                {% endif %}
+                                            </a>
+                                        {% endfor %}
+                                        {% if d.justificatif %}
+                                            <a href="{{ d.justificatif.url }}" target="_blank">
+                                                <img src="{{ d.justificatif.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif">
+                                            </a>
+                                        {% endif %}
+                                        {% if d.justificatif_bis %}
+                                            <a href="{{ d.justificatif_bis.url }}" target="_blank">
+                                                <img src="{{ d.justificatif_bis.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif bis">
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-300 text-[10px]">—</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+
+                            {# Score #}
+                            <td class="border border-black p-2 text-right font-black align-top tabular-nums bg-slate-50">
+                                {% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                         {% endfor %}
