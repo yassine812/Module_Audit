@@ -18,6 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
     .content-wrapper { padding: 0 !important; margin-top: 0 !important; min-height: 0 !important; }
@@ -76,61 +77,6 @@
             <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
             <button id="downloadPdfBtn" onclick="openPdfModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
             <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Print"><i data-lucide="printer" class="w-5 h-5"></i></button>
-        </div>
-    </div>
-
-    <!-- PDF ORIENTATION MODAL -->
-    <div id="pdfModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-[450px] overflow-hidden transform transition-all mx-4">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="text-xl font-black text-slate-800 tracking-tight">Configuration du PDF</h3>
-                <button onclick="closePdfModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <div class="p-8">
-                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Choisir l'orientation</p>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- PORTRAIT -->
-                    <div id="optPortrait" onclick="selectOrientation('portrait')" 
-                         class="relative group cursor-pointer border-2 border-blue-600 bg-blue-50/50 p-5 rounded-xl transition-all hover:border-blue-600">
-                        <div class="flex flex-col items-center gap-3">
-                            <div class="w-12 h-16 border-2 border-blue-600 rounded-sm bg-white shadow-sm flex items-center justify-center">
-                                <div class="w-8 h-10 bg-blue-100 rounded-[1px]"></div>
-                            </div>
-                            <span class="font-black text-blue-700 uppercase text-[12px] tracking-widest">Portrait</span>
-                        </div>
-                        <div class="absolute top-2 right-2 check-icon">
-                            <div class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                                <i data-lucide="check" class="w-3 h-3 text-white"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- LANDSCAPE -->
-                    <div id="optLandscape" onclick="selectOrientation('landscape')" 
-                         class="relative group cursor-pointer border-2 border-slate-200 p-5 rounded-xl transition-all hover:border-blue-400 hover:bg-slate-50">
-                        <div class="flex flex-col items-center gap-3">
-                            <div class="w-16 h-12 border-2 border-slate-300 rounded-sm bg-white shadow-sm flex items-center justify-center group-hover:border-blue-300">
-                                <div class="w-12 h-8 bg-slate-100 rounded-[1px]"></div>
-                            </div>
-                            <span class="font-black text-slate-500 group-hover:text-blue-500 uppercase text-[12px] tracking-widest">Paysage</span>
-                        </div>
-                        <div class="absolute top-2 right-2 check-icon hidden">
-                            <div class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                                <i data-lucide="check" class="w-3 h-3 text-white"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-                <button onclick="closePdfModal()" class="flex-1 px-4 py-3 font-black text-slate-500 uppercase tracking-widest text-[11px] hover:bg-slate-100 rounded-xl transition-colors">Annuler</button>
-                <button id="confirmPdfBtn" onclick="startPdfGeneration()" class="flex-1 px-4 py-3 bg-[#1e3a8a] text-white font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Générer le PDF</button>
-            </div>
         </div>
     </div>
 
@@ -200,18 +146,16 @@
 
             <!-- EVALUATION LIST (TABLE BASED) -->
             <div class="mt-8">
+            <!-- EVALUATION LIST (ATOMIC TABLES FOR PDF) -->
+            <div class="mt-8" id="evaluation-container">
                 <style>
-                    .audit-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; border: 2px solid #000; table-layout: fixed; }
-                    .audit-table thead { display: table-header-group; }
+                    .audit-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; border: 2px solid #000; table-layout: fixed; margin-bottom: 0; }
                     .audit-table th { background: #93c5fd; color: #1e3a8a; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 15px; border: 1px solid #000; text-align: left; }
                     
                     /* Criteria Row */
                     .critere-row { background: #f1f5f9; }
                     .critere-row td { padding: 8px 15px; border: 1px solid #000; font-weight: 900; color: #1e3a8a; font-size: 15px; }
                     
-                    /* Indivisible Group */
-                    .critere-group { display: table-row-group; }
-
                     /* Sub-rows */
                     .sc-row td { border: 1px solid #000; padding: 0; vertical-align: top; height: auto; }
                     .sc-meta-cell { text-align: center; color: #cbd5e1; font-weight: 900; padding-top: 10px !important; width: 45px; }
@@ -220,7 +164,7 @@
                     .sc-score-label { display: block; font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 2px; }
                     
                     .sc-sub-head { background: #93c5fd; color: #1e3a8a; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 15px; border-bottom: 1px solid #000; }
-                    .sc-sub-body { padding: 4px 15px 6px 15px; border-bottom: 1px solid #cbd5e1; height: auto; min-height: 20px; }
+                    .sc-sub-body { padding: 4px 15px 6px 15px; border-bottom: 1px solid #cbd5e1; height: auto; }
                     .sc-sub-body:last-child { border-bottom: none; }
 
                     .txt-main { font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.3; }
@@ -231,59 +175,70 @@
                     .pdf-btn { width: 100%; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #fca5a5; background: #fff5f5; gap: 4px; }
                     .pdf-btn span { font-size: 10px; font-weight: 700; }
                     .no-data { color: #e2e8f0; font-size: 12px; font-weight: 500; }
+
+                    .pdf-section-wrapper { margin-bottom: 12px; background: white; width: 100%; }
                 </style>
 
-                <table class="audit-table">
-                    <thead id="audit-table-head">
-                        <tr>
-                            <th style="width: 45px; text-align: center;">#</th>
-                            <th>Critères &amp; Évaluations</th>
-                            <th style="width: 85px; text-align: right;">Score</th>
-                        </tr>
-                    </thead>
-                    {% for group in grouped_results %}
-                    <tbody class="critere-group pdf-section">
-                        <tr class="critere-row">
-                            <td style="text-align: center;">{{ forloop.counter }}</td>
-                            <td style="text-transform: uppercase;">
-                                <span style="opacity: 0.6; margin-right: 8px; font-size: 10px;">Critère :</span>{{ group.critere.text_ref }}
-                            </td>
-                            <td style="text-align: right;">{{ group.score|floatformat:"-1" }}</td>
-                        </tr>
+                <!-- Hidden Table Head for Capture -->
+                <div id="pdf-table-header-source" class="no-print" style="position: absolute; left: -9999px; width: 1200px;">
+                    <table class="audit-table" style="width: 100%;">
+                        <thead>
+                            <tr id="audit-table-head">
+                                <th style="width: 45px; text-align: center; background: #93c5fd; border: 1px solid #000;">#</th>
+                                <th style="background: #93c5fd; border: 1px solid #000;">Critères &amp; Évaluations</th>
+                                <th style="width: 85px; text-align: right; background: #93c5fd; border: 1px solid #000;">Score</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
 
-                        {% for d in group.details %}
-                        <tr class="sc-row">
-                            <td class="sc-meta-cell">•</td>
-                            <td style="padding: 0;">
-                                <div class="sc-sub-head">Sous-Critère</div>
-                                <div class="sc-sub-body"><div class="txt-main">{{ d.sous_critere }}</div></div>
-                                <div class="sc-sub-head">Observations</div>
-                                <div class="sc-sub-body">
-                                    {% if d.commentaire and d.commentaire != 'None' %}<div class="txt-obs">{{ d.commentaire }}</div>{% else %}<div class="no-data">— Aucune observation</div>{% endif %}
-                                </div>
-                                <div class="sc-sub-head">Justificatifs</div>
-                                <div class="sc-sub-body">
-                                    {% with evs=d.evidences.all %}
-                                    {% if evs or d.justificatif or d.justificatif_bis %}
-                                        <div class="just-gallery">
-                                            {% for ev in evs %}
-                                                <div class="just-item"><a href="{{ ev.file.url }}" target="_blank"><img src="{{ ev.file.url }}" alt="Evidence"></a></div>
-                                            {% endfor %}
-                                            {% if d.justificatif %}<div class="just-item"><a href="{{ d.justificatif.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif PDF</span></a></div>{% endif %}
-                                            {% if d.justificatif_bis %}<div class="just-item"><a href="{{ d.justificatif_bis.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif Bis</span></a></div>{% endif %}
-                                        </div>
-                                    {% else %}<div class="no-data">— Aucun justificatif fourni</div>{% endif %}
-                                    {% endwith %}
-                                </div>
-                            </td>
-                            <td class="sc-score-cell">
-                                <span class="sc-score-val">{{ d.value|floatformat:"-1" }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    {% endfor %}
-                </table>
+                {% for group in grouped_results %}
+                <div class="pdf-section pdf-section-wrapper critere-group-block" data-is-criteria="true">
+                    <table class="audit-table">
+                        <tbody class="critere-group">
+                            <tr class="critere-row" style="background: #e0f2fe;">
+                                <td style="width: 45px; text-align: center; border: 1px solid #000;">{{ forloop.counter }}</td>
+                                <td style="text-transform: uppercase; border: 1px solid #000;">
+                                    <span style="opacity: 0.6; margin-right: 8px; font-size: 10px;">Critère :</span>{{ group.critere.text_ref }}
+                                </td>
+                                <td style="width: 85px; text-align: right; border: 1px solid #000;">{{ group.score|floatformat:"-1" }}</td>
+                            </tr>
+
+                            {% for d in group.details %}
+                            <tr class="sc-row">
+                                <td class="sc-meta-cell">•</td>
+                                <td style="padding: 0;">
+                                    <div class="sc-sub-head">Sous-Critère</div>
+                                    <div class="sc-sub-body"><div class="txt-main">{{ d.sous_critere }}</div></div>
+                                    <div class="sc-sub-head">Observations</div>
+                                    <div class="sc-sub-body">
+                                        {% if d.commentaire and d.commentaire != 'None' %}<div class="txt-obs">{{ d.commentaire }}</div>{% else %}<div class="no-data">— Aucune observation</div>{% endif %}
+                                    </div>
+                                    <div class="sc-sub-head">Justificatifs</div>
+                                    <div class="sc-sub-body">
+                                        {% with evs=d.evidences.all %}
+                                        {% if evs or d.justificatif or d.justificatif_bis %}
+                                            <div class="just-gallery">
+                                                {% for ev in evs %}
+                                                    <div class="just-item"><a href="{{ ev.file.url }}" target="_blank"><img src="{{ ev.file.url }}" alt="Evidence"></a></div>
+                                                {% endfor %}
+                                                {% if d.justificatif %}<div class="just-item"><a href="{{ d.justificatif.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif PDF</span></a></div>{% endif %}
+                                                {% if d.justificatif_bis %}<div class="just-item"><a href="{{ d.justificatif_bis.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif Bis</span></a></div>{% endif %}
+                                            </div>
+                                        {% else %}<div class="no-data">— Aucun justificatif fourni</div>{% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                                <td class="sc-score-cell">
+                                    <span class="sc-score-val">{{ d.value|floatformat:"-1" }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
             </div>
             </div>
         </div>
@@ -315,50 +270,92 @@
     let selectedOrientation = 'portrait';
 
     function openPdfModal() {
-        document.getElementById('pdfModal').classList.remove('hidden');
-        lucide.createIcons();
+        Swal.fire({
+            title: '<span class="font-black text-2xl uppercase tracking-tighter text-slate-800">Configuration du PDF</span>',
+            html: `
+                <div class="p-4">
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Choisir l'orientation</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div id="swalOptPortrait" onclick="selectSwalOrientation('portrait')" 
+                             class="relative cursor-pointer border-2 border-blue-600 bg-blue-50/50 p-6 rounded-2xl transition-all">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-12 h-16 border-2 border-blue-600 rounded-md bg-white shadow-sm flex items-center justify-center">
+                                    <div class="w-8 h-10 bg-blue-100 rounded-sm"></div>
+                                </div>
+                                <span class="font-black text-blue-700 uppercase text-[12px] tracking-widest">Portrait</span>
+                            </div>
+                            <div id="swalCheckPortrait" class="absolute top-2 right-2">
+                                <div class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="swalOptLandscape" onclick="selectSwalOrientation('landscape')" 
+                             class="relative cursor-pointer border-2 border-slate-200 p-6 rounded-2xl transition-all hover:border-slate-300">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-12 border-2 border-slate-300 rounded-md bg-white shadow-sm flex items-center justify-center">
+                                    <div class="w-12 h-8 bg-slate-100 rounded-sm"></div>
+                                </div>
+                                <span class="font-black text-slate-500 uppercase text-[12px] tracking-widest">Paysage</span>
+                            </div>
+                            <div id="swalCheckLandscape" class="absolute top-2 right-2 hidden">
+                                <div class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'GÉNÉRER LE PDF',
+            cancelButtonText: 'ANNULER',
+            customClass: {
+                confirmButton: 'bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[12px] shadow-lg hover:bg-blue-800 transition-all ml-3',
+                cancelButton: 'bg-white text-slate-400 px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[12px] hover:bg-slate-50 transition-all border border-slate-100',
+                popup: 'rounded-3xl border-none shadow-2xl'
+            },
+            buttonsStyling: false,
+            reverseButtons: true,
+            willOpen: () => {
+                selectedOrientation = 'portrait';
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                generatePDF(selectedOrientation);
+            }
+        });
     }
 
-    function closePdfModal() {
-        document.getElementById('pdfModal').classList.add('hidden');
-    }
-
-    function selectOrientation(orient) {
+    window.selectSwalOrientation = function(orient) {
         selectedOrientation = orient;
-        const optPortrait = document.getElementById('optPortrait');
-        const optLandscape = document.getElementById('optLandscape');
-        
+        const pCard = document.getElementById('swalOptPortrait');
+        const lCard = document.getElementById('swalOptLandscape');
+        const pCheck = document.getElementById('swalCheckPortrait');
+        const lCheck = document.getElementById('swalCheckLandscape');
+
         if (orient === 'portrait') {
-            optPortrait.classList.add('border-blue-600', 'bg-blue-50/50');
-            optPortrait.classList.remove('border-slate-200');
-            optPortrait.querySelector('.check-icon').classList.remove('hidden');
-            optPortrait.querySelector('span').classList.add('text-blue-700');
-            optPortrait.querySelector('span').classList.remove('text-slate-500');
+            pCard.classList.add('border-blue-600', 'bg-blue-50/50');
+            pCard.classList.remove('border-slate-200');
+            pCheck.classList.remove('hidden');
+            pCard.querySelector('span').className = 'font-black text-blue-700 uppercase text-[12px] tracking-widest';
 
-            optLandscape.classList.add('border-slate-200');
-            optLandscape.classList.remove('border-blue-600', 'bg-blue-50/50');
-            optLandscape.querySelector('.check-icon').classList.add('hidden');
-            optLandscape.querySelector('span').classList.add('text-slate-500');
-            optLandscape.querySelector('span').classList.remove('text-blue-700');
+            lCard.classList.add('border-slate-200');
+            lCard.classList.remove('border-blue-600', 'bg-blue-50/50');
+            lCheck.classList.add('hidden');
+            lCard.querySelector('span').className = 'font-black text-slate-500 uppercase text-[12px] tracking-widest';
         } else {
-            optLandscape.classList.add('border-blue-600', 'bg-blue-50/50');
-            optLandscape.classList.remove('border-slate-200');
-            optLandscape.querySelector('.check-icon').classList.remove('hidden');
-            optLandscape.querySelector('span').classList.add('text-blue-700');
-            optLandscape.querySelector('span').classList.remove('text-slate-500');
+            lCard.classList.add('border-blue-600', 'bg-blue-50/50');
+            lCard.classList.remove('border-slate-200');
+            lCheck.classList.remove('hidden');
+            lCard.querySelector('span').className = 'font-black text-blue-700 uppercase text-[12px] tracking-widest';
 
-            optPortrait.classList.add('border-slate-200');
-            optPortrait.classList.remove('border-blue-600', 'bg-blue-50/50');
-            optPortrait.querySelector('.check-icon').classList.add('hidden');
-            optPortrait.querySelector('span').classList.add('text-slate-500');
-            optPortrait.querySelector('span').classList.remove('text-blue-700');
+            pCard.classList.add('border-slate-200');
+            pCard.classList.remove('border-blue-600', 'bg-blue-50/50');
+            pCheck.classList.add('hidden');
+            pCard.querySelector('span').className = 'font-black text-slate-500 uppercase text-[12px] tracking-widest';
         }
-    }
-
-    function startPdfGeneration() {
-        closePdfModal();
-        generatePDF(selectedOrientation);
-    }
+    };
 
     async function generatePDF(orientation = 'portrait') {
         const btn = document.getElementById('downloadPdfBtn');
@@ -390,13 +387,13 @@
             let currentY = margin;
 
             const sections = document.querySelectorAll('.pdf-section');
-            const tableHead = document.getElementById('audit-table-head');
+            const tableHeadSource = document.getElementById('audit-table-head');
             
             // 1. Capture Header
             let headImg = null;
             let headHeightMm = 0;
-            if (tableHead) {
-                const headCanvas = await html2canvas(tableHead, { scale: 2, useCORS: true });
+            if (tableHeadSource) {
+                const headCanvas = await html2canvas(tableHeadSource, { scale: 2, useCORS: true });
                 if (headCanvas.width > 0) {
                     headImg = headCanvas.toDataURL('image/jpeg', 0.95);
                     headHeightMm = (headCanvas.height * contentWidth) / headCanvas.width;
@@ -407,7 +404,7 @@
 
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
-                const isCriteria = section.classList.contains('critere-group');
+                const isCriteria = section.getAttribute('data-is-criteria') === 'true';
 
                 const canvas = await html2canvas(section, { 
                     scale: 2, 
@@ -423,12 +420,14 @@
 
                 const spaceNeeded = (isCriteria && !headerOnThisPage && headImg) ? (sectionHeightMm + headHeightMm) : sectionHeightMm;
 
+                // Page Break Trigger
                 if (currentY + spaceNeeded > pageHeight - margin) {
                     pdf.addPage();
                     currentY = margin;
                     headerOnThisPage = false;
                 }
 
+                // Header injection
                 if (isCriteria && !headerOnThisPage && headImg) {
                     pdf.addImage(headImg, 'JPEG', margin, currentY, contentWidth, headHeightMm);
                     currentY += headHeightMm;
@@ -436,7 +435,7 @@
                 }
 
                 pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, sectionHeightMm);
-                currentY += sectionHeightMm + 2; 
+                currentY += sectionHeightMm + 1; // Very tight gap
             }
 
             pdf.save(`Rapport_Audit_{{ resultat.id }}_${orientation}.pdf`);
