@@ -94,8 +94,20 @@
             </div>
 
             <div class="col-md-12 mb-4">
-                <label class=" font-weight-bold text-dark" for="id_preuve_attendu">Preuves Attendues</label>
-                {{ form.preuve_attendu }}
+                <label class="font-weight-bold text-dark" for="id_preuve_attendu">Preuves Attendues</label>
+                <div class="input-group-select2-wrapper">
+                    <i data-lucide="file-text" class="select2-prefix-icon"></i>
+                    <select name="preuve_attendu" id="id_preuve_attendu" class="form-control select2-multiple" multiple="multiple" data-placeholder="Sélectionner les preuves...">
+                        {% for choice in form.preuve_attendu.field.choices %}
+                        <option value="{{ choice.0 }}" 
+                            {% if form.preuve_attendu.value %}
+                                {% if choice.0|slugify in form.preuve_attendu.value|slugify %}selected{% endif %}
+                            {% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
         </div>
@@ -118,23 +130,24 @@
 
     function initSelect2Fields() {
         if ($.fn.select2) {
-            $('.select2-multiple').each(function () {
-                var placeholderText = $(this).attr('data-placeholder') || 'Sélectionner...';
-                $(this).select2({
+            $('#id_preuve_attendu, #id_type_audit, .select2-multiple').each(function () {
+                var $this = $(this);
+                var placeholderText = $this.attr('data-placeholder') || 'Sélectionner...';
+                
+                if ($this.hasClass('select2-hidden-accessible')) {
+                    $this.select2('destroy');
+                }
+
+                $this.select2({
                     theme: 'bootstrap4',
                     width: '100%',
                     dropdownParent: $('#souscritereModal'),
                     placeholder: placeholderText,
                     allowClear: true,
-                    minimumResultsForSearch: Infinity // Disables any internal lookup search
+                    containerCssClass: 'modern-select2-container',
+                    dropdownCssClass: 'modern-select2-dropdown'
                 });
             });
-
-            // Prevent typing but allow clicking by making the input readonly
-            $('.select2-search__field').prop('readonly', true);
-            // Hide the blinking cursor
-            $('.select2-search__field').css('cursor', 'pointer');
-
         } else {
             console.warn("Select2 is not loaded.");
         }
@@ -177,4 +190,116 @@
         }
     });
 </script>
+
+    /* --- PREMIUM COMPACT SELECT2 OVERRIDES --- */
+    
+    /* 1. The main selection container */
+    .select2-container--bootstrap4 .select2-selection--multiple {
+        min-height: 46px !important;
+        height: 46px !important; /* Force matching height */
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #fff !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 0 12px 0 45px !important; /* Leave room for the absolute icon */
+        transition: all 0.2s ease !important;
+        overflow: hidden !important;
+    }
+
+    /* 2. Position the prefix icon correctly */
+    .input-group-select2-wrapper {
+        position: relative !important;
+        width: 100% !important;
+    }
+    
+    .select2-prefix-icon {
+        position: absolute !important;
+        left: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 10 !important;
+        pointer-events: none !important;
+        color: #94a3b8 !important;
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    /* 3. The rendered choices/chips */
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered {
+        display: flex !important;
+        flex-wrap: nowrap !important; /* Keep it single line if possible or very compact */
+        gap: 6px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        align-items: center !important;
+        overflow-x: auto !important; /* Allow internal horizontal scroll if too many chips */
+    }
+    
+    /* Hide scrollbar for chips */
+    .select2-selection__rendered::-webkit-scrollbar { display: none; }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #475569 !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        margin: 0 !important;
+        padding: 2px 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        max-width: 150px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+        color: #ef4444 !important;
+        margin-right: 6px !important;
+        font-size: 16px !important;
+    }
+
+    /* 4. Placeholder styling */
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        margin: 0 !important;
+        height: 100% !important;
+        font-size: 14px !important;
+        font-family: inherit !important;
+        color: #94a3b8 !important;
+    }
+
+    /* 5. The Dropdown Results Menu */
+    .select2-container--bootstrap4 .select2-dropdown {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        margin-top: 5px !important;
+        overflow: hidden !important;
+    }
+
+    .select2-container--bootstrap4 .select2-results__options {
+        max-height: 180px !important; /* User requirement */
+        padding: 4px !important;
+    }
+
+    .select2-results__option {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        border-radius: 8px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] {
+        background-color: #0d9488 !important; /* Teal to match theme */
+    }
+
+    /* Focus state */
+    .select2-container--bootstrap4.select2-container--focus .select2-selection {
+        border-color: #0d9488 !important;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1) !important;
+    }
+</style>
 
