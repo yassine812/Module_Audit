@@ -16,65 +16,67 @@
     border-radius: 1rem;
   }
 
-  /* REFINED SCROLL: Professional & Subtle */
-  .scroll-wrapper {
-    display: block !important;
+  /* --- SYNCHRONIZED DESIGN SYSTEM (ZERO-SCROLL) --- */
+  .desktop-table-container {
     width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 8px !important;
-    border-radius: 8px !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
 
-  .scroll-wrapper table {
-    min-width: 1000px !important;
-    table-layout: auto !important;
-    margin-bottom: 0 !important;
+  .synchronized-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    background: #fff !important;
+    margin: 0 !important;
   }
 
-  .scroll-wrapper th,
-  .scroll-wrapper td {
-    white-space: nowrap !important;
-    padding: 10px 15px !important;
-    font-size: 13.5px !important;
+  .synchronized-table thead th {
+    background: #f8fafc !important; /* Standardized light gray header */
+    color: #475569 !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    padding: 14px 10px !important;
     vertical-align: middle !important;
+    border: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important; /* Prevent header text wrapping */
   }
 
-  /* Specific column tightening */
-  .col-preuves, .col-type-cotation, .col-type-audit, .col-critere, .col-contenu {
-    width: 110px !important; 
-    text-align: center !important;
+  .synchronized-table td {
+    padding: 14px 10px !important;
+    vertical-align: top !important;
+    font-size: 13.5px !important;
+    color: #1e293b !important;
+    border: 1px solid #f1f5f9 !important;
+    line-height: 1.5 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
   }
 
-  .col-id {
-    width: 50px !important;
-    text-align: center !important;
-  }
+  /* PROPORTIONAL COLUMN DISTRIBUTION */
+  .col-id { width: 5% !important; text-align: center !important; }
+  .col-critere { width: 14% !important; }
+  .col-contenu { width: 35% !important; }
+  .col-type-cotation { width: 14% !important; }
+  .col-reaction { width: 22% !important; }
+  .col-actions { width: 10% !important; text-align: center !important; }
 
-  .col-reaction, .col-actions {
-    width: 80px !important;
-    text-align: center !important;
-  }
-
-  .col-preuves .badge, .col-type-cotation .badge, .col-type-audit .badge, .col-critere .badge, .col-contenu .content-cell, .col-reaction .reaction-cell {
+  /* COMPACT BADGES WITH ICONS */
+  .synchronized-table .badge {
     font-size: 11px !important;
-    padding: 2px 6px !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
   }
 
-  /* Subtle Modern Scrollbar */
-  .scroll-wrapper::-webkit-scrollbar {
-    height: 4px !important;
-    display: block !important;
-  }
-  .scroll-wrapper::-webkit-scrollbar-track {
-    background: #f8fafc !important;
-  }
-  .scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1 !important;
-    border-radius: 10px !important;
-  }
-  .scroll-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8 !important;
+  /* Global Scroll Prevention */
+  .card, .card-body, .container-fluid, .content-wrapper {
+    overflow: visible !important;
+    max-width: 100% !important;
   }
 
   /* Mobile Cards View */
@@ -297,33 +299,6 @@
                 <span class="card-field-value">{{ souscritere.reaction|default:"-"|truncatechars:30 }}</span>
               </div>
 
-              <div class="card-field">
-                <span class="card-field-label">Preuves</span>
-                <span class="card-field-value">
-                  {% if souscritere.preuve_attendu.all %}
-                    {{ souscritere.preuve_attendu.count }} preuve{{ souscritere.preuve_attendu.count|pluralize }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </span>
-              </div>
-
-              <div class="card-field">
-                <span class="card-field-label">Type Audit</span>
-                <span class="card-field-value">
-                  {% if souscritere.type_audit.all %}
-                    {% for type_audit in souscritere.type_audit.all|slice:":2" %}
-                      <span class="badge bg-info text-white px-2 py-1 rounded-pill" style="font-size: 11px;">{{ type_audit.name }}</span>
-                    {% endfor %}
-                    {% if souscritere.type_audit.count > 2 %}
-                      <span class="badge bg-light text-dark px-2 py-1 rounded-pill" style="font-size: 11px;">+{{ souscritere.type_audit.count|add:"-2" }}</span>
-                    {% endif %}
-                  {% else %}
-                    -
-                  {% endif %}
-                </span>
-              </div>
-
               <div class="card-actions-row">
                 <button onclick="openSousCritereModal('{% url 'souscritere_update' souscritere.id %}')" class="card-btn card-btn-primary" title="Modifier">
                   <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
@@ -336,100 +311,62 @@
             {% endfor %}
           </div>
 
-          <!-- Desktop Table View -->
-          <div class="desktop-table-container">
-            <div class="scroll-wrapper">
-              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-                <thead class="bg-light shadow-none">
-                  <tr>
-                    <th class="ps-3 col-id text-center">ID</th>
-                    <th class="col-critere">Critère</th>
-                    <th class="col-contenu">Contenu</th>
-                    <th class="col-type-cotation">Type Cotation</th>
-                    <th class="col-reaction">Réaction</th>
-                    <th class="col-preuves">Preuves Attendues</th>
-                    <th class="col-type-audit">Type Audit</th>
-                    <th class="text-center col-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for souscritere in page_obj %}
-                  <tr>
-                    <td class="text-center col-id" data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
-                    <td class="col-critere" data-label="Critère">
-                      {% if souscritere.critere %}
-                      <span class="badge rounded-pill bg-teal-50 text-teal-700 px-3 py-1 border border-teal-100 shadow-sm">
-                        <i data-lucide="list" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                        {{ souscritere.critere.name|truncatechars:15 }}
-                      </span>
-                      {% else %}
-                      <span class="italic">Aucun critère</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-contenu" data-label="Contenu">
-                      {% if souscritere.content %}
-                      <span class="content-cell">{{ souscritere.content }}</span>
-                      {% else %}
-                      <span>-</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-type-cotation" data-label="Cotation">
-                      {% if souscritere.type_cotation %}
-                      <span class="badge badge-secondary shadow-none px-2 py-1">{{ souscritere.type_cotation.name }}</span>
-                      {% else %}
-                      <span>-</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-reaction" data-label="Réaction">
-                      {% if souscritere.reaction %}
-                      <span class="reaction-cell">{{ souscritere.reaction }}</span>
-                      {% else %}
-                      <span>-</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-preuves" data-label="Preuves">
-                      {% if souscritere.preuve_attendu.all %}
-                      <div class="d-flex flex-wrap gap-1">
-                        {% for preuve in souscritere.preuve_attendu.all|slice:":2" %}
-                        <span class="badge bg-warning text-dark border shadow-sm px-2 mb-1">{{ preuve.name|truncatechars:10 }}</span>
-                        {% endfor %}
-                        {% if souscritere.preuve_attendu.count > 2 %}
-                        <span class="badge bg-light text-dark border shadow-sm px-2 mb-1">+{{ souscritere.preuve_attendu.count|add:"-2" }}</span>
-                        {% endif %}
-                      </div>
-                      {% else %}
-                      <span>-</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-type-audit" data-label="Type Audit">
-                      {% if souscritere.type_audit.all %}
-                      <div class="d-flex flex-wrap gap-1">
-                        {% for type_audit in souscritere.type_audit.all %}
-                        <span class="badge bg-info text-white shadow-sm border-0 px-2 mb-1">{{ type_audit.name }}</span>
-                        {% endfor %}
-                      </div>
-                      {% else %}
-                      <span>-</span>
-                      {% endif %}
-                    </td>
-                    <td class="text-center col-actions" data-label="Actions">
-                      <div class="d-flex justify-content-center align-items-center">
-                        <button onclick="openSousCritereModal('{% url 'souscritere_update' souscritere.id %}')"
-                          class="btn btn-link text-warning p-1" title="Modifier">
-                          <i data-lucide="edit"></i>
-                        </button>
-                        <button onclick="openDeleteModal('{% url 'souscritere_delete' souscritere.id %}')"
-                          class="btn btn-link text-danger p-1" title="Supprimer">
-                          <i data-lucide="trash-2"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
+          <div class="desktop-table-container px-3">
+            <table class="table table-bordered table-striped synchronized-table mb-0">
+              <thead>
+                <tr>
+                  <th class="col-id">ID</th>
+                  <th class="col-critere">Critère</th>
+                  <th class="col-contenu">Contenu</th>
+                  <th class="col-type-cotation">Type Cotation</th>
+                  <th class="col-reaction">Réaction</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for souscritere in page_obj %}
+                <tr>
+                  <td class="col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                  <td class="col-critere">
+                    {% if souscritere.critere %}
+                    <span class="badge rounded-pill bg-teal-50 text-teal-700 border border-teal-100">
+                      <i data-lucide="list" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                      {{ souscritere.critere.name|truncatechars:15 }}
+                    </span>
+                    {% else %}
+                    <span class="italic small text-muted">Aucun</span>
+                    {% endif %}
+                  </td>
+                  <td class="col-contenu">
+                    {{ souscritere.content|default:"-" }}
+                  </td>
+                  <td class="col-type-cotation">
+                    {% if souscritere.type_cotation %}
+                    <span class="badge bg-light text-dark border font-weight-normal">{{ souscritere.type_cotation.name }}</span>
+                    {% else %}
+                    <span>-</span>
+                    {% endif %}
+                  </td>
+                  <td class="col-reaction">
+                    {{ souscritere.reaction|default:"-" }}
+                  </td>
+                  <td class="col-actions">
+                    <div class="d-flex justify-content-center align-items-center">
+                      <button onclick="openSousCritereModal('{% url 'souscritere_update' souscritere.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                        <i data-lucide="edit"></i>
+                      </button>
+                      <button onclick="openDeleteModal('{% url 'souscritere_delete' souscritere.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                        <i data-lucide="trash-2"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
               </table>
             </div>
-          </div>
           {% else %}
           <div class="text-center py-5">
             <i data-lucide="list-checks" class="w-12 h-12 mb-3 opacity-25"></i>
