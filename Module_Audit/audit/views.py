@@ -2973,31 +2973,46 @@ import json
 def send_audit_report_email(request, pk):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            email_to = data.get('email_to')
-            email_message = data.get('email_message')
-            pdf_base64 = data.get('pdf_data')
-            
-            if not email_to or not pdf_base64:
-                return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+            # Handle both FormData (standard) and JSON (legacy)
+            if request.content_type == 'application/json':
+                import json, base64
+                data = json.loads(request.body)
+                email_to = data.get('email_to') or data.get('to')
+                email_message = data.get('email_message') or data.get('message')
+                pdf_data = data.get('pdf_data')
                 
-            if ',' in pdf_base64:
-                pdf_base64 = pdf_base64.split(',')[1]
-                
-            pdf_content = base64.b64decode(pdf_base64)
+                if pdf_data and ',' in pdf_data:
+                    pdf_data = pdf_data.split(',')[1]
+                pdf_content = base64.b64decode(pdf_data) if pdf_data else None
+                pdf_name = f'Rapport_Audit_{pk}.pdf'
+            else:
+                email_to = request.POST.get('to')
+                email_message = request.POST.get('message')
+                pdf_file = request.FILES.get('file')
+                pdf_content = pdf_file.read() if pdf_file else None
+                pdf_name = pdf_file.name if pdf_file else f'Rapport_Audit_{pk}.pdf'
+
+            if not email_to or not pdf_content:
+                return JsonResponse({'status': 'error', 'message': 'Données manquantes (email ou fichier)'}, status=400)
             
+            from django.core.mail import EmailMessage
             email = EmailMessage(
                 subject=f'Rapport d\'Audit #{pk}',
                 body=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email_to],
             )
-            email.attach(f'Rapport_Audit_{pk}.pdf', pdf_content, 'application/pdf')
+            email.attach(pdf_name, pdf_content, 'application/pdf')
             email.send()
             
-            return JsonResponse({'status': 'success', 'message': 'Email sent successfully'})
+            return JsonResponse({'status': 'success', 'message': 'Email envoyé avec succès'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+            import traceback
+            print(f"EMAIL ERROR: {str(e)}")
+            print(traceback.format_exc())
+            return JsonResponse({'status': 'error', 'message': f"Erreur serveur: {str(e)}"}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
 
 def get_formulaire_type_audit(request, formulaire_id):
     formulaire = get_object_or_404(FormulaireAudit, pk=formulaire_id)

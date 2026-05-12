@@ -53,11 +53,12 @@
 
     @media print {
         .no-print, nav, footer, header, .sidebar, .navbar, [data-html2canvas-ignore] { display: none !important; }
-        body { background: white !important; padding: 0 !important; margin: 0 !important; }
-        .sc-row, .ev-crit-row, .ev-container, .just-gallery, .mb-8, .mt-8, .mb-12 { 
-            page-break-inside: avoid !important; 
-            break-inside: avoid !important; 
-        }
+        body { background: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        #report-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; border: none !important; }
+        .report-paper { box-shadow: none !important; border: none !important; padding: 10mm !important; }
+        .pdf-section { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 20px !important; }
+        .audit-table { page-break-inside: avoid !important; }
+        .sc-row { page-break-inside: avoid !important; }
     }
 
     #report-container { width: 1250px; max-width: 98%; margin: 0 auto; padding: 0 20px 20px 20px; box-sizing: border-box; overflow: visible !important; }
@@ -239,35 +240,92 @@
                 </div>
                 {% endfor %}
             </div>
-            </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Email Modal -->
-<div id="emailModal" class="fixed inset-0 z-[100] hidden no-print">
-    <div class="flex items-center justify-center min-h-screen p-4 text-center">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEmailModal()"></div>
-        <div class="relative bg-white rounded-2xl text-left shadow-2xl w-full max-w-md border overflow-hidden p-6">
-            <h3 class="font-black text-slate-900 mb-4">Envoyer le rapport</h3>
-            <div class="space-y-4">
-                <input type="email" id="email_to" placeholder="Email" class="w-full px-3 py-2 border rounded-lg">
-                <textarea id="email_message" rows="4" class="w-full px-3 py-2 border rounded-lg text-sm">Veuillez trouver ci-joint le rapport d'audit.</textarea>
-            </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeEmailModal()" class="px-4 py-2 font-bold text-slate-600">Annuler</button>
-                <button id="sendEmailBtn" onclick="sendEmail()" class="px-4 py-2 bg-[#1e3a8a] text-white rounded-lg font-bold">Envoyer</button>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function openEmailModal() { document.getElementById('emailModal').classList.remove('hidden'); lucide.createIcons(); }
-    function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
+    async function openEmailModal() {
+        const { value: formValues } = await Swal.fire({
+            title: '<span class="font-black text-2xl uppercase tracking-tighter text-slate-800">Envoyer le rapport</span>',
+            html: `
+                <div class="text-left space-y-4 p-2">
+                    <div class="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-xl mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-100">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Rapport prêt à l'envoi</p>
+                            <p class="text-xs text-slate-500 font-bold italic">Rapport_Audit_{{ resultat.id }}.pdf</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block pl-1">Destinataire</label>
+                        <input type="email" id="swal-email" placeholder="email@exemple.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block pl-1">Message</label>
+                        <textarea id="swal-msg" rows="3" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm font-bold">Veuillez trouver ci-joint le rapport d'audit.</textarea>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'ENVOYER LE RAPPORT',
+            cancelButtonText: 'ANNULER',
+            customClass: {
+                confirmButton: 'bg-blue-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[12px] shadow-lg hover:bg-blue-700 transition-all ml-3',
+                cancelButton: 'bg-white text-slate-400 px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[12px] hover:bg-slate-50 transition-all border border-slate-100',
+                popup: 'rounded-3xl border-none shadow-2xl'
+            },
+            buttonsStyling: false,
+            reverseButtons: true,
+            preConfirm: () => {
+                const email = document.getElementById('swal-email').value;
+                if (!email) { Swal.showValidationMessage('L\'adresse email est requise'); return false; }
+                return { email: email, msg: document.getElementById('swal-msg').value };
+            }
+        });
 
-    let selectedOrientation = 'portrait';
+        if (formValues) {
+            startEmailFlow(formValues.email, formValues.msg);
+        }
+    }
+
+    async function startEmailFlow(to, message) {
+        Swal.fire({
+            title: 'Envoi en cours...',
+            html: 'Génération du rapport haute fidélité...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            customClass: { popup: 'rounded-3xl shadow-2xl' }
+        });
+
+        try {
+            const pdfBlob = await executePDFGeneration('portrait', true);
+            const formData = new FormData();
+            formData.append('file', pdfBlob, `Rapport_Audit_{{ resultat.id }}.pdf`);
+            formData.append('to', to);
+            formData.append('message', message);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            const response = await fetch("{% url 'resultat_send_email' resultat.id %}", {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                Swal.fire({ icon: 'success', title: 'Envoyé !', text: 'Le rapport a été envoyé avec succès.', customClass: { popup: 'rounded-3xl' } });
+            } else {
+                throw new Error('Erreur lors de l\'envoi');
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: error.message, customClass: { popup: 'rounded-3xl' } });
+        }
+    }
+
+    async function generatePDF(orientation = 'portrait') {
+        await executePDFGeneration(orientation, false);
+    }
 
     function openPdfModal() {
         Swal.fire({
@@ -357,11 +415,13 @@
         }
     };
 
-    async function generatePDF(orientation = 'portrait') {
-        const btn = document.getElementById('downloadPdfBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i>';
-        lucide.createIcons();
+    async function executePDFGeneration(orientation = 'portrait', returnBlob = false) {
+        if (!returnBlob) {
+            const btn = document.getElementById('downloadPdfBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i>';
+            lucide.createIcons();
+        }
 
         try {
             let JsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
@@ -389,7 +449,6 @@
             const sections = document.querySelectorAll('.pdf-section');
             const tableHeadSource = document.getElementById('audit-table-head');
             
-            // 1. Capture Header
             let headImg = null;
             let headHeightMm = 0;
             if (tableHeadSource) {
@@ -420,14 +479,12 @@
 
                 const spaceNeeded = (isCriteria && !headerOnThisPage && headImg) ? (sectionHeightMm + headHeightMm) : sectionHeightMm;
 
-                // Page Break Trigger
                 if (currentY + spaceNeeded > pageHeight - margin) {
                     pdf.addPage();
                     currentY = margin;
                     headerOnThisPage = false;
                 }
 
-                // Header injection
                 if (isCriteria && !headerOnThisPage && headImg) {
                     pdf.addImage(headImg, 'JPEG', margin, currentY, contentWidth, headHeightMm);
                     currentY += headHeightMm;
@@ -435,18 +492,26 @@
                 }
 
                 pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, sectionHeightMm);
-                currentY += sectionHeightMm + 1; // Very tight gap
+                currentY += sectionHeightMm + 1;
             }
 
-            pdf.save(`Rapport_Audit_{{ resultat.id }}_${orientation}.pdf`);
+            if (returnBlob) {
+                return pdf.output('blob');
+            } else {
+                pdf.save(`Rapport_Audit_{{ resultat.id }}_${orientation}.pdf`);
+            }
 
         } catch (error) {
             console.error('PDF Error:', error);
-            alert('Erreur : ' + error.message);
+            if (!returnBlob) alert('Erreur : ' + error.message);
+            else throw error;
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="file-down" class="w-5 h-5"></i>';
-            lucide.createIcons();
+            if (!returnBlob) {
+                const btn = document.getElementById('downloadPdfBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="file-down" class="w-5 h-5"></i>';
+                lucide.createIcons();
+            }
         }
     }
 
