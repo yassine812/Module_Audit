@@ -1,4 +1,4 @@
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 import os
 from django.conf import settings
 from django.views.generic import (
@@ -18,6 +18,9 @@ from django.db import transaction
 from django.db.models import ProtectedError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from textblob import TextBlob
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 from .models import (
     TypeAudit,
     TextRef,
@@ -457,6 +460,9 @@ class CritereListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, List
     context_object_name = "criteres"
     ordering = ["id"]
     paginate_by = 7
+
+    def get_queryset(self):
+        return Critere.objects.select_related('chapitre_norme', 'formulaire').prefetch_related('type_audit').all()
 
     def paginate_queryset(self, queryset, page_size):
         from django.http import Http404
@@ -1244,6 +1250,7 @@ class StartAuditView(LoginRequiredMixin, View):
             sujet=liste_audit.desc,
             auditeur=request.user,
             site=getattr(liste_audit, "site", None),
+            commentaire=commentaire,
             en_cours=True
         )
 
@@ -1599,6 +1606,92 @@ class DetailResultatAuditUpdateView(LoginRequiredMixin, View):
 
 
 
+class AuditAISuggestionsView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        details = resultat.detailresultataudit_set.all()
+        
+        # --- 1. DATA ANALYSIS ---
+        # Group details by criteria for score analysis
+        criteria_performance = {}
+        for d in details:
+            c_name = d.critere if d.critere else "Général"
+            if c_name not in criteria_performance:
+                criteria_performance[c_name] = {'total': 0, 'count': 0, 'comments': []}
+            if d.value is not None and d.value >= 0:
+                criteria_performance[c_name]['total'] += d.value
+                criteria_performance[c_name]['count'] += 1
+            if d.commentaire:
+                criteria_performance[c_name]['comments'].append(d.commentaire)
+
+        # Identify top and bottom criteria
+        ranked_criteria = []
+        for name, stats in criteria_performance.items():
+            if stats['count'] > 0:
+                avg = stats['total'] / stats['count']
+                ranked_criteria.append({'name': name, 'avg': avg, 'comments': stats['comments']})
+        
+        ranked_criteria.sort(key=lambda x: x['avg'], reverse=True)
+        top_criteres = [c['name'] for c in ranked_criteria if c['avg'] >= 0.8][:2]
+        low_criteres = [c['name'] for c in ranked_criteria if c['avg'] < 0.5][:2]
+
+        # --- 2. GENERATING SECTIONS ---
+        
+        # A. Points Forts (High scores + positive comments)
+        pf_text = "L'audit a démontré une excellente maîtrise sur les domaines suivants : " + ", ".join(top_criteres) + ". " if top_criteres else "Bonne conformité générale observée."
+        all_pf_comments = [d.commentaire for d in details if d.value >= 1.0 and d.commentaire]
+        if all_pf_comments:
+            pf_text += " " + " / ".join(list(dict.fromkeys(all_pf_comments))[:3])
+        
+        # B. Points Sensibles (Partial scores)
+        ps_criteres = [c['name'] for c in ranked_criteria if 0.5 <= c['avg'] < 0.8]
+        ps_text = "Des points de vigilance ont été identifiés concernant : " + ", ".join(ps_criteres[:2]) + ". " if ps_criteres else ""
+        all_ps_comments = [d.commentaire for d in details if 0.0 < d.value < 1.0 and d.commentaire]
+        ps_text += " / ".join(list(dict.fromkeys(all_ps_comments))[:3]) if all_ps_comments else "Aucun point sensible majeur à signaler."
+
+        # C. Risques (Zero scores + critical comments)
+        risk_text = "Écarts critiques et risques identifiés sur : " + ", ".join(low_criteres) + ". " if low_criteres else "Aucun risque majeur immédiat."
+        critical_comments = []
+        for d in details:
+            if d.value == 0.0 and d.commentaire:
+                critical_comments.append(d.commentaire)
+            elif d.commentaire and any(w in d.commentaire.lower() for w in ['risque', 'critique', 'danger', 'non-conformité']):
+                critical_comments.append(d.commentaire)
+        
+        if critical_comments:
+            risk_text += " Détails : " + " / ".join(list(dict.fromkeys(critical_comments))[:3])
+
+        # D. Opportunités (Constructive comments)
+        opp_comments = []
+        for d in details:
+            if d.commentaire:
+                c_low = d.commentaire.lower()
+                if any(w in c_low for w in ['opportunité', 'piste', 'optimiser', 'pourrait', 'suggérer', 'préconiser', 'recommandation']):
+                    opp_comments.append(d.commentaire)
+        
+        opp_text = "Axes de progrès : " + " / ".join(list(dict.fromkeys(opp_comments))[:3]) if opp_comments else "Continuer la démarche d'amélioration continue sur l'ensemble des processus audités."
+
+        return JsonResponse({
+            "point_fort": pf_text[:1200],
+            "point_sensible": ps_text[:1200],
+            "risque": risk_text[:1200],
+            "opportunite": opp_text[:1200]
+        })
+
+class ResultatAuditSaveSynthesisView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return HttpResponseForbidden()
+            
+        resultat.point_fort = request.POST.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = request.POST.get('point_sensible', resultat.point_sensible)
+        resultat.risque = request.POST.get('risque', resultat.risque)
+        resultat.opportunite = request.POST.get('opportunite', resultat.opportunite)
+        resultat.save()
+        
+        return JsonResponse({"status": "success"})
+
 class CloseAuditView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
@@ -1607,11 +1700,20 @@ class CloseAuditView(LoginRequiredMixin, View):
         if not request.user.is_superuser and resultat.auditeur != request.user:
             return HttpResponseForbidden()
 
+        # Save AI/User synthesis fields
+        resultat.point_fort = request.POST.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = request.POST.get('point_sensible', resultat.point_sensible)
+        resultat.risque = request.POST.get('risque', resultat.risque)
+        resultat.opportunite = request.POST.get('opportunite', resultat.opportunite)
+
         resultat.en_cours = False
         resultat.recalculate_score()
-        resultat.save(update_fields=["en_cours", "score_audit"])
+        resultat.save()
 
-        return redirect("resultat_report", pk=resultat.pk)
+        return JsonResponse({
+            "status": "success", 
+            "redirect_url": reverse("resultat_report", args=[resultat.pk])
+        })
 
 
 class FinishAuditView(LoginRequiredMixin, View):
@@ -1637,6 +1739,7 @@ class FinishAuditView(LoginRequiredMixin, View):
                 sujet=liste_audit.desc,
                 auditeur=request.user,
                 site=getattr(liste_audit, "site", None),
+                commentaire=request.POST.get('commentaire', ''),
                 en_cours=False
             )
 

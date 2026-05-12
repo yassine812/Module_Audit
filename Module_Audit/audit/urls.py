@@ -148,6 +148,8 @@ urlpatterns = [
     path("resultat/<int:pk>/update-detail/", DetailResultatAuditUpdateView.as_view(), name="detail_update"),
     path("resultat/<int:pk>/etapes/", EtapeAuditView.as_view(), name="etape_audit"),
     path("resultat/<int:pk>/close/", CloseAuditView.as_view(), name="resultat_close"),
+    path("resultat/<int:pk>/ai-suggestions/", AuditAISuggestionsView.as_view(), name="ai_suggestions"),
+    path("resultat/<int:pk>/save-synthesis/", ResultatAuditSaveSynthesisView.as_view(), name="save_synthesis"),
     path("resultat/<int:pk>/report/", ResultatAuditReportView.as_view(), name="resultat_report"),
     path("resultat/<int:pk>/send-email/", send_audit_report_email, name="resultat_send_email"),
 

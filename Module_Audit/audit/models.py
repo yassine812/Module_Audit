@@ -200,6 +200,7 @@ class ResultatAudit(models.Model):
     point_sensible = models.TextField(blank=True, null=True)
     risque = models.TextField(blank=True, null=True)
     opportunite = models.TextField(blank=True, null=True)
+    commentaire = models.TextField(blank=True, null=True)
     en_cours = models.BooleanField(default=True)
     def __str__(self):
         return f"Audit {self.audit.desc} - {self.date_audit.strftime('%Y-%m-%d %H:%M:%S')} - Score: {self.score_audit}"

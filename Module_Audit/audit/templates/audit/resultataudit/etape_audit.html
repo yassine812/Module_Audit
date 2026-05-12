@@ -370,25 +370,104 @@
 
   async function finalizeAudit(){
     await saveStep(false);
+    
+    // Show initial loading for AI generation
     Swal.fire({
-      title: 'Finalisation...',
+      title: 'Analyse IA en cours...',
+      text: 'Génération des points forts, sensibles, risques et opportunités...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     });
 
     try {
+      // 1. Fetch AI Suggestions
+      const aiResp = await fetch(`/audit/resultat/{{ resultat.id }}/ai-suggestions/`);
+      const suggestions = await aiResp.json();
+
+      // 2. Show Modal with editable suggestions
+      const { value: formValues } = await Swal.fire({
+        title: '<div style="display:flex; align-items:center; gap:10px; justify-content:center;"><div style="width:3px; height:18px; background:#1e3a6e; border-radius:2px;"></div><span style="font-weight:900; color:#1e3a6e; letter-spacing:-0.02em; font-size:20px;">Synthèse de l\'Audit (IA)</span></div>',
+        html: `
+          <div style="text-align:left; font-family:\'Inter\',sans-serif; padding:0 4px;">
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px; font-weight:500; text-align:center;">Synthèse générée par l\'IA basée sur vos observations.</p>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div style="margin-bottom:8px;">
+                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Points Forts <span style="color:#22c55e;">●</span></label>
+                <textarea id="swal-pf" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fcfdfe;">${suggestions.point_fort}</textarea>
+              </div>
+
+              <div style="margin-bottom:8px;">
+                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Points Sensibles <span style="color:#f97316;">●</span></label>
+                <textarea id="swal-ps" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fcfdfe;">${suggestions.point_sensible}</textarea>
+              </div>
+
+              <div style="margin-bottom:8px;">
+                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Risques <span style="color:#ef4444;">●</span></label>
+                <textarea id="swal-risk" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fff5f5; color:#991b1b;">${suggestions.risque}</textarea>
+              </div>
+
+              <div>
+                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Opportunités <span style="color:#0ea5e9;">●</span></label>
+                <textarea id="swal-opp" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#f0f9ff;">${suggestions.opportunite}</textarea>
+              </div>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Finaliser l\'Audit',
+        cancelButtonText: 'Annuler',
+        confirmButtonColor: '#16a34a',
+        width: '750px',
+        padding: '1.25rem',
+        customClass: {
+          container: 'compact-swal-container',
+          popup: 'compact-swal-popup'
+        },
+        preConfirm: () => {
+          return {
+            point_fort: document.getElementById('swal-pf').value,
+            point_sensible: document.getElementById('swal-ps').value,
+            risque: document.getElementById('swal-risk').value,
+            opportunite: document.getElementById('swal-opp').value
+          }
+        }
+      });
+      if (!formValues) return; // User cancelled
+      // 3. Final submission
+      Swal.fire({
+        title: 'Enregistrement final...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
       const fd = new FormData();
       fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('point_fort', formValues.point_fort);
+      fd.append('point_sensible', formValues.point_sensible);
+      fd.append('risque', formValues.risque);
+      fd.append('opportunite', formValues.opportunite);
+
       const resp = await fetch(`/audit/resultat/{{ resultat.id }}/close/`, {method: 'POST', body: fd});
+      const data = await resp.json();
       
-      if(resp.ok) {
-        Swal.fire({icon: 'success', title: 'Audit finalisé !', confirmButtonText: 'Voir le rapport'})
-          .then(r => { if(r.isConfirmed) window.location.href='{% url "resultat_report" resultat.id %}'; });
+      if(data.status === 'success') {
+        Swal.fire({
+          icon: 'success', 
+          title: 'Audit terminé !', 
+          text: 'Redirection vers le rapport...', 
+          timer: 2000, 
+          showConfirmButton: false
+        }).then(() => {
+          window.location.href = data.redirect_url;
+        });
       } else {
         throw new Error('Close failed');
       }
     } catch(e) {
-      Swal.fire('Erreur', 'Échec de la finalisation.', 'error');
+      console.error(e);
+      Swal.fire('Erreur', 'Une erreur est survenue lors de la finalisation.', 'error');
     }
   }
 

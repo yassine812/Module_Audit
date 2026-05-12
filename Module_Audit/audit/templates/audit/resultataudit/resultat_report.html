@@ -4,6 +4,7 @@
 {% block title %}Rapport d'Audit - {{ resultat.sujet }}{% endblock %}
 
 {% block extra_css %}
+<!-- v19.0 - Zero-Margin Resolution -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     tailwind.config = {
@@ -17,459 +18,144 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-    .content-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
+    .content-wrapper { padding: 0 !important; }
     .report-body { font-family: 'Inter', sans-serif; background-color: #fcfcfc; }
-    @page {
-        size: auto;
-        margin: 10mm;
-    }
+    
     @media print {
-        .no-print, nav, footer, header, .sidebar, .navbar { display: none !important; }
-        .print-shadow-none { box-shadow: none !important; border: 1px solid #eee !important; }
-        body { background: white !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-size: 14pt !important; }
-        #report-container { display: none !important; }
-        #pdf-content { 
-            display: block !important; 
-            width: 100% !important; 
-            max-width: 100% !important;
-            margin: 0 !important; 
-            padding: 0 !important;
-            position: static !important;
-            visibility: visible !important;
-            zoom: 1.2 !important;
-        }
-        #pdf-content table { width: 100% !important; border-collapse: collapse !important; }
-        #pdf-content td, #pdf-content th { padding: 15px !important; }
-        .page-break { page-break-before: always; }
-        .no-break-inside { break-inside: avoid; page-break-inside: avoid; }
-    }
-    #pdf-content, #pdf-content * {
-        box-sizing: border-box !important;
-    }
-    #pdf-content {
-        display: none;
-        background: white;
-        margin: 0 !important;
-        padding: 20px;
+        .no-print, nav, footer, header, .sidebar, .navbar, [data-html2canvas-ignore] { display: none !important; }
+        body { background: white !important; margin: 0 !important; padding: 0 !important; }
+        #report-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .report-paper { border: none !important; box-shadow: none !important; padding: 10mm !important; }
     }
 
-    .pdf-page-break-avoid {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        margin-bottom: 30px;
-    }
+    #report-container { width: 1000px; margin: 0 auto; padding: 20px; box-sizing: border-box; overflow: visible !important; }
+    .report-paper { background: white; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); overflow: visible !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="report-body py-10 px-1 md:px-2">
+<div class="report-body py-10 px-4">
 
-    <!-- 📄 HIDDEN PDF SPECIFIC STRUCTURE (Refactored to match Teleperformance Design) -->
-    <div id="pdf-content" style="font-family: Arial, sans-serif; color: black; background: white; padding: 0;">
-        <div style="padding: 10px; border: 1px solid black; margin: 10px;">
-            
-            <!-- HEADER SECTION -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
-                <tr>
-                    <td style="width: 30%; border: 1px solid blue; text-align: center; padding: 10px;">
-                        <img src="{% static 'img/ab-serve-logo.png' %}" style="max-height: 50px; width: auto;">
-                    </td>
-                    <td style="width: 40%; border: 1px solid blue; background-color: #0000FF; color: white; text-align: center; font-size: 22px; font-weight: bold; padding: 10px;">
-                        RAPPORT D'AUDIT
-                    </td>
-                    <td style="width: 30%; border: 1px solid blue; font-size: 11px; padding: 5px;">
-                        <div style="border-bottom: 1px solid blue; padding-bottom: 2px;">Référence : AUD-{{ resultat.id }}</div>
-                        <div style="border-bottom: 1px solid blue; padding: 2px 0;">Page : 1 / 1</div>
-                        <div style="padding-top: 2px;">Indice : 0</div>
-                    </td>
-                </tr>
-            </table>
-
-            <!-- AUDIT INFO -->
-            <div style="margin-bottom: 20px; line-height: 1.6;">
-                <div style="margin-bottom: 12px;">
-                    <span style="font-weight: bold; display: inline-block; width: 160px;">Auditeurs :</span>
-                    <span style="display: inline-block; vertical-align: top;">
-                        {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}
-                        {% for co in resultat.co_auditeur.all %}<br>{{ co.get_full_name|default:co.username }}{% endfor %}
-                    </span>
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <span style="font-weight: bold; display: inline-block; width: 160px;">Département audité :</span>
-                    <span>{{ resultat.audit.section|default:"-" }}</span>
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <span style="font-weight: bold; display: inline-block; width: 160px;">Site :</span>
-                    <span style="font-weight: bold;">{{ resultat.site|default:"-" }}</span>
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <span style="font-weight: bold; display: inline-block; width: 160px;">Date d'audit :</span>
-                    <span style="font-weight: bold;">{{ resultat.date_audit|date:"d/m/y" }}</span>
-                </div>
-            </div>
-
-            <!-- TABLE 1: PROCESSUS AUDITÉS -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid black;">
-                <thead>
-                    <tr style="background-color: #0000FF; color: white; text-align: center; font-weight: bold; font-size: 13px;">
-                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Processus Audités</th>
-                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Sous processus</th>
-                        <th style="padding: 6px; border: 1px solid black; width: 33%;">Procédures<br><span style="font-size: 9px; font-weight: normal;">(Nombre de procédures)</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for group in grouped_results %}
-                    <tr style="font-size: 12px;">
-                        <td style="padding: 6px; border: 1px solid black;">{{ group.critere.text_ref|default:"-" }}</td>
-                        <td style="padding: 6px; border: 1px solid black;">-</td>
-                        <td style="padding: 6px; border: 1px solid black; text-align: center;">Toutes les procédures</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div style="font-size: 12px; margin-bottom: 15px;">Tout au long de l'audit le M.O.E et les enregistrements qualité seront contrôlés.</div>
-
-            <!-- TABLE 2: PERSONNES AUDITÉES -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid black;">
-                <thead>
-                    <tr style="background-color: #0000FF; color: white; text-align: center; font-weight: bold; font-size: 13px;">
-                        <th style="padding: 6px; border: 1px solid black; width: 50%;">Nom des personnes auditées</th>
-                        <th style="padding: 6px; border: 1px solid black; width: 50%;">Fonction des personnes auditées</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in resultat.audit.participants.all %}
-                    <tr style="font-size: 12px;">
-                        <td style="padding: 6px; border: 1px solid black;">{{ p.get_full_name|default:p.username }}</td>
-                        <td style="padding: 6px; border: 1px solid black;">-</td>
-                    </tr>
-                    {% empty %}
-                    <tr style="font-size: 12px;">
-                        <td style="padding: 6px; border: 1px solid black;">{{ resultat.audites.all.0|default:"-" }}</td>
-                        <td style="padding: 6px; border: 1px solid black;">-</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- TABLE 3: SUMMARY -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 2px solid black;">
-                <tr style="font-size: 13px; font-weight: bold;">
-                    <td style="padding: 8px; border: 1px solid black; width: 60%;">Nombre de points forts</td>
-                    <td style="padding: 8px; border: 1px solid black; width: 20%; text-align: center;">(PF)</td>
-                    <td style="padding: 8px; border: 1px solid black; width: 20%; text-align: center; font-size: 15px;">
-                        {{ pf_count }}
-                    </td>
-                </tr>
-                <tr style="font-size: 13px; font-weight: bold;">
-                    <td style="padding: 8px; border: 1px solid black;">Nombre de points sensibles/Axes d'amélioration</td>
-                    <td style="padding: 8px; border: 1px solid black; text-align: center;">(PS/AA)</td>
-                    <td style="padding: 8px; border: 1px solid black; text-align: center; font-size: 15px;">{{ ps_count }}</td>
-                </tr>
-                <tr style="font-size: 13px; font-weight: bold;">
-                    <td style="padding: 8px; border: 1px solid black;">Nombre d'écarts</td>
-                    <td style="padding: 8px; border: 1px solid black; text-align: center;">(E)</td>
-                    <td style="padding: 8px; border: 1px solid black; text-align: center; font-size: 15px;">{{ e_count }}</td>
-                </tr>
-            </table>
-
-            <!-- SIGNATURE SECTION -->
-            <div style="border: 1px solid black; padding: 10px; margin-bottom: 15px; min-height: 60px;">
-                <div style="font-weight: bold; font-size: 13px; margin-bottom: 5px;">Signature des Auditeurs :</div>
-                <div style="font-size: 13px;">
-                    {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }} 
-                    {% if resultat.co_auditeur.exists %} / {% endif %}
-                    {% for co in resultat.co_auditeur.all %}{{ co.get_full_name|default:co.username }}{% if not forloop.last %} / {% endif %}{% endfor %}
-                </div>
-            </div>
-
-            <!-- FOOTER -->
-            <table style="width: 100%; border-collapse: collapse; border: 1px solid gray; font-size: 10px; color: #444;">
-                <tr>
-                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">Classé par : MAG / DO</td>
-                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">
-                        Archivé<br>Où : Bureau MAG<br>Par qui : MAG
-                    </td>
-                    <td style="width: 33%; border: 1px solid gray; padding: 4px;">Durée : 2 Ans(s)</td>
-                </tr>
-            </table>
-
+    <!-- Actions -->
+    <div class="flex justify-end max-w-5xl mx-auto mb-4 no-print" data-html2canvas-ignore="true">
+        <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+            <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
+            <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
+            <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Print"><i data-lucide="printer" class="w-5 h-5"></i></button>
         </div>
     </div>
 
-       <!-- ORIGINAL UI LAYOUT (Refactored to match Teleperformance Design) -->
-    <div id="report-container" class="max-w-5xl mx-auto space-y-6 no-print">
-        
-        <!-- Floating Actions -->
-        <div class="flex justify-end w-full mb-4" data-html2canvas-ignore="true">
-            <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-                <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Envoyer par Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
-                <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Télécharger PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
-                <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all text-slate-700" title="Imprimer"><i data-lucide="printer" class="w-5 h-5"></i></button>
-            </div>
-        </div>
-
+    <!-- THE CONTAINER -->
+    <div id="report-container">
         <!-- Paper Document -->
-        <div class="bg-white border border-slate-300 shadow-2xl p-8 md:p-12 text-black" style="font-family: Arial, sans-serif;">
+        <div class="report-paper p-8 md:p-12 text-black">
             
-            <!-- HEADER (High-Precision Professional Design) -->
-            <div class="w-full flex border-2 border-[#0000FF] mb-12 h-32 overflow-hidden">
-                <!-- Logo Section -->
-                <div class="w-[30%] border-r-2 border-[#0000FF] flex items-center justify-center p-6 bg-white">
-                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-24 w-auto object-contain">
+            <!-- HEADER -->
+            <div class="w-full flex border-[3px] border-[#1e3a8a] mb-12 h-36 overflow-hidden bg-white shadow-sm">
+                <div class="w-[32%] border-r-[3px] border-[#1e3a8a] flex items-center justify-center p-8">
+                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-28 w-auto object-contain">
                 </div>
-                
-                <!-- Title Section -->
-                <div class="w-[40%] bg-[#0000FF] text-white flex flex-col items-center justify-center text-center px-4">
-                    <h1 class="font-black text-[32px] uppercase tracking-[0.2em] leading-none m-0">
-                        Rapport<br>d'Audit
-                    </h1>
+                <div class="w-[38%] bg-[#1e3a8a] text-white flex flex-col items-center justify-center text-center px-4 relative">
+                    <h1 class="font-black text-[34px] uppercase tracking-[0.25em] leading-[1.1] m-0 drop-shadow-md">Rapport<br>d'Audit</h1>
                 </div>
-                
-                <!-- Reference Section -->
-                <div class="w-[30%] border-l-2 border-[#0000FF] flex flex-col bg-white">
-                    <div class="flex-1 border-b-2 border-[#0000FF] flex items-center px-4">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Référence</span>
-                        <span class="text-xs font-black">: AUD-{{ resultat.id }}</span>
+                <div class="w-[30%] border-l-[1px] border-[#1e3a8a] flex flex-col bg-white">
+                    <div class="flex-1 border-b-[3px] border-[#1e3a8a] flex flex-col justify-center px-6">
+                        <span class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
+                        <span class="text-[16px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
                     </div>
-                    <div class="flex-1 border-b-2 border-[#0000FF] flex items-center px-4">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Page</span>
-                        <span class="text-xs font-black">: 1 / 1</span>
-                    </div>
-                    <div class="flex-1 flex items-center px-4">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter w-20">Indice</span>
-                        <span class="text-xs font-black">: 0</span>
+                    <div class="flex-1 flex flex-col justify-center px-6">
+                        <span class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Auditeur</span>
+                        <span class="text-[16px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- AUDIT INFO (High-Fidelity Match) -->
-            <div class="mb-12 space-y-5 text-[14px]">
-                <div class="flex items-start">
-                    <span class="font-bold w-44">Auditeurs :</span>
-                    <div class="flex-1 font-medium space-y-1">
-                        <div>{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
-                        {% for co in resultat.co_auditeur.all %}
-                        <div>{{ co.get_full_name|default:co.username }}</div>
-                        {% endfor %}
+            <!-- SCORE GLOBAL -->
+            <div class="mb-8 flex items-center gap-6 bg-white border-2 border-[#1e3a8a] p-6 rounded-lg shadow-sm">
+                <div class="flex-1">
+                    <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global</div>
+                    <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
+                </div>
+                <div class="w-px h-12 bg-slate-200"></div>
+                <div class="text-5xl font-black text-[#1e3a8a]">{{ resultat.score_audit|floatformat:2 }}</div>
+            </div>
+
+            <!-- COMMENTAIRE -->
+            <div class="mb-8">
+                <div class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
+                <div class="border-2 border-[#1e3a8a] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
+            </div>
+
+            <!-- SYNTHESE -->
+            <div class="mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#1e3a8a]">
+                <div class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
+                    <div class="border-b-2 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Forts</h4>
+                        <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_fort|default:"" }}</div>
+                    </div>
+                    <div class="border-b-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Sensibles</h4>
+                        <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_sensible|default:"" }}</div>
+                    </div>
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-rose-800">Risques</h4>
+                        <div class="text-[14px] leading-relaxed text-rose-900 font-bold">{{ resultat.risque|default:"" }}</div>
+                    </div>
+                    <div class="p-6 min-h-[140px]">
+                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-emerald-800">Opportunités</h4>
+                        <div class="text-[14px] leading-relaxed text-emerald-900 font-bold">{{ resultat.opportunite|default:"" }}</div>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <span class="font-bold w-44">Département audité :</span>
-                    <span class="flex-1 font-medium">{{ resultat.audit.section|default:"-" }}</span>
-                </div>
-                <div class="flex items-center">
-                    <span class="font-bold w-44">Site :</span>
-                    <span class="flex-1 font-medium">{{ resultat.site|default:"-" }}</span>
-                </div>
-                <div class="flex items-center">
-                    <span class="font-bold w-44">Date d'audit :</span>
-                    <span class="flex-1 font-bold">{{ resultat.date_audit|date:"d/m/y" }}</span>
-                </div>
             </div>
 
-            <!-- TABLE 1: PROCESSUS (High-Fidelity Match) -->
-            <div class="overflow-x-auto mb-4">
-                <table class="w-full border-collapse border-2 border-black text-[11px]">
-                    <thead>
-                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-2 w-[35%]">Processus Audités</th>
-                            <th class="border border-black p-2 w-[35%]">Sous processus</th>
-                            <th class="border border-black p-2 w-[30%]">
-                                <div class="leading-tight">Procédures</div>
-                                <div class="text-[9px] font-normal lowercase tracking-tight">(Nombre de procédures)</div>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for group in grouped_results %}
-                        <tr>
-                            <td class="border border-black p-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded-full border border-[#0000FF] flex items-center justify-center flex-shrink-0">
-                                        <div class="w-1.5 h-1.5 bg-[#0000FF] rotate-45"></div>
-                                    </div>
-                                    <span class="font-medium">{{ group.critere.text_ref|default:"-" }}</span>
-                                </div>
-                            </td>
-                            <td class="border border-black p-2 text-center">-</td>
-                            <td class="border border-black p-2 text-center">Toutes les procédures</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <p class="text-[11px] mb-6">Tout au long de l'audit le M.O.E et les enregistrements qualité seront contrôlés.</p>
-
-            <!-- TABLE 2: PERSONNES AUDITÉES (High-Fidelity Match) -->
-            <div class="overflow-x-auto mb-6">
-                <table class="w-full border-collapse border-2 border-black text-[11px]">
-                    <thead>
-                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-2 w-1/2">Nom des personnes auditées</th>
-                            <th class="border border-black p-2 w-1/2">Fonction des personnes auditées</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in resultat.audit.participants.all %}
-                        <tr>
-                            <td class="border border-black p-2">{{ p.get_full_name|default:p.username }}</td>
-                            <td class="border border-black p-2">-</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td class="border border-black p-2">{{ resultat.audites.all.0|default:"-" }}</td>
-                            <td class="border border-black p-2">-</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- TABLE 3: SUMMARY (Compact & Professional) -->
-            <div class="max-w-md border-2 border-black mb-8 text-[11px]">
-                <div class="flex border-b border-black font-bold items-center">
-                    <div class="flex-1 p-2">Nombre de points forts</div>
-                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(PF)</div>
-                    <div class="w-16 p-2 text-center font-black text-sm">{{ pf_count }}</div>
-                </div>
-                <div class="flex border-b border-black font-bold items-center">
-                    <div class="flex-1 p-2">Nombre de points sensibles / Axes d'amélioration</div>
-                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(PS/AA)</div>
-                    <div class="w-16 p-2 text-center font-black text-sm">{{ ps_count }}</div>
-                </div>
-                <div class="flex font-bold items-center">
-                    <div class="flex-1 p-2">Nombre d'écarts</div>
-                    <div class="w-16 border-x border-black p-2 text-center text-slate-500">(E)</div>
-                    <div class="w-16 p-2 text-center font-black text-sm">{{ e_count }}</div>
-                </div>
-            </div>
-
-            <!-- SIGNATURE -->
-            <div class="border border-black p-3 mb-8 min-h-[80px]">
-                <h3 class="font-bold text-[10px] mb-1 underline">Signature des Auditeurs :</h3>
-                <p class="text-[11px]">
-                    {{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }} 
-                    {% if resultat.co_auditeur.exists %} / {% endif %}
-                    {% for co in resultat.co_auditeur.all %}{{ co.get_full_name|default:co.username }}{% if not forloop.last %} / {% endif %}{% endfor %}
-                </p>
-            </div>
-
-            <!-- FOOTER -->
-            <div class="flex border border-slate-300 text-[9px] text-slate-500">
-                <div class="w-1/3 border-r border-slate-300 p-2 italic">Classé par : MAG / DO</div>
-                <div class="w-1/3 border-r border-slate-300 p-2">
-                    Archivé<br>Où : Bureau MAG<br>Par qui : MAG
-                </div>
-                <div class="w-1/3 p-2">Durée : 2 Ans(s)</div>
-            </div>
-
-            <!-- DETAILED RESULTS SECTION (Compact & Professional) -->
+            <!-- TABLE -->
             <div class="mt-8 overflow-x-auto">
                 <table class="w-full border-collapse text-black text-[10px] md:text-[11px] border-2 border-black">
                     <thead>
-                        <tr class="bg-[#0000FF] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-2 w-8">#</th>
-                            <th class="border border-black p-2 text-left">Processus / Critères / Points de contrôle</th>
-                            <th class="border border-black p-2 w-32 md:w-40 text-center">Conformité</th>
-                            <th class="border border-black p-2 w-14 md:w-20 text-center">Score</th>
+                        <tr class="bg-[#1e3a8a] text-white uppercase font-bold text-center">
+                            <th class="border border-black p-3 w-12">#</th>
+                            <th class="border border-black p-3 text-left uppercase">Critères & Sous-Critères</th>
+                            <th class="border border-black p-3 w-16 text-right">Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for group in grouped_results %}
-                        <tr class="bg-slate-50">
-                            <td class="border border-black p-2 font-bold text-center align-middle bg-slate-100">{{ forloop.counter }}</td>
-                            <td class="border border-black p-2 font-bold uppercase align-middle bg-slate-100">
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-1 h-3 bg-[#0000FF]"></div>
-                                    <span class="text-xs">{{ group.critere.text_ref }}</span>
-                                </div>
-                            </td>
-                            <td colspan="2" class="border border-black p-2 bg-slate-100 align-middle">
-                                <div class="flex items-center justify-end gap-2">
-                                    <div class="flex-1 h-1.5 bg-white border border-slate-300 rounded-full overflow-hidden hidden md:block">
-                                        <div class="h-full bg-[#0000FF]" style="width: {% widthratio group.score 1 100 %}%"></div>
-                                    </div>
-                                    <span class="font-black text-sm tabular-nums text-blue-800">{{ group.score|floatformat:"-1" }}</span>
-                                </div>
-                            </td>
+                        <tr class="bg-slate-100 font-black">
+                            <td class="border border-black p-3 text-center align-middle">{{ forloop.counter }}</td>
+                            <td class="border border-black p-3 uppercase align-middle"><span class="text-[#1e3a8a] mr-2">Critère :</span> {{ group.critere.text_ref }}</td>
+                            <td class="border border-black p-3 text-right align-middle text-blue-800">{{ group.score|floatformat:"-1" }}</td>
                         </tr>
                         {% for d in group.details %}
                         <tr>
-                            <td class="border border-black p-2 text-center align-middle">
-                                <div class="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
+                            <td class="border border-black p-2 text-center text-slate-300 align-middle">•</td>
+                            <td class="border border-black p-2 align-middle">
+                                <div class="font-bold text-slate-800 text-[13px]"><span class="text-[9px] uppercase text-slate-400 font-black mr-2">Sous-Critère :</span> {{ d.sous_critere }}</div>
+                                {% if d.commentaire %}<div class="text-[10px] text-slate-500 italic mt-1 border-l-2 border-blue-200 pl-2">{{ d.commentaire }}</div>{% endif %}
                             </td>
-                            <td class="border border-black p-2">
-                                <div class="flex flex-col gap-0.5">
-                                    <div class="font-bold text-slate-800 leading-tight">{{ d.sous_critere }}</div>
-                                    {% if d.commentaire %}
-                                    <div class="text-[9px] text-slate-500 mt-1 border-l border-blue-400 pl-2 italic">
-                                        {{ d.commentaire }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                
-                                {% if d.justificatif or d.justificatif_bis %}
-                                <div class="flex flex-wrap gap-1 mt-2 no-print">
-                                    {% if d.justificatif %}
-                                    <a href="{{ d.justificatif.url }}" target="_blank" class="block border border-slate-200 p-0.5 rounded opacity-70 hover:opacity-100 transition-opacity">
-                                        <img src="{{ d.justificatif.url }}" class="h-10 w-auto object-contain">
-                                    </a>
-                                    {% endif %}
-                                    {% if d.justificatif_bis %}
-                                    <a href="{{ d.justificatif_bis.url }}" target="_blank" class="block border border-slate-200 p-0.5 rounded opacity-70 hover:opacity-100 transition-opacity">
-                                        <img src="{{ d.justificatif_bis.url }}" class="h-10 w-auto object-contain">
-                                    </a>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td class="border border-black p-2 text-center align-middle">
-                                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight border
-                                    {% if d.value >= 1.0 %}bg-emerald-50 text-emerald-700 border-emerald-200
-                                    {% elif d.value > 0.0 %}bg-amber-50 text-amber-700 border-amber-200
-                                    {% elif d.value == 0.0 %}bg-rose-50 text-rose-700 border-rose-200
-                                    {% else %}bg-slate-100 text-slate-600 border-slate-200{% endif %}">
-                                    {{ d.cotation|default:"N/A" }}
-                                </span>
-                            </td>
-                            <td class="border border-black p-2 text-right font-black text-sm align-middle tabular-nums bg-slate-50">
-                                {% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}
-                            </td>
+                            <td class="border border-black p-2 text-right font-black align-middle tabular-nums bg-slate-50">{% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}</td>
                         </tr>
                         {% endfor %}
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- EMAIL MODAL -->
-<div id="emailModal" class="fixed inset-0 z-[100] hidden no-print overflow-y-auto">
+<div id="emailModal" class="fixed inset-0 z-[100] hidden no-print">
     <div class="flex items-center justify-center min-h-screen p-4 text-center">
-        <div class="fixed inset-0 bg-slate-900/60 transition-opacity backdrop-blur-sm" onclick="closeEmailModal()"></div>
-        <div class="relative inline-block align-middle bg-white rounded-2xl text-left shadow-2xl transform transition-all sm:max-w-md w-full border border-slate-100 flex flex-col">
-            <div class="bg-white px-4 py-3 sm:px-5 sm:py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0 rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-50 text-blue-600"><i data-lucide="mail" class="h-4 w-4"></i></div>
-                    <h3 class="text-[15px] sm:text-base font-black text-slate-900 tracking-tight">Envoyer le rapport</h3>
-                </div>
-                <button type="button" onclick="closeEmailModal()" class="text-slate-400 hover:text-slate-600 transition-colors rounded-full p-1 hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5"></i></button>
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEmailModal()"></div>
+        <div class="relative bg-white rounded-2xl text-left shadow-2xl w-full max-w-md border overflow-hidden p-6">
+            <h3 class="font-black text-slate-900 mb-4">Envoyer le rapport</h3>
+            <div class="space-y-4">
+                <input type="email" id="email_to" placeholder="Email" class="w-full px-3 py-2 border rounded-lg">
+                <textarea id="email_message" rows="4" class="w-full px-3 py-2 border rounded-lg text-sm">Veuillez trouver ci-joint le rapport.</textarea>
             </div>
-            <div class="bg-white px-4 py-4 sm:px-5 sm:py-5">
-                <div class="space-y-4">
-                    <div><label class="block text-[12px] sm:text-[13px] font-bold text-slate-700 mb-1">Destinataire</label><input type="email" id="email_to" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none font-medium text-slate-900" placeholder="Email..."></div>
-                    <div><label class="block text-[12px] sm:text-[13px] font-bold text-slate-700 mb-1">Message</label><textarea id="email_message" rows="5" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none text-slate-700 font-medium">Bonjour, veuillez trouver ci-joint le rapport pour "{{ resultat.sujet }}".</textarea></div>
-                </div>
-            </div>
-            <div class="bg-slate-50 px-4 py-3 sm:px-5 sm:py-4 flex items-center justify-end gap-3 border-t border-slate-100 rounded-b-2xl">
-                <button type="button" onclick="closeEmailModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg font-bold text-slate-700">Annuler</button>
-                <button type="button" id="sendEmailBtn" onclick="sendEmail()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">Envoyer</button>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeEmailModal()" class="px-4 py-2 font-bold text-slate-600">Annuler</button>
+                <button id="sendEmailBtn" onclick="sendEmail()" class="px-4 py-2 bg-[#1e3a8a] text-white rounded-lg font-bold">Envoyer</button>
             </div>
         </div>
     </div>
@@ -480,103 +166,68 @@
     function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
 
     function generatePDF() {
-        const element = document.getElementById('pdf-content');
-        const uiContainer = document.getElementById('report-container');
+        const element = document.getElementById('report-container');
         const btn = document.getElementById('downloadPdfBtn');
-        const originalContent = btn.innerHTML;
-
-        window.scrollTo(0, 0);
         btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 text-white animate-spin"></i>';
-        lucide.createIcons();
 
-        // ⚠️ SWITCH VIEWS FOR CAPTURE
-        uiContainer.style.display = 'none';
-        element.style.display = 'block';
-        element.style.width = '650px';
-
-        const opt = {
-            margin: [10, 10, 10, 10],
-            filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
-            image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                logging: false, 
-                letterRendering: true, 
-                windowWidth: 650,
-                scrollX: 0,
-                scrollY: 0,
-                x: 0,
-                y: 0
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
+        window.scrollTo(0,0);
+        
+        // v19.0 - THE ZERO-MARGIN RESOLUTION
+        // This is the final strategy to force the report to stretch to 100% of the paper width.
+        const wrapper = document.createElement('div');
+        wrapper.style.backgroundColor = 'white';
+        wrapper.style.padding = '80px 0 0 0'; // Header safety buffer only
+        
+        element.parentNode.insertBefore(wrapper, element);
+        wrapper.appendChild(element);
 
         setTimeout(() => {
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
-                element.style.width = '';
-                uiContainer.style.display = '';
+            const opt = {
+                margin: 0, // NO MARGINS - This forces the 1000px content to occupy the entire A4 sheet.
+                filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2.5, // Even higher resolution
+                    useCORS: true,
+                    logging: false,
+                    scrollY: 0,
+                    scrollX: 0
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+                const pages = pdf.internal.getNumberOfPages();
+                for (let i = pages; i > 1; i--) { pdf.deletePage(i); }
+            }).save().then(() => {
+                wrapper.parentNode.insertBefore(element, wrapper);
+                wrapper.parentNode.removeChild(wrapper);
                 btn.disabled = false;
-                btn.innerHTML = originalContent;
-                lucide.createIcons();
             }).catch(() => {
-                element.style.display = 'none';
-                element.style.width = '';
-                uiContainer.style.display = '';
+                wrapper.parentNode.insertBefore(element, wrapper);
+                wrapper.parentNode.removeChild(wrapper);
                 btn.disabled = false;
-                btn.innerHTML = originalContent;
-                lucide.createIcons();
             });
-        }, 1000);
+        }, 300);
     }
 
     function sendEmail() {
         const btn = document.getElementById('sendEmailBtn');
         const emailTo = document.getElementById('email_to').value;
         if (!emailTo) return alert("Email requis");
-
-        window.scrollTo(0, 0);
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = 'Envoi...';
-
-        const element = document.getElementById('pdf-content');
-        const uiContainer = document.getElementById('report-container');
-
-        // ⚠️ SWITCH VIEWS FOR CAPTURE
-        uiContainer.style.display = 'none';
-        element.style.display = 'block';
-        element.style.width = '650px';
-
+        const element = document.getElementById('report-container');
         const opt = {
-            margin: [10, 10, 10, 10],
-            html2canvas: { scale: 2, useCORS: true, windowWidth: 650, scrollX: 0, scrollY: 0, x: 0, y: 0 },
+            html2canvas: { scale: 1.5, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4' }
         };
-
-        setTimeout(() => {
-            html2pdf().set(opt).from(element).outputPdf('datauristring').then(function (pdfBase64) {
-                element.style.display = 'none';
-                element.style.width = '';
-                uiContainer.style.display = '';
-                fetch('{% url "resultat_send_email" resultat.id %}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email_to: emailTo, email_message: document.getElementById('email_message').value, pdf_data: pdfBase64 })
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                        if (data.status === 'success') { closeEmailModal(); alert("Envoyé !"); }
-                    });
-            });
-        }, 500);
+        html2pdf().set(opt).from(element).outputPdf('datauristring').then(pdfBase64 => {
+            fetch('{% url "resultat_send_email" resultat.id %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ email_to: emailTo, pdf_data: pdfBase64 })
+            }).then(() => { closeEmailModal(); alert("Envoyé !"); });
+        });
     }
-
     lucide.createIcons();
 </script>
 {% endblock %}

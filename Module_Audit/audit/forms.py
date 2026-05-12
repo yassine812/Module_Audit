@@ -47,11 +47,12 @@ class FormulaireAuditForm(forms.ModelForm):
 class CritereForm(forms.ModelForm):
     class Meta:
         model = Critere
-        fields = ['name', 'chapitre_norme', 'formulaire']
+        fields = ['name', 'chapitre_norme', 'formulaire', 'type_audit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du critère...'}),
             'chapitre_norme': forms.Select(attrs={'class': 'custom-input form-select'}),
             'formulaire': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_audit': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
         }
 
 class SousCritereForm(forms.ModelForm):
@@ -156,7 +157,7 @@ class ListeAuditForm(forms.ModelForm):
 
 # FormSets
 SousCritereFormSet = inlineformset_factory(
-    Critere, SousCritere, form=SousCritereForm, extra=1, can_delete=True
+    Critere, SousCritere, form=SousCritereForm, extra=0, can_delete=True
 )
 
 CritereFormSet = modelformset_factory(

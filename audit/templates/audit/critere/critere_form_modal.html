@@ -6,7 +6,8 @@
             <i data-lucide="check-square" class="w-6 h-6"></i>
         </div>
         <div>
-            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.1rem;">{% if object %}Modifier Critère{% else %}Nouveau Critère{% endif %}</h5>
+            <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.1rem;">{% if object %}Modifier Critère{%
+                else %}Nouveau Critère{% endif %}</h5>
         </div>
     </div>
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"
@@ -33,7 +34,8 @@
                 <i data-lucide="layers" class="w-5 h-5"></i>
                 Sous-Critères
                 <span class="badge badge-indigo border ml-2 row-count-badge"
-                    style="font-size: 0.75rem; padding: 3px 8px;">{% if sous_criteres.total_form_count %}{{ sous_criteres.total_form_count }}{% else %}0{% endif %}</span>
+                    style="font-size: 0.75rem; padding: 3px 8px;">{% if sous_criteres.total_form_count %}{{
+                    sous_criteres.total_form_count }}{% else %}0{% endif %}</span>
             </a>
         </li>
     </ul>
@@ -69,7 +71,8 @@
                             <select name="chapitre_norme" id="id_chapitre_norme"
                                 class="form-control border-0 py-0 text-sm" style="height: 42px;">
                                 {% for choice in form.chapitre_norme.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0|slugify == form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                                <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify
+                                    %}selected{% endif %}>{{ choice.1 }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -80,7 +83,8 @@
                             <select name="formulaire" id="id_formulaire" class="form-control border-0 py-0 text-sm"
                                 style="height: 42px;">
                                 {% for choice in form.formulaire.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0|slugify == form.formulaire.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                                <option value="{{ choice.0 }}" {% if choice.0|slugify==form.formulaire.value|slugify
+                                    %}selected{% endif %}>{{ choice.1 }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -97,27 +101,26 @@
             <!-- Tab 2: Sous-Critères -->
             <div class="tab-pane" id="souscritere" role="tabpanel" aria-labelledby="souscritere-tab">
                 <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-                    <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Sous-Critères</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <i data-lucide="list-checks" class="text-indigo-500" style="width: 20px; height: 20px;"></i>
+                        <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Sous-Critères</h6>
+                    </div>
                     <button type="button" id="add-sous-critere"
-                        class="btn btn-indigo text-white rounded-pill px-4 py-2 shadow-sm border-0"
-                        style="background: linear-gradient(135deg, #4338ca 0%, #1e3a8a 100%); font-size: 0.85rem;">
-                        <i data-lucide="plus" class="w-5 h-5 mr-1"></i>
+                        class="btn btn-outline-primary rounded-pill px-4 py-1.5 d-flex align-items-center gap-2 shadow-sm"
+                        style="font-size: 0.85rem; border-width: 1px;">
+                        <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
                         Ajouter
                     </button>
                 </div>
 
                 <!-- Empty State -->
-                <div id="empty-state-sous-critere" class="text-center py-3 border rounded-xl bg-light-gray d-none">
-                    <div class="empty-state-icon text-indigo-500 mb-1">
-                        <i data-lucide="list-checks" class="w-6 h-6"></i>
+                <div id="empty-state-sous-critere" class="text-center py-5 border rounded-xl bg-light-gray d-none">
+                    <div class="empty-state-icon text-indigo-500 mb-2">
+                        <i data-lucide="layers" class="w-10 h-10 opacity-25"></i>
                     </div>
-                    <h6 class="text-dark font-weight-bold mb-0.5" style="font-size: 0.75rem;">Aucun sous-critère</h6>
-                    <p class="px-5 mb-1" style="font-size: 0.65rem;">Définissez les sous-critères spécifiques pour
-                        affiner votre évaluation d'audit.</p>
-                    <button type="button" onclick="$('#add-sous-critere').click()"
-                        class="btn btn-link text-indigo-600 font-weight-bold p-0" style="font-size: 0.65rem;">
-                        Ajouter un Sous-Critère
-                    </button>
+                    <h6 class="text-dark font-weight-bold mb-1" style="font-size: 0.85rem;">Aucun sous-critère</h6>
+                    <p class="px-5 mb-2 text-muted" style="font-size: 0.75rem;">Définissez les sous-critères pour
+                        affiner votre évaluation.</p>
                 </div>
 
                 <div id="table-container-sous-critere" class="d-none">
@@ -125,40 +128,38 @@
                         {{ sous_criteres.management_form }}
                         {% for sc_form in sous_criteres %}
                         <div
-                            class="sc-block sous-critere-row position-relative p-3 mb-3 bg-white border border-slate-200 rounded-xl shadow-sm hover-shadow transition-all">
+                            class="sc-block sous-critere-row position-relative p-4 mb-4 bg-white border border-slate-200 rounded-xl shadow-sm hover-shadow transition-all">
                             {% for hidden in sc_form.hidden_fields %}{{ hidden }}{% endfor %}
                             <div class="d-none">{{ sc_form.DELETE }}</div>
 
-                            <!-- Remove Button at top right -->
+                            <!-- Remove Button -->
                             <button type="button"
-                                class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border p-1"
-                                style="top: 10px; right: 10px; z-index: 10;" title="Retirer">
+                                class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border shadow-sm p-1.5"
+                                style="top: -10px; right: -10px; z-index: 10; background: #fff;" title="Retirer">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
 
-                            <div class="row align-items-end pe-4">
-                                <div class="col-md-5 mb-2">
-                                    <label class="text-uppercase mb-1 d-block"
-                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Description
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="text-uppercase mb-2 d-block"
+                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description
                                         détaillée <span class="text-danger">*</span></label>
                                     {{ sc_form.content }}
                                 </div>
-                                <div class="col-md-3 mb-2">
-                                    <label class="text-uppercase mb-1 d-block"
-                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Cotation</label>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-uppercase mb-2 d-block"
+                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
                                     {{ sc_form.type_cotation }}
                                 </div>
-                                <div class="col-md-4 mb-2">
-                                    <label class="text-uppercase mb-1 d-block"
-                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Preuves
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-uppercase mb-2 d-block"
+                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves
                                         Attendues</label>
                                     {{ sc_form.preuve_attendu }}
                                 </div>
-                            </div>
-                            <div class="row pe-4">
-                                <div class="col-md-12 mb-1">
-                                    <label class="text-uppercase mb-1 d-block"
-                                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Réaction
+                                <div class="col-md-12">
+                                    <label class="text-uppercase mb-2 d-block"
+                                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction
                                         attendue (En cas de déviation)</label>
                                     {{ sc_form.reaction }}
                                 </div>
@@ -174,39 +175,38 @@
     <!-- Hidden Empty Form Template -->
     <div id="empty-form" class="d-none">
         <div
-            class="sc-block sous-critere-row position-relative p-3 mb-3 bg-white border border-slate-200 rounded-xl shadow-sm hover-shadow transition-all">
+            class="sc-block sous-critere-row position-relative p-4 mb-4 bg-white border border-slate-200 rounded-xl shadow-sm hover-shadow transition-all">
             <input type="hidden" name="souscritere_set-__prefix__-id" id="id_souscritere_set-__prefix__-id">
             <input type="hidden" name="souscritere_set-__prefix__-critere" id="id_souscritere_set-__prefix__-critere">
 
             <button type="button"
-                class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border p-1"
-                style="top: 10px; right: 10px; z-index: 10;" title="Retirer">
+                class="btn btn-sm btn-light text-danger position-absolute remove-row rounded-circle border shadow-sm p-1.5"
+                style="top: -10px; right: -10px; z-index: 10; background: #fff;" title="Retirer">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
 
-            <div class="row align-items-end pe-4">
-                <div class="col-md-5 mb-2">
-                    <label class="text-uppercase mb-1 d-block"
-                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Description détaillée
-                        <span class="text-danger">*</span></label>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="text-uppercase mb-2 d-block"
+                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Description
+                        détaillée <span class="text-danger">*</span></label>
                     {{ sous_criteres.empty_form.content }}
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="text-uppercase mb-1 d-block"
-                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Cotation</label>
+                <div class="col-md-6 mb-3">
+                    <label class="text-uppercase mb-2 d-block"
+                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Cotation</label>
                     {{ sous_criteres.empty_form.type_cotation }}
                 </div>
-                <div class="col-md-4 mb-2">
-                    <label class="text-uppercase mb-1 d-block"
-                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Preuves Attendues</label>
+                <div class="col-md-6 mb-3">
+                    <label class="text-uppercase mb-2 d-block"
+                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Preuves
+                        Attendues</label>
                     {{ sous_criteres.empty_form.preuve_attendu }}
                 </div>
-            </div>
-            <div class="row pe-4">
-                <div class="col-md-12 mb-1">
-                    <label class="text-uppercase mb-1 d-block"
-                        style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Réaction attendue (En cas
-                        de déviation)</label>
+                <div class="col-md-12">
+                    <label class="text-uppercase mb-2 d-block"
+                        style="font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em;">Réaction
+                        attendue (En cas de déviation)</label>
                     {{ sous_criteres.empty_form.reaction }}
                 </div>
             </div>

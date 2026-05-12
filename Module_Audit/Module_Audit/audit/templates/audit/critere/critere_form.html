@@ -86,17 +86,20 @@
         <!-- Compact Modal Header style -->
         <div class="modal-header border-bottom-0 pt-3 px-4 pb-0 justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'critere_list' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
+                <a href="{% url 'critere_list' %}"
+                    class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0"
+                    style="width: 32px !important; height: 32px !important; text-decoration: none;">
                     <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
                 </a>
                 <div class="rounded-lg d-flex align-items-center justify-content-center"
                     style="width: 36px; height: 36px; background-color: #e0e7ff; color: #4f46e5;">
-                    <i data-lucide="{% if form.instance.pk %}edit-3{% else %}plus-circle{% endif %}"
-                        ></i>
+                    <i data-lucide="{% if form.instance.pk %}edit-3{% else %}plus-circle{% endif %}"></i>
                 </div>
                 <div>
-                    <h5 class="modal-title font-weight-bold mb-0 text-dark" style="font-weight: 800 !important;">{% if form.instance.pk %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
-                    <p class=" mb-0" style="font-size: 0.75rem;">Détaillez les critères d'évaluation pour vos structures d'audit.</p>
+                    <h5 class="modal-title font-weight-bold mb-0 text-dark" style="font-weight: 800 !important;">{% if
+                        form.instance.pk %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
+                    <p class=" mb-0" style="font-size: 0.75rem;">Détaillez les critères d'évaluation pour vos structures
+                        d'audit.</p>
                 </div>
             </div>
         </div>
@@ -118,12 +121,13 @@
                     <label class="modern-label" for="id_name">Désignation du Critère <span
                             class="text-danger">*</span></label>
                     <div class="input-box">
-                        <div class="input-icon"><i data-lucide="tag" ></i></div>
+                        <div class="input-icon"><i data-lucide="tag"></i></div>
                         <input type="text" name="name" id="id_name" class="form-control-modern"
                             placeholder="Nom du critère..." value="{{ form.name.value|default:'' }}" required>
                     </div>
                     {% if form.name.errors %}
-                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
+                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors
+                        %}{{ error }}{% endfor %}</small>
                     {% endif %}
                 </div>
 
@@ -131,7 +135,7 @@
                 <div class="modern-input-group mb-4">
                     <label class="modern-label" for="id_chapitre_norme">Chapitre de Norme associé</label>
                     <div class="input-box">
-                        <div class="input-icon"><i data-lucide="bookmark" ></i></div>
+                        <div class="input-icon"><i data-lucide="bookmark"></i></div>
                         <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern">
                             {% for choice in form.chapitre_norme.field.choices %}
                             <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify
@@ -144,12 +148,11 @@
 
             <!-- Compact Footer -->
             <div class="modal-footer border-top-0 px-4 pb-3 pt-0 bg-transparent">
-                <button type="button"
-                    class="btn btn-white  font-weight-bold rounded-pill px-3 py-1 text-sm border"
+                <button type="button" class="btn btn-white  font-weight-bold rounded-pill px-3 py-1 text-sm border"
                     data-dismiss="modal">Annuler</button>
                 <button type="submit" class="btn btn-indigo text-white font-weight-bold rounded-pill px-4 shadow-sm"
                     id="ajaxSubmitBtn" style="min-height: 40px; font-size: 0.85rem;">
-                    <i data-lucide="save" class="mr-2" ></i>
+                    <i data-lucide="save" class="mr-2"></i>
                     {% if form.instance.pk %}Mettre à jour{% else %}Enregistrer{% endif %}
                 </button>
             </div>
@@ -162,7 +165,3 @@
     </div>
 </div>
 {% endblock %}
-
-
-
-

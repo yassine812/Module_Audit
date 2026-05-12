@@ -11,7 +11,102 @@
 
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
+  
+  /* Mobile Responsive Modal for Critere */
   @media (max-width: 768px) {
+    #critereModal.modal {
+      padding: 0 !important;
+    }
+
+    #critereModal .modal-dialog {
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    #critereModal .modal-content {
+      height: 100vh !important;
+      border-radius: 0 !important;
+    }
+
+    /* Compact modal body for mobile */
+    #critereModal .modal-body {
+      max-height: calc(100vh - 120px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 12px 16px 70px 16px !important;
+    }
+
+    /* Compact header */
+    #critereModal .modal-header {
+      padding: 12px 16px !important;
+    }
+
+    #critereModal .modal-title {
+      font-size: 1.1rem !important;
+    }
+
+    /* Compact tabs */
+    #critereModal .nav-pills {
+      padding: 4px !important;
+      margin-bottom: 12px !important;
+    }
+
+    #critereModal .nav-link {
+      padding: 6px 10px !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Compact form fields - minimal spacing */
+    #critereModal .form-group,
+    #critereModal .input-group {
+      margin-bottom: 4px !important;
+    }
+
+    #critereModal label {
+      margin-bottom: 2px !important;
+      font-size: 0.85rem !important;
+      line-height: 1.2 !important;
+    }
+
+    #critereModal .form-control {
+      padding: 6px 10px !important;
+      font-size: 14px !important;
+      height: 36px !important;
+      min-height: 36px !important;
+    }
+
+    #critereModal select.form-control {
+      padding-right: 30px !important;
+    }
+
+    /* Sous-Criteres tab - compact layout */
+    #critereModal #souscritere .d-flex.align-items-center.justify-content-between {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      margin-bottom: 12px !important;
+    }
+
+    #critereModal #souscritere h6 {
+      font-size: 0.95rem !important;
+      margin-bottom: 2px !important;
+    }
+
+    #critereModal #souscritere p {
+      font-size: 0.8rem !important;
+      line-height: 1.3 !important;
+      margin-bottom: 0 !important;
+    }
+
+    #critereModal #add-sous-critere {
+      width: 100% !important;
+      padding: 8px 12px !important;
+      font-size: 0.85rem !important;
+      justify-content: center !important;
+    }
+    
     /* Mobile Cards View */
     .mobile-cards-container {
       display: block !important;
@@ -72,10 +167,14 @@
   }
   
   @media (min-width: 768px) {
-    .desktop-table-container table td.col-form {
+    .desktop-table-container table td.col-form,
+    .desktop-table-container table td.col-type {
       white-space: normal;
       word-break: break-word;
       max-width: none;
+      min-width: 150px;
+    }
+    .desktop-table-container table td.col-form {
       min-width: 200px;
     }
   }
@@ -145,6 +244,16 @@
                <div class="critere-card-body">
                  <div><strong>Désignation:</strong> {{ critere.name }}</div>
                  <div><strong>Formulaire:</strong> {{ critere.formulaire.name|default:"-" }}</div>
+                 <div class="mt-2">
+                   <strong>Ciblage:</strong>
+                   <div class="d-flex flex-wrap gap-1 mt-1">
+                     {% for type in critere.type_audit.all %}
+                       <span class="badge bg-blue-50 text-blue-700 border border-blue-100">{{ type.name }}</span>
+                     {% empty %}
+                       <span class="text-muted italic">-</span>
+                     {% endfor %}
+                   </div>
+                 </div>
                </div>
 
                <div class="critere-card-actions">
@@ -166,6 +275,7 @@
                     <th class="ps-3 col-id text-center">ID</th>
                     <th class="col-name">Désignation du Critère</th>
                     <th class="col-chapitre">Chapitre de Norme</th>
+                    <th class="col-type">Type Audit</th>
                     <th class="col-form">Formulaire associé</th>
                     <th class="text-center col-actions">Actions</th>
                   </tr>
@@ -186,6 +296,17 @@
                       {% else %}
                           <span class="  italic">Aucun</span>
                       {% endif %}
+                    </td>
+                    <td class="col-type" data-label="Type Audit">
+                      <div class="d-flex flex-wrap gap-1">
+                        {% for type in critere.type_audit.all %}
+                          <span class="badge rounded-pill bg-blue-50 text-blue-700 px-2 py-1 border border-blue-100" style="font-size: 0.7rem;">
+                            {{ type.name }}
+                          </span>
+                        {% empty %}
+                          <span class="text-muted italic small">-</span>
+                        {% endfor %}
+                      </div>
                     </td>
                     <td class="col-form" data-label="Formulaire associé">
                       {% if critere.formulaire %}
@@ -296,6 +417,23 @@
 
 {% block extra_js %}
 <script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString()) {
+      document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('?page=')) {
+          const pageNum = href.split('=')[1];
+          const newParams = new URLSearchParams(window.location.search);
+          newParams.set('page', pageNum);
+          link.setAttribute('href', '?' + newParams.toString());
+        }
+      });
+    }
+  });
+</script>
+<script>
     function openCritereModal(url) {
         $('#modalBodyContent').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-indigo-600" role="status"></div><p class="mt-2 mb-0 text-xs font-weight-bold text-muted">Chargement...</p></div>');
         $('#critereModal').modal('show');
@@ -315,8 +453,13 @@
 
     function initModalBehaviors() {
         $('#critereModalForm').off('submit').on('submit', function(e) {
+            if ($(this).closest('#ajaxFormModal').length) return; // Handled by outer script
+
             e.preventDefault();
             const form = $(this);
+            const btn = form.find('button[type="submit"]');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Enregistrement...');
+
             $.ajax({
                 type:"POST",
                 url: form.attr('action'),
@@ -333,9 +476,21 @@
                             showConfirmButton: false
                         }).then(() => location.reload()); 
                     } else {
-                        $('#modalBodyContent').html(response);
-                        initModalBehaviors();
+                        const body = form.closest('.modal-content');
+                        if (body.length && typeof response === 'string' && response.includes('modal-header')) {
+                             body.html(response);
+                             if (typeof lucide !== 'undefined') lucide.createIcons();
+                             initModalBehaviors();
+                        } else {
+                             // Fallback or handle JSON errors
+                             Swal.fire({ icon: 'error', title: 'Erreur', text: "Vérifiez les champs du formulaire" });
+                             btn.prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i> Enregistrer');
+                        }
                     }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i> Enregistrer');
+                    Swal.fire({ icon: 'error', title: 'Erreur', text: "Erreur serveur" });
                 }
             });
         });

@@ -1,4 +1,4 @@
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import (
     ListView, CreateView, UpdateView,
     DeleteView, DetailView, View, TemplateView
@@ -1241,6 +1241,7 @@ class StartAuditView(LoginRequiredMixin, View):
             sujet=liste_audit.desc,
             auditeur=request.user,
             site=getattr(liste_audit, "site", None),
+            commentaire=request.POST.get("commentaire", ""),
             en_cours=True
         )
 
@@ -1533,6 +1534,7 @@ class FinishAuditView(LoginRequiredMixin, View):
                 sujet=liste_audit.desc,
                 auditeur=request.user,
                 site=getattr(liste_audit, "site", None),
+                commentaire=request.POST.get("commentaire", ""),
                 en_cours=False
             )
 

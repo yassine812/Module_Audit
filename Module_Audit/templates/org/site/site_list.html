@@ -51,7 +51,7 @@
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
             </a>
-            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1rem !important;">
+            <h3 class="card-title fw-bold header-text mb-0" style="font-size: 1.15rem !important;">
               Gestion des Sites
             </h3>
           </div>
@@ -182,7 +182,7 @@
 
 <!-- Main Forms Modal -->
 <div class="modal fade" id="siteModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 350px; margin: 1.75rem auto;" role="document">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px; width: 95%; margin: 1.75rem auto;" role="document">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
             <div id="modalBodyContent">
                 <div class="text-center py-3">
@@ -234,7 +234,6 @@
     }
 
     function initModalBehaviors() {
-        // Form submission logic remains here, but label parsing is now handled by the modal's internal script
         $('#siteModalForm').off('submit').on('submit', function(e) {
             e.preventDefault();
             const form = $(this);
@@ -246,7 +245,18 @@
                 success: function(response) {
                     if (response.success) {
                         $('#siteModal').modal('hide');
-                        location.reload(); 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message || 'Opération réussie',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            customClass: {
+                                popup: 'rounded-4 shadow-sm border-0'
+                            }
+                        }).then(() => {
+                            location.reload(); 
+                        });
                     } else {
                         $('#modalBodyContent').html(response);
                         initModalBehaviors();
