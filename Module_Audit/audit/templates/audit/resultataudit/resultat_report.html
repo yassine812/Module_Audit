@@ -4,7 +4,6 @@
 {% block title %}Rapport d'Audit - {{ resultat.sujet }}{% endblock %}
 
 {% block extra_css %}
-<!-- v19.0 - Zero-Margin Resolution -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     tailwind.config = {
@@ -18,26 +17,58 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-    .content-wrapper { padding: 0 !important; }
-    .report-body { font-family: 'Inter', sans-serif; background-color: #fcfcfc; }
+    .content-wrapper { padding: 0 !important; margin-top: 0 !important; min-height: 0 !important; }
+    .report-body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     
-    @media print {
-        .no-print, nav, footer, header, .sidebar, .navbar, [data-html2canvas-ignore] { display: none !important; }
-        body { background: white !important; margin: 0 !important; padding: 0 !important; }
-        #report-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        .report-paper { border: none !important; box-shadow: none !important; padding: 10mm !important; }
+    /* PDF Export Final Optimized Layout */
+    .pdf-export-wrapper {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        width: 210mm; /* FULL A4 WIDTH */
+        background: white;
+    }
+    .pdf-page {
+        width: 210mm;
+        min-height: 297mm;
+        background: white;
+        margin: 0;
+        padding: 6mm 8mm; /* Reduced Padding */
+        box-sizing: border-box;
+        overflow: hidden;
+        position: relative;
+    }
+    .pdf-content {
+        width: 194mm; /* Further Increased Usable Space */
+        max-width: 194mm;
+        margin: 0 auto;
+        box-sizing: border-box;
     }
 
-    #report-container { width: 1000px; margin: 0 auto; padding: 20px; box-sizing: border-box; overflow: visible !important; }
+    * { box-sizing: border-box; }
+
+    @media print {
+        .no-print, nav, footer, header, .sidebar, .navbar, [data-html2canvas-ignore] { display: none !important; }
+        body { background: white !important; padding: 0 !important; margin: 0 !important; }
+        .sc-row, .ev-crit-row, .ev-container, .just-gallery, .mb-8, .mt-8, .mb-12 { 
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
+    }
+
+    #report-container { width: 1250px; max-width: 98%; margin: 0 auto; padding: 0 20px 20px 20px; box-sizing: border-box; overflow: visible !important; }
     .report-paper { background: white; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); overflow: visible !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="report-body py-10 px-4">
+<div class="report-body pt-2 pb-10 px-4">
+
+    <!-- HIDDEN EXPORT CONTAINER -->
+    <div id="pdf-export-container" class="pdf-export-wrapper"></div>
 
     <!-- Actions -->
-    <div class="flex justify-end max-w-5xl mx-auto mb-4 no-print" data-html2canvas-ignore="true">
+    <div class="flex justify-end max-w-7xl mx-auto mb-4 no-print" data-html2canvas-ignore="true">
         <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
             <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
             <button id="downloadPdfBtn" onclick="generatePDF()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
@@ -45,33 +76,33 @@
         </div>
     </div>
 
-    <!-- THE CONTAINER -->
+    <!-- THE CONTAINER (SCREEN VIEW) -->
     <div id="report-container">
         <!-- Paper Document -->
-        <div class="report-paper p-8 md:p-12 text-black">
+        <div class="report-paper p-8 md:p-12 text-black" id="actual-paper-content">
             
             <!-- HEADER -->
-            <div class="w-full flex border-[3px] border-[#1e3a8a] mb-12 h-36 overflow-hidden bg-white shadow-sm">
-                <div class="w-[32%] border-r-[3px] border-[#1e3a8a] flex items-center justify-center p-8">
-                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-28 w-auto object-contain">
+            <div class="w-full flex border-[3px] border-[#93c5fd] mb-6 h-28 overflow-hidden bg-white shadow-sm" style="page-break-inside: avoid; break-inside: avoid;">
+                <div class="w-[12%] border-r-[3px] border-[#93c5fd] flex items-center justify-start pl-4 py-4">
+                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-12 w-auto object-contain">
                 </div>
-                <div class="w-[38%] bg-[#1e3a8a] text-white flex flex-col items-center justify-center text-center px-4 relative">
-                    <h1 class="font-black text-[34px] uppercase tracking-[0.25em] leading-[1.1] m-0 drop-shadow-md">Rapport<br>d'Audit</h1>
+                <div class="w-[76%] bg-[#93c5fd] text-[#1e3a8a] flex flex-col items-center justify-center text-center relative">
+                    <h1 class="font-black text-[28px] uppercase tracking-[0.2em] m-0">Rapport d'Audit</h1>
                 </div>
-                <div class="w-[30%] border-l-[1px] border-[#1e3a8a] flex flex-col bg-white">
-                    <div class="flex-1 border-b-[3px] border-[#1e3a8a] flex flex-col justify-center px-6">
-                        <span class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
-                        <span class="text-[16px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
+                <div class="w-[12%] border-l-[1px] border-[#93c5fd] flex flex-col bg-white">
+                    <div class="flex-1 border-b-[3px] border-[#93c5fd] flex flex-col justify-center px-3">
+                        <span class="text-[8px] font-black text-[#1e3a8a] uppercase tracking-widest">Date</span>
+                        <span class="text-[11px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
                     </div>
-                    <div class="flex-1 flex flex-col justify-center px-6">
-                        <span class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Auditeur</span>
-                        <span class="text-[16px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
+                    <div class="flex-1 flex flex-col justify-center px-3">
+                        <span class="text-[8px] font-black text-[#1e3a8a] uppercase tracking-widest">Auditeur</span>
+                        <span class="text-[11px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- SCORE GLOBAL -->
-            <div class="mb-8 flex items-center gap-6 bg-white border-2 border-[#1e3a8a] p-6 rounded-lg shadow-sm">
+            <div class="mb-8 flex items-center gap-6 bg-white border-2 border-[#93c5fd] p-6 rounded-lg shadow-sm" style="page-break-inside: avoid; break-inside: avoid;">
                 <div class="flex-1">
                     <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global</div>
                     <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
@@ -81,24 +112,24 @@
             </div>
 
             <!-- COMMENTAIRE -->
-            <div class="mb-8">
-                <div class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
-                <div class="border-2 border-[#1e3a8a] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
+            <div class="mb-8" style="page-break-inside: avoid; break-inside: avoid;">
+                <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
+                <div class="border-2 border-[#93c5fd] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
             </div>
 
             <!-- SYNTHESE -->
-            <div class="mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#1e3a8a]">
-                <div class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
+            <div class="mb-6 overflow-hidden rounded-lg shadow-sm border-2 border-[#93c5fd]" style="page-break-inside: avoid; break-inside: avoid;">
+                <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
-                    <div class="border-b-2 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                    <div class="border-b-2 md:border-r-2 border-[#93c5fd] p-6 min-h-[140px]">
                         <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Forts</h4>
                         <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_fort|default:"" }}</div>
                     </div>
-                    <div class="border-b-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                    <div class="border-b-2 border-[#93c5fd] p-6 min-h-[140px]">
                         <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Sensibles</h4>
                         <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_sensible|default:"" }}</div>
                     </div>
-                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#93c5fd] p-6 min-h-[140px]">
                         <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-rose-800">Risques</h4>
                         <div class="text-[14px] leading-relaxed text-rose-900 font-bold">{{ resultat.risque|default:"" }}</div>
                     </div>
@@ -109,97 +140,98 @@
                 </div>
             </div>
 
-            <!-- TABLE -->
-            <div class="mt-8 overflow-x-auto">
-                <table class="w-full border-collapse text-black text-[10px] md:text-[11px] border-2 border-black">
+            <!-- EVALUATION LIST (TABLE BASED) -->
+            <div class="mt-4">
+                <style>
+                    .audit-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; border: 2px solid #000; table-layout: fixed; }
+                    .audit-table thead { display: table-header-group; }
+                    .audit-table th { background: #93c5fd; color: #1e3a8a; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 15px; border: 1px solid #000; text-align: left; }
+                    
+                    /* Criteria Row */
+                    .critere-row { background: #f1f5f9; page-break-inside: avoid; break-inside: avoid; }
+                    .critere-row td { padding: 10px 15px; border: 1px solid #000; font-weight: 900; color: #1e3a8a; }
+                    
+                    /* Indivisible Group */
+                    .critere-group { page-break-inside: avoid; break-inside: avoid; display: table-row-group; }
+
+                    /* Sub-rows */
+                    .sc-row td { border: 1px solid #000; padding: 0; vertical-align: top; }
+                    .sc-meta-cell { text-align: center; color: #cbd5e1; font-weight: 900; padding-top: 15px !important; }
+                    .sc-score-cell { text-align: right; background: #f8fafc; padding: 12px !important; border: 1px solid #000; }
+                    .sc-score-val { display: block; font-weight: 900; color: #1e3a8a; font-size: 18px; }
+                    .sc-score-label { display: block; font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 2px; }
+                    
+                    .sc-sub-head { background: #93c5fd; color: #1e3a8a; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 15px; border-bottom: 1px solid #000; }
+                    .sc-sub-body { padding: 8px 15px 12px 15px; border-bottom: 1px solid #cbd5e1; }
+                    .sc-sub-body:last-child { border-bottom: none; }
+
+                    .txt-main { font-size: 12px; font-weight: 700; color: #1e293b; line-height: 1.4; }
+                    .txt-obs { font-size: 11px; color: #475569; font-style: italic; line-height: 1.4; }
+                    .just-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; width: 100%; break-inside: avoid; }
+                    .just-item { flex: 0 0 auto; width: 170px; max-width: 100%; break-inside: avoid; }
+                    .just-item img { max-width: 100%; height: auto; object-fit: contain; border-radius: 6px; border: 1.2px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: block; }
+                    .pdf-btn { width: 100%; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #fca5a5; background: #fff5f5; gap: 8px; }
+                    .no-data { color: #e2e8f0; font-size: 11px; font-weight: 500; }
+                </style>
+
+                <table class="audit-table">
                     <thead>
-                        <tr class="bg-[#1e3a8a] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-3 w-10">#</th>
-                            <th class="border border-black p-3 text-left uppercase">Critères &amp; Sous-Critères</th>
-                            <th class="border border-black p-3 text-left uppercase" style="width:22%">Observations</th>
-                            <th class="border border-black p-3 text-left uppercase" style="width:18%">Justificatifs</th>
-                            <th class="border border-black p-3 w-14 text-right">Score</th>
+                        <tr>
+                            <th style="width: 45px; text-align: center;">#</th>
+                            <th>Critères &amp; Évaluations</th>
+                            <th style="width: 85px; text-align: right;">Score</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for group in grouped_results %}
-                        {# Critère header row #}
-                        <tr class="bg-slate-100 font-black">
-                            <td class="border border-black p-3 text-center align-middle">{{ forloop.counter }}</td>
-                            <td class="border border-black p-3 uppercase align-middle" colspan="3">
-                                <span class="text-[#1e3a8a] mr-2">Critère :</span> {{ group.critere.text_ref }}
+                    {% for group in grouped_results %}
+                    <tbody class="critere-group">
+                        <tr class="critere-row">
+                            <td style="text-align: center;">{{ forloop.counter }}</td>
+                            <td style="text-transform: uppercase;">
+                                <span style="opacity: 0.6; margin-right: 8px; font-size: 10px;">Critère :</span>{{ group.critere.text_ref }}
                             </td>
-                            <td class="border border-black p-3 text-right align-middle text-blue-800">{{ group.score|floatformat:"-1" }}</td>
+                            <td style="text-align: right;">{{ group.score|floatformat:"-1" }}</td>
                         </tr>
-                        {# Sous-Critère rows #}
-                        {% for d in group.details %}
-                        <tr>
-                            <td class="border border-black p-2 text-center text-slate-300 align-top">•</td>
 
-                            {# Sous-critère name #}
-                            <td class="border border-black p-2 align-top">
-                                <div class="font-semibold text-slate-800 text-[12px]">
-                                    <span class="text-[9px] uppercase text-slate-400 font-black mr-1">Sous-Critère :</span>
-                                    {{ d.sous_critere }}
+                        {% for d in group.details %}
+                        <tr class="sc-row">
+                            <td class="sc-meta-cell">•</td>
+                            <td style="padding: 0;">
+                                <div class="sc-sub-head">Sous-Critère</div>
+                                <div class="sc-sub-body"><div class="txt-main">{{ d.sous_critere }}</div></div>
+                                <div class="sc-sub-head">Observations</div>
+                                <div class="sc-sub-body">
+                                    {% if d.commentaire and d.commentaire != 'None' %}<div class="txt-obs">{{ d.commentaire }}</div>{% else %}<div class="no-data">— Aucune observation</div>{% endif %}
+                                </div>
+                                <div class="sc-sub-head">Justificatifs</div>
+                                <div class="sc-sub-body">
+                                    {% with evs=d.evidences.all %}
+                                    {% if evs or d.justificatif or d.justificatif_bis %}
+                                        <div class="just-gallery">
+                                            {% for ev in evs %}
+                                                <div class="just-item"><a href="{{ ev.file.url }}" target="_blank"><img src="{{ ev.file.url }}" alt="Evidence"></a></div>
+                                            {% endfor %}
+                                            {% if d.justificatif %}<div class="just-item"><a href="{{ d.justificatif.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif PDF</span></a></div>{% endif %}
+                                            {% if d.justificatif_bis %}<div class="just-item"><a href="{{ d.justificatif_bis.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif Bis</span></a></div>{% endif %}
+                                        </div>
+                                    {% else %}<div class="no-data">— Aucun justificatif fourni</div>{% endif %}
+                                    {% endwith %}
                                 </div>
                             </td>
-
-                            {# Observations / Commentaire #}
-                            <td class="border border-black p-2 align-top">
-                                {% if d.commentaire and d.commentaire != 'None' %}
-                                    <div class="text-[11px] text-slate-700 italic leading-relaxed border-l-2 border-blue-300 pl-2">{{ d.commentaire }}</div>
-                                {% else %}
-                                    <span class="text-slate-300 text-[10px]">—</span>
-                                {% endif %}
-                            </td>
-
-                            {# Justificatifs (thumbnails) #}
-                            <td class="border border-black p-2 align-top">
-                                {% with evs=d.evidences.all %}
-                                {% if evs or d.justificatif or d.justificatif_bis %}
-                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                                        {% for ev in evs %}
-                                            <a href="{{ ev.file.url }}" target="_blank" title="Voir le fichier">
-                                                {% if ev.file.name|lower|slice:"-4:" == ".pdf" %}
-                                                    <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid #fca5a5;background:#fff5f5;">
-                                                        <span style="font-size:8px;font-weight:900;color:#ef4444;">PDF</span>
-                                                    </div>
-                                                {% else %}
-                                                    <img src="{{ ev.file.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif">
-                                                {% endif %}
-                                            </a>
-                                        {% endfor %}
-                                        {% if d.justificatif %}
-                                            <a href="{{ d.justificatif.url }}" target="_blank">
-                                                <img src="{{ d.justificatif.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif">
-                                            </a>
-                                        {% endif %}
-                                        {% if d.justificatif_bis %}
-                                            <a href="{{ d.justificatif_bis.url }}" target="_blank">
-                                                <img src="{{ d.justificatif_bis.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;" alt="Justificatif bis">
-                                            </a>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <span class="text-slate-300 text-[10px]">—</span>
-                                {% endif %}
-                                {% endwith %}
-                            </td>
-
-                            {# Score #}
-                            <td class="border border-black p-2 text-right font-black align-top tabular-nums bg-slate-50">
-                                {% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}
+                            <td class="sc-score-cell">
+                                <span class="sc-score-val">{{ d.value|floatformat:"-1" }}</span>
                             </td>
                         </tr>
                         {% endfor %}
-                        {% endfor %}
                     </tbody>
+                    {% endfor %}
                 </table>
+            </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Email Modal -->
 <div id="emailModal" class="fixed inset-0 z-[100] hidden no-print">
     <div class="flex items-center justify-center min-h-screen p-4 text-center">
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEmailModal()"></div>
@@ -207,7 +239,7 @@
             <h3 class="font-black text-slate-900 mb-4">Envoyer le rapport</h3>
             <div class="space-y-4">
                 <input type="email" id="email_to" placeholder="Email" class="w-full px-3 py-2 border rounded-lg">
-                <textarea id="email_message" rows="4" class="w-full px-3 py-2 border rounded-lg text-sm">Veuillez trouver ci-joint le rapport.</textarea>
+                <textarea id="email_message" rows="4" class="w-full px-3 py-2 border rounded-lg text-sm">Veuillez trouver ci-joint le rapport d'audit.</textarea>
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeEmailModal()" class="px-4 py-2 font-bold text-slate-600">Annuler</button>
@@ -222,68 +254,87 @@
     function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
 
     function generatePDF() {
-        const element = document.getElementById('report-container');
         const btn = document.getElementById('downloadPdfBtn');
+        const exportContainer = document.getElementById('pdf-export-container');
+        const contentToClone = document.getElementById('actual-paper-content');
+
         btn.disabled = true;
+        btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i>Export...';
+        lucide.createIcons();
 
-        window.scrollTo(0,0);
+        // 1. Prepare Shadow DOM (Full A4 210mm Wrapper)
+        exportContainer.innerHTML = '';
+        const pdfPage = document.createElement('div');
+        pdfPage.className = 'pdf-page';
         
-        // v19.0 - THE ZERO-MARGIN RESOLUTION
-        // This is the final strategy to force the report to stretch to 100% of the paper width.
-        const wrapper = document.createElement('div');
-        wrapper.style.backgroundColor = 'white';
-        wrapper.style.padding = '80px 0 0 0'; // Header safety buffer only
+        const innerContent = document.createElement('div');
+        innerContent.className = 'pdf-content';
         
-        element.parentNode.insertBefore(wrapper, element);
-        wrapper.appendChild(element);
+        const clone = contentToClone.cloneNode(true);
+        // Optimize for Full Page Usage
+        clone.style.padding = '0';
+        clone.style.border = 'none';
+        clone.style.boxShadow = 'none';
+        clone.style.width = '100%'; 
+        innerContent.appendChild(clone);
+        pdfPage.appendChild(innerContent);
+        exportContainer.appendChild(pdfPage);
 
-        setTimeout(() => {
-            const opt = {
-                margin: 0, // NO MARGINS - This forces the 1000px content to occupy the entire A4 sheet.
-                filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2.5, // Even higher resolution
-                    useCORS: true,
-                    logging: false,
-                    scrollY: 0,
-                    scrollX: 0
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+        // 2. Fast HD Configuration (A4 Portrait)
+        const opt = {
+            margin: [3, 3, 3, 3],
+            filename: 'Rapport_Audit_Optimise_{{ resultat.id }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true,
+                logging: false,
+                scrollY: 0,
+                scrollX: 0
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { 
+                mode: ['css', 'legacy'],
+                avoid: ['.critere-group', '.sc-row', '.just-gallery']
+            } 
+        };
 
-            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
-                const pages = pdf.internal.getNumberOfPages();
-                for (let i = pages; i > 1; i--) { pdf.deletePage(i); }
-            }).save().then(() => {
-                wrapper.parentNode.insertBefore(element, wrapper);
-                wrapper.parentNode.removeChild(wrapper);
-                btn.disabled = false;
-            }).catch(() => {
-                wrapper.parentNode.insertBefore(element, wrapper);
-                wrapper.parentNode.removeChild(wrapper);
-                btn.disabled = false;
-            });
-        }, 300);
+        // 3. Execution
+        html2pdf().set(opt).from(pdfPage).save().then(() => {
+            exportContainer.innerHTML = '';
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="file-down" class="w-5 h-5"></i>';
+            lucide.createIcons();
+        });
     }
 
     function sendEmail() {
         const btn = document.getElementById('sendEmailBtn');
         const emailTo = document.getElementById('email_to').value;
         if (!emailTo) return alert("Email requis");
-        const element = document.getElementById('report-container');
+        const element = document.getElementById('actual-paper-content');
+        
+        btn.disabled = true;
         const opt = {
+            margin: [10, 10, 10, 10],
             html2canvas: { scale: 1.5, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4' }
         };
+        
         html2pdf().set(opt).from(element).outputPdf('datauristring').then(pdfBase64 => {
             fetch('{% url "resultat_send_email" resultat.id %}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify({ email_to: emailTo, pdf_data: pdfBase64 })
-            }).then(() => { closeEmailModal(); alert("Envoyé !"); });
+            }).then(() => { 
+                closeEmailModal(); 
+                alert("Envoyé !"); 
+                btn.disabled = false;
+            });
         });
     }
+    
     lucide.createIcons();
 </script>
 {% endblock %}
