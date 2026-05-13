@@ -1562,12 +1562,11 @@ class ResultatAuditDetailView(LoginRequiredMixin, DetailView):
                     'name': crit_name,
                     'chapitre': d.chapitre_norme or "",
                     'details': [],
-                    'percentages': []
+                    'values': []
                 }
             groups[crit_name]['details'].append(d)
             if d.value >= 0: # Non N/A
-                perc = d.value / d.value_max if d.value_max > 0 else 0
-                groups[crit_name]['percentages'].append(perc)
+                groups[crit_name]['values'].append(d.value)
 
         # Finalize grouping list with category scores
         grouped_results = []
@@ -1893,23 +1892,6 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     template_name = "audit/resultataudit/resultat_report.html"
     context_object_name = "resultat"
 
-class ResultatAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
-    model = ResultatAudit
-    success_url = reverse_lazy("resultat_list")
-
-    def form_valid(self, form):
-        try:
-            self.object = self.get_object()
-            self.object.delete()
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': "Résultat d'audit supprimé avec succès."})
-            return redirect(self.success_url)
-        except ProtectedError:
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': "Impossible de supprimer car des données dépendantes existent."}, status=400)
-            return redirect(self.success_url)
-
-
     def get_queryset(self):
         qs = ResultatAudit.objects.select_related("audit", "auditeur")
         if self.request.user.is_superuser:
@@ -1974,6 +1956,25 @@ class ResultatAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
         context["ps_count"] = ps_count
         context["e_count"] = e_count
         return context
+
+
+class ResultatAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+    model = ResultatAudit
+    success_url = reverse_lazy("resultat_list")
+
+    def form_valid(self, form):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': "Résultat d'audit supprimé avec succès."})
+            return redirect(self.success_url)
+        except ProtectedError:
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': "Impossible de supprimer car des données dépendantes existent."}, status=400)
+            return redirect(self.success_url)
+
+
 
 # =====================================================
 # USER MANAGEMENT

@@ -28,6 +28,9 @@ export const API_PATHS = {
   LISTE_AUDIT: '/audit/api/liste-audit/',
   CRITERES: '/audit/api/criteres/',
   RESULTATS: '/audit/api/resultat-audit/',
+  RESULTAT_DETAIL: (id: any) => `/audit/api/resultat-audit/${id}/`,
+  RESULTAT_FINISH: (id: any) => `/audit/api/resultat-audit/${id}/finish/`,
+  UPDATE_DETAIL: (id: any) => `/audit/api/resultat-detail/${id}/update/`,
   CHAPITRES: '/audit/api/chapitre-norme/',
   SOUS_CRITERES: '/audit/api/sous-criteres/',
   COTATION: '/audit/api/cotation/',
@@ -51,6 +54,7 @@ export const API_PATHS = {
   ACTIVITIES: '/audit/api/activities/',
   TEXT_REFS: '/audit/api/textref/',
   FORMULAIRES: '/audit/api/formulaire-audit/',
+  START_AUDIT: (id: any) => `/audit/api/liste-audit/${id}/start/`,
   GET_STRUCTURE: '/audit/get-structure/',
   GET_FORM_STRUCTURE: '/audit/get-formulaire-structure/',
 };

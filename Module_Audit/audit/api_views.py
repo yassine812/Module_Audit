@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, transaction
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -6,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 import json
-from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere
+from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -1347,3 +1348,306 @@ class TypeCotationDetailAPIView(View):
             return JsonResponse({'status': 'success', 'message': 'Deleted'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ListeAuditStartAPIView(View):
+    @transaction.atomic
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        liste_audit = get_object_or_404(ListeAudit, pk=pk)
+
+        # Permission check
+        if not request.user.is_superuser and not liste_audit.affectation.filter(pk=request.user.pk).exists():
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
+        # Prevent duplicate start
+        existing = ResultatAudit.objects.filter(audit=liste_audit).first()
+        if existing:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Audit already started',
+                'resultat_id': existing.pk
+            })
+
+        # Extract commentaire
+        try:
+            data = json.loads(request.body)
+            commentaire = data.get('commentaire', '')
+        except:
+            commentaire = request.POST.get('commentaire', '')
+
+        # Create ResultatAudit
+        resultat = ResultatAudit.objects.create(
+            ref_audit=liste_audit.pk,
+            audit=liste_audit,
+            users=str(request.user),
+            sujet=liste_audit.desc,
+            auditeur=request.user,
+            site=getattr(liste_audit, "site", None),
+            commentaire=commentaire,
+            en_cours=True
+        )
+
+        # Generate detail rows
+        formulaire = liste_audit.formulaire_audit
+        if not formulaire:
+            return JsonResponse({"status": "error", "message": "Aucun formulaire associé à cet audit"}, status=400)
+
+        details = []
+        fscs = formulaire.formulairesouscritere_set.select_related(
+            "sous_critere__critere",
+            "sous_critere__critere__chapitre_norme",
+            "sous_critere__critere__chapitre_norme__text_ref",
+        ).order_by('ordre')
+
+        if fscs.exists():
+            for fs in fscs:
+                sc = fs.sous_critere
+                if not sc: continue
+                details.append(
+                    DetailResultatAudit(
+                        resultat_audit=resultat,
+                        critere=sc.critere.name if sc.critere else "",
+                        norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                        sous_critere=sc.content,
+                        chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                        text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
+                        value=0,
+                        value_max=getattr(sc, 'valeur_max', 1),
+                        cotation="",
+                        cotation_option=[],
+                    )
+                )
+        else:
+            for crit in formulaire.criteres.all():
+                for sc in crit.souscritere_set.all():
+                    details.append(
+                        DetailResultatAudit(
+                            resultat_audit=resultat,
+                            critere=crit.name,
+                            norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                            value=0,
+                            value_max=1,
+                            cotation="",
+                            cotation_option=[],
+                        )
+                    )
+
+        if details:
+            DetailResultatAudit.objects.bulk_create(details)
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Audit started successfully',
+            'resultat_id': resultat.pk
+        })
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResultatAuditDetailAPIView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        # Check permissions
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        details = resultat.detailresultataudit_set.all().order_by('id')
+        
+        details_data = []
+        for d in details:
+            # Get cotation options for the sous-critere if available
+            # This logic mimics the web version's way of finding cotations
+            cotations = []
+            # We search for the SousCritere to get its type_cotation
+            try:
+                # We have to find the original SousCritere. 
+                # Since DetailResultatAudit stores content, we match by content and ResultatAudit's form
+                sc = SousCritere.objects.filter(content=d.sous_critere).first()
+                if sc and sc.type_cotation:
+                    cots = Cotation.objects.filter(type_cotation=sc.type_cotation)
+                    for c in cots:
+                        cotations.append({
+                            'id': c.id,
+                            'code': c.code,
+                            'content': c.content,
+                            'valeur': c.valeur
+                        })
+                
+                # Fetch Real Preuve Attendue
+                preuves_att = []
+                if sc:
+                    for pa in sc.preuve_attendu.all():
+                        preuves_att.append(f"{pa.name} ({pa.type_preuve.name if pa.type_preuve else ''})")
+                preuve_text = " • ".join(preuves_att) if preuves_att else "Aucune preuve spécifiée"
+            except:
+                preuve_text = "Aucune preuve spécifiée"
+                pass
+
+            details_data.append({
+                'id': d.id,
+                'critere': d.critere,
+                'norme': d.norme,
+                'sous_critere': d.sous_critere,
+                'chapitre_norme': d.chapitre_norme,
+                'text_ref_url': d.text_ref_url,
+                'commentaire': d.commentaire,
+                'cotation': d.cotation,
+                'code': d.code,
+                'value': d.value,
+                'value_max': d.value_max,
+                'cotations': cotations,
+                'preuve_attendu': preuve_text,
+                'evidences': [{'id': e.id, 'url': e.file.url} for e in d.evidences.all()]
+            })
+            
+        data = {
+            'id': resultat.id,
+            'sujet': resultat.sujet,
+            'date_audit': resultat.date_audit,
+            'score_audit': float(resultat.score_audit),
+            'auditeur': resultat.auditeur.get_full_name() or resultat.auditeur.username,
+            'participants': ", ".join(filter(None, [
+                ", ".join([u.get_full_name() or u.username for u in resultat.audit.participants.all()]),
+                resultat.audit.participants_externes
+            ])) or "Aucun",
+            'site': resultat.site.name if resultat.site else None,
+            'en_cours': resultat.en_cours,
+            'commentaire': resultat.commentaire,
+            'point_fort': resultat.point_fort,
+            'point_sensible': resultat.point_sensible,
+            'risque': resultat.risque,
+            'opportunite': resultat.opportunite,
+            'details': details_data
+        }
+        
+        return JsonResponse({'status': 'success', 'data': data})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DetailResultatAuditUpdateAPIView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        detail = get_object_or_404(DetailResultatAudit, pk=pk)
+        resultat = detail.resultat_audit
+
+        if not resultat.en_cours:
+            return JsonResponse({'status': 'error', 'message': 'Audit is closed'}, status=403)
+
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
+        try:
+            # Handle both JSON and Form data (for file uploads)
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+
+            if "commentaire" in data:
+                detail.commentaire = data.get("commentaire")
+            if "cotation" in data:
+                detail.cotation = data.get("cotation")
+            if "code" in data:
+                detail.code = data.get("code")
+            if "value" in data:
+                try:
+                    detail.value = float(data.get("value", 0))
+                except (ValueError, TypeError):
+                    pass
+
+            if "justificatif" in request.FILES:
+                files = request.FILES.getlist("justificatif")
+                for f in files:
+                    EvidenceAudit.objects.create(detail=detail, file=f)
+            
+            if data.get("delete_justificatif") == "true":
+                EvidenceAudit.objects.filter(detail=detail).delete()
+                detail.justificatif = None
+
+            detail.save()
+            resultat.recalculate_score()
+
+            return JsonResponse({
+                "status": "success",
+                "score": float(resultat.score_audit),
+                "detail_id": detail.id,
+                "evidences": [{'id': e.id, 'url': e.file.url} for e in detail.evidences.all()]
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResultatAuditFinishAPIView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        import json
+        try:
+            data = json.loads(request.body)
+        except:
+            data = request.POST
+
+        resultat.point_fort = data.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = data.get('point_sensible', resultat.point_sensible)
+        resultat.risque = data.get('risque', resultat.risque)
+        resultat.opportunite = data.get('opportunite', resultat.opportunite)
+        
+        resultat.en_cours = False
+        resultat.recalculate_score()
+        resultat.save()
+        
+        return JsonResponse({'status': 'success', 'message': 'Audit finished'})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResultatAuditAISuggestionsAPIView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+        
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        details = resultat.detailresultataudit_set.all()
+        
+        # Simple heuristic analysis (copying logic from web view)
+        criteria_performance = {}
+        for d in details:
+            c_name = d.critere if d.critere else "Général"
+            if c_name not in criteria_performance:
+                criteria_performance[c_name] = {'total': 0, 'count': 0}
+            if d.value is not None and d.value >= 0:
+                criteria_performance[c_name]['total'] += d.value
+                criteria_performance[c_name]['count'] += 1
+
+        ranked_criteria = []
+        for name, stats in criteria_performance.items():
+            if stats['count'] > 0:
+                ranked_criteria.append({'name': name, 'avg': stats['total'] / stats['count']})
+        
+        ranked_criteria.sort(key=lambda x: x['avg'], reverse=True)
+        top_criteres = [c['name'] for c in ranked_criteria if c['avg'] >= 0.8][:2]
+        low_criteres = [c['name'] for c in ranked_criteria if c['avg'] < 0.5][:2]
+
+        pf_text = "Maîtrise démontrée sur : " + ", ".join(top_criteres) if top_criteres else "Conformité générale correcte."
+        ps_text = "Points de vigilance sur les critères intermédiaires."
+        risk_text = "Écarts identifiés sur : " + ", ".join(low_criteres) if low_criteres else "Aucun risque majeur immédiat."
+        opp_text = "Continuer la démarche d'amélioration continue."
+
+        return JsonResponse({
+            "point_fort": pf_text,
+            "point_sensible": ps_text,
+            "risque": risk_text,
+            "opportunite": opp_text
+        })

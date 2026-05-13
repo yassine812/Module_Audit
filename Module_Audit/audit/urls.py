@@ -8,7 +8,9 @@ from .api_views import (
     SousCritereDetailAPIView, FormulaireAuditListAPIView, FormulaireAuditDetailAPIView, 
     FormulaireAuditCopyAPIView,    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
     SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView, TextRefDetailAPIView, 
-    ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView
+    ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView, ListeAuditStartAPIView,
+    ResultatAuditDetailAPIView, DetailResultatAuditUpdateAPIView, ResultatAuditFinishAPIView,
+    ResultatAuditAISuggestionsAPIView
 )
 from .views import (
     UserListView, UserCreateView, 
@@ -187,9 +189,13 @@ urlpatterns = [
     
     path("api/liste-audit/", ListeAuditListAPIView.as_view(), name="api_liste_audit_list"),
     path("api/liste-audit/<int:pk>/", ListeAuditListAPIView.as_view(), name="api_liste_audit_detail"),
+    path("api/liste-audit/<int:pk>/start/", ListeAuditStartAPIView.as_view(), name="api_liste_audit_start"),
     
     path("api/resultat-audit/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_list"),
-    path("api/resultat-audit/<int:pk>/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_detail"),
+    path("api/resultat-audit/<int:pk>/", ResultatAuditDetailAPIView.as_view(), name="api_resultat_audit_detail"),
+    path("api/resultat-audit/<int:pk>/finish/", ResultatAuditFinishAPIView.as_view(), name="api_resultat_audit_finish"),
+    path("api/resultat-audit/<int:pk>/ai-suggestions/", ResultatAuditAISuggestionsAPIView.as_view(), name="api_resultat_audit_suggestions"),
+    path("api/resultat-detail/<int:pk>/update/", DetailResultatAuditUpdateAPIView.as_view(), name="api_resultat_detail_update"),
     
     path("api/type-preuve/", TypePreuveListAPIView.as_view(), name="api_type_preuve_list"),
     path("api/type-preuve/<int:pk>/", TypePreuveListAPIView.as_view(), name="api_type_preuve_detail"),

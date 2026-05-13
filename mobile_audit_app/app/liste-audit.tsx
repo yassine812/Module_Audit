@@ -12,6 +12,9 @@ import {
   Alert,
   Modal,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
@@ -30,6 +33,10 @@ const ListeAuditScreen = () => {
   const [filter, setFilter] = useState('Tous');
   const [notifCount, setNotifCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [startModalVisible, setStartModalVisible] = useState(false);
+  const [selectedAuditId, setSelectedAuditId] = useState(null);
+  const [auditCommentaire, setAuditCommentaire] = useState('');
+  const [starting, setStarting] = useState(false);
   const { logout } = useAuth();
 
   const fetchData = async () => {
@@ -72,6 +79,40 @@ const ListeAuditScreen = () => {
     );
   };
 
+  const handleStartAudit = (auditId) => {
+    setSelectedAuditId(auditId);
+    setAuditCommentaire('');
+    setStartModalVisible(true);
+  };
+
+  const submitStartAudit = async () => {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const res = await api.post(API_PATHS.START_AUDIT(selectedAuditId), {
+        commentaire: auditCommentaire
+      });
+      
+      if (res.data.status === 'success') {
+        setStartModalVisible(false);
+        // After starting, we navigate to the execution screen
+        // The API returns the resultat_id
+        router.push({ 
+          pathname: '/audit-form', 
+          params: { id: res.data.resultat_id } 
+        });
+        fetchData(); // Refresh list
+      } else {
+        Alert.alert('Erreur', res.data.message || "Échec du démarrage de l'audit");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', "Une erreur est survenue lors du démarrage");
+    } finally {
+      setStarting(false);
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.tableHeader}>
       <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>N°</Text></View>
@@ -105,7 +146,10 @@ const ListeAuditScreen = () => {
         </View>
         <View style={[styles.cell, { width: 85, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
             {isTermine ? (
-                <TouchableOpacity style={styles.rapportBtn}>
+                <TouchableOpacity 
+                    style={styles.rapportBtn}
+                    onPress={() => router.push({ pathname: '/report', params: { id: item.resultat_id || item.id } })}
+                >
                     <Text style={styles.rapportBtnText}>Rapport</Text>
                     <MaterialCommunityIcons name="file-document-outline" size={10} color="#64748b" />
                 </TouchableOpacity>
@@ -117,10 +161,10 @@ const ListeAuditScreen = () => {
             ) : (
                 <TouchableOpacity 
                   style={[styles.continuerBtn, { backgroundColor: '#22c55e' }]} 
-                  onPress={() => router.push({ pathname: '/audit-schedule', params: { id: item.id } })}
+                  onPress={() => handleStartAudit(item.id)}
                 >
-                    <Text style={styles.continuerBtnText}>Modifier</Text>
-                    <Ionicons name="create-outline" size={10} color="#fff" />
+                    <Text style={styles.continuerBtnText}>Démarrer</Text>
+                    <Ionicons name="play" size={10} color="#fff" />
                 </TouchableOpacity>
             )}
             <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => Alert.alert('Action', 'Options supplémentaires pour l\'audit #' + item.id)}>
@@ -184,6 +228,70 @@ const ListeAuditScreen = () => {
             </View>
           </View>
         </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Start Audit Context Modal */}
+      <Modal visible={startModalVisible} transparent animationType="slide" onRequestClose={() => setStartModalVisible(false)}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.startModalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.startModalContainer}>
+                  <View style={styles.startModalHeader}>
+                    <Text style={styles.startModalTitle}>Démarrer l'Audit</Text>
+                    <TouchableOpacity onPress={() => setStartModalVisible(false)}>
+                      <Ionicons name="close" size={24} color="#64748b" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.startModalBody}>
+                    <Text style={styles.startModalLabel}>Contexte de l'audit (Optionnel)</Text>
+                    <TextInput
+                      style={styles.startModalInput}
+                      placeholder="Ex: Audit de routine, suivi de non-conformité..."
+                      multiline
+                      numberOfLines={4}
+                      value={auditCommentaire}
+                      onChangeText={setAuditCommentaire}
+                      placeholderTextColor="#94a3b8"
+                      blurOnSubmit={true}
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                    <Text style={styles.startModalHelp}>
+                      Ce commentaire sera affiché dans l'entête du rapport final.
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.startModalFooter}>
+                    <TouchableOpacity 
+                      style={styles.startModalCancelBtn} 
+                      onPress={() => setStartModalVisible(false)}
+                    >
+                      <Text style={styles.startModalCancelText}>Annuler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.startModalSubmitBtn, starting && { opacity: 0.7 }]} 
+                      onPress={submitStartAudit}
+                      disabled={starting}
+                    >
+                      {starting ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <>
+                          <Text style={styles.startModalSubmitText}>Démarrer</Text>
+                          <Ionicons name="play-circle" size={18} color="#fff" style={{ marginLeft: 8 }} />
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       <View style={styles.searchSection}>
@@ -287,6 +395,21 @@ const styles = StyleSheet.create({
   continuerBtnText: { color: '#fff', fontSize: 6, fontWeight: '700', marginRight: 2 },
   
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
+  
+  // Start Modal Styles
+  startModalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  startModalContainer: { backgroundColor: '#fff', borderRadius: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10, overflow: 'hidden' },
+  startModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  startModalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
+  startModalBody: { padding: 20 },
+  startModalLabel: { fontSize: 14, fontWeight: '600', color: '#64748b', marginBottom: 10 },
+  startModalInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 12, fontSize: 14, color: '#1e293b', minHeight: 100, textAlignVertical: 'top' },
+  startModalHelp: { fontSize: 11, color: '#94a3b8', marginTop: 8, fontStyle: 'italic' },
+  startModalFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', gap: 12 },
+  startModalCancelBtn: { paddingVertical: 10, paddingHorizontal: 16 },
+  startModalCancelText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
+  startModalSubmitBtn: { backgroundColor: '#22c55e', flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, shadowColor: '#22c55e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  startModalSubmitText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
 
 export default ListeAuditScreen;
