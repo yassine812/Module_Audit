@@ -357,10 +357,11 @@
                                 <td class="sc-meta-cell">•</td>
                                 <td style="padding: 0;">
                                     <div class="sc-sub-body"><div class="txt-main">{{ d.sous_critere }}</div></div>
-                                    {% if d.commentaire and d.commentaire != 'None' %}
+                                    {% if d.commentaire and d.commentaire != 'None' and d.commentaire != '' %}
                                     <div class="sc-sub-head">Observations</div>
                                     <div class="sc-sub-body"><div class="txt-obs">{{ d.commentaire }}</div></div>
                                     {% endif %}
+
                                     {% with evs=d.evidences.all %}
                                     {% if evs or d.justificatif or d.justificatif_bis %}
                                     <div class="sc-sub-head">Justificatifs</div>
