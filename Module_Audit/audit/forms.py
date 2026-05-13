@@ -91,20 +91,24 @@ class CritereForm(forms.ModelForm):
 class SousCritereForm(forms.ModelForm):
     class Meta:
         model = SousCritere
-        fields = ['content', 'critere', 'type_cotation', 'reaction', 'type_audit', 'preuve_attendu']
+        fields = ['content', 'type_cotation', 'reaction', 'preuve_attendu']
         widgets = {
             'content': forms.Textarea(attrs={'class': 'custom-input', 'rows': 3, 'placeholder': 'Contenu du sous-critère...'}),
-            'critere': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_cotation': forms.Select(attrs={'class': 'custom-input form-select'}),
             'reaction': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2}),
-            'type_audit': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
             'preuve_attendu': forms.SelectMultiple(attrs={'class': 'custom-input select2-modal', 'multiple': 'multiple'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['reaction', 'preuve_attendu', 'type_cotation']:
+            if field in self.fields:
+                self.fields[field].required = False
 
 class SousCritereStandaloneForm(forms.ModelForm):
     class Meta:
         model = SousCritere
-        fields = ['content', 'critere', 'type_cotation', 'reaction', 'type_audit', 'preuve_attendu']
+        fields = ['content', 'critere', 'type_cotation', 'reaction', 'preuve_attendu']
         widgets = {
             'content': forms.Textarea(attrs={'class': 'custom-input', 'rows': 3}),
             'reaction': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2}),

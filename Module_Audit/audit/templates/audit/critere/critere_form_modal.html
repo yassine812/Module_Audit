@@ -28,198 +28,65 @@
         </div>
         {% endif %}
 
-        <!-- TABS BAR -->
-        <ul class="nav nav-pills mb-4 bg-light p-1 rounded-pill d-inline-flex w-100" id="critere-tabs" role="tablist">
-            <li class="nav-item flex-fill text-center" role="presentation">
-                <a class="nav-link active rounded-pill px-4 py-2 fw-bold d-flex align-items-center justify-content-center gap-2"
-                    id="general-tab" data-toggle="pill" href="#general" role="tab" aria-controls="general"
-                    aria-selected="true" style="font-size: 0.9rem;">
-                    <i data-lucide="info" class="w-4 h-4"></i> Général
-                </a>
-            </li>
-            <li class="nav-item flex-fill text-center" role="presentation">
-                <a class="nav-link rounded-pill px-4 py-2 fw-bold d-flex align-items-center justify-content-center gap-2"
-                    id="souscriteres-tab" data-toggle="pill" href="#souscriteres" role="tab"
-                    aria-controls="souscriteres" aria-selected="false" style="font-size: 0.9rem;">
-                    <i data-lucide="layers" class="w-4 h-4"></i> Sous-Critères
-                </a>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="critere-tabs-content">
-            <!-- TAB: GENERAL -->
-            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
-                <div class="row g-4">
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label class="form-label d-flex align-items-center gap-2">
-                                <i data-lucide="type" class="w-4 h-4 text-primary"></i> Désignation du Critère
-                            </label>
-                            <input type="text" name="name" id="id_name" class="form-control-modern w-100"
-                                placeholder="Ex: Management de la Qualité..." value="{{ form.name.value|default:'' }}" required autofocus>
-                        </div>
-                    </div>
-                    <div class="col-12" id="chapitre-norme-container">
-                        <div class="form-group">
-                            <label class="form-label d-flex align-items-center gap-2">
-                                <i data-lucide="bookmark" class="w-4 h-4 text-primary"></i> Chapitre de Norme
-                            </label>
-                            <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern w-100 select2-modal">
-                                {% for choice in form.chapitre_norme.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0|slugify == form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label class="form-label d-flex align-items-center gap-2">
-                                <i data-lucide="crosshair" class="w-4 h-4 text-primary"></i> Ciblage (Type Audit) [VERIFIED]
-                            </label>
-                            <select name="ciblage" id="id_ciblage" class="form-control-modern w-100 select2-modal">
-                                <option value="">Sélectionnez...</option>
-                                {% if audit_types %}
-                                    {% for ta in audit_types %}
-                                        <option value="{{ ta.id }}" 
-                                            {% if ta.id|slugify == form.ciblage.value|slugify or ta.id|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
-                                            {{ ta.name }}
-                                        </option>
-                                    {% endfor %}
-                                {% else %}
-                                    {% for choice in form.ciblage.field.choices %}
-                                        {% if choice.0 %}
-                                            <option value="{{ choice.0 }}" 
-                                                {% if choice.0|slugify == form.ciblage.value|slugify or choice.0|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
-                                                {{ choice.1 }}
-                                            </option>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label class="form-label d-flex align-items-center gap-2">
-                                <i data-lucide="clipboard-list" class="w-4 h-4 text-primary"></i> Formulaire
-                            </label>
-                            <select name="formulaire" class="form-control-modern w-100 select2-modal">
-                                {% for choice in form.formulaire.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0|slugify == form.formulaire.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="form-group">
+                    <label class="form-label d-flex align-items-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4 text-primary"></i> Désignation du Critère
+                    </label>
+                    <input type="text" name="name" id="id_name" class="form-control-modern w-100"
+                        placeholder="Ex: Management de la Qualité..." value="{{ form.name.value|default:'' }}" required autofocus>
                 </div>
             </div>
-
-            <!-- TAB: SOUS-CRITÈRES -->
-            <div class="tab-pane fade" id="souscriteres" role="tabpanel" aria-labelledby="souscriteres-tab">
-                <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-                    <h6 class="mb-0 fw-bold d-flex align-items-center gap-2" style="font-size: 0.9rem;">
-                        <i data-lucide="list-checks" class="text-primary w-4 h-4"></i> Sous-Critères
-                    </h6>
-                    <button type="button" id="add-sous-critere" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Ajouter
-                    </button>
+            <div class="col-12" id="chapitre-norme-container">
+                <div class="form-group">
+                    <label class="form-label d-flex align-items-center gap-2">
+                        <i data-lucide="bookmark" class="w-4 h-4 text-primary"></i> Chapitre de Norme
+                    </label>
+                    <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern w-100 select2-modal">
+                        {% for choice in form.chapitre_norme.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0|slugify == form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-
-                <div id="sous-criteres-list" class="accordion">
-                    {{ sous_criteres.management_form }}
-                    {% for sc_form in sous_criteres %}
-                    <div class="sous-critere-row">
-                        {% for hidden in sc_form.hidden_fields %}{{ hidden }}{% endfor %}
-                        <div class="d-none">{{ sc_form.DELETE }}</div>
-
-                        <!-- DESKTOP VERSION: PROFESSIONAL ACCORDION -->
-                        <div class="desktop-sc-ui">
-                            <div class="card sc-block mb-3 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                                <div class="card-header sc-header bg-white d-flex align-items-center justify-content-between" 
-                                     id="heading-{{ forloop.counter0 }}" style="cursor: pointer; height: 60px; padding: 0 20px;" 
-                                     data-toggle="collapse" data-target="#collapse-{{ forloop.counter0 }}" data-parent="#sous-criteres-list">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <i data-lucide="chevron-down" class="w-5 h-5 text-muted transition-all sc-chevron"></i>
-                                        <span class="fw-bold text-dark sc-title-text" style="font-size: 0.9rem;">
-                                            {% if sc_form.content.value %}{{ sc_form.content.value|truncatechars:70 }}{% else %}Sous-critère {{ forloop.counter }}{% endif %}
-                                        </span>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-light text-danger remove-row rounded-circle p-2 border-0 shadow-none" title="Supprimer">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                                <div id="collapse-{{ forloop.counter0 }}" class="collapse" data-parent="#sous-criteres-list">
-                                    <div class="card-body p-3 bg-white">
-                                        <div class="desktop-accordion-grid">
-                                            <!-- LEFT COLUMN: TEXT FIELDS -->
-                                            <div class="sc-grid-left">
-                                                <div class="mb-3">
-                                                    <label class="form-label-sc">Description détaillée <span class="text-danger">*</span></label>
-                                                    {{ sc_form.content }}
-                                                </div>
-                                                <div>
-                                                    <label class="form-label-sc">Réaction attendue (En cas de déviation)</label>
-                                                    {{ sc_form.reaction }}
-                                                </div>
-                                            </div>
-                                            <!-- RIGHT COLUMN: SELECT & LIST -->
-                                            <div class="sc-grid-right">
-                                                <div class="mb-3">
-                                                    <label class="form-label-sc">Cotation</label>
-                                                    {{ sc_form.type_cotation }}
-                                                </div>
-                                                <div>
-                                                    <label class="form-label-sc">Preuves Attendues</label>
-                                                    <select name="{{ sc_form.preuve_attendu.html_name }}" class="form-control-modern w-100">
-                                                        <option value="">Sélectionnez...</option>
-                                                        {% for choice in sc_form.preuve_attendu.field.choices %}
-                                                            {% if choice.0 %}
-                                                                <option value="{{ choice.0 }}" {% if choice.0|stringformat:"s" in sc_form.preuve_attendu.value|default:"" %}selected{% endif %}>{{ choice.1 }}</option>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- MOBILE VERSION: COMPACT DROPDOWN CARDS -->
-                        <div class="mobile-sc-ui">
-                            <div class="mobile-sc-card">
-                                <div class="mobile-sc-header toggle-mobile-card">
-                                    <div class="mobile-sc-header-left">
-                                        <div class="mobile-chevron"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>
-                                        <div class="mobile-sc-title-group">
-                                            <span class="mobile-sc-title">{% if sc_form.content.value %}{{ sc_form.content.value|truncatechars:30 }}{% else %}Sous-critère {{ forloop.counter }}{% endif %}</span>
-                                            <span class="mobile-sc-badge">{{ sc_form.type_cotation.value|default:"-" }}</span>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="mobile-delete-btn remove-row"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                                <div class="mobile-sc-body">
-                                    <div class="mobile-sc-grid">
-                                        <div class="mobile-field"><label>DESCRIPTION *</label>{{ sc_form.content }}</div>
-                                        <div class="mobile-field"><label>RÉACTION</label>{{ sc_form.reaction }}</div>
-                                        <div class="mobile-field"><label>COTATION</label>{{ sc_form.type_cotation }}</div>
-                                        <div class="mobile-field">
-                                            <label>PREUVES</label>
-                                            <select name="{{ sc_form.preuve_attendu.html_name }}" class="form-control-modern w-100">
-                                                <option value="">Sélectionnez...</option>
-                                                {% for choice in sc_form.preuve_attendu.field.choices %}
-                                                    {% if choice.0 %}
-                                                        <option value="{{ choice.0 }}" {% if choice.0|stringformat:"s" in sc_form.preuve_attendu.value|default:"" %}selected{% endif %}>{{ choice.1 }}</option>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+            </div>
+            <div class="col-12">
+                <div class="form-group">
+                    <label class="form-label d-flex align-items-center gap-2">
+                        <i data-lucide="crosshair" class="w-4 h-4 text-primary"></i> Ciblage (Type Audit)
+                    </label>
+                    <select name="ciblage" id="id_ciblage" class="form-control-modern w-100 select2-modal">
+                        <option value="">Sélectionnez...</option>
+                        {% if audit_types %}
+                            {% for ta in audit_types %}
+                                <option value="{{ ta.id }}" 
+                                    {% if ta.id|slugify == form.ciblage.value|slugify or ta.id|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                    {{ ta.name }}
+                                </option>
+                            {% endfor %}
+                        {% else %}
+                            {% for choice in form.ciblage.field.choices %}
+                                {% if choice.0 %}
+                                    <option value="{{ choice.0 }}" 
+                                        {% if choice.0|slugify == form.ciblage.value|slugify or choice.0|slugify == form.instance.type_audit.first.id|slugify %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group">
+                    <label class="form-label d-flex align-items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-4 h-4 text-primary"></i> Formulaire
+                    </label>
+                    <select name="formulaire" class="form-control-modern w-100 select2-modal">
+                        {% for choice in form.formulaire.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0|slugify == form.formulaire.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
         </div>
@@ -249,23 +116,30 @@
                             <div class="desktop-accordion-grid">
                                 <div class="sc-grid-left">
                                     <div class="mb-3">
-                                        <label class="form-label-sc">Description détaillée *</label>
+                                        <label class="form-label-sc d-flex align-items-center gap-2">
+                                            <i data-lucide="align-left" class="w-3 h-3"></i> Description détaillée *
+                                        </label>
                                         {{ sous_criteres.empty_form.content }}
                                     </div>
                                     <div>
-                                        <label class="form-label-sc">Réaction attendue</label>
+                                        <label class="form-label-sc d-flex align-items-center gap-2">
+                                            <i data-lucide="corner-down-right" class="w-3 h-3"></i> Réaction attendue
+                                        </label>
                                         {{ sous_criteres.empty_form.reaction }}
                                     </div>
                                 </div>
                                 <div class="sc-grid-right">
                                     <div class="mb-3">
-                                        <label class="form-label-sc">Cotation</label>
+                                        <label class="form-label-sc d-flex align-items-center gap-2">
+                                            <i data-lucide="bar-chart-2" class="w-3 h-3"></i> Cotation
+                                        </label>
                                         {{ sous_criteres.empty_form.type_cotation }}
                                     </div>
                                     <div>
-                                        <label class="form-label-sc">Preuves Attendues</label>
-                                        <select name="{{ sous_criteres.empty_form.preuve_attendu.html_name }}" class="form-control-modern w-100">
-                                            <option value="">Sélectionnez...</option>
+                                        <label class="form-label-sc d-flex align-items-center gap-2">
+                                            <i data-lucide="file-text" class="w-3 h-3"></i> Preuves Attendues
+                                        </label>
+                                        <select name="{{ sous_criteres.empty_form.preuve_attendu.html_name }}" class="form-control-modern w-100 select2-modal" multiple="multiple">
                                             {% for choice in sous_criteres.empty_form.preuve_attendu.field.choices %}
                                                 {% if choice.0 %}
                                                     <option value="{{ choice.0 }}">{{ choice.1 }}</option>
@@ -300,8 +174,7 @@
                             <div class="mobile-field"><label>COTATION</label>{{ sous_criteres.empty_form.type_cotation }}</div>
                             <div class="mobile-field">
                                 <label>PREUVES</label>
-                                <select name="{{ sous_criteres.empty_form.preuve_attendu.html_name }}" class="form-control-modern w-100">
-                                    <option value="">Sélectionnez...</option>
+                                <select name="{{ sous_criteres.empty_form.preuve_attendu.html_name }}" class="form-control-modern w-100 select2-modal" multiple="multiple">
                                     {% for choice in sous_criteres.empty_form.preuve_attendu.field.choices %}
                                         {% if choice.0 %}
                                             <option value="{{ choice.0 }}">{{ choice.1 }}</option>
@@ -355,37 +228,40 @@
         .form-control-modern::placeholder { color: #9aa7bd !important; }
 
         /* --- Accordion Layout --- */
-        .desktop-accordion-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
-        .sc-grid-left, .sc-grid-right { display: flex; flex-direction: column; }
+        .desktop-accordion-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 16px; align-items: start; }
+        .sc-grid-left, .sc-grid-right { display: flex; flex-direction: column; gap: 8px; }
 
         /* --- Accordion Card --- */
         .sc-block {
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-            border: 1px solid #e5ebf5 !important;
-            border-radius: 20px !important;
-            box-shadow: 0 4px 16px rgba(15,23,42,0.04) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01) !important;
+            background: #fff !important;
         }
-        .sc-block:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.08) !important; }
+        .sc-block:hover { border-color: #cbd5e1 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important; }
 
         /* --- Accordion Header --- */
-        .sc-header { min-height: 68px !important; border-bottom: 1px solid #f0f4fa !important; }
-        .sc-header[aria-expanded="true"] .sc-chevron { transform: rotate(180deg); color: #1677ff !important; }
-        .sc-title-text { font-size: 15px !important; font-weight: 600 !important; color: #1e293b !important; }
+        .sc-header { min-height: 48px !important; border-bottom: 1px solid #f1f5f9 !important; padding: 0 16px !important; }
+        .sc-header[aria-expanded="true"] { background: #f8fafc !important; }
+        .sc-header[aria-expanded="true"] .sc-chevron { transform: rotate(180deg); color: #6366f1 !important; }
+        .sc-title-text { font-size: 13px !important; font-weight: 700 !important; color: #334155 !important; }
 
         /* --- SC Field Labels --- */
-        .form-label-sc { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #7b8ea6; margin-bottom: 8px; display: block; letter-spacing: 0.04em; }
+        .form-label-sc { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 6px; display: flex; align-items: center; letter-spacing: 0.05em; }
+        .form-label-sc i { color: #6366f1; opacity: 0.8; margin-right: 4px; }
 
         /* --- Text Inputs & Textareas inside accordion --- */
         .sc-block input:not(.select2-search__field),
         .sc-block textarea {
             border: 1.5px solid #dbe3f0 !important;
-            border-radius: 14px !important;
+            border-radius: 10px !important;
             background: #f8fbff !important;
             color: #1e293b !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             font-weight: 400 !important;
-            line-height: 1.6 !important;
-            padding: 14px 16px !important;
+            line-height: 1.4 !important;
+            padding: 8px 12px !important;
             width: 100% !important;
             transition: all 0.2s ease !important;
             box-shadow: none !important;
@@ -397,30 +273,94 @@
         .sc-block textarea::placeholder, .sc-block input::placeholder { color: #9aa7bd !important; }
 
         /* --- Description textarea --- */
-        .sc-block textarea[name$="-content"] { height: 120px !important; min-height: 120px !important; resize: vertical !important; }
+        .sc-block textarea[name$="-content"] { height: 75px !important; min-height: 75px !important; resize: vertical !important; }
 
         /* --- Reaction textarea --- */
-        .sc-block textarea[name$="-reaction"] { height: 90px !important; min-height: 90px !important; resize: vertical !important; }
+        .sc-block textarea[name$="-reaction"] { height: 50px !important; min-height: 50px !important; resize: vertical !important; }
 
         /* --- Cotation Select (single) --- */
         .sc-block select:not([multiple]) {
-            height: 52px !important;
+            height: 40px !important;
             border: 1.5px solid #dbe3f0 !important;
-            border-radius: 14px !important;
+            border-radius: 10px !important;
             background-color: #f8fbff !important;
-            padding: 0 16px !important;
-            font-size: 14px !important;
+            padding: 0 12px !important;
+            font-size: 13px !important;
             font-weight: 500 !important;
             color: #1e293b !important;
             width: 100% !important;
             appearance: none !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7a90' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7a90' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
             background-repeat: no-repeat !important;
-            background-position: right 14px center !important;
+            background-position: right 12px center !important;
             transition: all 0.2s ease !important;
         }
         .sc-block select:not([multiple]):hover { border-color: #b8c7e0 !important; }
         .sc-block select:not([multiple]):focus { border-color: #1677ff !important; background-color: #fff !important; box-shadow: 0 0 0 4px rgba(22,119,255,0.10) !important; outline: none !important; }
+
+        /* --- Select2 Premium Styling for Modal --- */
+        .select2-container--bootstrap4 .select2-selection {
+            border: 1.5px solid #dbe3f0 !important;
+            border-radius: 10px !important;
+            min-height: 40px !important;
+            background-color: #f8fbff !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .select2-container--bootstrap4.select2-container--focus .select2-selection {
+            border-color: #1677ff !important;
+            background-color: #fff !important;
+            box-shadow: 0 0 0 4px rgba(22,119,255,0.10) !important;
+        }
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+            background-color: #e6f4ff !important;
+            border: 1px solid #91caff !important;
+            color: #0958d9 !important;
+            border-radius: 4px !important;
+            padding: 1px 6px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            margin-top: 4px !important;
+        }
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+            color: #ff4d4f !important;
+            margin-right: 4px !important;
+        }
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-search__field {
+            margin-top: 0 !important;
+            height: 28px !important;
+            background: transparent !important;
+            font-size: 13px !important;
+        }
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+            line-height: 40px !important;
+            color: #1e293b !important;
+            padding-left: 12px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+        }
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            right: 12px !important;
+        }
+        
+        /* Dropdown styling */
+        .select2-dropdown {
+            border: 1px solid #dbe3f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+        }
+        .select2-results__option {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+        }
+        .select2-results__option--highlighted {
+            background-color: #1677ff !important;
+        }
 
 
         /* --- Delete Button --- */
@@ -471,9 +411,35 @@
         
         .mobile-sc-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .mobile-field { display: flex; flex-direction: column; gap: 4px; }
-        .mobile-field label { font-size: 11px; font-weight: 600; color: #64748b; margin: 0; }
-        .mobile-field .form-control, .mobile-field select { height: 36px !important; border-radius: 8px !important; font-size: 13px !important; padding: 0 8px !important; border: 1px solid #e2e8f0; }
-        .mobile-field textarea { height: 58px !important; border-radius: 8px !important; font-size: 13px !important; padding: 6px 8px !important; resize: none !important; border: 1px solid #e2e8f0; }
+        .mobile-field label { font-size: 11px; font-weight: 700; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .mobile-field .form-control, .mobile-field select, .mobile-field .select2-container--bootstrap4 .select2-selection { 
+            height: 40px !important; 
+            border-radius: 10px !important; 
+            font-size: 13px !important; 
+            padding: 0 10px !important; 
+            border: 1.5px solid #e2e8f0 !important;
+            background-color: #f8fbff !important;
+            min-height: 40px !important;
+        }
+        .mobile-field .form-control:focus, .mobile-field select:focus, .mobile-field .select2-container--bootstrap4.select2-container--focus .select2-selection {
+            border-color: #6366f1 !important;
+            background-color: #fff !important;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+        }
+        .mobile-field textarea { 
+            height: 65px !important; 
+            border-radius: 10px !important; 
+            font-size: 13px !important; 
+            padding: 8px 10px !important; 
+            resize: none !important; 
+            border: 1.5px solid #e2e8f0 !important;
+            background-color: #f8fbff !important;
+        }
+        .mobile-field textarea:focus {
+            border-color: #6366f1 !important;
+            background-color: #fff !important;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+        }
 
         .modal-footer { height: 68px !important; background: white; border-top: 1px solid #eee; }
     }
@@ -552,9 +518,50 @@
             e.stopPropagation();
             const $row = $(this).closest('.sous-critere-row');
             const $del = $row.find('input[name$="-DELETE"]');
-            if ($del.length) { $del.prop('checked', true); $row.fadeOut(300); }
-            else { $row.remove(); const tf = $('#id_souscritere_set-TOTAL_FORMS'); tf.val(Math.max(0, parseInt(tf.val()) - 1)); }
+            
+            if ($del.length && $row.find('input[name$="-id"]').val()) {
+                // If it has an ID, it's an existing record, mark for deletion
+                $del.prop('checked', true);
+                $row.fadeOut(300);
+            } else {
+                // If it's a new row, remove it and re-index
+                $row.remove();
+                reindexFormset();
+            }
         });
+
+        function reindexFormset() {
+            const $rows = $('#sous-criteres-list .sous-critere-row');
+            const totalForms = $('#id_souscritere_set-TOTAL_FORMS');
+            totalForms.val($rows.length);
+            
+            $rows.each(function(index) {
+                const $row = $(this);
+                // Update all name and id attributes with the new index
+                $row.find('input, select, textarea').each(function() {
+                    const name = $(this).attr('name');
+                    if (name) {
+                        const newName = name.replace(/souscritere_set-\d+-/, `souscritere_set-${index}-`);
+                        $(this).attr('name', newName);
+                    }
+                    const id = $(this).attr('id');
+                    if (id) {
+                        const newId = id.replace(/id_souscritere_set-\d+-/, `id_souscritere_set-${index}-`);
+                        $(this).attr('id', newId);
+                    }
+                });
+                
+                // Update collapse IDs and targets
+                const $header = $row.find('.card-header');
+                const $body = $row.find('.collapse');
+                if ($header.length && $body.length) {
+                    $header.attr('id', `heading-${index}`);
+                    $header.attr('data-target', `#collapse-${index}`);
+                    $body.attr('id', `collapse-${index}`);
+                    $body.attr('aria-labelledby', `heading-${index}`);
+                }
+            });
+        }
 
         // Mobile Toggle
         $(document).on('click', '.toggle-mobile-card', function(e) {
@@ -562,31 +569,6 @@
             const $card = $(this).closest('.mobile-sc-card');
             $('.mobile-sc-card.active-mobile-card').not($card).removeClass('active-mobile-card');
             $card.toggleClass('active-mobile-card');
-        });
-
-        // AJAX Submit
-        $('#critereModalForm').on('submit', function (e) {
-            e.preventDefault();
-            const form = $(this);
-            const btn = form.find('button[type="submit"]');
-            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>...');
-            
-            $.ajax({
-                type: "POST", url: form.attr('action'), data: form.serialize(),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                success: function (res) {
-                    if (res.success) {
-                        $('.modal').modal('hide');
-                        Swal.fire({ icon: 'success', title: 'Succès', text: res.message, timer: 1500, showConfirmButton: false }).then(() => location.reload());
-                    } else {
-                        $('#modalBodyContent').html(res);
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    }
-                },
-                error: function() {
-                    btn.prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i> Enregistrer');
-                }
-            });
         });
     });
 </script>

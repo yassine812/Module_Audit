@@ -497,31 +497,33 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
     def form_valid(self, form):
         context = self.get_context_data()
         sous_criteres = context['sous_criteres']
-        if sous_criteres.is_valid():
-            self.object = form.save()
-            sous_criteres.instance = self.object
-            saved_scs = sous_criteres.save()
+    def form_valid(self, form):
+        self.object = form.save()
+        form.save_m2m() # Ensure M2M is saved
+
+        # Handle formset only if present in POST
+        if 'souscritere_set-TOTAL_FORMS' in self.request.POST:
+            sous_criteres = SousCritereFormSet(self.request.POST, instance=self.object)
+            if sous_criteres.is_valid():
+                sous_criteres.save()
+        
+        # Sync Type Audit from Parent to all Children
+        parent_types = list(self.object.type_audit.all())
+        for sc in self.object.souscritere_set.all():
+            sc.type_audit.set(parent_types)
             
-            # Sync Type Audit from Parent to Children
-            parent_types = list(self.object.type_audit.all())
-            for sc in saved_scs:
-                sc.type_audit.set(parent_types)
-                
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': f"Le critère '{self.object.name}' et ses sous-critères ont été créés avec succès."
-                })
-            return redirect(self.success_url)
-        else:
-            return self.form_invalid(form)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'id': self.object.id,
+                'message': f"Le critère '{self.object.name}' a été créé avec succès."
+            })
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
-        context = self.get_context_data()
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
-                'form': form,
-                'sous_criteres': context['sous_criteres']
+                'form': form
             })
         return super().form_invalid(form)
 
@@ -547,43 +549,59 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         return data
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        sous_criteres = context['sous_criteres']
-        if sous_criteres.is_valid():
-            self.object = form.save()
-            # Ensure M2M is saved before we access it
-            form.save_m2m() 
-            
-            saved_scs = sous_criteres.save()
-            
-            # Sync Type Audit from Parent to Children
-            parent_types = list(self.object.type_audit.all())
-            for sc in saved_scs:
-                sc.type_audit.set(parent_types)
-            
-            # Also sync existing ones if they changed? 
-            # Usually only newly saved ones are returned by sous_criteres.save()
-            for sc in self.object.souscritere_set.all():
-                sc.type_audit.set(parent_types)
+        self.object = form.save()
+        form.save_m2m() 
+        
+        # Handle formset only if present in POST
+        if 'souscritere_set-TOTAL_FORMS' in self.request.POST:
+            sous_criteres = SousCritereFormSet(self.request.POST, instance=self.object)
+            if sous_criteres.is_valid():
+                sous_criteres.save()
+        
+        # Sync Type Audit from Parent to all Children
+        parent_types = list(self.object.type_audit.all())
+        for sc in self.object.souscritere_set.all():
+            sc.type_audit.set(parent_types)
 
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': f"Le critère '{self.object.name}' et ses sous-critères ont été mis à jour avec succès."
-                })
-            return redirect(self.success_url)
-        else:
-            return self.form_invalid(form)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'id': self.object.id,
+                'message': f"Le critère '{self.object.name}' a été mis à jour avec succès."
+            })
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
-        context = self.get_context_data()
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
                 'form': form,
-                'object': self.get_object(),
-                'sous_criteres': context['sous_criteres']
+                'object': self.get_object()
             })
         return super().form_invalid(form)
+class CritereSousCriteresModalView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, View):
+    def get(self, request, pk):
+        critere = get_object_or_404(Critere, pk=pk)
+        formset = SousCritereFormSet(instance=critere)
+        return render(request, "audit/critere/souscritere_manage_modal.html", {
+            'critere': critere,
+            'sous_criteres': formset
+        })
+
+    def post(self, request, pk):
+        critere = get_object_or_404(Critere, pk=pk)
+        formset = SousCritereFormSet(request.POST, instance=critere)
+        if formset.is_valid():
+            formset.save()
+            # Sync Type Audit from Parent to all Children
+            parent_types = list(critere.type_audit.all())
+            for sc in critere.souscritere_set.all():
+                sc.type_audit.set(parent_types)
+            return JsonResponse({'success': True, 'message': 'Sous-critères enregistrés avec succès.'})
+        return render(request, "audit/critere/souscritere_manage_modal.html", {
+            'critere': critere,
+            'sous_criteres': formset
+        })
+
 class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DeleteView):
     model = Critere
     template_name = "audit/critere/critere_confirm_delete.html"
@@ -1142,7 +1160,8 @@ class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
     def form_valid(self, form):
         with transaction.atomic():
             self.object = form.save()
-            selected_sc_ids = self.request.POST.getlist('sous_criteres')
+            # Deduplicate selected IDs to avoid redundant records and IntegrityErrors
+            selected_sc_ids = list(dict.fromkeys(self.request.POST.getlist('sous_criteres')))
             if selected_sc_ids:
                 for i, sc_id in enumerate(selected_sc_ids):
                     FormulaireSousCritere.objects.create(
@@ -1150,6 +1169,10 @@ class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
                         sous_critere_id=sc_id,
                         ordre=i
                     )
+        
+        if self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'id': self.object.id})
+            
         return redirect(self.success_url)
 
 class FormulaireAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, UpdateView):
@@ -1869,6 +1892,23 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = ResultatAudit
     template_name = "audit/resultataudit/resultat_report.html"
     context_object_name = "resultat"
+
+class ResultatAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+    model = ResultatAudit
+    success_url = reverse_lazy("resultat_list")
+
+    def form_valid(self, form):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': "Résultat d'audit supprimé avec succès."})
+            return redirect(self.success_url)
+        except ProtectedError:
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': "Impossible de supprimer car des données dépendantes existent."}, status=400)
+            return redirect(self.success_url)
+
 
     def get_queryset(self):
         qs = ResultatAudit.objects.select_related("audit", "auditeur")

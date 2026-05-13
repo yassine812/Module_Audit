@@ -178,7 +178,7 @@
                                         </div>
 
                                         <div class="d-flex gap-1">
-                                            {% if user.is_superuser and resultat.en_cours %}
+                                            {% if resultat.en_cours and (user.is_superuser or user == resultat.auditeur) %}
                                             <form method="post" action="{% url 'resultat_close' resultat.id %}" class="m-0">
                                                 {% csrf_token %}
                                                 <button type="button" class="btn-mobile-action text-danger btn-finish-audit">
@@ -250,7 +250,7 @@
                                                 <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
                                                     <i data-lucide="file-text" ></i>
                                                 </a>
-                                                {% if user.is_superuser and resultat.en_cours %}
+                                                {% if resultat.en_cours and (user.is_superuser or user == resultat.auditeur) %}
                                                 <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
                                                     {% csrf_token %}
                                                     <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
@@ -526,26 +526,64 @@
 
     searchInput.addEventListener('input', applyFilters);
 
-    // Close Audit Confirmation
-    document.querySelectorAll('.btn-finish-audit').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    // Close Audit Confirmation (using event delegation for reliability)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-finish-audit');
+        if (btn) {
             e.preventDefault();
-            const form = this.closest('form');
+            const form = btn.closest('form');
+            if (!form) return;
+
             Swal.fire({
                 title: 'Clôturer l\'audit ?',
-                text:"L'audit sera définitivement marqué comme terminé.",
+                text: "L'audit sera définitivement marqué comme terminé.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'Oui, clôturer',
-                cancelButtonText: 'Annuler'
+                cancelButtonText: 'Annuler',
+                borderRadius: '1rem'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    form.submit();
+                    // Try AJAX first, fallback to form submit if needed
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    })
+                    .then(response => {
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            return response.json();
+                        }
+                        // If not JSON, it's likely a redirect or HTML, just reload
+                        window.location.reload();
+                    })
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Audit clôturé !',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                if (data.redirect_url) window.location.href = data.redirect_url;
+                                else window.location.reload();
+                            });
+                        } else if (data && data.status === 'error') {
+                            Swal.fire('Erreur', data.message || 'Erreur inconnue', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        // Final fallback: standard form submission
+                        form.submit();
+                    });
                 }
             });
-        });
+        }
     });
 </script>
 {% endblock %}

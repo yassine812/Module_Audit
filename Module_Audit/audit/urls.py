@@ -71,6 +71,7 @@ urlpatterns = [
     path("critere/create/", CritereCreateView.as_view(), name="critere_create"),
     path("critere/<int:pk>/edit/", CritereUpdateView.as_view(), name="critere_update"),
     path("critere/<int:pk>/delete/", CritereDeleteView.as_view(), name="critere_delete"),
+    path("critere/<int:pk>/manage-sous-criteres/", CritereSousCriteresModalView.as_view(), name="critere_manage_sous_criteres"),
 
     # =====================================================
     # SOUS CRITERE
@@ -153,6 +154,7 @@ urlpatterns = [
     path("resultat/<int:pk>/save-synthesis/", ResultatAuditSaveSynthesisView.as_view(), name="save_synthesis"),
     path("resultat/<int:pk>/report/", ResultatAuditReportView.as_view(), name="resultat_report"),
     path("resultat/<int:pk>/send-email/", send_audit_report_email, name="resultat_send_email"),
+    path("resultat/<int:pk>/delete/", ResultatAuditDeleteView.as_view(), name="resultat_delete"),
 
     # =====================================================
     # API ENDPOINTS

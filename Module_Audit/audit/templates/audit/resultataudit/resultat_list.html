@@ -178,7 +178,7 @@
                                         </div>
 
                                         <div class="d-flex gap-1">
-                                            {% if user.is_superuser and resultat.en_cours %}
+                                            {% if resultat.en_cours and user.is_superuser or resultat.en_cours and user == resultat.auditeur %}
                                             <form method="post" action="{% url 'resultat_close' resultat.id %}" class="m-0">
                                                 {% csrf_token %}
                                                 <button type="button" class="btn-mobile-action text-danger btn-finish-audit">
@@ -243,18 +243,23 @@
                                             </span>
                                         </td>
                                         <td class="text-center col-actions" data-label="Actions">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <a href="{% url 'resultat_detail' resultat.id %}" class="btn btn-link text-info p-1" title="Détails">
-                                                    <i data-lucide="eye" ></i>
+                                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                                <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary btn-sm" title="Rapport PDF">
+                                                    <i data-lucide="file-text"></i>
                                                 </a>
-                                                <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
-                                                    <i data-lucide="file-text" ></i>
-                                                </a>
-                                                {% if user.is_superuser and resultat.en_cours %}
+                                                {% if resultat.en_cours and user.is_superuser or resultat.en_cours and user == resultat.auditeur %}
                                                 <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
                                                     {% csrf_token %}
-                                                    <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                                        <i data-lucide="lock" ></i>
+                                                    <button type="button" class="btn btn-warning btn-sm btn-finish-audit" title="Clôturer">
+                                                        <i data-lucide="lock"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                {% if user.is_superuser %}
+                                                <form method="post" action="{% url 'resultat_delete' resultat.id %}" class="d-inline m-0 btn-delete-resultat-form">
+                                                    {% csrf_token %}
+                                                    <button type="button" class="btn btn-danger btn-sm btn-delete-resultat" title="Supprimer">
+                                                        <i data-lucide="trash-2"></i>
                                                     </button>
                                                 </form>
                                                 {% endif %}
@@ -526,26 +531,84 @@
 
     searchInput.addEventListener('input', applyFilters);
 
-    // Close Audit Confirmation
-    document.querySelectorAll('.btn-finish-audit').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    // Close Audit Confirmation (using event delegation for reliability)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-finish-audit');
+        if (btn) {
             e.preventDefault();
-            const form = this.closest('form');
+            const form = btn.closest('form');
+            if (!form) return;
+
             Swal.fire({
                 title: 'Clôturer l\'audit ?',
-                text:"L'audit sera définitivement marqué comme terminé.",
+                text: "Cette action va finaliser l'audit et générer le rapport final.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
+                confirmButtonColor: '#16a34a',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Oui, clôturer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    })
+                    .then(response => {
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            return response.json();
+                        }
+                        window.location.reload();
+                    })
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Audit clôturé !',
+                                text: 'Le rapport final est disponible.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                if (data.redirect_url) window.location.href = data.redirect_url;
+                                else window.location.reload();
+                            });
+                        } else if (data && data.status === 'error') {
+                            Swal.fire('Erreur', data.message || 'Une erreur est survenue.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        form.submit();
+                    });
+                }
+            });
+        }
+
+        // Delete Resultat Confirmation
+        const deleteBtn = e.target.closest('.btn-delete-resultat');
+        if (deleteBtn) {
+            e.preventDefault();
+            const form = deleteBtn.closest('form');
+            if (!form) return;
+
+            Swal.fire({
+                title: 'Supprimer ce résultat ?',
+                text: "Cette action est irréversible. Toutes les données associées seront perdues.",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, supprimer',
                 cancelButtonText: 'Annuler'
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.submit();
                 }
             });
-        });
+        }
     });
 </script>
 {% endblock %}

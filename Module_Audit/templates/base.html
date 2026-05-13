@@ -278,6 +278,15 @@
         font-size: 0.95rem !important;
       }
     }
+    /* 9. Hide Sidebar Scrollbar */
+    .sidebar {
+      -ms-overflow-style: none !important;  /* IE and Edge */
+      scrollbar-width: none !important;  /* Firefox */
+      overflow-y: auto !important;
+    }
+    .sidebar::-webkit-scrollbar {
+      display: none !important; /* Chrome, Safari and Opera */
+    }
   </style>
 
 </head>

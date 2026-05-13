@@ -467,14 +467,27 @@
                 headers: {'X-Requested-With': 'XMLHttpRequest'},
                 success: function(response) {
                     if (response.success) {
-                        $('#critereModal').modal('hide');
                         Swal.fire({
+                            title: 'Critère enregistré !',
+                            text: response.message,
                             icon: 'success',
-                            title: 'Succès',
-                            text: response.message || 'Opération réussie',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload()); 
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fas fa-layer-group mr-2"></i>Gérer les sous-critères',
+                            cancelButtonText: 'Plus tard',
+                            confirmButtonColor: '#4f46e5',
+                            cancelButtonColor: '#94a3b8',
+                            customClass: {
+                                confirmButton: 'rounded-pill px-4',
+                                cancelButton: 'rounded-pill px-4'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Transition to Sub-criteria modal
+                                loadSubCriteriaModal(response.id);
+                            } else {
+                                location.reload();
+                            }
+                        });
                     } else {
                         const body = form.closest('.modal-content');
                         if (body.length && typeof response === 'string' && response.includes('modal-header')) {
@@ -482,7 +495,6 @@
                              if (typeof lucide !== 'undefined') lucide.createIcons();
                              initModalBehaviors();
                         } else {
-                             // Fallback or handle JSON errors
                              Swal.fire({ icon: 'error', title: 'Erreur', text: "Vérifiez les champs du formulaire" });
                              btn.prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i> Enregistrer');
                         }
@@ -493,6 +505,25 @@
                     Swal.fire({ icon: 'error', title: 'Erreur', text: "Erreur serveur" });
                 }
             });
+        });
+    }
+
+    // New function to load the sub-criteria management modal
+    function loadSubCriteriaModal(critereId) {
+        let url = "{% url 'critere_manage_sous_criteres' 0 %}";
+        url = url.replace('0', critereId);
+        
+        const body = $('#modalBodyContent');
+        
+        // Show loading state
+        body.html('<div class="p-5 text-center"><div class="spinner-border text-indigo-600" role="status"></div><p class="mt-2 text-slate-500">Chargement des sous-critères...</p></div>');
+        $('#critereModal').modal('show');
+
+        $.get(url, function(data) {
+            body.html(data);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }).fail(function() {
+            Swal.fire('Erreur', 'Impossible de charger les sous-critères.', 'error').then(() => location.reload());
         });
     }
 
