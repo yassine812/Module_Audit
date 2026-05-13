@@ -758,7 +758,9 @@ class ResultatAuditListAPIView(View):
                 'status_label': a.get_audit_status_display(),
                 'en_cours': res.en_cours if res else False,
                 'has_result': res is not None,
-                'resultat_id': res.id if res else None
+                'resultat_id': res.id if res else None,
+                'score_audit': float(res.score_audit) if res else 0.0,
+                'ref_audit': a.get_reference()
             })
             
         return JsonResponse({'status': 'success', 'data': data})
@@ -1528,6 +1530,19 @@ class ResultatAuditDetailAPIView(View):
         }
         
         return JsonResponse({'status': 'success', 'data': data})
+
+    def delete(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        # Check permissions (only superuser can delete results, matching web logic)
+        if not request.user.is_superuser:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        resultat.delete()
+        return JsonResponse({'status': 'success', 'message': 'Resultat deleted'})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DetailResultatAuditUpdateAPIView(View):

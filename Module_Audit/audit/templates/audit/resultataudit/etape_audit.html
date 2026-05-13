@@ -691,27 +691,49 @@
 
   /* PDF Modal Desktop Base Styles */
   .pdf-close-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
     background: #fff;
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,.2);
-    z-index: 10;
-    color: #334155;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    z-index: 10002;
+    transition: all 0.2s;
+    color: #64748b;
   }
-  #pdf-canvas {
+  .pdf-close-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    transform: scale(1.05);
+  }
+  #pdf-pages-container canvas {
     display: block;
-    height: 95vh;
-    max-height: 95vh;
-    width: auto;
+    margin: 0 auto;
+    background: #fff;
+    max-width: 100%;
+    height: auto !important;
+  }
+  #pdf-paper-wrapper::-webkit-scrollbar {
+    width: 8px;
+  }
+  #pdf-paper-wrapper::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 0 16px 16px 0;
+  }
+  #pdf-paper-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    border: 2px solid #f8fafc;
+  }
+  #pdf-paper-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 
   /* 📱 EXTREME MOBILE REDESIGN (370x615) - NON-COMPRESSED WORKSTATION */
@@ -876,41 +898,11 @@
     .btn-prev { background: #f8fafc !important; }
     #step-counter { font-size: 10px !important; padding: 4px 8px !important; }
     /* 4. PDF MODAL MOBILE OPTIMIZATION */
-    #pdf-modal { padding: 0 !important; background: rgba(0,0,0,0.8) !important; backdrop-filter: blur(5px); }
-    #pdf-paper-wrapper { 
-      width: 100% !important; 
-      height: 100% !important; 
-      max-height: 100% !important; 
-      border-radius: 0 !important; 
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      background: transparent !important;
-    }
-    #pdf-canvas { 
-      width: 100% !important; 
-      height: auto !important; 
-      max-height: 90vh !important; 
-      object-fit: contain !important;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    .pdf-close-btn {
-      position: fixed !important;
-      top: 16px !important;
-      right: 16px !important;
-      background: rgba(255,255,255,0.9) !important;
-      backdrop-filter: blur(4px);
-      border: none !important;
-      border-radius: 50% !important;
-      width: 44px !important;
-      height: 44px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
-      z-index: 10000 !important;
-      color: #1e293b !important;
-    }
+    #pdf-modal { padding: 10px !important; }
+    #pdf-modal-title { font-size: 14px !important; }
+    .pdf-close-btn { width: 36px !important; height: 36px !important; }
+    #pdf-pages-container { padding: 10px 0 !important; }
+    #pdf-pages-container canvas { width: 100% !important; margin-bottom: 10px !important; }
   }
 </style>
 {% endblock %}
@@ -1083,22 +1075,22 @@
 
 <!-- PDF Modal -->
 <div id="pdf-modal"
-  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+  style="display:none;position:fixed;inset:0;background:rgba(255, 255, 255, 0.2);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
   <button class="pdf-close-btn" onclick="closePdfModal()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
       stroke-linecap="round" stroke-linejoin="round">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   </button>
-  <div id="pdf-paper-wrapper" style="background:#fff;border-radius:8px;overflow:hidden;max-height:95vh;position:relative;">
+  <div id="pdf-paper-wrapper" style="background:transparent;overflow-y:auto;width:auto;min-width:300px;max-width:98vw;height:92vh;position:relative;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.1);scroll-behavior:smooth;">
     <div id="pdf-loading"
       style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:10;">
       <div
-        style="width:36px;height:36px;border:4px solid #3b82f6;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;">
+        style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;">
       </div>
     </div>
-    <canvas id="pdf-canvas" style="display:block; max-width:100%;"></canvas>
+    <div id="pdf-pages-container" style="display:flex; flex-direction:column; align-items:center; padding:0;"></div>
   </div>
 </div>
 
@@ -1318,10 +1310,27 @@
     const chapLink = document.getElementById('item-chapitre-link');
     const chapEl = document.getElementById('item-chapitre');
     const normeEl = document.getElementById('item-norme');
-    if (chapEl) chapEl.textContent = d.chapitre || '--';
-    if (normeEl) normeEl.textContent = d.norme || '';
-    if (chapLink && d.text_ref_url) {
-      chapLink.onclick = (e) => { e.preventDefault(); openPdfModal(d.text_ref_url, d.chapitre || d.norme, d.pdf_page); };
+    if (chapEl) {
+      const labelText = (d.chapitre && d.chapitre !== '--') ? d.chapitre : (d.norme || 'Document');
+      chapEl.textContent = labelText;
+    }
+    if (normeEl) {
+      // If we are showing Norme as the main label, maybe hide it here or keep it.
+      // Usually it's better to show the full Norme name below if Chapitre is showing.
+      normeEl.textContent = (d.chapitre && d.chapitre !== '--') ? (d.norme || '') : '';
+    }
+    if (chapLink) {
+      const modalTitle = (d.chapitre && d.chapitre !== '--') ? d.chapitre : (d.norme || 'Document');
+      if (d.text_ref_url) {
+        chapLink.style.opacity = '1';
+        chapLink.style.pointerEvents = 'auto';
+        chapLink.onclick = (e) => { e.preventDefault(); openPdfModal(d.text_ref_url, modalTitle, d.pdf_page); };
+      } else {
+        // No PDF for this step — disable the link so the previous step's handler can't fire
+        chapLink.style.opacity = '0.4';
+        chapLink.style.pointerEvents = 'none';
+        chapLink.onclick = null;
+      }
     }
     const titleEl = document.getElementById('item-title');
     const descEl = document.getElementById('item-description');
@@ -1333,14 +1342,14 @@
     if (preuveEl) preuveEl.textContent = (d.preuves_attendues && d.preuves_attendues.length > 0) ? d.preuves_attendues.join(', ') : '';
     if (obsEl) obsEl.value = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
     if (scoreEl) scoreEl.textContent = (d.value !== undefined && d.value !== null) ? parseFloat(d.value).toFixed(1) : '--';
+    // Always clear all cotation highlights first
+    document.querySelectorAll('.eval-btn').forEach(btn => {
+      [...btn.classList].forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
+    });
+    // Then apply the current step's cotation if it has one
     if (d.cotation) {
       const ab = document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
       if (ab) {
-        // Clear all others first to be safe
-        document.querySelectorAll('.eval-btn').forEach(btn => {
-          const classes = [...btn.classList];
-          classes.forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
-        });
         const safe = d.cotation.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         ab.classList.add('selected-' + safe);
       }
@@ -1650,31 +1659,86 @@
   function openPdfModal(url, title, page) {
     const modal = document.getElementById('pdf-modal');
     const loading = document.getElementById('pdf-loading');
+    const titleEl = document.getElementById('pdf-modal-title');
+    const container = document.getElementById('pdf-pages-container');
+    const wrapper = document.getElementById('pdf-paper-wrapper');
+    
+    console.log('[PDF Debug] openPdfModal called:', { url, title, page });
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     if (loading) loading.style.display = 'flex';
-    let cleanPath = url.replace(/.*processus_docs\//, '');
-    let path1 = '/processus_docs/' + cleanPath;
-    let path2 = url.startsWith('/') ? url : '/' + url;
+    if (titleEl) titleEl.textContent = title || 'Document';
+    if (container) container.innerHTML = '';
+    if (wrapper) wrapper.scrollTop = 0;
+
     const tryFetch = (targetUrl) => {
       fetch(targetUrl).then(r => { if (!r.ok) throw new Error('Not found'); return r.blob(); })
         .then(async blob => {
           const ab = await blob.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-          const pdfPage = await pdf.getPage(parseInt(page) || 1);
-          const viewport = pdfPage.getViewport({ scale: 2.0 });
-          const canvas = document.getElementById('pdf-canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.height = viewport.height; canvas.width = viewport.width;
-          await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+          
           if (loading) loading.style.display = 'none';
+          
+          const targetPage = parseInt(page) || 1;
+          
+          // Fixed 3x super-sampling for razor-sharp text on all screens
+          const OUTPUT_SCALE = 3.0;
+          const availableHeight = wrapper.clientHeight - 40;
+          
+          const canvases = [];
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const pdfPage = await pdf.getPage(i);
+            const unscaledViewport = pdfPage.getViewport({ scale: 1.0 });
+            
+            const logicalScale = availableHeight / unscaledViewport.height;
+            const hiResViewport = pdfPage.getViewport({ scale: logicalScale * OUTPUT_SCALE });
+
+            if (i === 1) {
+              const logicalWidth = Math.ceil(hiResViewport.width / OUTPUT_SCALE);
+              wrapper.style.width = (logicalWidth + 20) + 'px';
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = hiResViewport.width;
+            canvas.height = hiResViewport.height;
+            canvas.style.width = Math.ceil(hiResViewport.width / OUTPUT_SCALE) + 'px';
+            canvas.style.height = Math.ceil(hiResViewport.height / OUTPUT_SCALE) + 'px';
+            canvas.style.display = 'block';
+            canvas.style.marginBottom = '2px';
+            
+            container.appendChild(canvas);
+            canvases.push(canvas);
+            
+            await pdfPage.render({ canvasContext: ctx, viewport: hiResViewport }).promise;
+          }
+          
+          // Scroll AFTER all pages are rendered for reliable positioning
+          const targetCanvas = canvases[targetPage - 1];
+          if (targetCanvas) {
+            wrapper.scrollTop = targetCanvas.offsetTop;
+          }
+          
+          // Update modal title with page info for transparency
+          if (titleEl) titleEl.textContent = (title || 'Document') + (pdf.numPages > 1 ? ` — Page ${targetPage}/${pdf.numPages}` : '');
+
         })
         .catch(err => {
+          const cleanPath = url.replace(/.*processus_docs\//, '');
+          const path1 = '/processus_docs/' + cleanPath;
+          const path2 = url.startsWith('/') ? url : '/' + url;
           if (targetUrl === path1) tryFetch(path2);
-          else { console.error('PDF:', err); if (loading) loading.style.display = 'none'; }
+          else { 
+            console.error('PDF Error:', err); 
+            if (loading) loading.style.display = 'none'; 
+            Swal.fire('Erreur', 'Impossible de charger le document PDF.', 'error');
+          }
         });
     };
-    tryFetch(path1);
+    
+    const cleanPath = url.replace(/.*processus_docs\//, '');
+    tryFetch('/processus_docs/' + cleanPath);
   }
 
   function closePdfModal() {

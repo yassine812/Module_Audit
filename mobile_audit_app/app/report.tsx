@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Share, ScrollView, Image, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Share, ScrollView, Image, FlatList, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView as SAV } from 'react-native-safe-area-context';
+import * as Sharing from 'expo-sharing';
+import * as WebBrowser from 'expo-web-browser';
 import api, { TUNNEL_URL } from '../src/utils/api';
 
 const API_BASE_URL = TUNNEL_URL;
@@ -34,7 +36,7 @@ const ReportScreen = () => {
     try {
       const reportUrl = `${API_BASE_URL}/audit/resultat/${id}/report/`;
       await Share.share({
-        message: `Rapport d'Audit: ${data?.sujet}\nScore: ${data?.score_audit}%\nLien: ${reportUrl}`,
+        message: `Rapport d'Audit: ${data?.sujet}\nLien: ${reportUrl}`,
         url: reportUrl,
       });
     } catch (error) {
@@ -42,22 +44,40 @@ const ReportScreen = () => {
     }
   };
 
+  const handlePrint = async () => {
+    try {
+      const reportUrl = `${API_BASE_URL}/audit/resultat/${id}/report/`;
+      await WebBrowser.openBrowserAsync(reportUrl);
+    } catch (error) {
+      console.error('Print error:', error);
+      Alert.alert("Erreur", "Impossible d'ouvrir le rapport.");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    handlePrint();
+  };
+
+  const handleEmail = async () => {
+    handlePrint();
+  };
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SAV style={styles.container}>
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#2563eb" />
           <Text style={styles.loadingText}>Génération du rapport...</Text>
         </View>
-      </SafeAreaView>
+      </SAV>
     );
   }
 
   if (!data) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SAV style={styles.container}>
         <Text>Erreur de chargement du rapport</Text>
-      </SafeAreaView>
+      </SAV>
     );
   }
 
@@ -144,7 +164,7 @@ const ReportScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SAV style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/liste-audit')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#1e293b" />
@@ -153,6 +173,20 @@ const ReportScreen = () => {
         <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
           <Ionicons name="share-social-outline" size={24} color="#2563eb" />
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.actionBar}>
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleEmail}>
+            <Feather name="mail" size={24} color="#1e293b" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleDownloadPDF}>
+            <MaterialCommunityIcons name="file-download-outline" size={26} color="#1e293b" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={handlePrint}>
+            <Feather name="printer" size={24} color="#1e293b" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -242,7 +276,7 @@ const ReportScreen = () => {
         )}
         contentContainerStyle={styles.scrollContent}
       />
-    </SafeAreaView>
+    </SAV>
   );
 };
 
@@ -264,6 +298,37 @@ const styles = StyleSheet.create({
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 14, color: '#64748b', fontWeight: '600' },
   scrollContent: { paddingBottom: 40 },
+  
+  // Action Bar
+  actionBar: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  actionBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#1e293b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
   
   // Report Header
   reportHeader: { padding: 12 },

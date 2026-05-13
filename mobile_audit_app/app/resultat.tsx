@@ -16,10 +16,13 @@ import { Ionicons, Feather, MaterialCommunityIcons, Entypo } from '@expo/vector-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
 import { useSidebar } from '../src/context/SidebarContext';
+import { useAuth } from '../src/context/AuthContext';
 
 const ResultatAuditListScreen = () => {
   const router = useRouter();
   const { openSidebar } = useSidebar();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState([]);
@@ -43,6 +46,61 @@ const ResultatAuditListScreen = () => {
     fetchData();
   }, []);
 
+  const handleReport = (item) => {
+    router.push({ pathname: '/report', params: { id: item.resultat_id || item.id } });
+  };
+
+  const handleFinish = (item) => {
+    Alert.alert(
+      "Clôturer l'audit ?",
+      "Cette action va finaliser l'audit et générer le rapport final.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Oui, clôturer", 
+          onPress: async () => {
+            try {
+              const res = await api.post(API_PATHS.RESULTAT_FINISH(item.resultat_id || item.id));
+              if (res.data.status === 'success') {
+                Alert.alert('Succès', 'Audit clôturé avec succès');
+                fetchData();
+              }
+            } catch (error) {
+              console.error(error);
+              Alert.alert('Erreur', 'Impossible de clôturer l\'audit');
+            }
+          } 
+        }
+      ]
+    );
+  };
+
+  const handleDelete = (item) => {
+    Alert.alert(
+      "Supprimer ce résultat ?",
+      "Cette action est irréversible. Toutes les données associées seront perdues.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Oui, supprimer", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await api.delete(API_PATHS.RESULTAT_DETAIL(item.resultat_id || item.id));
+              if (res.data.status === 'success') {
+                Alert.alert('Succès', 'Résultat supprimé');
+                fetchData();
+              }
+            } catch (error) {
+              console.error(error);
+              Alert.alert('Erreur', 'Impossible de supprimer le résultat');
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   const renderHeader = () => (
     <View style={styles.tableHeader}>
       <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>ID ▲</Text></View>
@@ -52,7 +110,7 @@ const ResultatAuditListScreen = () => {
       <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>Date</Text></View>
       <View style={[styles.headerCell, { width: 45 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Score</Text></View>
       <View style={[styles.headerCell, { width: 55 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Statut</Text></View>
-      <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
+      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
@@ -61,10 +119,10 @@ const ResultatAuditListScreen = () => {
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>{index + 1}</Text></View>
+        <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>{item.id}</Text></View>
         <View style={[styles.cell, { flex: 1.8 }]}>
             <Text style={[styles.cellText, { fontWeight: '700' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
-            <Text style={[styles.cellText, { fontSize: 7, color: '#94a3b8' }]}>{item.ref_audit || item.id}</Text>
+            <Text style={[styles.cellText, { fontSize: 7, color: '#94a3b8' }]}>{item.ref_audit || `ID-${item.id}`}</Text>
         </View>
         <View style={[styles.cell, { width: 55 }]}><Text style={styles.cellText} numberOfLines={1}>{item.auditeur_name || 'admin'}</Text></View>
         <View style={[styles.cell, { width: 45 }]}><Text style={styles.cellText}>{item.site_name || 'N/A'}</Text></View>
@@ -79,15 +137,17 @@ const ResultatAuditListScreen = () => {
                 <Text style={styles.statusText}>{isTermine ? 'TERMINÉ' : 'EN COURS'}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 75, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
-            <TouchableOpacity style={styles.miniAction}>
-                <Feather name="eye" size={10} color="#06b6d4" />
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#64748b' }]}>
+        <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
+            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#64748b' }]} onPress={() => handleReport(item)}>
                 <MaterialCommunityIcons name="file-document-outline" size={10} color="#fff" />
             </TouchableOpacity>
             {!isTermine && (
-                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#ef4444' }]}>
+                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#f59e0b' }]} onPress={() => handleFinish(item)}>
+                    <Feather name="lock" size={10} color="#fff" />
+                </TouchableOpacity>
+            )}
+            {isAdmin && (
+                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#ef4444' }]} onPress={() => handleDelete(item)}>
                     <Feather name="trash-2" size={10} color="#fff" />
                 </TouchableOpacity>
             )}
@@ -108,7 +168,7 @@ const ResultatAuditListScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Résultats d'Audit</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/liste-audit')}>
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.addBtnText}>Nouvel Audit</Text>
         </TouchableOpacity>
