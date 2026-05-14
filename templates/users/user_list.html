@@ -342,15 +342,18 @@
         });
     }
 
-            function openDeleteModal(url, name) {
+    function confirmDelete(userId, username) {
+        const form = document.getElementById('delete-user-form');
+        form.action = `/audit/users/${userId}/delete/`;
+        
         Swal.fire({
             title: 'Confirmer la suppression',
-            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            text: `Voulez-vous vraiment supprimer l'utilisateur "${username}" ? Cette action est irréversible.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#e74a3b',
             cancelButtonColor: '#858796',
-            confirmButtonText: 'Oui, supprimer',
+            confirmButtonText: '<i data-lucide="trash-2" class="mr-2"></i>Oui, supprimer',
             cancelButtonText: 'Annuler',
             reverseButtons: true,
             customClass: {
@@ -360,42 +363,33 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    headers: {'X-Requested-With': 'XMLHttpRequest'},
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Supprimé',
-                                text: response.message || "L'élément a été supprimé",
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => location.reload());
-                        }
-                    },
-                    error: function(xhr) {
-                        const response = xhr.responseJSON;
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erreur',
-                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
-                        });
+                Swal.fire({
+                    title: 'Suppression...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
                     }
                 });
+                form.submit();
             }
         });
     }
-    
-    // Alias for compatibility
-    function confirmDelete(url, name) {
-        openDeleteModal(url, name);
-    }
 
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
 
 </script>
 {% endblock %}

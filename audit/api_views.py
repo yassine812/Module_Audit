@@ -1,11 +1,13 @@
-from django.db import models
+from django.db import models, transaction
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 import json
-from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere
+from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -56,6 +58,29 @@ class LogoutAPIView(View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class ChangePasswordAPIView(View):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Non authentifié'}, status=401)
+        try:
+            data = json.loads(request.body)
+            old_password = data.get('old_password')
+            new_password = data.get('new_password')
+            
+            if not request.user.check_password(old_password):
+                return JsonResponse({'status': 'error', 'message': 'Ancien mot de passe incorrect'}, status=400)
+            
+            request.user.set_password(new_password)
+            request.user.save()
+            # We need to re-login the user because changing password invalidates the session
+            login(request, request.user)
+            
+            return JsonResponse({'status': 'success', 'message': 'Mot de passe modifié avec succès'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class UserListAPIView(View):
     def get(self, request):
         from django.contrib.auth.models import User
@@ -85,8 +110,6 @@ class UserListAPIView(View):
             user = User.objects.create_user(
                 username=data['username'],
                 email=data.get('email', ''),
-                first_name=data.get('first_name', ''),
-                last_name=data.get('last_name', ''),
                 password='password123' # Default password
             )
             # Handle role
@@ -106,8 +129,6 @@ class UserListAPIView(View):
                     'id': user.id,
                     'username': user.username,
                     'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
                     'role': role
                 }
             })
@@ -184,12 +205,18 @@ class TypeAuditDetailAPIView(View):
             
             type_audit.name = data.get('name', type_audit.name)
             type_audit.save()
+
+            if 'section' in data:
+                type_audit.section.set(data['section'])
             
+            sections = list(type_audit.section.values('id', 'name'))
             return JsonResponse({
                 'status': 'success',
                 'data': {
                     'id': type_audit.id,
-                    'name': type_audit.name
+                    'name': type_audit.name,
+                    'sections': sections,
+                    'section_names': ", ".join([s['name'] for s in sections]) or '-'
                 }
             })
         except TypeAudit.DoesNotExist:
@@ -304,23 +331,30 @@ class CritereListAPIView(View):
         try:
             data = json.loads(request.body)
             
-            # Validate foreign key exists
-            try:
-                ChapitreNorme.objects.get(id=data['chapitre_norme'])
-            except ChapitreNorme.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f'ChapitreNorme with id {data["chapitre_norme"]} does not exist'}, status=400)
+            # Validate foreign key exists (only if provided)
+            chapitre_id = data.get('chapitre_norme') or data.get('chapitre_id')
+            if chapitre_id:
+                try:
+                    ChapitreNorme.objects.get(id=chapitre_id)
+                except ChapitreNorme.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': f'ChapitreNorme with id {chapitre_id} does not exist'}, status=400)
             
             critere = Critere.objects.create(
-                name=data['name'],
-                chapitre_norme_id=data['chapitre_norme']
+                name=data.get('name') or data.get('nom'),
+                chapitre_norme_id=chapitre_id,
+                formulaire_id=data.get('formulaire') or data.get('formulaire_id')
             )
+            if 'type_audit' in data:
+                critere.type_audit.set(data['type_audit'])
             return JsonResponse({
                 'status': 'success',
                 'data': {
                     'id': critere.id,
                     'name': critere.name,
-                    'chapitre_norme': critere.chapitre_norme.id,
-                    'chapitre_norme_name': critere.chapitre_norme.name
+                    'chapitre_norme_id': critere.chapitre_norme.id if critere.chapitre_norme else None,
+                    'chapitre_norme_name': critere.chapitre_norme.name if critere.chapitre_norme else '-',
+                    'formulaire_id': critere.formulaire.id if critere.formulaire else None,
+                    'formulaire_name': critere.formulaire.name if critere.formulaire else '-'
                 }
             })
         except (json.JSONDecodeError, KeyError) as e:
@@ -348,10 +382,41 @@ class CritereDetailAPIView(View):
         try:
             c = Critere.objects.get(pk=pk)
             data = json.loads(request.body)
+            c.name = data.get('name') or data.get('nom') or c.name
+            chap_id = data.get('chapitre_norme') or data.get('chapitre_id')
+            if chap_id:
+                c.chapitre_norme_id = chap_id
+            form_id = data.get('formulaire') or data.get('formulaire_id')
+            if form_id:
+                c.formulaire_id = form_id
+            c.save()
+            
+            if 'type_audit' in data:
+                c.type_audit.set(data['type_audit'])
+                
+            return JsonResponse({'status': 'success', 'message': 'Updated successfully'})
+        except Critere.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def delete(self, request, pk):
+        try:
+            Critere.objects.get(pk=pk).delete()
+            return JsonResponse({'status': 'success', 'message': 'Deleted successfully'})
+        except Critere.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+
+    def put(self, request, pk):
+        try:
+            c = Critere.objects.get(pk=pk)
+            data = json.loads(request.body)
             c.name = data.get('name', c.name)
             if 'chapitre_norme' in data: c.chapitre_norme_id = data['chapitre_norme']
             if 'formulaire' in data: c.formulaire_id = data['formulaire']
             c.save()
+            if 'type_audit' in data:
+                c.type_audit.set(data['type_audit'])
             return JsonResponse({'status': 'success', 'data': {'id': c.id, 'name': c.name}})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -393,7 +458,7 @@ class TypeCotationListAPIView(View):
 class SousCritereListAPIView(View):
     def get(self, request):
         # Temporarily removed authentication for testing
-        qs = SousCritere.objects.all().select_related('critere', 'type_cotation').prefetch_related('preuve_attendu', 'type_audit')
+        qs = SousCritere.objects.all().select_related('critere', 'type_cotation').prefetch_related('preuve_attendu', 'critere__type_audit')
         data = []
         for sc in qs:
             data.append({
@@ -405,8 +470,8 @@ class SousCritereListAPIView(View):
                 'type_cotation_id': sc.type_cotation.id if sc.type_cotation else None,
                 'type_cotation_name': sc.type_cotation.name if sc.type_cotation else '-',
                 'preuves_attendues': list(sc.preuve_attendu.values('id', 'name')),
-                'type_audits': list(sc.type_audit.values('id', 'name')),
-                'type_audit_names': ", ".join([t.name for t in sc.type_audit.all()])
+                'type_audits': list(sc.critere.type_audit.values('id', 'name')),
+                'type_audit_names': ", ".join([t.name for t in sc.critere.type_audit.all()])
             })
         return JsonResponse({'status': 'success', 'data': data})
     
@@ -415,25 +480,33 @@ class SousCritereListAPIView(View):
         try:
             data = json.loads(request.body)
             
+            crit_id = data.get('critere') or data.get('critere_id') or data.get('crit_id')
             # Validate foreign key exists
             try:
-                Critere.objects.get(id=data['critere'])
+                Critere.objects.get(id=crit_id)
             except Critere.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f'Critere with id {data["critere"]} does not exist'}, status=400)
+                return JsonResponse({'status': 'error', 'message': f'Critere with id {crit_id} does not exist'}, status=400)
             
             # Optional: validate type_cotation if provided
-            if 'type_cotation' in data:
+            cot_id = data.get('type_cotation') or data.get('cotation_id') or data.get('cotation')
+            if cot_id:
                 try:
-                    TypeCotation.objects.get(id=data['type_cotation'])
+                    TypeCotation.objects.get(id=cot_id)
                 except TypeCotation.DoesNotExist:
-                    return JsonResponse({'status': 'error', 'message': f'TypeCotation with id {data["type_cotation"]} does not exist'}, status=400)
+                    return JsonResponse({'status': 'error', 'message': f'TypeCotation with id {cot_id} does not exist'}, status=400)
             
             sous_critere = SousCritere.objects.create(
-                content=data['content'],
-                critere_id=data['critere'],
+                content=data.get('content') or data.get('nom') or data.get('libelle'),
+                critere_id=crit_id,
                 reaction=data.get('reaction', ''),
-                type_cotation_id=data.get('type_cotation')
+                type_cotation_id=cot_id
             )
+            if 'preuves_attendues' in data or 'preuve_attendu' in data:
+                preuves = data.get('preuves_attendues') or data.get('preuve_attendu')
+                sous_critere.preuve_attendu.set(preuves)
+            if 'type_audit' in data:
+                for ta_id in data['type_audit']:
+                    SousCritereTypeAudit.objects.get_or_create(sous_critere=sous_critere, type_audit_id=ta_id)
             return JsonResponse({
                 'status': 'success',
                 'data': {
@@ -462,7 +535,8 @@ class SousCritereDetailAPIView(View):
                     'content': sc.content,
                     'reaction': sc.reaction,
                     'critere_id': sc.critere.id,
-                    'type_cotation_id': sc.type_cotation.id if sc.type_cotation else None
+                    'type_cotation_id': sc.type_cotation.id if sc.type_cotation else None,
+                    'preuves_attendues_ids': list(sc.preuve_attendu.values_list('id', flat=True))
                 }
             })
         except SousCritere.DoesNotExist:
@@ -472,11 +546,28 @@ class SousCritereDetailAPIView(View):
         try:
             sc = SousCritere.objects.get(pk=pk)
             data = json.loads(request.body)
-            sc.content = data.get('content', sc.content)
+            sc.content = data.get('content') or data.get('nom') or data.get('libelle') or sc.content
             sc.reaction = data.get('reaction', sc.reaction)
-            if 'critere' in data: sc.critere_id = data['critere']
-            if 'type_cotation' in data: sc.type_cotation_id = data['type_cotation']
+            
+            crit_id = data.get('critere') or data.get('critere_id') or data.get('crit_id')
+            if crit_id:
+                sc.critere_id = crit_id
+                
+            cot_id = data.get('type_cotation') or data.get('cotation_id') or data.get('cotation')
+            if cot_id:
+                sc.type_cotation_id = cot_id
+                
             sc.save()
+            
+            preuves = data.get('preuves_attendues') or data.get('preuve_attendu')
+            if preuves is not None:
+                sc.preuve_attendu.set(preuves)
+                
+            if 'type_audit' in data:
+                SousCritereTypeAudit.objects.filter(sous_critere=sc).delete()
+                for ta_id in data['type_audit']:
+                    SousCritereTypeAudit.objects.create(sous_critere=sc, type_audit_id=ta_id)
+                    
             return JsonResponse({'status': 'success', 'data': {'id': sc.id, 'content': sc.content}})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -531,7 +622,20 @@ class FormulaireAuditListAPIView(View):
             )
             
             if data.get('sections'):
-                formulaire.section.set(data['sections'])
+                sections = data['sections']
+                if not isinstance(sections, list): sections = [sections]
+                formulaire.section.set(sections)
+            elif data.get('section'): # Handle singular from mobile
+                formulaire.section.set([data['section']])
+            
+            # Handle sub-criteria links via through table
+            sous_criteres = data.get('sous_criteres', [])
+            for idx, sc_id in enumerate(sous_criteres):
+                FormulaireSousCritere.objects.create(
+                    formulaire=formulaire,
+                    sous_critere_id=sc_id,
+                    ordre=idx
+                )
                 
             return JsonResponse({
                 'status': 'success',
@@ -547,84 +651,119 @@ class FormulaireAuditListAPIView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ListeAuditListAPIView(View):
-    def get(self, request):
-        try:
-            user = request.user
-            if not user.is_authenticated:
-                return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+    def get(self, request, pk=None):
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
 
-            from django.db.models import Q, Prefetch
-            
-            # Filter audits assigned to the user
-            if user.is_superuser:
-                qs = ListeAudit.objects.all()
-            else:
-                qs = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
-            
-            qs = qs.select_related('site', 'formulaire_audit').prefetch_related('resultataudit_set').order_by('-date')
-            
-            data = []
-            for audit in qs:
-                # Determine status
-                res = audit.resultataudit_set.first()
-                statut_label = 'planifie'
-                if res:
-                    statut_label = 'en_cours' if res.en_cours else 'termine'
-                
-                data.append({
-                    'id': audit.id,
-                    'desc': audit.desc,
-                    'reference': f"AUD-{audit.id}", # Fallback if no ref field
-                    'site_name': audit.site.name if audit.site else 'N/A',
-                    'date_audit': audit.date.isoformat() if audit.date else None,
-                    'statut_label': statut_label,
-                    'status': audit.status, # Legacy field
-                    'number_audit': audit.number_audit
+        if pk:
+            try:
+                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site').get(pk=pk)
+                return JsonResponse({
+                    'status': 'success',
+                    'data': {
+                        'id': a.id,
+                        'desc': a.desc,
+                        'status': a.status,
+                        'date_audit': a.date,
+                        'section': a.section.id if a.section else None,
+                        'departement_name': a.section.name if a.section else '-',
+                        'site_id': a.site.id if a.site else None,
+                        'site_name': a.site.name if a.site else '-',
+                        'formulaire_audit': a.formulaire_audit.id if a.formulaire_audit else None,
+                        'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
+                        'en_cours': a.get_audit_status() == 'en_cours',
+                        'statut_label': a.get_audit_status(),
+                        'affectation': list(a.affectation.values_list('id', flat=True)),
+                        'participants': list(a.participants.values_list('id', flat=True))
+                    }
                 })
-                
-            return JsonResponse({'status': 'success', 'data': data})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            except ListeAudit.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+
+        from django.db.models import Q
+        if user.is_superuser:
+            audits = ListeAudit.objects.all()
+        else:
+            audits = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
+            
+        audits = audits.select_related('section', 'formulaire_audit', 'site')
+        data = []
+        for a in audits:
+            data.append({
+                'id': a.id,
+                'desc': a.desc,
+                'status': a.status,
+                'date_audit': a.date,
+                'departement_name': a.section.name if a.section else '-',
+                'site_name': a.site.name if a.site else '-',
+                'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
+                'en_cours': a.get_audit_status() == 'en_cours',
+                'statut_label': a.get_audit_status()
+            })
+        return JsonResponse({'status': 'success', 'data': data})
     
     def post(self, request):
-        # Temporarily removed authentication for testing
         try:
             data = json.loads(request.body)
             
             liste_audit = ListeAudit.objects.create(
-                desc=data['desc'],
-                status=data.get('status', False),
-                number_audit=data.get('number_audit', 0)
+                desc=data.get('desc'),
+                status=data.get('status', True),
+                date=data.get('date', timezone.now()),
+                section_id=data.get('section') or None,
+                formulaire_audit_id=data.get('formulaire_audit') or None,
+                site_id=data.get('site') or None
             )
+
+            if 'affectation' in data and data['affectation']:
+                liste_audit.affectation.set(data['affectation'])
+            
+            if 'participants' in data and data['participants']:
+                liste_audit.participants.set(data['participants'])
+
             return JsonResponse({
                 'status': 'success',
                 'data': {
                     'id': liste_audit.id,
-                    'desc': liste_audit.desc,
-                    'status': liste_audit.status,
-                    'number_audit': liste_audit.number_audit
+                    'desc': liste_audit.desc
                 }
             })
-        except (json.JSONDecodeError, KeyError) as e:
+        except Exception as e:
+            print(f"Error creating ListeAudit: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ResultatAuditListAPIView(View):
     def get(self, request):
-        # Temporarily removed authentication for testing
-        resultats = ResultatAudit.objects.all().annotate(
-            auditeur_name=models.F('auditeur__username'),
-            formulaire_name=models.F('audit__formulaire_audit__name'),
-            audit_desc=models.F('audit__desc'),
-            departement_name=models.F('audit__section__name'),
-            site_name=models.F('site__name')
-        ).values(
-            'id', 'ref_audit', 'audit', 'audit_desc', 'users', 'date_audit', 
-            'score_audit', 'sujet', 'site', 'auditeur', 'auditeur_name', 
-            'formulaire_name', 'reference_gamme', 'processus', 'departement_name', 'site_name', 'en_cours'
-        )
-        return JsonResponse({'status': 'success', 'data': list(resultats)})
+        # Fetch all planned audits
+        audits = ListeAudit.objects.all().select_related('section', 'formulaire_audit', 'site').prefetch_related('affectation')
+        
+        data = []
+        for a in audits:
+            # Check if this audit has a result (is started/finished)
+            res = a.resultataudit_set.first()
+            
+            data.append({
+                'id': a.id,
+                'audit_desc': a.desc,
+                'sujet': a.desc,
+                'departement_name': a.section.name if a.section else '-',
+                'site_name': a.site.name if a.site else '-',
+                'date_audit': a.date.isoformat() if a.date else None,
+                'auditeur_name': a.affectation.first().username if a.affectation.exists() else 'admin',
+                'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
+                'status': a.get_audit_status(),
+                'status_label': a.get_audit_status_display(),
+                'en_cours': res.en_cours if res else False,
+                'has_result': res is not None,
+                'resultat_id': res.id if res else None,
+                'score_audit': float(res.score_audit) if res else 0.0,
+                'ref_audit': a.get_reference()
+            })
+            
+        return JsonResponse({'status': 'success', 'data': data})
     
     def post(self, request):
         # Temporarily removed authentication for testing
@@ -846,6 +985,7 @@ class TextRefListAPIView(View):
             data.append({
                 'id': tr.id,
                 'norme': tr.norme,
+                'text_ref': tr.text_ref.id if tr.text_ref else None,
                 'file_name': tr.text_ref.name if tr.text_ref else 'N/A',
                 'file_url': tr.text_ref.content.url if tr.text_ref and tr.text_ref.content else None
             })
@@ -863,6 +1003,7 @@ class TextRefListAPIView(View):
                 'data': {
                     'id': text_ref.id,
                     'norme': text_ref.norme,
+                    'text_ref': text_ref.text_ref.id if text_ref.text_ref else None,
                     'file_name': text_ref.text_ref.name if text_ref.text_ref else 'N/A'
                 }
             })
@@ -954,14 +1095,14 @@ class DashboardStatsAPIView(View):
                 en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
                 termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
                 
-                # Score average remains for results where user is the lead Auditor
+                # Score average remains for results where user is the lead Auditeur
                 score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
                 
                 stats = {
                     'planifies': planifies,
                     'en_cours': en_cours,
                     'termines': termines,
-                    'score_moy': round(score_moy, 1) if score_moy else "0.0"
+                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0"
                 }
                 
             return JsonResponse({'status': 'success', 'data': stats})
@@ -1068,7 +1209,15 @@ class FormulaireAuditDetailAPIView(View):
     def get(self, request, pk):
         try:
             f = FormulaireAudit.objects.get(pk=pk)
-            return JsonResponse({'status': 'success', 'data': {'id': f.id, 'name': f.name}})
+            return JsonResponse({'status': 'success', 'data': {
+                'id': f.id,
+                'name': f.name,
+                'processus_id': f.processus.id if f.processus else None,
+                'type_audit_id': f.type_audit.id if f.type_audit else None,
+                'section_id': f.section.first().id if f.section.exists() else None,
+                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
+                'sous_criteres_ids': list(f.liste_sous_criteres.values_list('id', flat=True))
+            }})
         except FormulaireAudit.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
 
@@ -1077,7 +1226,29 @@ class FormulaireAuditDetailAPIView(View):
             f = FormulaireAudit.objects.get(pk=pk)
             data = json.loads(request.body)
             f.name = data.get('name', f.name)
+            f.processus_id = data.get('processus', f.processus_id)
+            f.type_audit_id = data.get('type_audit', f.type_audit_id)
+            f.type_equipement_id = data.get('type_equipement', f.type_equipement_id)
             f.save()
+
+            if 'section' in data:
+                sections = data['section']
+                if not isinstance(sections, list): sections = [sections]
+                f.section.set(sections)
+            elif 'sections' in data:
+                sections = data['sections']
+                if not isinstance(sections, list): sections = [sections]
+                f.section.set(sections)
+            
+            if 'sous_criteres' in data:
+                # Update through table
+                FormulaireSousCritere.objects.filter(formulaire=f).delete()
+                for idx, sc_id in enumerate(data['sous_criteres']):
+                    FormulaireSousCritere.objects.create(
+                        formulaire=f,
+                        sous_critere_id=sc_id,
+                        ordre=idx
+                    )
             return JsonResponse({'status': 'success', 'data': {'id': f.id, 'name': f.name}})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -1089,6 +1260,68 @@ class FormulaireAuditDetailAPIView(View):
             return JsonResponse({'status': 'success', 'message': 'Deleted'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class FormulaireAuditCopyAPIView(View):
+    def post(self, request, pk):
+        import re
+        try:
+            original_form = FormulaireAudit.objects.get(pk=pk)
+            original_name = original_form.name
+            base_name = re.sub(r' - Copie( \d+)?$', '', original_name)
+            
+            existing_copies = FormulaireAudit.objects.filter(name__startswith=f"{base_name} - Copie")
+            last_number = 0
+            for copy in existing_copies:
+                match = re.search(r' - Copie (\d+)$', copy.name)
+                if match:
+                    num = int(match.group(1))
+                    if num > last_number:
+                        last_number = num
+                elif copy.name == f"{base_name} - Copie":
+                    if last_number < 1: last_number = 1
+            
+            new_nom = f"{base_name} - Copie {last_number + 1}"
+            
+            # Deep copy
+            new_form = FormulaireAudit.objects.get(pk=original_form.pk)
+            new_form.pk = None
+            new_form.name = new_nom
+            new_form.save()
+            new_form.section.set(original_form.section.all())
+            
+            fsc_associations = FormulaireSousCritere.objects.filter(formulaire=original_form).order_by('ordre')
+            critere_map = {}
+
+            for assoc in fsc_associations:
+                old_sc = assoc.sous_critere
+                old_crit = old_sc.critere
+                
+                if old_crit.id not in critere_map:
+                    new_crit = Critere.objects.get(pk=old_crit.pk)
+                    new_crit.pk = None
+                    new_crit.formulaire = new_form
+                    new_crit.save()
+                    critere_map[old_crit.id] = new_crit
+                else:
+                    new_crit = critere_map[old_crit.id]
+                
+                new_sc = SousCritere.objects.get(pk=old_sc.pk)
+                new_sc.pk = None
+                new_sc.critere = new_crit
+                new_sc.save()
+                
+                FormulaireSousCritere.objects.create(
+                    formulaire=new_form,
+                    sous_critere=new_sc,
+                    ordre=assoc.ordre
+                )
+                
+            return JsonResponse({'status': 'success', 'message': 'Copied', 'new_id': new_form.id, 'new_name': new_form.name})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1118,30 +1351,318 @@ class TypeCotationDetailAPIView(View):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class ListeAuditStartAPIView(View):
+    @transaction.atomic
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        liste_audit = get_object_or_404(ListeAudit, pk=pk)
+
+        # Permission check
+        if not request.user.is_superuser and not liste_audit.affectation.filter(pk=request.user.pk).exists():
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
+        # Prevent duplicate start
+        existing = ResultatAudit.objects.filter(audit=liste_audit).first()
+        if existing:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Audit already started',
+                'resultat_id': existing.pk
+            })
+
+        # Extract commentaire
+        try:
+            data = json.loads(request.body)
+            commentaire = data.get('commentaire', '')
+        except:
+            commentaire = request.POST.get('commentaire', '')
+
+        # Create ResultatAudit
+        resultat = ResultatAudit.objects.create(
+            ref_audit=liste_audit.pk,
+            audit=liste_audit,
+            users=str(request.user),
+            sujet=liste_audit.desc,
+            auditeur=request.user,
+            site=getattr(liste_audit, "site", None),
+            commentaire=commentaire,
+            en_cours=True
+        )
+
+        # Generate detail rows
+        formulaire = liste_audit.formulaire_audit
+        if not formulaire:
+            return JsonResponse({"status": "error", "message": "Aucun formulaire associé à cet audit"}, status=400)
+
+        details = []
+        fscs = formulaire.formulairesouscritere_set.select_related(
+            "sous_critere__critere",
+            "sous_critere__critere__chapitre_norme",
+            "sous_critere__critere__chapitre_norme__text_ref",
+        ).order_by('ordre')
+
+        if fscs.exists():
+            for fs in fscs:
+                sc = fs.sous_critere
+                if not sc: continue
+                details.append(
+                    DetailResultatAudit(
+                        resultat_audit=resultat,
+                        critere=sc.critere.name if sc.critere else "",
+                        norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                        sous_critere=sc.content,
+                        chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                        text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
+                        value=0,
+                        value_max=getattr(sc, 'valeur_max', 1),
+                        cotation="",
+                        cotation_option=[],
+                    )
+                )
+        else:
+            for crit in formulaire.criteres.all():
+                for sc in crit.souscritere_set.all():
+                    details.append(
+                        DetailResultatAudit(
+                            resultat_audit=resultat,
+                            critere=crit.name,
+                            norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                            value=0,
+                            value_max=1,
+                            cotation="",
+                            cotation_option=[],
+                        )
+                    )
+
+        if details:
+            DetailResultatAudit.objects.bulk_create(details)
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Audit started successfully',
+            'resultat_id': resultat.pk
+        })
 
 @method_decorator(csrf_exempt, name='dispatch')
-class SousCritereDetailAPIView(View):
+class ResultatAuditDetailAPIView(View):
     def get(self, request, pk):
-        try:
-            sc = SousCritere.objects.get(pk=pk)
-            return JsonResponse({'status': 'success', 'data': {'id': sc.id, 'content': sc.content}})
-        except SousCritere.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        # Check permissions
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        details = resultat.detailresultataudit_set.all().order_by('id')
+        
+        details_data = []
+        for d in details:
+            # Get cotation options for the sous-critere if available
+            # This logic mimics the web version's way of finding cotations
+            cotations = []
+            # We search for the SousCritere to get its type_cotation
+            try:
+                # We have to find the original SousCritere. 
+                # Since DetailResultatAudit stores content, we match by content and ResultatAudit's form
+                sc = SousCritere.objects.filter(content=d.sous_critere).first()
+                if sc and sc.type_cotation:
+                    cots = Cotation.objects.filter(type_cotation=sc.type_cotation)
+                    for c in cots:
+                        cotations.append({
+                            'id': c.id,
+                            'code': c.code,
+                            'content': c.content,
+                            'valeur': c.valeur
+                        })
+                
+                # Fetch Real Preuve Attendue
+                preuves_att = []
+                if sc:
+                    for pa in sc.preuve_attendu.all():
+                        preuves_att.append(f"{pa.name} ({pa.type_preuve.name if pa.type_preuve else ''})")
+                preuve_text = " • ".join(preuves_att) if preuves_att else "Aucune preuve spécifiée"
+            except:
+                preuve_text = "Aucune preuve spécifiée"
+                pass
 
-    def put(self, request, pk):
-        try:
-            sc = SousCritere.objects.get(pk=pk)
-            data = json.loads(request.body)
-            sc.content = data.get('content', sc.content)
-            sc.save()
-            return JsonResponse({'status': 'success', 'data': {'id': sc.id}})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            details_data.append({
+                'id': d.id,
+                'critere': d.critere,
+                'norme': d.norme,
+                'sous_critere': d.sous_critere,
+                'chapitre_norme': d.chapitre_norme,
+                'text_ref_url': d.text_ref_url,
+                'commentaire': d.commentaire,
+                'cotation': d.cotation,
+                'code': d.code,
+                'value': d.value,
+                'value_max': d.value_max,
+                'cotations': cotations,
+                'preuve_attendu': preuve_text,
+                'evidences': [{'id': e.id, 'url': e.file.url} for e in d.evidences.all()]
+            })
+            
+        data = {
+            'id': resultat.id,
+            'sujet': resultat.sujet,
+            'date_audit': resultat.date_audit,
+            'score_audit': float(resultat.score_audit),
+            'auditeur': resultat.auditeur.get_full_name() or resultat.auditeur.username,
+            'participants': ", ".join(filter(None, [
+                ", ".join([u.get_full_name() or u.username for u in resultat.audit.participants.all()]),
+                resultat.audit.participants_externes
+            ])) or "Aucun",
+            'site': resultat.site.name if resultat.site else None,
+            'en_cours': resultat.en_cours,
+            'commentaire': resultat.commentaire,
+            'point_fort': resultat.point_fort,
+            'point_sensible': resultat.point_sensible,
+            'risque': resultat.risque,
+            'opportunite': resultat.opportunite,
+            'details': details_data
+        }
+        
+        return JsonResponse({'status': 'success', 'data': data})
 
     def delete(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        # Check permissions (only superuser can delete results, matching web logic)
+        if not request.user.is_superuser:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        resultat.delete()
+        return JsonResponse({'status': 'success', 'message': 'Resultat deleted'})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DetailResultatAuditUpdateAPIView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        detail = get_object_or_404(DetailResultatAudit, pk=pk)
+        resultat = detail.resultat_audit
+
+        if not resultat.en_cours:
+            return JsonResponse({'status': 'error', 'message': 'Audit is closed'}, status=403)
+
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+
         try:
-            sc = SousCritere.objects.get(pk=pk)
-            sc.delete()
-            return JsonResponse({'status': 'success', 'message': 'Deleted'})
+            # Handle both JSON and Form data (for file uploads)
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+
+            if "commentaire" in data:
+                detail.commentaire = data.get("commentaire")
+            if "cotation" in data:
+                detail.cotation = data.get("cotation")
+            if "code" in data:
+                detail.code = data.get("code")
+            if "value" in data:
+                try:
+                    detail.value = float(data.get("value", 0))
+                except (ValueError, TypeError):
+                    pass
+
+            if "justificatif" in request.FILES:
+                files = request.FILES.getlist("justificatif")
+                for f in files:
+                    EvidenceAudit.objects.create(detail=detail, file=f)
+            
+            if data.get("delete_justificatif") == "true":
+                EvidenceAudit.objects.filter(detail=detail).delete()
+                detail.justificatif = None
+
+            detail.save()
+            resultat.recalculate_score()
+
+            return JsonResponse({
+                "status": "success",
+                "score": float(resultat.score_audit),
+                "detail_id": detail.id,
+                "evidences": [{'id': e.id, 'url': e.file.url} for e in detail.evidences.all()]
+            })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResultatAuditFinishAPIView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+            
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+            
+        import json
+        try:
+            data = json.loads(request.body)
+        except:
+            data = request.POST
+
+        resultat.point_fort = data.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = data.get('point_sensible', resultat.point_sensible)
+        resultat.risque = data.get('risque', resultat.risque)
+        resultat.opportunite = data.get('opportunite', resultat.opportunite)
+        
+        resultat.en_cours = False
+        resultat.recalculate_score()
+        resultat.save()
+        
+        return JsonResponse({'status': 'success', 'message': 'Audit finished'})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResultatAuditAISuggestionsAPIView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+        
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        details = resultat.detailresultataudit_set.all()
+        
+        # Simple heuristic analysis (copying logic from web view)
+        criteria_performance = {}
+        for d in details:
+            c_name = d.critere if d.critere else "Général"
+            if c_name not in criteria_performance:
+                criteria_performance[c_name] = {'total': 0, 'count': 0}
+            if d.value is not None and d.value >= 0:
+                criteria_performance[c_name]['total'] += d.value
+                criteria_performance[c_name]['count'] += 1
+
+        ranked_criteria = []
+        for name, stats in criteria_performance.items():
+            if stats['count'] > 0:
+                ranked_criteria.append({'name': name, 'avg': stats['total'] / stats['count']})
+        
+        ranked_criteria.sort(key=lambda x: x['avg'], reverse=True)
+        top_criteres = [c['name'] for c in ranked_criteria if c['avg'] >= 0.8][:2]
+        low_criteres = [c['name'] for c in ranked_criteria if c['avg'] < 0.5][:2]
+
+        pf_text = "Maîtrise démontrée sur : " + ", ".join(top_criteres) if top_criteres else "Conformité générale correcte."
+        ps_text = "Points de vigilance sur les critères intermédiaires."
+        risk_text = "Écarts identifiés sur : " + ", ".join(low_criteres) if low_criteres else "Aucun risque majeur immédiat."
+        opp_text = "Continuer la démarche d'amélioration continue."
+
+        return JsonResponse({
+            "point_fort": pf_text,
+            "point_sensible": ps_text,
+            "risque": risk_text,
+            "opportunite": opp_text
+        })

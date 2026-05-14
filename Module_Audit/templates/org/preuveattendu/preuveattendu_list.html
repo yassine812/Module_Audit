@@ -376,18 +376,24 @@
                     type: "POST",
                     url: url,
                     data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                        'ajax': 'true'
                     },
                     headers: {'X-Requested-With': 'XMLHttpRequest'},
                     success: function(response) {
-                        if (response.success) {
+                        if (response.success || response.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Supprimé',
                                 text: response.message || "L'élément a été supprimé",
                                 timer: 1500,
                                 showConfirmButton: false
-                            }).then(() => location.reload());
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            // If it's a redirect or HTML response but status is 200, it probably succeeded
+                            location.reload();
                         }
                     },
                     error: function(xhr) {

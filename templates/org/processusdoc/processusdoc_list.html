@@ -91,7 +91,7 @@
                         class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit"></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'processusdoc_delete' doc.id %}')" class="btn btn-link text-danger p-1"
+                      <button onclick="openDeleteModal('{% url 'processusdoc_delete' doc.id %}', '{{ doc.name|escapejs }}')" class="btn btn-link text-danger p-1"
                         title="Supprimer">
                         <i data-lucide="trash-2"></i>
                       </button>
@@ -187,9 +187,6 @@
 
 <!-- Modal Deletion -->
 
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 
@@ -242,13 +239,7 @@
         success: function (response) {
           if (response.success) {
             $('#processusDocModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Succès',
-                            text: response.message || 'Opération réussie',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
+            location.reload();
           } else {
             $('#modalBodyContent').html(response);
             initModalBehaviors();
@@ -258,7 +249,7 @@
     });
   }
 
-              function openDeleteModal(url, name) {
+  function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -306,13 +297,11 @@
             }
         });
     }
-    
+
     // Alias for compatibility
     function confirmDelete(url, name) {
         openDeleteModal(url, name);
     }
-
-
 </script>
 {% endblock %}
 

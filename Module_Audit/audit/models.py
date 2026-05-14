@@ -72,7 +72,7 @@ class FormulaireAudit(models.Model):
     name = models.CharField(max_length=100)
     processus = models.ForeignKey(Processus, on_delete=models.SET_NULL , null=True, blank=True)
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
-    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.PROTECT , null=True, blank=True)
+    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.SET_NULL , null=True, blank=True)
     section = models.ManyToManyField(Section, related_name='formulaire_audit_section', blank=True)
     liste_sous_criteres = models.ManyToManyField(SousCritere,through='FormulaireSousCritere',related_name='liste_sous_critere', blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
@@ -196,10 +196,7 @@ class ResultatAudit(models.Model):
     audites = models.ManyToManyField(User, related_name='audites', blank=True)
     reference_gamme = models.CharField(max_length=50, blank=True, null=True)
     processus = models.CharField(max_length=50, blank=True, null=True)
-    point_fort = models.TextField(blank=True, null=True)
-    point_sensible = models.TextField(blank=True, null=True)
-    risque = models.TextField(blank=True, null=True)
-    opportunite = models.TextField(blank=True, null=True)
+   
     commentaire = models.TextField(blank=True, null=True)
     en_cours = models.BooleanField(default=True)
     def __str__(self):

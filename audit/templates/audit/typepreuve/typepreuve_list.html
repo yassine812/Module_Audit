@@ -87,7 +87,7 @@
                       <button onclick="openTypePreuveModal('{% url 'typepreuve_update' typepreuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit" ></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'typepreuve_delete' typepreuve.id %}', '{{ typepreuve.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <button onclick="openDeleteModal('{% url 'typepreuve_delete' typepreuve.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
                         <i data-lucide="trash-2" ></i>
                       </button>
                     </div>
@@ -175,29 +175,9 @@
     </div>
   </div>
 </div>
-
-<!-- Modal Deletion -->
-
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
-      }
-  });
-</script>
 <script>
     function openTypePreuveModal(url) {
         $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
@@ -240,7 +220,7 @@
         });
     }
 
-                function openDeleteModal(url, name) {
+    function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -288,12 +268,9 @@
             }
         });
     }
-    
-    // Alias for compatibility
+
     function confirmDelete(url, name) {
         openDeleteModal(url, name);
     }
-
-
 </script>
 {% endblock %}

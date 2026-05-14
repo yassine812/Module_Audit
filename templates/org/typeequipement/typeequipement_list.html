@@ -92,7 +92,7 @@
                       <button onclick="openTypeEquipementModal('{% url 'typeequipement_update' typeequipement.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                         <i data-lucide="edit"></i>
                       </button>
-                      <button onclick="openDeleteModal('{% url 'typeequipement_delete' typeequipement.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                      <button onclick="openDeleteModal('{% url 'typeequipement_delete' typeequipement.id %}', '{{ typeequipement.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
                         <i data-lucide="trash-2"></i>
                       </button>
                     </div>
@@ -223,13 +223,7 @@
         success: function(response) {
           if (response.success) {
             $('#typeequipementModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Succès',
-                            text: response.message || 'Opération réussie',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
+            location.reload();
           }
         },
         error: function(xhr) {
@@ -244,7 +238,7 @@
     });
   }
 
-              function openDeleteModal(url, name) {
+  function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -292,13 +286,11 @@
             }
         });
     }
-    
+
     // Alias for compatibility
     function confirmDelete(url, name) {
         openDeleteModal(url, name);
     }
-
-
 </script>
 {% endblock %}
 

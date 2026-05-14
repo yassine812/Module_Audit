@@ -89,8 +89,8 @@ class SectionDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["org/section/section_delete_modal.html"]
         return ["org/section/section_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -196,8 +196,8 @@ class SiteDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["org/site/site_delete_modal.html"]
         return ["org/site/site_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -330,8 +330,8 @@ class ProcessusDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             return ["org/processus/processus_delete_modal.html"]
         return ["org/processus/processus_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -416,8 +416,8 @@ class ProcessusDocDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             return ["org/processusdoc/processusdoc_delete_modal.html"]
         return ["org/processusdoc/processusdoc_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -534,19 +534,23 @@ class TypeEquipementDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delet
                 self.object.delete()
                 return JsonResponse({'success': True, 'message': "Type d'équipement supprimé avec succès."})
             except ProtectedError:
-                return JsonResponse({'success': False, 'message': "Impossible de supprimer ce type car il est lié à des équipements existants. Veuillez les modifier d'abord."}, status=400)
+                from audit.models import FormulaireAudit
+                related_equipements = self.object.equipement_set.all()
+                related_forms = FormulaireAudit.objects.filter(type_equipement=self.object)
+                
+                reasons = []
+                if related_equipements.exists():
+                    reasons.append(f"{len(related_equipements)} équipement(s)")
+                if related_forms.exists():
+                    reasons.append(f"{len(related_forms)} formulaire(s) d'audit")
+                
+                error_msg = f"Impossible de supprimer ce type car il est encore lié à : {', '.join(reasons) if reasons else 'des éléments protégés'}."
+                return JsonResponse({'success': False, 'message': error_msg}, status=400)
         
         try:
             return super().form_valid(form)
         except ProtectedError:
-            related_equipements = self.object.equipement_set.all()
-            equipement_names = [equip.name for equip in related_equipements]
-            messages.error(
-                self.request, 
-                f"Impossible de supprimer le type d'équipement '{self.object.name}' car il est utilisé par "
-                f"{len(related_equipements)} équipement(s): {', '.join(equipement_names)}. "
-                "Veuillez supprimer ou modifier ces équipements d'abord."
-            )
+            messages.error(self.request, "Impossible de supprimer ce type car il est encore utilisé par d'autres éléments.")
             return redirect(self.success_url)
 
 # =====================================================
@@ -631,8 +635,8 @@ class NiveauAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
             return ["org/niveauattendu/niveauattendu_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()

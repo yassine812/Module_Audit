@@ -41,7 +41,7 @@ class Equipement(models.Model):
     # Associations:
     # - chaque Equipement a UN type (TypeEquipement)
     # -chaque Equipement est localisé sur UN site (Site)
-    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.PROTECT)
+    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.SET_NULL, null=True, blank=True)
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
     name = models.CharField(max_length=150)
     serial_number = models.CharField(max_length=120, blank=True)

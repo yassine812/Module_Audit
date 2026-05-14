@@ -1,0 +1,355 @@
+{% load static %}
+
+<style>
+    /* --- Premium Design System for Sub-Criteria Modal --- */
+    #sousCritereManageForm {
+        --primary-indigo: #4f46e5;
+        --soft-indigo: #eef2ff;
+        --slate-700: #334155;
+        --slate-500: #64748b;
+        --slate-200: #e2e8f0;
+    }
+
+    .modal-body-responsive::-webkit-scrollbar { width: 6px; }
+    .modal-body-responsive::-webkit-scrollbar-track { background: #f1f5f9; }
+    .modal-body-responsive::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    /* --- Field Styling --- */
+    .form-control-modern {
+        border: 1.5px solid #dbe3f0 !important;
+        border-radius: 10px !important;
+        background: #f8fbff !important;
+        color: #1e293b !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        transition: all 0.2s ease !important;
+    }
+    .form-control-modern:focus {
+        border-color: var(--primary-indigo) !important;
+        background: #fff !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+        outline: none !important;
+    }
+
+    .form-label-sc {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--slate-500);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.05em;
+    }
+    .form-label-sc i { color: var(--primary-indigo); opacity: 0.8; margin-right: 6px; }
+
+    /* --- Accordion Layout --- */
+    .desktop-accordion-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 16px; align-items: start; }
+    .sc-grid-left, .sc-grid-right { display: flex; flex-direction: column; gap: 8px; }
+
+    .sc-block {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--slate-200) !important;
+        border-radius: 12px !important;
+        background: #fff !important;
+    }
+    .sc-block:hover { border-color: #cbd5e1 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important; }
+
+    .sc-header { min-height: 48px !important; border-bottom: 1px solid #f1f5f9 !important; padding: 0 16px !important; }
+    .sc-header[aria-expanded="true"] { background: var(--soft-indigo) !important; }
+    .sc-header[aria-expanded="true"] .sc-chevron { transform: rotate(180deg); color: var(--primary-indigo) !important; }
+    .sc-title-text { font-size: 13px !important; font-weight: 700 !important; color: var(--slate-700) !important; }
+
+    /* --- Select2 Styling --- */
+    .select2-container--bootstrap4 .select2-selection {
+        border: 1.5px solid #dbe3f0 !important;
+        border-radius: 10px !important;
+        min-height: 40px !important;
+        background-color: #f8fbff !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+        background-color: var(--soft-indigo) !important;
+        border: 1px solid #c7d2fe !important;
+        color: var(--primary-indigo) !important;
+        border-radius: 4px !important;
+        padding: 1px 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        margin-top: 4px !important;
+    }
+    
+    /* --- Buttons --- */
+    .btn-indigo { background-color: var(--primary-indigo); color: white; }
+    .btn-indigo:hover { background-color: #4338ca; color: white; transform: translateY(-1px); }
+
+    .btn-header-icon {
+        width: 44px; height: 44px; min-width: 44px; 
+        border-radius: 12px;
+        background: var(--primary-indigo);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+    }
+</style>
+
+<div class="modal-header d-flex align-items-center justify-content-between p-4 border-0">
+    <div class="d-flex align-items-center" style="gap: 16px;">
+        <div class="btn-header-icon">
+            <i data-lucide="layers" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="min-w-0">
+            <h5 class="modal-title fw-bold text-dark mb-0" style="font-size: 1.2rem; line-height: 1.2;">Sous-Critères : {{ critere.name }}</h5>
+            <p class="text-muted mb-0 small" style="max-width: 350px;">Définissez les éléments d'évaluation détaillés pour ce critère.</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
+        style="background: none; border: none; font-size: 1.5rem; color: #94a3b8;">&times;</button>
+</div>
+
+<form id="sousCritereManageForm" method="post" action="{% url 'critere_manage_sous_criteres' critere.id %}" autocomplete="off">
+    {% csrf_token %}
+    <div class="modal-body p-0 bg-slate-50">
+        <div class="modal-body-responsive custom-scrollbar" style="max-height: 65vh; overflow-y: auto; padding: 20px 30px;">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-soft-indigo text-primary rounded-pill px-3 py-2 fw-bold" style="background: var(--soft-indigo); color: var(--primary-indigo);">
+                        <i data-lucide="list-checks" class="w-4 h-4 mr-1"></i>
+                        <span id="sc-count">{{ sous_criteres|length }}</span> Sous-critères
+                    </span>
+                </div>
+                <button type="button" id="add-sous-critere" class="btn btn-primary rounded-pill d-flex align-items-center gap-2 px-4 py-2 shadow-sm fw-bold">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Ajouter un élément</span>
+                </button>
+            </div>
+
+            {{ sous_criteres.management_form }}
+            <div id="sous-criteres-list" class="accordion">
+                {% for sc_form in sous_criteres %}
+                <div class="sous-critere-row mb-3">
+                    {% for hidden in sc_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div class="d-none">{{ sc_form.DELETE }}</div>
+
+                    <div class="card sc-block shadow-sm">
+                        <div class="card-header sc-header bg-white d-flex align-items-center justify-content-between py-2 px-3" 
+                             id="heading-{{ forloop.counter0 }}" style="cursor: pointer; min-height: 52px;" 
+                             data-toggle="collapse" data-target="#collapse-{{ forloop.counter0 }}">
+                            <div class="d-flex align-items-center gap-3">
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-muted transition-all sc-chevron"></i>
+                                <span class="fw-bold text-dark sc-title-text">
+                                    {% if sc_form.content.value %}{{ sc_form.content.value|truncatechars:60 }}{% else %}Nouveau Sous-critère{% endif %}
+                                </span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-light text-danger remove-row rounded-circle p-2 border-0 shadow-none">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div id="collapse-{{ forloop.counter0 }}" class="collapse {% if not sc_form.instance.pk %}show{% endif %}" data-parent="#sous-criteres-list">
+                            <div class="card-body p-4 bg-white border-top border-slate-100">
+                                <div class="desktop-accordion-grid">
+                                    <div class="sc-grid-left">
+                                        <div class="mb-3">
+                                            <label class="form-label-sc">
+                                                <i data-lucide="align-left"></i> DESCRIPTION DÉTAILLÉE *
+                                            </label>
+                                            {{ sc_form.content }}
+                                        </div>
+                                        <div>
+                                            <label class="form-label-sc">
+                                                <i data-lucide="corner-down-right"></i> RÉACTION ATTENDUE
+                                            </label>
+                                            {{ sc_form.reaction }}
+                                        </div>
+                                    </div>
+                                    <div class="sc-grid-right">
+                                        <div class="mb-3">
+                                            <label class="form-label-sc">
+                                                <i data-lucide="bar-chart-2"></i> COTATION
+                                            </label>
+                                            {{ sc_form.type_cotation }}
+                                        </div>
+                                        <div>
+                                            <label class="form-label-sc">
+                                                <i data-lucide="file-text"></i> PREUVES ATTENDUES
+                                            </label>
+                                            <select name="{{ sc_form.preuve_attendu.html_name }}" class="form-control-modern w-100 select2-modal" multiple="multiple">
+                                                {% for choice in sc_form.preuve_attendu.field.choices %}
+                                                    {% if choice.0 %}
+                                                        <option value="{{ choice.0 }}" {% if choice.0|stringformat:"s" in sc_form.preuve_attendu.value|default:"" or choice.0 in sc_form.preuve_attendu.value %}selected{% endif %}>{{ choice.1 }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-between align-items-center">
+        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-slate-500" data-dismiss="modal">Terminer plus tard</button>
+        <button type="submit" class="btn btn-indigo rounded-pill px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm transition-all">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>Enregistrer les Sous-Critères</span>
+        </button>
+    </div>
+</form>
+
+<div id="empty-form" class="d-none">
+    <div class="sous-critere-row mb-3">
+        <input type="hidden" name="souscritere_set-__prefix__-id" id="id_souscritere_set-__prefix__-id">
+        <div class="card sc-block shadow-sm">
+            <div class="card-header sc-header bg-white d-flex align-items-center justify-content-between py-2 px-3" 
+                 id="heading-__prefix__" style="cursor: pointer; min-height: 52px;" 
+                 data-toggle="collapse" data-target="#collapse-__prefix__">
+                <div class="d-flex align-items-center gap-3">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-muted transition-all sc-chevron"></i>
+                    <span class="fw-bold text-dark sc-title-text">Nouveau Sous-critère</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-light text-danger remove-row rounded-circle p-2 border-0 shadow-none">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="collapse-__prefix__" class="collapse show" data-parent="#sous-criteres-list">
+                <div class="card-body p-4 bg-white border-top border-slate-100">
+                    <div class="desktop-accordion-grid">
+                        <div class="sc-grid-left">
+                            <div class="mb-3">
+                                <label class="form-label-sc"><i data-lucide="align-left"></i> DESCRIPTION DÉTAILLÉE *</label>
+                                <textarea name="souscritere_set-__prefix__-content" class="form-control-modern w-100" placeholder="Contenu du sous-critère..." style="height:75px !important;"></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label-sc"><i data-lucide="corner-down-right"></i> RÉACTION ATTENDUE</label>
+                                <textarea name="souscritere_set-__prefix__-reaction" class="form-control-modern w-100" style="height:50px !important;"></textarea>
+                            </div>
+                        </div>
+                        <div class="sc-grid-right">
+                            <div class="mb-3">
+                                <label class="form-label-sc"><i data-lucide="bar-chart-2"></i> COTATION</label>
+                                <select name="souscritere_set-__prefix__-type_cotation" class="form-control-modern w-100" style="height:40px !important;">
+                                    {% for choice in sous_criteres.empty_form.type_cotation.field.choices %}
+                                        <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label-sc"><i data-lucide="file-text"></i> PREUVES ATTENDUES</label>
+                                <select name="souscritere_set-__prefix__-preuve_attendu" class="form-control-modern w-100 select2-modal" multiple="multiple">
+                                    {% for choice in sous_criteres.empty_form.preuve_attendu.field.choices %}
+                                        {% if choice.0 %}
+                                            <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        function initSelect2(el) {
+            $(el).select2({
+                theme: 'bootstrap4',
+                placeholder: "Sélectionnez...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#critereModal')
+            });
+        }
+
+        $('.select2-modal').each(function() { initSelect2(this); });
+
+        function syncHeaders($row) {
+            $row.find('textarea[name$="-content"], input[name$="-content"]').on('input', function() {
+                const text = $(this).val();
+                const truncated = text.length > 60 ? text.substring(0, 57) + '...' : text;
+                $row.find('.sc-title-text').text(truncated || 'Nouveau Sous-critère');
+            });
+        }
+        $('.sous-critere-row').each(function() { syncHeaders($(this)); });
+
+        $('#add-sous-critere').on('click', function() {
+            const totalForms = $('#id_souscritere_set-TOTAL_FORMS');
+            const count = parseInt(totalForms.val()) || 0;
+            const template = $('#empty-form').html().replace(/__prefix__/g, count);
+            const $newRow = $(template);
+            
+            $('.collapse.show').collapse('hide');
+            $('#sous-criteres-list').prepend($newRow);
+            totalForms.val(count + 1);
+            
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            $newRow.find('.select2-modal').each(function() { initSelect2(this); });
+            syncHeaders($newRow);
+            
+            $('#sc-count').text($('.sous-critere-row').length - 1);
+        });
+
+        $(document).on('click', '.remove-row', function(e) {
+            e.stopPropagation();
+            const $row = $(this).closest('.sous-critere-row');
+            const $del = $row.find('input[name$="-DELETE"]');
+            
+            if ($del.length && $row.find('input[name$="-id"]').val()) {
+                $del.prop('checked', true);
+                $row.fadeOut(300);
+            } else {
+                $row.remove();
+                reindexFormset();
+            }
+        });
+
+        function reindexFormset() {
+            const $rows = $('#sous-criteres-list .sous-critere-row');
+            $('#id_souscritere_set-TOTAL_FORMS').val($rows.length);
+            $('#sc-count').text($rows.length);
+        }
+
+        $('#sousCritereManageForm').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const btn = form.find('button[type="submit"]');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-2"></span>Enregistrement...');
+
+            $.ajax({
+                type: "POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function(res) {
+                    if (res.success) {
+                        $('#critereModal').modal('hide');
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Succès !', 
+                            text: res.message, 
+                            timer: 2000, 
+                            showConfirmButton: false,
+                            background: '#fff',
+                            iconColor: '#4f46e5'
+                        }).then(() => location.reload());
+                    } else {
+                        $('#modalBodyContent').html(res);
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i data-lucide="check-circle" class="w-5 h-5"></i> Enregistrer');
+                    Swal.fire({ icon: 'error', title: 'Erreur', text: "Erreur lors de l'enregistrement.", confirmButtonColor: '#4f46e5' });
+                }
+            });
+        });
+    });
+</script>

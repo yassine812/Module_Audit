@@ -35,7 +35,12 @@ class TypePreuve(models.Model):
     def __str__(self):
         return self.name
 class PreuveAttendu(models.Model):
+    CODE_CHOICES = [
+        ('C', 'Conforme'),
+        ('PC', 'Partiellement Conforme'),
+    ]
     name = models.TextField()
+    code = models.CharField(max_length=2, choices=CODE_CHOICES, blank=True, null=True, verbose_name='Code de preuve')
     type_preuve = models.ForeignKey(TypePreuve, on_delete=models.SET_NULL, null=True, blank=True)
     def __str__(self):
         type_name = self.type_preuve.name if self.type_preuve else "N/A"
@@ -67,7 +72,7 @@ class FormulaireAudit(models.Model):
     name = models.CharField(max_length=100)
     processus = models.ForeignKey(Processus, on_delete=models.SET_NULL , null=True, blank=True)
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
-    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.PROTECT , null=True, blank=True)
+    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.SET_NULL , null=True, blank=True)
     section = models.ManyToManyField(Section, related_name='formulaire_audit_section', blank=True)
     liste_sous_criteres = models.ManyToManyField(SousCritere,through='FormulaireSousCritere',related_name='liste_sous_critere', blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
@@ -102,7 +107,9 @@ class ListeAudit(models.Model):
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True)
     formulaire_audit = models.ForeignKey(FormulaireAudit, on_delete=models.SET_NULL, null=True, blank=True)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
     participants = models.ManyToManyField(User, related_name='liste_audit_participants', blank=True)
+    participants_externes = models.TextField(blank=True, null=True, verbose_name="Participants Externes")
     
     def get_audit_status(self):
         """Determine the actual status of the audit based on ResultatAudit"""
@@ -170,6 +177,7 @@ class FormulaireSousCritere(models.Model):
     sous_critere = models.ForeignKey("SousCritere", on_delete=models.CASCADE)
     ordre = models.PositiveIntegerField(default=0)
     class Meta:
+        unique_together = ("formulaire", "sous_critere")
         ordering = ["ordre"]
     def __str__(self):
         return f"{self.formulaire.name} - {self.sous_critere.content[:30]} (ordre {self.ordre})"
@@ -197,34 +205,27 @@ class ResultatAudit(models.Model):
     def __str__(self):
         return f"Audit {self.audit.desc} - {self.date_audit.strftime('%Y-%m-%d %H:%M:%S')} - Score: {self.score_audit}"
     
+    @property
+    def score_percentage(self):
+        if self.score_audit is None:
+            return 0
+        return round(self.score_audit * 100, 1)
+
     def recalculate_score(self):
-        details = self.detailresultataudit_set.all()
-        # Group by criteria name (snapshot)
-        groups = {}
-        for d in details:
-            if d.value < 0 or not d.cotation: # Skip N/A or unanswered
-                continue
-            if d.critere not in groups:
-                groups[d.critere] = []
-            # Raw cotation value
-            groups[d.critere].append(d.value)
+        # Exclude empty cotations AND N/A cotations from the average
+        # We also exclude negative values as they typically represent N/A in this system
+        details = self.detailresultataudit_set.exclude(cotation='').exclude(
+            models.Q(cotation__icontains='n/a') | 
+            models.Q(cotation__icontains='non applicable') |
+            models.Q(value__lt=0)
+        )
         
-        if not groups:
+        if not details.exists():
             self.score_audit = 0
         else:
-            # Calculate average value for each criterion
-            criteria_scores = []
-            for crit_name, values in groups.items():
-                if values:
-                    avg_crit = sum(values) / len(values)
-                    criteria_scores.append(avg_crit)
-            
-            # Global score is the average of criteria averages
-            if criteria_scores:
-                global_score = sum(criteria_scores) / len(criteria_scores)
-                self.score_audit = round(global_score, 2)
-            else:
-                self.score_audit = 0
+            total_value = sum(detail.value for detail in details)
+            count = details.count()
+            self.score_audit = round(total_value / count, 3) if count > 0 else 0
                 
         self.save(update_fields=["score_audit"])
 # --- EXÉCUTION : DÉTAIL PAR SOUS-CRITÈRE ---
@@ -244,8 +245,14 @@ class DetailResultatAudit(models.Model):
     code = models.CharField(max_length=3, blank=True, null=True)
     value = models.FloatField(default=0)
     value_max = models.FloatField(default=1)
+class EvidenceAudit(models.Model):
+    detail = models.ForeignKey(DetailResultatAudit, on_delete=models.CASCADE, related_name='evidences')
+    file = models.FileField(upload_to='evidence/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return f"Detail {self.critere} - {self.norme}"
+        return f"Evidence for {self.detail.critere} - {self.uploaded_at}"
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.resultat_audit.recalculate_score()
+        if self.detail and self.detail.resultat_audit:
+            self.detail.resultat_audit.recalculate_score()

@@ -297,8 +297,8 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             return ["audit/typeaudit/typeaudit_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -306,7 +306,7 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des formulaires d'audit existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 #textref
 class TextRefListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = TextRef
@@ -368,8 +368,8 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["audit/textref/textref_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -379,7 +379,7 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
                     'success': False,
                     'message': "Cette référence ne peut pas être supprimée car elle est utilisée ailleurs."
                 }, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 #chapiteNorme
 class ChapitreNormeListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = ChapitreNorme
@@ -439,8 +439,8 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
             return ["audit/chapitre/chapitre_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -450,7 +450,7 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
                     'success': False,
                     'message': "Ce chapitre ne peut pas être supprimé car il est utilisé."
                 }, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 #critere
 class CritereListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, ListView):
     model = Critere
@@ -579,8 +579,8 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
             return ["audit/critere/critere_delete_modal.html"]
         return ["audit/critere/critere_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -596,7 +596,7 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
                         f"{len(related_sous_criteres)} sous-critère(s): {', '.join(sc_names)}{'...' if len(related_sous_criteres) > 3 else ''}."
                     )
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 
 #SousCritère
 class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -713,8 +713,8 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
             return ["audit/souscritere/souscritere_delete_modal.html"]
         return ["audit/souscritere/souscritere_confirm_delete.html"]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -723,7 +723,7 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
                 # Add specific error handling if it's protected
                 error_msg = f"Impossible de supprimer le sous-critère car il possède des dépendances actives."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 
 #TypePreuve
 class TypePreuveListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -786,8 +786,8 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
             return ["audit/typepreuve/typepreuve_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -797,7 +797,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
                     'success': False,
                     'message': "Ce type de preuve ne peut pas être supprimé car il est utilisé ailleurs."
                 }, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 # =====================================================
 # LIST VIEW
 # =====================================================
@@ -957,8 +957,8 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             return ["audit/typecotation/typecotation_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -966,7 +966,7 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des cotations existantes."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 
 # =====================================================
 # COTATION VIEWS
@@ -1070,8 +1070,8 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             return ["audit/cotation/cotation_delete_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -1079,7 +1079,7 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             except ProtectedError:
                 error_msg = "Impossible de supprimer cette cotation car elle est utilisée dans des audits existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 
 
 # =====================================================
@@ -1780,11 +1780,11 @@ class UserPasswordChangeView(LoginRequiredMixin, SuccessMessageMixin, PasswordCh
             return ["users/password_change_modal.html"]
         return [self.template_name]
 
-    def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    def delete(self, request, *args, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             form.save()
             return JsonResponse({'success': True, 'message': self.success_message})
-        return super().form_valid(form)
+        return super().delete(request, *args, **kwargs)
 
     def form_invalid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -2701,10 +2701,13 @@ def send_audit_report_email(request, pk):
                 
             pdf_content = base64.b64decode(pdf_base64)
             
+            # Split recipients by comma or semicolon
+            recipients = [e.strip() for e in email_to.replace(';', ' ').replace(',', ' ').split() if e.strip()]
+            
             email = EmailMessage(
                 subject=f'Rapport d\'Audit #{pk}',
                 body=email_message,
-                to=[email_to],
+                to=recipients,
             )
             email.attach(f'Rapport_Audit_{pk}.pdf', pdf_content, 'application/pdf')
             email.send()
@@ -2720,3 +2723,6 @@ def get_formulaire_type_audit(request, formulaire_id):
         'type_audit_id': formulaire.type_audit.id if formulaire.type_audit else None,
         'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
     })
+
+
+

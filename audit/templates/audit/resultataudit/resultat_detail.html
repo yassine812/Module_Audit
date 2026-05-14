@@ -48,6 +48,12 @@
                         <span class="flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4"></i> {{ resultat.auditeur.username }}</span>
                         <span class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i> {{ resultat.site|default:"Site de l'audit" }}</span>
                     </div>
+                    {% if resultat.commentaire %}
+                    <div class="mt-4 p-4 bg-slate-50 border-l-4 border-slate-400 rounded-r-xl">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Contexte de l'Audit</span>
+                        <p class="text-xs text-slate-600 italic leading-relaxed">{{ resultat.commentaire }}</p>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="flex items-center gap-8">

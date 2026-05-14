@@ -8,12 +8,62 @@
 {% block breadcrumb %}Preuves Attendues{% endblock %}
 
 {% block extra_css %}
-
 <style>
   .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); border-radius: 1rem; }
-  
-  
 
+  @media (max-width: 768px) {
+    /* Mobile Cards View */
+    .mobile-cards-container {
+      display: block !important;
+    }
+    .desktop-table-container {
+      display: none !important;
+    }
+    .btn-sm-block {
+      width: 100%;
+      border-radius: 25px !important;
+      font-size: 16px !important;
+    }
+    .card-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .card-header-flex .ml-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+    }
+  }
+
+  .mobile-cards-container { display: none; }
+  
+  .preuve-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #f1f5f9;
+  }
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-weight: bold;
+    align-items: center;
+  }
+  .preuve-card-body div {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  .preuve-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+  }
 
   /* Responsive Pagination */
   .pagination-container {
@@ -46,7 +96,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between">
+        <div class="card-header d-flex align-items-center bg-white border-bottom-0 pb-0 pt-3 justify-content-between card-header-flex">
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'dashboard' %}" class="d-inline-flex align-items-center justify-content-center bg-slate-100 text-slate-600 rounded-3 shadow-sm border-0" style="width: 32px !important; height: 32px !important; text-decoration: none;">
               <i data-lucide="arrow-left" style="width: 16px !important; height: 16px !important;"></i>
@@ -57,10 +107,9 @@
           </div>
           {% if page_obj %}
           <div class="ml-auto mt-0">
-            <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4">
+            <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_create' %}')" class="btn btn-success shadow-sm rounded-pill px-4 btn-sm-block">
               <i data-lucide="plus" class="mr-1"></i>
-              Ajouter une Preuve Attendue
-              
+              Ajouter une Preuve
             </button>
           </div>
           {% endif %}
@@ -68,49 +117,105 @@
         
         <div class="card-body px-0 pb-0">
           {% if page_obj %}
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
-              <thead class="bg-light shadow-none">
-                <tr>
-                  <th class="ps-3 col-id text-center">ID</th>
-                  <th class="col-name">Désignation</th>
-                  <th class="col-type text-center">Type de Preuve</th>
-                  <th class="text-center col-actions">Actions</th>
-                </tr>
-              </thead>
-            <tbody>
-              {% for preuve in page_obj %}
-              <tr>
-                <td class="text-center col-id  ">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
-                <td class="col-name text-truncate">
-                  <strong class="text-dark ">{{ preuve.name }}</strong>
-                </td>
-                <td class="col-type text-center">
-                  {% if preuve.type_preuve %}
-                    <span class="badge badge-info">{{ preuve.type_preuve.name }}</span>
-                  {% else %}
-                    <span class=" ">-</span>
-                  {% endif %}
-                </td>
-                <td class="text-center col-actions">
-                  <div class="d-flex justify-content-center align-items-center">
-                    <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
-                      <i data-lucide="edit" ></i>
-                    </button>
-                    <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}')" class="btn btn-link text-danger p-1" title="Supprimer">
-                      <i data-lucide="trash-2" ></i>
-                    </button>
+          <!-- Mobile Cards View -->
+          <div class="mobile-cards-container p-3">
+             {% for preuve in page_obj %}
+             <div class="preuve-card">
+                <div class="card-header-row">
+                  <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+                  <div class="d-flex gap-2">
+                    {% if preuve.code %}
+                      <span class="badge {% if preuve.code == 'C' %}bg-success-50 text-success-700 border-success-100{% else %}bg-warning-50 text-warning-700 border-warning-100{% endif %} border px-2 py-1" title="{% if preuve.code == 'C' %}Conforme{% else %}Partiellement Conforme{% endif %}">
+                        {{ preuve.code }}
+                      </span>
+                    {% endif %}
+                    {% if preuve.type_preuve %}
+                        <span class="badge bg-info-50 text-info-700 border border-info-100 px-3 py-1">
+                            {{ preuve.type_preuve.name }}
+                        </span>
+                    {% endif %}
                   </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                </div>
+               
+               <div class="preuve-card-body">
+                 <div class="fw-bold text-dark" style="font-size: 16px;">{{ preuve.name }}</div>
+               </div>
+
+               <div class="preuve-card-actions">
+                 <a href="{% url 'preuveattendu_detail' preuve.id %}" class="btn btn-light text-info px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Détails">
+                   <i data-lucide="eye" style="width: 18px;"></i>
+                 </a>
+                 <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Modifier">
+                   <i data-lucide="edit" style="width: 18px;"></i>
+                 </button>
+                  <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}', '{{ preuve.name|escapejs }}')" class="btn btn-light text-danger px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Supprimer">
+                    <i data-lucide="trash-2" style="width: 18px;"></i>
+                  </button>
+               </div>
+             </div>
+             {% endfor %}
+          </div>
+
+          <!-- Desktop Table View -->
+          <div class="desktop-table-container">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0 mt-3 border-left-0 border-right-0">
+                <thead class="bg-light shadow-none">
+                  <tr>
+                    <th class="ps-3 col-id text-center" style="width: 80px;">ID</th>
+                    <th class="col-name">Désignation</th>
+                    <th class="col-code text-center" style="width: 150px;">Code de preuve</th>
+                    <th class="col-type text-center" style="width: 200px;">Type de Preuve</th>
+                    <th class="text-center col-actions" style="width: 180px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for preuve in page_obj %}
+                  <tr>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                    <td class="col-name text-truncate">
+                      <strong class="text-dark">{{ preuve.name }}</strong>
+                    </td>
+                    <td class="col-code text-center">
+                      {% if preuve.code %}
+                        <span class="badge {% if preuve.code == 'C' %}bg-success-50 text-success-700 border-success-100{% else %}bg-warning-50 text-warning-700 border-warning-100{% endif %} border px-3 py-1 fw-bold" title="{% if preuve.code == 'C' %}Conforme{% else %}Partiellement Conforme{% endif %}">
+                          {{ preuve.code }}
+                        </span>
+                      {% else %}
+                        <span class="text-muted italic">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="col-type text-center">
+                      {% if preuve.type_preuve %}
+                        <span class="badge bg-light text-info border px-3 py-1 fw-normal">{{ preuve.type_preuve.name }}</span>
+                      {% else %}
+                        <span class="text-muted italic">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center col-actions">
+                      <div class="d-flex justify-content-center align-items-center gap-1">
+                        <a href="{% url 'preuveattendu_detail' preuve.id %}" class="btn btn-link text-info p-1" title="Détails">
+                          <i data-lucide="eye"></i>
+                        </a>
+                        <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
+                          <i data-lucide="edit"></i>
+                        </button>
+                         <button onclick="openDeleteModal('{% url 'preuveattendu_delete' preuve.id %}', '{{ preuve.name|escapejs }}')" class="btn btn-link text-danger p-1" title="Supprimer">
+                           <i data-lucide="trash-2"></i>
+                         </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
           {% else %}
           <div class="text-center py-5">
-            <i data-lucide="check-square" class="w-12 h-12  mb-3 opacity-25"></i>
-            <h4 class=" font-weight-bold">Aucune preuve attendue trouvée</h4>
-            <p class=" ">Commencez par créer votre première preuve attendue.</p>
+            <i data-lucide="check-square" class="w-12 h-12 mb-3 opacity-25"></i>
+            <h4 class="font-weight-bold">Aucune preuve attendue trouvée</h4>
+            <p>Commencez par créer votre première preuve attendue.</p>
             <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_create' %}')" class="btn btn-primary rounded-pill px-4 shadow-sm">
               <i data-lucide="plus" class="mr-2"></i>
               Créer une Preuve Attendue
@@ -120,51 +225,51 @@
         </div>
         
         {% if is_paginated %}
-        <div class="card-footer bg-white border-top-0 pt-0">
+        <div class="card-footer bg-white border-top-0 pt-3">
           <div class="pagination-container">
             <div class="pagination-info px-2">
               <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
-            <nav aria-label="Page navigation">
+            <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
                 {% if page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="Première">
+                    <a class="page-link shadow-sm border px-3" href="?page=1" aria-label="Première">
                       <i data-lucide="chevrons-left" class="w-4 h-4"></i>
                     </a>
                   </li>
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
                       <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </a>
                   </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
                 {% endif %}
 
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
 
                 {% if page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                   <li class="page-item">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
                       <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </a>
                   </li>
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
+                    <a class="page-link shadow-sm border px-3" href="?page={{ paginator.num_pages }}" aria-label="Dernière">
                       <i data-lucide="chevrons-right" class="w-4 h-4"></i>
                     </a>
                   </li>
                 {% else %}
-                  <li class="page-item disabled"><span class="page-link"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
+                  <li class="page-item disabled"><span class="page-link shadow-sm border px-3 opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></span></li>
                 {% endif %}
               </ul>
             </nav>
           </div>
         </div>
         {% elif page_obj %}
-        <div class="card-footer bg-light border-top-0">
-           <small class="">Affichage de {{ page_obj|length }} preuve{{ page_obj|length|pluralize }}</small>
+        <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
+           <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> preuve{{ page_obj|length|pluralize }}</small>
         </div>
         {% endif %}
       </div>
@@ -172,25 +277,21 @@
   </div>
 </div>
 
-<!-- Modal Creation/Edition -->
+<!-- Modal Containers -->
 <div class="modal fade" id="preuveAttenduModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
       <div id="modalBodyContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2  ">Chargement du formulaire...</p>
+          <p class="mt-2">Chargement du formulaire...</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Deletion -->
 
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -213,7 +314,7 @@
 </script>
 <script>
     function openPreuveAttenduModal(url) {
-        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
+        $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Chargement...</p></div>');
         $('#preuveAttenduModal').modal('show');
         $.ajax({
             url: url,
@@ -310,8 +411,3 @@
 
 </script>
 {% endblock %}
-
-
-
-
-

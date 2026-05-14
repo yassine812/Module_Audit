@@ -78,7 +78,7 @@
         .pdf-section.w-full.flex.h-36 { 
             height: auto !important; 
             flex-direction: column !important; 
-            border: 2px solid #93c5fd !important;
+            border: 2px solid #dbeafe !important;
             overflow: visible !important;
         }
         .w-\[12\%\], .w-\[76\%\] { 
@@ -91,7 +91,7 @@
             align-items: center !important;
             justify-content: center !important;
         }
-        .w-\[76\%\] { background: #93c5fd !important; min-height: 80px !important; }
+        .w-\[76\%\] { background: #dbeafe !important; min-height: 80px !important; }
         .text-\[34px\] { 
             font-size: 1.5rem !important; 
             letter-spacing: 0.1em !important; 
@@ -196,14 +196,14 @@
         <div class="report-paper p-8 md:p-12 text-black" id="actual-paper-content">
             
             <!-- HEADER -->
-            <div class="pdf-section w-full flex border-[3px] border-[#93c5fd] mb-8 h-36 overflow-hidden bg-white shadow-sm">
-                <div class="w-[12%] border-r-[3px] border-[#93c5fd] flex items-center justify-start pl-6 py-6">
+            <div class="pdf-section w-full flex border-[3px] border-[#dbeafe] mb-8 h-36 overflow-hidden bg-white shadow-sm">
+                <div class="w-[12%] border-r-[3px] border-[#dbeafe] flex items-center justify-start pl-6 py-6">
                     <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-16 w-auto object-contain">
                 </div>
-                <div class="w-[76%] bg-[#93c5fd] text-[#1e3a8a] flex flex-col items-center justify-center text-center relative">
+                <div class="w-[76%] bg-[#dbeafe] text-[#1e3a8a] flex flex-col items-center justify-center text-center relative">
                     <h1 class="font-black text-[34px] uppercase tracking-[0.25em] m-0">Rapport d'Audit</h1>
                 </div>
-                <div class="w-[12%] border-l-[1px] border-[#93c5fd] flex flex-col bg-white">
+                <div class="w-[12%] border-l-[1px] border-[#dbeafe] flex flex-col bg-white">
                     <div class="flex-1 flex flex-col justify-center px-4">
                         <span class="text-[9px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
                         <span class="text-[13px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
@@ -212,7 +212,7 @@
             </div>
 
             <!-- SCORE GLOBAL -->
-            <div class="pdf-section mb-8 flex items-center gap-6 bg-white border-2 border-[#93c5fd] p-6 rounded-lg shadow-sm">
+            <div class="pdf-section mb-8 flex items-center gap-6 bg-white border-2 border-[#dbeafe] p-6 rounded-lg shadow-sm">
                 <div class="flex-1">
                     <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global</div>
                     <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
@@ -222,14 +222,14 @@
             </div>
 
             <!-- PARTICIPANTS / AUDITEUR -->
-            <div class="pdf-section mb-6 overflow-hidden rounded-lg shadow-sm border-2 border-[#93c5fd]">
-                <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Intervenants de l'Audit</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 bg-white divide-y-2 md:divide-y-0 md:divide-x-2 divide-[#93c5fd]">
+            <div class="pdf-section mb-6 overflow-hidden rounded-lg shadow-sm border-2 border-[#dbeafe]">
+                <div class="bg-[#dbeafe] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Intervenants de l'Audit</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 bg-white divide-y-2 md:divide-y-0 md:divide-x-2 divide-[#dbeafe]">
                     <!-- Auditeur -->
                     <div class="p-3">
                         <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-2 tracking-widest border-b border-blue-100 pb-1 inline-block">Auditeur</h4>
                         <div class="flex items-center gap-2 mt-1">
-                            <div class="w-8 h-8 rounded-full bg-[#93c5fd] flex items-center justify-center flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-[#dbeafe] flex items-center justify-center flex-shrink-0">
                                 <svg class="w-4 h-4 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             </div>
                             <span class="text-[14px] font-bold text-slate-800">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
@@ -265,28 +265,28 @@
 
             <!-- COMMENTAIRE -->
             <div class="pdf-section mb-8">
-                <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
-                <div class="border-2 border-[#93c5fd] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
+                <div class="bg-[#dbeafe] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
+                <div class="border-2 border-[#dbeafe] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
             </div>
 
             <!-- SYNTHESE -->
-            <div class="pdf-section mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#93c5fd]">
-                <div class="bg-[#93c5fd] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
+            <div class="pdf-section mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#dbeafe]">
+                <div class="bg-[#dbeafe] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
-                    <div class="border-b-2 md:border-r-2 border-[#93c5fd] p-6 min-h-[140px]">
-                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Forts</h4>
+                    <div class="border-b-2 md:border-r-2 border-[#dbeafe] p-6 min-h-[140px]">
+                        <h4 class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Forts</h4>
                         <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_fort|default:"" }}</div>
                     </div>
-                    <div class="border-b-2 border-[#93c5fd] p-6 min-h-[140px]">
-                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Sensibles</h4>
+                    <div class="border-b-2 border-[#dbeafe] p-6 min-h-[140px]">
+                        <h4 class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Sensibles</h4>
                         <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_sensible|default:"" }}</div>
                     </div>
-                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#93c5fd] p-6 min-h-[140px]">
-                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-rose-800">Risques</h4>
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#dbeafe] p-6 min-h-[140px]">
+                        <h4 class="text-[14px] font-black text-rose-800 uppercase mb-3 tracking-widest border-b border-rose-100 pb-1 inline-block">Risques</h4>
                         <div class="text-[14px] leading-relaxed text-rose-900 font-bold">{{ resultat.risque|default:"" }}</div>
                     </div>
                     <div class="p-6 min-h-[140px]">
-                        <h4 class="text-[11px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-emerald-800">Opportunités</h4>
+                        <h4 class="text-[14px] font-black text-emerald-800 uppercase mb-3 tracking-widest border-b border-emerald-100 pb-1 inline-block">Opportunités</h4>
                         <div class="text-[14px] leading-relaxed text-emerald-900 font-bold">{{ resultat.opportunite|default:"" }}</div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@
             <div class="mt-8" id="evaluation-container">
                 <style>
                     .audit-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; border: 2px solid #000; table-layout: fixed; margin-bottom: 0; }
-                    .audit-table th { background: #93c5fd; color: #1e3a8a; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 15px; border: 1px solid #000; text-align: left; }
+                    .audit-table th { background: #dbeafe; color: #1e3a8a; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 15px; border: 1px solid #000; text-align: left; }
                     
                     /* Criteria Row */
                     .critere-row { background: #f1f5f9; }
@@ -311,7 +311,7 @@
                     .sc-score-val { display: block; font-weight: 900; color: #1e3a8a; font-size: 22px; line-height: 1; }
                     .sc-score-label { display: block; font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 2px; }
                     
-                    .sc-sub-head { background: #93c5fd; color: #1e3a8a; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 15px; border-bottom: 1px solid #000; }
+                    .sc-sub-head { background: #dbeafe; color: #1e3a8a; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 15px; border-bottom: 1px solid #000; }
                     .sc-sub-body { padding: 4px 15px 6px 15px; border-bottom: 1px solid #cbd5e1; height: auto; }
                     .sc-sub-body:last-child { border-bottom: none; }
 
@@ -332,9 +332,9 @@
                     <table class="audit-table" style="width: 100%;">
                         <thead>
                             <tr id="audit-table-head">
-                                <th style="width: 45px; text-align: center; background: #93c5fd; border: 1px solid #000;">#</th>
-                                <th style="background: #93c5fd; border: 1px solid #000;">Critères &amp; Évaluations</th>
-                                <th style="width: 85px; text-align: right; background: #93c5fd; border: 1px solid #000;">Score</th>
+                                <th style="width: 45px; text-align: center; background: #dbeafe; border: 1px solid #000;">#</th>
+                                <th style="background: #dbeafe; border: 1px solid #000;">Critères &amp; Ãvaluations</th>
+                                <th style="width: 85px; text-align: right; background: #dbeafe; border: 1px solid #000;">Score</th>
                             </tr>
                         </thead>
                     </table>
@@ -402,13 +402,13 @@
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Rapport prêt à l'envoi</p>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Rapport prÃªt Ã  l'envoi</p>
                             <p class="text-xs text-slate-500 font-bold italic">Rapport_Audit_{{ resultat.id }}.pdf</p>
                         </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block pl-1">Destinataire</label>
-                        <input type="email" id="swal-email" placeholder="email@exemple.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm font-bold">
+                        <input type="text" id="swal-email" placeholder="email1@exemple.com, email2@exemple.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm font-bold">
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block pl-1">Message</label>
@@ -428,7 +428,7 @@
             reverseButtons: true,
             preConfirm: () => {
                 const email = document.getElementById('swal-email').value;
-                if (!email) { Swal.showValidationMessage('L\'adresse email est requise'); return false; }
+                if (!email) { Swal.showValidationMessage('Au moins une adresse email est requise'); return false; }
                 return { email: email, msg: document.getElementById('swal-msg').value };
             }
         });
@@ -513,7 +513,7 @@
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: 'GÉNÉRER LE PDF',
+            confirmButtonText: 'GÃNÃRER LE PDF',
             cancelButtonText: 'ANNULER',
             customClass: {
                 confirmButton: 'bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[12px] shadow-lg hover:bg-blue-800 transition-all ml-3',
@@ -691,3 +691,14 @@
     lucide.createIcons();
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
