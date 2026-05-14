@@ -462,6 +462,7 @@
                         <th scope="col" class="col-id ps-2">N°</th>
                         <th scope="col" class="col-name">Nom Audit</th>
                         <th scope="col" class="col-dep">Département</th>
+                        <th scope="col" class="col-site">Site</th>
                         <th scope="col" class="col-date">Date</th>
                         <th scope="col" class="col-auditores">Auditeurs</th>
                         <th scope="col" class="col-form">Formulaire</th>
@@ -478,6 +479,9 @@
                         </td>
                         <td class="col-dep" data-label="Département">
                             <span class="">{{ audit.section|default:"-" }}</span>
+                        </td>
+                        <td class="col-site" data-label="Site">
+                            <span class="">{{ audit.site|default:"-" }}</span>
                         </td>
                         <td class="text-nowrap col-date" data-label="Date">
                             <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}

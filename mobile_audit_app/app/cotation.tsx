@@ -129,40 +129,30 @@ const CotationManagementScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>#</Text></View>
       <View style={[styles.headerCell, { flex: 1.5 }]}><Text style={styles.headerText}>Libellé</Text></View>
-      <View style={[styles.headerCell, { width: 40 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Valeur</Text></View>
-      <View style={[styles.headerCell, { flex: 1 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>{"Type\nCotation"}</Text></View>
+      <View style={[styles.headerCell, { width: 50 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Valeur</Text></View>
+      <View style={[styles.headerCell, { flex: 1.2 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Type Cotation</Text></View>
       <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 25 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 30 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1.5 }]}>
-        <Text style={[styles.cellText, { fontWeight: '600' }]}>
+        <Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={2}>
           {item.content} <Text style={{ fontWeight: '400', color: '#94a3b8' }}>({item.code})</Text>
         </Text>
       </View>
-      <View style={[styles.cell, { width: 40, alignItems: 'center' }]}>
-        <View style={styles.valBadge}>
-          <Text style={styles.valText}>{item.valeur}</Text>
-        </View>
-      </View>
-      <View style={[styles.cell, { flex: 1, alignItems: 'center' }]}>
-         {item.type_cotation_name ? (
-           <View style={styles.typeBadge}>
-             <Text style={styles.typeText}>{item.type_cotation_name}</Text>
-           </View>
-         ) : <Text style={styles.cellText}>-</Text>}
-      </View>
+      <View style={[styles.cell, { width: 50 }]}><Text style={[styles.cellText, { textAlign: 'center', fontWeight: '700' }]}>{item.valeur}</Text></View>
+      <View style={[styles.cell, { flex: 1.2 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={2}>{item.type_cotation_name || '-'}</Text></View>
       <View style={[styles.cell, { width: 65, flexDirection: 'row', justifyContent: 'center' }]}>
         <TouchableOpacity onPress={() => handleEdit(item)} style={styles.miniActionBtn}>
-          <Feather name="edit-2" size={12} color="#f59e0b" />
+          <Feather name="edit-2" size={15} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniActionBtn}>
-          <Feather name="trash-2" size={12} color="#ef4444" />
+          <Feather name="trash-2" size={15} color="#ef4444" />
         </TouchableOpacity>
       </View>
     </View>
@@ -297,18 +287,14 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, marginLeft: 8, fontSize: 13, color: '#1e293b' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  headerCell: { padding: 4, justifyContent: 'center' },
-  headerText: { fontSize: 9, fontWeight: '700', color: '#1e293b' },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: 4 },
+  headerCell: { paddingHorizontal: 4, paddingVertical: 12, justifyContent: 'center' },
+  headerText: { fontSize: 13, fontWeight: '700', color: '#1e293b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
-  cell: { padding: 4, justifyContent: 'center' },
-  cellText: { fontSize: 9, color: '#475569' },
-  valBadge: { backgroundColor: '#64748b', width: 16, height: 16, borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
-  valText: { color: '#fff', fontSize: 8, fontWeight: '800' },
-  typeBadge: { backgroundColor: '#06b6d4', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
-  typeText: { color: '#fff', fontSize: 8, fontWeight: '700' },
-  miniActionBtn: { padding: 4, marginHorizontal: 1 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 56, paddingHorizontal: 4 },
+  cell: { paddingHorizontal: 4, paddingVertical: 8, justifyContent: 'center' },
+  cellText: { fontSize: 13, color: '#475569' },
+  miniActionBtn: { padding: 6, marginHorizontal: 2 },
   
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
   

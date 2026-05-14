@@ -675,7 +675,8 @@ class ListeAuditListAPIView(View):
                         'en_cours': a.get_audit_status() == 'en_cours',
                         'statut_label': a.get_audit_status(),
                         'affectation': list(a.affectation.values_list('id', flat=True)),
-                        'participants': list(a.participants.values_list('id', flat=True))
+                        'participants': list(a.participants.values_list('id', flat=True)),
+                        'participants_externes': a.participants_externes or ""
                     }
                 })
             except ListeAudit.DoesNotExist:
@@ -713,7 +714,8 @@ class ListeAuditListAPIView(View):
                 date=data.get('date', timezone.now()),
                 section_id=data.get('section') or None,
                 formulaire_audit_id=data.get('formulaire_audit') or None,
-                site_id=data.get('site') or None
+                site_id=data.get('site') or None,
+                participants_externes=data.get('participants_externes') or ""
             )
 
             if 'affectation' in data and data['affectation']:
@@ -733,6 +735,50 @@ class ListeAuditListAPIView(View):
             print(f"Error creating ListeAudit: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+    def put(self, request, pk):
+        try:
+            data = json.loads(request.body)
+            liste_audit = get_object_or_404(ListeAudit, pk=pk)
+            
+            liste_audit.desc = data.get('desc', liste_audit.desc)
+            liste_audit.status = data.get('status', liste_audit.status)
+            liste_audit.date = data.get('date', liste_audit.date)
+            liste_audit.section_id = data.get('section') or None
+            liste_audit.formulaire_audit_id = data.get('formulaire_audit') or None
+            liste_audit.site_id = data.get('site') or None
+            liste_audit.participants_externes = data.get('participants_externes') or ""
+            liste_audit.save()
+
+            if 'affectation' in data:
+                liste_audit.affectation.set(data['affectation'])
+            
+            if 'participants' in data:
+                liste_audit.participants.set(data['participants'])
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Audit updated successfully'
+            })
+        except Exception as e:
+            print(f"Error updating ListeAudit: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def delete(self, request, pk):
+        try:
+            # We follow the same logic as the web version: only superusers can delete audits
+            # However, for mobile simplicity, we might allow it if needed, 
+            # but let's stick to the rule if we want high parity.
+            # In ListeAuditDeleteView, it checks if request.user.is_superuser
+            if not request.user.is_superuser:
+                return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+                
+            liste_audit = get_object_or_404(ListeAudit, pk=pk)
+            liste_audit.delete()
+            return JsonResponse({'status': 'success', 'message': 'Audit deleted successfully'})
+        except Exception as e:
+            print(f"Error deleting ListeAudit: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ResultatAuditListAPIView(View):
@@ -750,7 +796,7 @@ class ResultatAuditListAPIView(View):
                 'audit_desc': a.desc,
                 'sujet': a.desc,
                 'departement_name': a.section.name if a.section else '-',
-                'site_name': a.site.name if a.site else '-',
+                'site_name': res.site.name if res and res.site else (a.site.name if a.site else '-'),
                 'date_audit': a.date.isoformat() if a.date else None,
                 'auditeur_name': a.affectation.first().username if a.affectation.exists() else 'admin',
                 'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
@@ -1087,15 +1133,22 @@ class DashboardStatsAPIView(View):
                     'resultats': ResultatAudit.objects.count(),
                 }
             else:
-                from django.db.models import Avg, Q
+                from django.db.models import Avg, Q, Count
                 # Include audits where user is Auditor OR Participant
-                audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
+                audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user)).distinct()
                 
-                planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
+                # Planned: No results yet
+                planifies = audits_assigned.annotate(res_count=Count('resultataudit')).filter(res_count=0).count()
+                
+                # In Progress: Has at least one result in progress
                 en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
-                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
                 
-                # Score average remains for results where user is the lead Auditeur
+                # Finished: Has results and NONE are in progress
+                # This is a bit complex, let's simplify for performance if needed, 
+                # but let's try to be accurate first.
+                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(id__in=audits_assigned.filter(resultataudit__en_cours=True)).distinct().count()
+                
+                # Score average
                 score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
                 
                 stats = {

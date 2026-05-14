@@ -521,9 +521,9 @@ Créer un Audit
                     </div>
 
                     <div class="row g-4 mb-5">
-                        <!-- Column Left: Section -->
+                        <!-- Column Left: Section & Site -->
                         <div class="col-md-6">
-                            <div class="mb-0">
+                            <div class="mb-4">
                                 <label for="{{ form.section.id_for_label }}"
                                     class="form-label fw-bold  text-uppercase  mb-2">Section /
                                     Département</label>
@@ -535,6 +535,22 @@ Créer un Audit
                                 {% if form.section.errors %}
                                 <div class="text-danger  mt-2">
                                     {% for error in form.section.errors %}<p class="mb-0"><i data-lucide="times-circle"
+                                            class="me-1"></i>{{ error }}</p>{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-0">
+                                <label for="{{ form.site.id_for_label }}"
+                                    class="form-label fw-bold  text-uppercase  mb-2">Site / Emplacement</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i data-lucide="map-pin"
+                                            class=""></i></span>
+                                    {{ form.site }}
+                                </div>
+                                {% if form.site.errors %}
+                                <div class="text-danger  mt-2">
+                                    {% for error in form.site.errors %}<p class="mb-0"><i data-lucide="times-circle"
                                             class="me-1"></i>{{ error }}</p>{% endfor %}
                                 </div>
                                 {% endif %}

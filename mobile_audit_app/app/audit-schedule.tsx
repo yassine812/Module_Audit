@@ -11,6 +11,8 @@ import {
   Switch,
   Modal,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -122,6 +124,7 @@ const AuditScheduleScreen = () => {
   const [saving, setSaving] = useState(false);
   
   const [sections, setSections] = useState([]);
+  const [sitesList, setSitesList] = useState([]);
   const [chapitres, setChapitres] = useState([]);
   const [formulaires, setFormulaires] = useState([]);
   const [users, setUsers] = useState([]);
@@ -140,6 +143,7 @@ const AuditScheduleScreen = () => {
     site: '',
     affectation: [],
     participants: [],
+    participants_externes: '',
   });
 
   // Quick Create State
@@ -150,7 +154,12 @@ const AuditScheduleScreen = () => {
   const [expandedCriteria, setExpandedCriteria] = useState({});
 
   const toggleCriterion = (id) => {
-    setExpandedCriteria(prev => ({ ...prev, [id]: !prev[id] }));
+    setExpandedCriteria(prev => {
+      const isCurrentlyOpen = !!prev[id];
+      // Close all, then open the clicked one (if it was closed)
+      const allClosed = Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {});
+      return { ...allClosed, [id]: !isCurrentlyOpen };
+    });
   };
   
   useEffect(() => {
@@ -186,48 +195,66 @@ const AuditScheduleScreen = () => {
   const [selectedSousCriteres, setSelectedSousCriteres] = useState([]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [secRes, chapRes, formRes, userRes, procRes, typeARes, typeERes, cotRes, preuRes] = await Promise.all([
-        api.get(getApiUrl(API_PATHS.SECTIONS)),
-        api.get(getApiUrl(API_PATHS.CHAPITRES)),
-        api.get(getApiUrl(API_PATHS.FORMULAIRES)),
-        api.get(getApiUrl(API_PATHS.USERS)),
-        api.get(getApiUrl(API_PATHS.PROCESSUS)),
-        api.get(getApiUrl(API_PATHS.TYPES_AUDIT)),
-        api.get(getApiUrl(API_PATHS.TYPES_EQUIPEMENTS)),
-        api.get(getApiUrl(API_PATHS.TYPE_COTATION)),
-        api.get(getApiUrl(API_PATHS.PREUVE_ATTENDUE)),
-      ]);
-
+      console.log("Starting sequential data fetch...");
+      
+      const secRes = await api.get(getApiUrl(API_PATHS.SECTIONS)).catch(e => ({ data: { data: [] } }));
       setSections(secRes.data.data || []);
+      
+      const sitRes = await api.get(getApiUrl(API_PATHS.SITES)).catch(e => ({ data: { data: [] } }));
+      setSitesList(sitRes.data.data || []);
+      
+      const procRes = await api.get(getApiUrl(API_PATHS.PROCESSUS)).catch(e => ({ data: { data: [] } }));
+      setProcessusList(procRes.data.data || []);
+      
+      const typeERes = await api.get(getApiUrl(API_PATHS.TYPES_EQUIPEMENTS)).catch(e => ({ data: { data: [] } }));
+      setTypeEquipements(typeERes.data.data || []);
+      
+      const chapRes = await api.get(getApiUrl(API_PATHS.CHAPITRES)).catch(e => ({ data: { data: [] } }));
       setChapitres(chapRes.data.data || []);
+      
+      const formRes = await api.get(getApiUrl(API_PATHS.FORMULAIRES)).catch(e => ({ data: { data: [] } }));
       setFormulaires(formRes.data.data || []);
       
+      const userRes = await api.get(getApiUrl(API_PATHS.USERS)).catch(e => ({ data: { data: [] } }));
       const userData = userRes.data.data || userRes.data;
       setUsers(Array.isArray(userData) ? userData : []);
       
-      setProcessusList(procRes.data.data || []);
+      const typeARes = await api.get(getApiUrl(API_PATHS.TYPES_AUDIT)).catch(e => ({ data: { data: [] } }));
       setTypeAudits(typeARes.data.data || []);
-      setTypeEquipements(typeERes.data.data || []);
+      
+      const cotRes = await api.get(getApiUrl(API_PATHS.TYPE_COTATION)).catch(e => ({ data: [] }));
       setTypeCotations(cotRes.data.data || cotRes.data || []);
+      
+      const preuRes = await api.get(getApiUrl(API_PATHS.PREUVE_ATTENDUE)).catch(e => ({ data: [] }));
       setPreuvesAttendues(preuRes.data.data || preuRes.data || []);
 
       if (id) {
-        const res = await api.get(getApiUrl(`${API_PATHS.LISTE_AUDIT}${id}/`));
-        const audit = res.data.data;
-        setFormData({
-          desc: audit.desc || '',
-          status: audit.status ?? true,
-          date: audit.date_audit || new Date().toISOString().slice(0, 19).replace('T', ' '),
-          section: audit.section || '',
-          formulaire_audit: audit.formulaire_audit || '',
-          site: audit.site || '',
-          affectation: audit.affectation || [],
-          participants: audit.participants || [],
-        });
+        console.log("Fetching audit detail for ID:", id);
+        try {
+          const res = await api.get(getApiUrl(`${API_PATHS.LISTE_AUDIT}${id}/`));
+          const audit = res.data.data;
+          if (audit) {
+            setFormData({
+              desc: audit.desc || '',
+              status: audit.status ?? true,
+              date: audit.date_audit || new Date().toISOString().slice(0, 19).replace('T', ' '),
+              section: audit.section || '',
+              formulaire_audit: audit.formulaire_audit || '',
+              site: audit.site || '',
+              affectation: audit.affectation || [],
+              participants: audit.participants || [],
+              participants_externes: audit.participants_externes || '',
+            });
+          }
+        } catch (detailErr) {
+          console.error("Error fetching audit details:", detailErr);
+          Alert.alert("Erreur", "Impossible de charger les détails de l'audit.");
+        }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Global fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -561,7 +588,11 @@ const AuditScheduleScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color="#1e293b" />
@@ -588,6 +619,8 @@ const AuditScheduleScreen = () => {
         ref={scrollRef}
         style={styles.content} 
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 60 }}
       >
         <View style={styles.sectionHeader}>
            <View style={styles.sectionTitleWithIcon}>
@@ -631,6 +664,15 @@ const AuditScheduleScreen = () => {
               <Text style={styles.sectionTitle}>Paramètres & Configuration</Text>
            </View>
         </View>
+
+        <NormalDropdown 
+          label="SITE / EMPLACEMENT"
+          value={formData.site}
+          options={sitesList}
+          onSelect={(id) => setFormData({...formData, site: id})}
+          placeholder="Sélectionnez un site..."
+          icon={<Ionicons name="location-outline" size={18} color="#475569" />}
+        />
 
         <NormalDropdown 
           label="SECTION / DÉPARTEMENT"
@@ -689,6 +731,34 @@ const AuditScheduleScreen = () => {
                 placeholder="AAAA-MM-JJ HH:MM:SS"
              />
           </View>
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>PARTICIPANTS EXTERNES</Text>
+          <View style={styles.inputGroup}>
+             <View style={styles.inputGroupIcon}>
+                <Feather name="users" size={18} color="#64748b" />
+             </View>
+             <TextInput 
+                style={styles.input}
+                placeholder="Noms séparés par des virgules..."
+                value={formData.participants_externes}
+                onChangeText={(val) => setFormData({...formData, participants_externes: val})}
+             />
+          </View>
+          {formData.participants_externes.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {formData.participants_externes.split(',').map((tag, idx) => {
+                const trimmed = tag.trim();
+                if (!trimmed) return null;
+                return (
+                  <View key={idx} style={styles.tag}>
+                    <Text style={styles.tagText}>{trimmed}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         <NormalDropdown 
@@ -778,60 +848,89 @@ const AuditScheduleScreen = () => {
 
             {formStructure.length > 0 && (
               <View style={styles.structureContainer}>
-                <View style={styles.structureHeader}>
-                   <View style={styles.structureTitleRow}>
-                      <MaterialCommunityIcons name="layers-outline" size={24} color="#3b82f6" />
-                      <Text style={styles.structureTitle}>STRUCTURE DU FORMULAIRE</Text>
-                   </View>
-                   <View style={styles.structureLinks}>
-                      <TouchableOpacity onPress={toggleSelectAll}>
-                        <Text style={styles.structureLink}>Tout cocher</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                         style={styles.addCritereBtn}
-                         onPress={() => {
-                           setNewCritere({ id: null, name: '', chapitre_id: '' });
-                           setShowCritereModal(true);
-                         }}
-                       >
-                          <Text style={styles.addCritereBtnText}>+ Critère</Text>
-                       </TouchableOpacity>
-                   </View>
+                <View style={[styles.sectionHeader, { marginTop: 0, marginBottom: 15 }]}>
+                  <View style={styles.sectionTitleWithIcon}>
+                    <View style={styles.infoIconBox}>
+                      <MaterialCommunityIcons name="layers" size={18} color="#3b82f6" />
+                    </View>
+                    <Text style={styles.sectionTitle}>STRUCTURE DU FORMULAIRE</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity
+                      style={[styles.addCritereBtn, { backgroundColor: '#f1f5f9' }]}
+                      onPress={() => {
+                        const allExpanded = formStructure.every(crit => expandedCriteria[crit.critere_id]);
+                        const newExpanded = {};
+                        formStructure.forEach(crit => {
+                          newExpanded[crit.critere_id] = !allExpanded;
+                        });
+                        setExpandedCriteria(newExpanded);
+                      }}
+                    >
+                      <Text style={[styles.addCritereBtnText, { color: '#64748b' }]}>Détails</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.addCritereBtn}
+                      onPress={() => {
+                        setNewCritere({ id: null, name: '', chapitre_id: '' });
+                        setShowCritereModal(true);
+                      }}
+                    >
+                      <Text style={styles.addCritereBtnText}>+ Critère</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {formStructure.map((crit, idx) => (
                   <View key={crit.critere_id} style={styles.critereCard}>
-                    <TouchableOpacity 
-                      style={styles.critereCardHeader} 
+                    <TouchableOpacity
+                      style={styles.critereCardHeader}
                       onPress={() => toggleCriterion(crit.critere_id)}
                       activeOpacity={0.7}
                     >
                       <View style={styles.critereTopRow}>
                         <View style={styles.critereTitleGroup}>
-                          <Ionicons 
-                            name={expandedCriteria[crit.critere_id] ? "chevron-down" : "chevron-forward"} 
-                            size={20} 
-                            color="#475569" 
+                          <Ionicons
+                            name={expandedCriteria[crit.critere_id] ? "chevron-down" : "chevron-forward"}
+                            size={20}
+                            color="#475569"
                           />
-                          <Text style={styles.critereTitle} numberOfLines={2}>
+                          <Text style={[styles.critereTitle, { flex: 1 }]} numberOfLines={2}>
                             Critère {idx + 1}: {crit.critere_nom}
                           </Text>
                         </View>
                         <View style={styles.critereQuickActions}>
-                           <TouchableOpacity 
+                           <TouchableOpacity
+                             style={[styles.actionIconBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                             onPress={(e) => {
+                               e.stopPropagation?.();
+                               setNewSousCritere({ content: '', crit_id: crit.critere_id, cotation: '', reaction: '', preuves: [] });
+                               setShowSousCritereModal(true);
+                             }}
+                           >
+                              <Ionicons name="add" size={16} color="#16a34a" />
+                           </TouchableOpacity>
+                           <TouchableOpacity
                              style={styles.actionIconBtn}
-                             onPress={() => {
+                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                             onPress={(e) => {
+                               e.stopPropagation?.();
                                setNewCritere({ id: crit.critere_id, name: crit.critere_nom, chapitre_id: crit.chapitre_id });
                                setShowCritereModal(true);
                              }}
                            >
-                              <Feather name="edit-2" size={16} color="#3b82f6" />
+                              <Feather name="edit-2" size={14} color="#3b82f6" />
                            </TouchableOpacity>
-                           <TouchableOpacity 
-                             style={styles.actionIconBtn}
-                             onPress={() => handleDeleteCritere(crit.critere_id)}
+                           <TouchableOpacity
+                             style={[styles.actionIconBtn, { borderColor: '#fee2e2' }]}
+                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                             onPress={(e) => {
+                               e.stopPropagation?.();
+                               handleDeleteCritere(crit.critere_id);
+                             }}
                            >
-                              <Feather name="trash-2" size={16} color="#ef4444" />
+                              <Feather name="trash-2" size={14} color="#ef4444" />
                            </TouchableOpacity>
                         </View>
                       </View>
@@ -845,24 +944,26 @@ const AuditScheduleScreen = () => {
                          </TouchableOpacity>
                       </View>
                     </TouchableOpacity>
-                    
+
                     {expandedCriteria[crit.critere_id] && (
                       <View style={styles.critereBody}>
                         {crit.sous_criteres.map(sc => (
-                          <TouchableOpacity 
-                            key={sc.id} 
+                          <TouchableOpacity
+                            key={sc.id}
                             style={styles.sousCritereRow}
                             onPress={() => toggleSousCritereSelection(sc.id)}
                             activeOpacity={0.7}
                           >
-                             <Ionicons 
-                               name={selectedSousCriteres.includes(sc.id) ? "checkbox" : "square-outline"} 
-                               size={22} 
-                               color={selectedSousCriteres.includes(sc.id) ? "#3b82f6" : "#cbd5e1"} 
+                             <Ionicons
+                               name={selectedSousCriteres.includes(sc.id) ? "checkbox" : "square-outline"}
+                               size={22}
+                               color={selectedSousCriteres.includes(sc.id) ? "#3b82f6" : "#cbd5e1"}
                              />
-                             <Text style={[styles.sousCritereText, selectedSousCriteres.includes(sc.id) && { color: '#1e293b', fontWeight: '500' }]}>
-                               {sc.nom}
-                             </Text>
+                             <View style={{ flex: 1, marginRight: 10 }}>
+                               <Text style={[styles.sousCritereText, selectedSousCriteres.includes(sc.id) && { color: '#1e293b', fontWeight: '500' }]}>
+                                 {sc.nom}
+                               </Text>
+                             </View>
                              <View style={styles.scActions}>
                                <TouchableOpacity onPress={() => {
                                  setNewSousCritere({ id: sc.id, content: sc.nom, crit_id: crit.critere_id, cotation: sc.type_cotation, reaction: sc.reaction, preuves: sc.preuve_attendu });
@@ -876,7 +977,7 @@ const AuditScheduleScreen = () => {
                              </View>
                           </TouchableOpacity>
                         ))}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={styles.addSousCritereBtn}
                           onPress={() => {
                             setNewSousCritere({ content: '', crit_id: crit.critere_id, cotation: '', reaction: '', preuves: [] });
@@ -897,8 +998,8 @@ const AuditScheduleScreen = () => {
                <TouchableOpacity style={styles.quickCancelBtn} onPress={() => setShowQuickCreate(false)}>
                   <Text style={styles.quickCancelBtnText}>Annuler</Text>
                </TouchableOpacity>
-               <TouchableOpacity 
-                style={styles.quickSaveBtn} 
+               <TouchableOpacity
+                style={styles.quickSaveBtn}
                 onPress={handleSaveQuickForm}
                 disabled={savingQuick}
                >
@@ -984,6 +1085,17 @@ const AuditScheduleScreen = () => {
                               </Text>
                             </TouchableOpacity>
                             <View style={styles.critereQuickActions}>
+                               <TouchableOpacity
+                                 style={[styles.actionIconBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                 onPress={() => {
+                                   setNewSousCritere({ content: '', crit_id: crit.critere_id, cotation: '', reaction: '', preuves: [] });
+                                   setShowPreviewModal(false);
+                                   setTimeout(() => setShowSousCritereModal(true), 100);
+                                 }}
+                               >
+                                  <Ionicons name="add" size={16} color="#16a34a" />
+                               </TouchableOpacity>
                                <TouchableOpacity 
                                  style={styles.actionIconBtn}
                                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -996,7 +1108,7 @@ const AuditScheduleScreen = () => {
                                   <Feather name="edit-2" size={14} color="#3b82f6" />
                                </TouchableOpacity>
                                <TouchableOpacity 
-                                 style={styles.actionIconBtn}
+                                 style={[styles.actionIconBtn, { borderColor: '#fee2e2' }]}
                                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                  onPress={() => handleDeleteCritere(crit.critere_id)}
                                >
@@ -1287,6 +1399,7 @@ const AuditScheduleScreen = () => {
           </View>
         </View>
       </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -1326,6 +1439,9 @@ const styles = StyleSheet.create({
   
   inputGroup: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', height: 48, overflow: 'hidden' },
   inputGroupIcon: { width: 48, height: 48, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: '#e2e8f0' },
+  tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 8 },
+  tag: { backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#e2e8f0' },
+  tagText: { fontSize: 12, color: '#475569', fontWeight: '500' },
   input: { flex: 1, paddingHorizontal: 15, fontSize: 14, color: '#334155' },
   
   dropdownTrigger: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', height: 48, overflow: 'hidden' },
@@ -1387,8 +1503,8 @@ const styles = StyleSheet.create({
   critereCardHeader: { padding: 18 },
   critereTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   critereTitleGroup: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, flex: 1 },
-  critereTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b', lineHeight: 22 },
-  critereQuickActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  critereTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b', lineHeight: 22, flex: 1 },
+  critereQuickActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   
   critereBottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 },
   chapterBadge: { backgroundColor: '#f8fafc', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
@@ -1454,9 +1570,9 @@ const styles = StyleSheet.create({
   modalAddBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4f46e5', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, gap: 5 },
   modalAddBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   
-  critereTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  critereTitleGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 5 },
-  critereQuickActions: { flexDirection: 'row', gap: 8, marginLeft: 10 },
+  critereTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' },
+  critereTitleGroup: { flexDirection: 'row', alignItems: 'flex-start', flex: 1, gap: 5 },
+  critereQuickActions: { flexDirection: 'row', gap: 8, marginLeft: 10, marginTop: 2 },
   actionIconBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
   scActions: { flexDirection: 'row', gap: 10, marginLeft: 10 },
   addSousCritereBtn: { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingVertical: 5, gap: 5 },

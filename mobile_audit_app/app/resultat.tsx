@@ -103,14 +103,13 @@ const ResultatAuditListScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>ID ▲</Text></View>
-      <View style={[styles.headerCell, { flex: 1.8 }]}><Text style={styles.headerText}>Sujet / Réf.</Text></View>
-      <View style={[styles.headerCell, { width: 55 }]}><Text style={styles.headerText}>Auditeur</Text></View>
-      <View style={[styles.headerCell, { width: 45 }]}><Text style={styles.headerText}>Site</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>Date</Text></View>
-      <View style={[styles.headerCell, { width: 45 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Score</Text></View>
-      <View style={[styles.headerCell, { width: 55 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Statut</Text></View>
-      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
+      <View style={[styles.headerCell, { width: 35 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { flex: 1.5 }]}><Text style={styles.headerText}>SUJET / RÉF.</Text></View>
+      <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>SITE</Text></View>
+      <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>DATE</Text></View>
+      <View style={[styles.headerCell, { width: 50, alignItems: 'center' }]}><Text style={styles.headerText}>SCORE</Text></View>
+      <View style={[styles.headerCell, { width: 65, alignItems: 'center' }]}><Text style={styles.headerText}>STATUT</Text></View>
+      <View style={[styles.headerCell, { width: 85, alignItems: 'center' }]}><Text style={styles.headerText}>ACTIONS</Text></View>
     </View>
   );
 
@@ -119,36 +118,35 @@ const ResultatAuditListScreen = () => {
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>{item.id}</Text></View>
-        <View style={[styles.cell, { flex: 1.8 }]}>
-            <Text style={[styles.cellText, { fontWeight: '700' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
-            <Text style={[styles.cellText, { fontSize: 7, color: '#94a3b8' }]}>{item.ref_audit || `ID-${item.id}`}</Text>
+        <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>{item.id}</Text></View>
+        <View style={[styles.cell, { flex: 1.5 }]}>
+            <Text style={[styles.cellText, { fontWeight: '800' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
+            <Text style={[styles.cellText, { fontSize: 10, color: '#94a3b8', marginTop: 2 }]} numberOfLines={1}>{item.ref_audit || `ID-${item.id}`}</Text>
         </View>
-        <View style={[styles.cell, { width: 55 }]}><Text style={styles.cellText} numberOfLines={1}>{item.auditeur_name || 'admin'}</Text></View>
-        <View style={[styles.cell, { width: 45 }]}><Text style={styles.cellText}>{item.site_name || 'N/A'}</Text></View>
-        <View style={[styles.cell, { width: 65 }]}><Text style={styles.cellText}>{item.date_audit ? item.date_audit.split('T')[0].split('-').reverse().join('/') : '-'}</Text></View>
-        <View style={[styles.cell, { width: 45, alignItems: 'center' }]}>
+        <View style={[styles.cell, { width: 65 }]}><Text style={styles.cellText} numberOfLines={1}>{item.site_name || '-'}</Text></View>
+        <View style={[styles.cell, { width: 65 }]}><Text style={styles.cellText} numberOfLines={1}>{item.date_audit ? item.date_audit.split('T')[0].split('-').reverse().join('/') : '-'}</Text></View>
+        <View style={[styles.cell, { width: 50, alignItems: 'center' }]}>
             <View style={styles.scoreBadge}>
                 <Text style={styles.scoreText}>{parseFloat(item.score_audit || 0).toFixed(2)}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 55, alignItems: 'center' }]}>
-            <View style={[styles.statusBadge, { backgroundColor: isTermine ? '#10b981' : '#f59e0b' }]}>
-                <Text style={styles.statusText}>{isTermine ? 'TERMINÉ' : 'EN COURS'}</Text>
+        <View style={[styles.cell, { width: 65, alignItems: 'center' }]}>
+            <View style={[styles.statusBadge, { backgroundColor: isTermine ? '#f0fdf4' : '#fff7ed', borderWidth: 1, borderColor: isTermine ? '#10b981' : '#f59e0b' }]}>
+                <Text style={[styles.statusText, { color: isTermine ? '#10b981' : '#f59e0b' }]}>{isTermine ? 'OK' : '...'}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
+        <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }]}>
             <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#64748b' }]} onPress={() => handleReport(item)}>
-                <MaterialCommunityIcons name="file-document-outline" size={10} color="#fff" />
+                <MaterialCommunityIcons name="file-document-outline" size={18} color="#fff" />
             </TouchableOpacity>
             {!isTermine && (
                 <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#f59e0b' }]} onPress={() => handleFinish(item)}>
-                    <Feather name="lock" size={10} color="#fff" />
+                    <Feather name="lock" size={18} color="#fff" />
                 </TouchableOpacity>
             )}
             {isAdmin && (
                 <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#ef4444' }]} onPress={() => handleDelete(item)}>
-                    <Feather name="trash-2" size={10} color="#fff" />
+                    <Feather name="trash-2" size={18} color="#fff" />
                 </TouchableOpacity>
             )}
         </View>
@@ -244,24 +242,23 @@ const styles = StyleSheet.create({
   filterTabTextActive: { color: '#fff' },
   
   tableContainer: { flex: 1, marginTop: 10 },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 10, backgroundColor: '#fff' },
-  headerCell: { paddingHorizontal: 1, justifyContent: 'center' },
-  headerText: { fontSize: 8, fontWeight: '800', color: '#1e293b' },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 12, backgroundColor: '#fff', paddingTop: 8 },
+  headerCell: { paddingHorizontal: 4, justifyContent: 'center' },
+  headerText: { fontSize: 10, fontWeight: '800', color: '#64748b', letterSpacing: 0.5 },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 48 },
-  cell: { paddingHorizontal: 1, justifyContent: 'center' },
-  cellText: { fontSize: 9, color: '#1e293b' },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 64, paddingVertical: 8 },
+  cell: { paddingHorizontal: 4, justifyContent: 'center' },
+  cellText: { fontSize: 13, color: '#1e293b', lineHeight: 18 },
   
-  scoreBadge: { backgroundColor: '#f8fafc', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#e2e8f0' },
-  scoreText: { color: '#334155', fontSize: 8, fontWeight: '700' },
+  scoreBadge: { backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#e2e8f0' },
+  scoreText: { color: '#334155', fontSize: 11, fontWeight: '800' },
   
-  statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, minWidth: 50, alignItems: 'center' },
-  statusText: { color: '#fff', fontSize: 7, fontWeight: '900' },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, minWidth: 40, alignItems: 'center' },
+  statusText: { fontSize: 10, fontWeight: '900' },
   
-  miniAction: { padding: 5, marginHorizontal: 2 },
-  iconBtn: { width: 22, height: 22, borderRadius: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 1 },
+  iconBtn: { width: 34, height: 34, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginHorizontal: 2 },
   
-  emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
+  emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 14, fontWeight: '600' },
 });
 
 export default ResultatAuditListScreen;

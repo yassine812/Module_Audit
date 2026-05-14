@@ -94,40 +94,43 @@ const FormulaireManagementScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>ID</Text></View>
-      <View style={[styles.headerCell, { flex: 1.5 }]}><Text style={styles.headerText}>Nom</Text></View>
-      <View style={[styles.headerCell, { flex: 1.0 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Type</Text></View>
-      <View style={[styles.headerCell, { width: 70 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Date</Text></View>
-      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
+      <View style={[styles.headerCell, { width: 26 }]}><Text style={styles.headerText}>#</Text></View>
+      <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>Nom</Text></View>
+      <View style={[styles.headerCell, { width: 88 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Type</Text></View>
+      <View style={[styles.headerCell, { width: 76 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Date</Text></View>
+      <View style={[styles.headerCell, { width: 80 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
-  const renderItem = ({ item, index }) => (
-    <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 30 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
-      <View style={[styles.cell, { flex: 1.5 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.name}</Text></View>
-      <View style={[styles.cell, { flex: 1.0, alignItems: 'center' }]}>
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeText}>{item.type_audit_name || '-'}</Text>
+  const renderItem = ({ item, index }) => {
+    const dateStr = item.date_creation ? String(item.date_creation).split(' ')[0] : '-';
+    return (
+      <View style={styles.tableRow}>
+        <View style={[styles.cell, { width: 26 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
+        <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={2}>{item.name}</Text></View>
+        <View style={[styles.cell, { width: 88, alignItems: 'center' }]}>
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeText} numberOfLines={1} adjustsFontSizeToFit>{item.type_audit_name || '-'}</Text>
+          </View>
+        </View>
+        <View style={[styles.cell, { width: 76 }]}><Text style={[styles.cellText, { textAlign: 'center', fontSize: 11 }]} numberOfLines={1}>{dateStr}</Text></View>
+        <View style={[styles.cell, { width: 80, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
+          <TouchableOpacity style={styles.miniAction} onPress={() => router.push(`/formulaire-detail?id=${item.id}`)}>
+              <Feather name="eye" size={13} color="#06b6d4" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.miniAction} onPress={() => router.push(`/formulaire-form?id=${item.id}`)}>
+              <Feather name="edit-2" size={13} color="#f59e0b" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.miniAction} onPress={() => handleCopy(item.id)}>
+              <Feather name="copy" size={13} color="#64748b" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.miniAction} onPress={() => handleDelete(item.id)}>
+              <Feather name="trash-2" size={13} color="#ef4444" />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.cell, { width: 70 }]}><Text style={[styles.cellText, { textAlign: 'center' }]}>{item.date_creation ? item.date_creation.split(' ')[0] : '-'}</Text></View>
-      <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'center' }]}>
-        <TouchableOpacity style={styles.miniAction} onPress={() => { router.push(`/formulaire-detail?id=${item.id}`) }}>
-            <Feather name="eye" size={11} color="#06b6d4" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.miniAction} onPress={() => { router.push(`/formulaire-form?id=${item.id}`) }}>
-            <Feather name="edit-2" size={11} color="#f59e0b" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.miniAction} onPress={() => handleCopy(item.id)}>
-            <Feather name="copy" size={11} color="#64748b" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.miniAction} onPress={() => handleDelete(item.id)}>
-            <Feather name="trash-2" size={11} color="#ef4444" />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -177,20 +180,20 @@ const styles = StyleSheet.create({
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  headerCell: { paddingHorizontal: 2, paddingVertical: 4, justifyContent: 'center' },
-  headerText: { fontSize: 9, fontWeight: '700', color: '#1e293b' },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: 4 },
+  headerCell: { paddingHorizontal: 4, paddingVertical: 10, justifyContent: 'center' },
+  headerText: { fontSize: 12, fontWeight: '700', color: '#1e293b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 40 },
-  cell: { paddingHorizontal: 2, paddingVertical: 4, justifyContent: 'center' },
-  cellText: { fontSize: 9, color: '#475569' },
-  typeBadge: { backgroundColor: '#06b6d4', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4, minWidth: 60, alignItems: 'center' },
-  typeText: { color: '#fff', fontSize: 8, fontWeight: '700', textAlign: 'center' },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 52, paddingHorizontal: 4 },
+  cell: { paddingHorizontal: 4, paddingVertical: 6, justifyContent: 'center' },
+  cellText: { fontSize: 13, color: '#475569' },
+  typeBadge: { backgroundColor: '#06b6d4', paddingHorizontal: 5, paddingVertical: 4, borderRadius: 6, width: 80, alignItems: 'center' },
+  typeText: { color: '#fff', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   scBadge: { backgroundColor: '#10b981', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
-  scText: { color: '#fff', fontSize: 8, fontWeight: '800' },
-  miniAction: { padding: 3, marginHorizontal: 1 },
+  scText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  miniAction: { padding: 4, marginHorizontal: 1 },
   
-  emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
+  emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 14 },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContainer: { backgroundColor: '#fff', width: '90%', padding: 15, borderRadius: 15, maxHeight: '80%' },

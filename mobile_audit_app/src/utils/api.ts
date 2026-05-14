@@ -11,7 +11,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: TUNNEL_URL,
-  timeout: 30000,
+  timeout: 60000,
   withCredentials: true,
 });
 

@@ -17,6 +17,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons, Feather, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
@@ -38,6 +39,7 @@ const ListeAuditScreen = () => {
   const [auditCommentaire, setAuditCommentaire] = useState('');
   const [starting, setStarting] = useState(false);
   const { logout } = useAuth();
+  const navigation = useNavigation();
 
   const fetchData = async () => {
     try {
@@ -59,7 +61,11 @@ const ListeAuditScreen = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchData();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -113,13 +119,60 @@ const ListeAuditScreen = () => {
     }
   };
 
+  const handleOptions = (item) => {
+    Alert.alert(
+      "Options de l'audit",
+      `Audit: ${item.audit_desc || item.sujet}`,
+      [
+        {
+          text: "Modifier",
+          onPress: () => router.push({ pathname: '/audit-schedule', params: { id: item.id } }),
+        },
+        {
+          text: "Supprimer",
+          onPress: () => confirmDelete(item.id),
+          style: 'destructive'
+        },
+        {
+          text: "Annuler",
+          style: "cancel"
+        }
+      ]
+    );
+  };
+
+  const confirmDelete = (id) => {
+    Alert.alert(
+      "Suppression",
+      "Êtes-vous sûr de vouloir supprimer cet audit ? Cette action est irréversible.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { text: "Supprimer", style: "destructive", onPress: () => handleDeleteAudit(id) }
+      ]
+    );
+  };
+
+  const handleDeleteAudit = async (id) => {
+    try {
+      const res = await api.delete(`${API_PATHS.LISTE_AUDIT}${id}/`);
+      if (res.data.status === 'success') {
+        fetchData();
+      } else {
+        Alert.alert('Erreur', res.data.message || "Échec de la suppression");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', "Vous n'avez peut-être pas les permissions nécessaires pour supprimer cet audit.");
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>N°</Text></View>
-      <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>NOM AUDIT</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
+      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>#</Text></View>
+      <View style={[styles.headerCell, { flex: 1.2 }]}><Text style={styles.headerText}>NOM AUDIT</Text></View>
+      <View style={[styles.headerCell, { flex: 1 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
       <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DATE</Text></View>
-      <View style={[styles.headerCell, { width: 60 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>STATUT</Text></View>
+      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>STATUT</Text></View>
       <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>ACTIONS</Text></View>
     </View>
   );
@@ -131,13 +184,13 @@ const ListeAuditScreen = () => {
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 25 }]}><Text style={styles.cellText}>#{index + 1}</Text></View>
-        <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text></View>
-        <View style={[styles.cell, { width: 65 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={1}>{item.departement_name || '-'}</Text></View>
+        <View style={[styles.cell, { width: 30 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
+        <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={3}>{item.audit_desc || item.sujet || 'Sans nom'}</Text></View>
+        <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={3}>{item.departement_name || '-'}</Text></View>
         <View style={[styles.cell, { width: 75, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
-            <Text style={[styles.cellText, { fontSize: 9 }]}>{item.date_audit ? item.date_audit.split('T')[0].substring(2).split('-').reverse().join('/') : '-'}</Text>
+            <Text style={styles.cellText}>{item.date_audit ? item.date_audit.split('T')[0].substring(2).split('-').reverse().join('/') : '-'}</Text>
         </View>
-        <View style={[styles.cell, { width: 60, alignItems: 'center' }]}>
+        <View style={[styles.cell, { width: 65, alignItems: 'center' }]}>
             <View style={[styles.statusBadge, { 
               backgroundColor: isTermine ? '#10b981' : isEnCours ? '#3b82f6' : '#94a3b8' 
             }]}>
@@ -150,25 +203,22 @@ const ListeAuditScreen = () => {
                     style={styles.rapportBtn}
                     onPress={() => router.push({ pathname: '/report', params: { id: item.resultat_id || item.id } })}
                 >
-                    <Text style={styles.rapportBtnText}>Rapport</Text>
-                    <MaterialCommunityIcons name="file-document-outline" size={10} color="#64748b" />
+                    <MaterialCommunityIcons name="file-document-outline" size={18} color="#64748b" />
                 </TouchableOpacity>
             ) : isEnCours ? (
                 <TouchableOpacity style={styles.continuerBtn} onPress={() => router.push({ pathname: '/audit-form', params: { id: item.resultat_id || item.id } })}>
-                    <Text style={styles.continuerBtnText}>Continuer</Text>
-                    <Ionicons name="chevron-forward" size={10} color="#fff" />
+                    <Ionicons name="chevron-forward" size={18} color="#fff" />
                 </TouchableOpacity>
             ) : (
                 <TouchableOpacity 
                   style={[styles.continuerBtn, { backgroundColor: '#22c55e' }]} 
                   onPress={() => handleStartAudit(item.id)}
                 >
-                    <Text style={styles.continuerBtnText}>Démarrer</Text>
-                    <Ionicons name="play" size={10} color="#fff" />
+                    <Ionicons name="play" size={18} color="#fff" />
                 </TouchableOpacity>
             )}
-            <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => Alert.alert('Action', 'Options supplémentaires pour l\'audit #' + item.id)}>
-                <Entypo name="dots-three-horizontal" size={10} color="#3b82f6" />
+            <TouchableOpacity style={{ marginLeft: 6 }} onPress={() => handleOptions(item)}>
+                <Entypo name="dots-three-horizontal" size={16} color="#3b82f6" />
             </TouchableOpacity>
         </View>
       </View>
@@ -374,25 +424,25 @@ const styles = StyleSheet.create({
   filterTabTextActive: { color: '#1e293b' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 5 },
-  headerCell: { paddingHorizontal: 1, justifyContent: 'center' },
-  headerText: { fontSize: 7, fontWeight: '800', color: '#64748b' },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 8, paddingHorizontal: 4 },
+  headerCell: { paddingHorizontal: 2, justifyContent: 'center' },
+  headerText: { fontSize: 11, fontWeight: '800', color: '#64748b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 40 },
-  cell: { paddingHorizontal: 1, justifyContent: 'center' },
-  cellText: { fontSize: 8, color: '#1e293b' },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 56, paddingHorizontal: 4 },
+  cell: { paddingHorizontal: 2, paddingVertical: 8, justifyContent: 'center' },
+  cellText: { fontSize: 11, color: '#1e293b' },
   
-  auditeurBadge: { backgroundColor: '#e0f2fe', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 8 },
-  auditeurText: { color: '#0369a1', fontSize: 7, fontWeight: '600' },
+  auditeurBadge: { backgroundColor: '#e0f2fe', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 8 },
+  auditeurText: { color: '#0369a1', fontSize: 10, fontWeight: '600' },
   
-  statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, minWidth: 45, alignItems: 'center' },
-  statusText: { color: '#fff', fontSize: 6, fontWeight: '800' },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, minWidth: 55, alignItems: 'center' },
+  statusText: { color: '#fff', fontSize: 9, fontWeight: '800' },
   
-  rapportBtn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, paddingHorizontal: 5, paddingVertical: 2 },
-  rapportBtnText: { color: '#64748b', fontSize: 6, fontWeight: '700', marginRight: 2 },
+  rapportBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, backgroundColor: '#f8fafc' },
+  rapportBtnText: { display: 'none' },
   
-  continuerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2563eb', borderRadius: 10, paddingHorizontal: 5, paddingVertical: 2 },
-  continuerBtnText: { color: '#fff', fontSize: 6, fontWeight: '700', marginRight: 2 },
+  continuerBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2563eb', borderRadius: 8, shadowColor: '#2563eb', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 },
+  continuerBtnText: { display: 'none' },
   
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
   

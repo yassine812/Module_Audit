@@ -104,22 +104,22 @@ const TypeCotationManagementScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 35 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>#</Text></View>
       <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>Type de Cotation</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
+      <View style={[styles.headerCell, { width: 70 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>Actions</Text></View>
     </View>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>#{item.id}</Text></View>
+      <View style={[styles.cell, { width: 30 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
       <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]}>{item.name}</Text></View>
-      <View style={[styles.cell, { width: 65, flexDirection: 'row', justifyContent: 'center' }]}>
+      <View style={[styles.cell, { width: 70, flexDirection: 'row', justifyContent: 'center' }]}>
         <TouchableOpacity onPress={() => handleEdit(item)} style={styles.miniActionBtn}>
-          <Feather name="edit-2" size={12} color="#f59e0b" />
+          <Feather name="edit-2" size={15} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniActionBtn}>
-          <Feather name="trash-2" size={12} color="#ef4444" />
+          <Feather name="trash-2" size={15} color="#ef4444" />
         </TouchableOpacity>
       </View>
     </View>
@@ -216,14 +216,14 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, marginLeft: 8, fontSize: 13, color: '#1e293b' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  headerCell: { padding: 4, justifyContent: 'center' },
-  headerText: { fontSize: 9, fontWeight: '700', color: '#1e293b' },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: 4 },
+  headerCell: { paddingHorizontal: 4, paddingVertical: 12, justifyContent: 'center' },
+  headerText: { fontSize: 13, fontWeight: '700', color: '#1e293b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
-  cell: { padding: 4, justifyContent: 'center' },
-  cellText: { fontSize: 9, color: '#475569' },
-  miniActionBtn: { padding: 4, marginHorizontal: 2 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 56, paddingHorizontal: 4 },
+  cell: { paddingHorizontal: 4, paddingVertical: 8, justifyContent: 'center' },
+  cellText: { fontSize: 13, color: '#475569' },
+  miniActionBtn: { padding: 6, marginHorizontal: 2 },
   
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
   

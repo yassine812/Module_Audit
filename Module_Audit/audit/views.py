@@ -2538,16 +2538,38 @@ def get_formulaire_structure(request):
         .order_by('ordre')
     )
     
-    # Map sous-critères by critère ID
-    sc_by_critere = {}
-    for fsc in fsc_qs:
-        crit_id = fsc.sous_critere.critere_id
-        if crit_id not in sc_by_critere:
-            sc_by_critere[crit_id] = []
-        sc_by_critere[crit_id].append({
-            "id": fsc.sous_critere.id,
-            "nom": fsc.sous_critere.content,
-        })
+    # 2a. Check if ANY FormulaireSousCritere rows exist for this formulaire
+    has_fsc = fsc_qs.exists()
+
+    if has_fsc:
+        # Map sous-critères by critère ID from FormulaireSousCritere
+        sc_by_critere = {}
+        for fsc in fsc_qs:
+            crit_id = fsc.sous_critere.critere_id
+            if crit_id not in sc_by_critere:
+                sc_by_critere[crit_id] = []
+            sc_by_critere[crit_id].append({
+                "id": fsc.sous_critere.id,
+                "nom": fsc.sous_critere.content,
+                "type_cotation": fsc.sous_critere.type_cotation_id if fsc.sous_critere.type_cotation else None,
+                "type_cotation_name": fsc.sous_critere.type_cotation.name if fsc.sous_critere.type_cotation else None,
+                "reaction": fsc.sous_critere.reaction or "",
+                "preuve_attendu": list(fsc.sous_critere.preuve_attendu.values_list('id', flat=True)),
+            })
+    else:
+        # Fall back: load all SousCritere directly linked to each Critere
+        from .models import SousCritere
+        sc_by_critere = {}
+        for crit in criteres:
+            sc_list = SousCritere.objects.filter(critere=crit).select_related('type_cotation')
+            sc_by_critere[crit.id] = [{
+                "id": sc.id,
+                "nom": sc.content,
+                "type_cotation": sc.type_cotation_id if sc.type_cotation else None,
+                "type_cotation_name": sc.type_cotation.name if sc.type_cotation else None,
+                "reaction": sc.reaction or "",
+                "preuve_attendu": list(sc.preuve_attendu.values_list('id', flat=True)),
+            } for sc in sc_list]
 
     # 3. Build the grouped structure
     grouped = []
@@ -2556,6 +2578,7 @@ def get_formulaire_structure(request):
             "critere_id": crit.id,
             "critere_nom": crit.name,
             "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "chapitre_id": crit.chapitre_norme.id if crit.chapitre_norme else None,
             "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
             "sous_criteres": sc_by_critere.get(crit.id, [])
         })
