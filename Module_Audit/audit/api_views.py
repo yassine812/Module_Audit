@@ -11,6 +11,7 @@ from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, Typ
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.db.models import Q, Avg, Count
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -686,11 +687,18 @@ class ListeAuditListAPIView(View):
         if user.is_superuser:
             audits = ListeAudit.objects.all()
         else:
-            audits = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
+            audits = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user)).distinct()
             
-        audits = audits.select_related('section', 'formulaire_audit', 'site')
+        audits = audits.select_related('section', 'formulaire_audit', 'site').prefetch_related('resultataudit_set')
         data = []
         for a in audits:
+            # Optimize status check by using prefetched set
+            resultats = a.resultataudit_set.all()
+            status = 'planifie'
+            first_res = resultats[0] if len(resultats) > 0 else None
+            if resultats:
+                status = 'en_cours' if any(r.en_cours for r in resultats) else 'termine'
+            
             data.append({
                 'id': a.id,
                 'desc': a.desc,
@@ -699,8 +707,9 @@ class ListeAuditListAPIView(View):
                 'departement_name': a.section.name if a.section else '-',
                 'site_name': a.site.name if a.site else '-',
                 'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
-                'en_cours': a.get_audit_status() == 'en_cours',
-                'statut_label': a.get_audit_status()
+                'en_cours': status == 'en_cours',
+                'statut_label': status,
+                'resultat_id': first_res.id if first_res else None,
             })
         return JsonResponse({'status': 'success', 'data': data})
     
@@ -783,14 +792,19 @@ class ListeAuditListAPIView(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class ResultatAuditListAPIView(View):
     def get(self, request):
-        # Fetch all planned audits
-        audits = ListeAudit.objects.all().select_related('section', 'formulaire_audit', 'site').prefetch_related('affectation')
+        # Fetch all planned audits with results prefetched
+        audits = ListeAudit.objects.all().select_related('section', 'formulaire_audit', 'site').prefetch_related('affectation', 'resultataudit_set')
         
         data = []
         for a in audits:
-            # Check if this audit has a result (is started/finished)
-            res = a.resultataudit_set.first()
+            # Check if this audit has a result using prefetched set
+            results = a.resultataudit_set.all()
+            res = results[0] if results else None
             
+            status = 'planifie'
+            if results:
+                status = 'en_cours' if any(r.en_cours for r in results) else 'termine'
+
             data.append({
                 'id': a.id,
                 'audit_desc': a.desc,
@@ -800,9 +814,9 @@ class ResultatAuditListAPIView(View):
                 'date_audit': a.date.isoformat() if a.date else None,
                 'auditeur_name': a.affectation.first().username if a.affectation.exists() else 'admin',
                 'formulaire_name': a.formulaire_audit.name if a.formulaire_audit else 'form',
-                'status': a.get_audit_status(),
-                'status_label': a.get_audit_status_display(),
-                'en_cours': res.en_cours if res else False,
+                'status': status,
+                'status_label': status.capitalize(),
+                'en_cours': any(r.en_cours for r in results) if results else False,
                 'has_result': res is not None,
                 'resultat_id': res.id if res else None,
                 'score_audit': float(res.score_audit) if res else 0.0,
@@ -1125,12 +1139,14 @@ class DashboardStatsAPIView(View):
                 return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
 
             if user.is_superuser:
+                notifications_count = ResultatAudit.objects.filter(en_cours=True).count()
                 stats = {
                     'type_audits': TypeAudit.objects.count(),
                     'text_refs': TextRef.objects.count(),
                     'formulaires': FormulaireAudit.objects.count(),
                     'liste_audits': ListeAudit.objects.count(),
                     'resultats': ResultatAudit.objects.count(),
+                    'notifications_count': notifications_count
                 }
             else:
                 from django.db.models import Avg, Q, Count
@@ -1151,16 +1167,57 @@ class DashboardStatsAPIView(View):
                 # Score average
                 score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
                 
+                # Notifications count logic matching context_processors.py
+                notif_count = audits_assigned.filter(resultataudit__isnull=True).count()
+
                 stats = {
                     'planifies': planifies,
                     'en_cours': en_cours,
                     'termines': termines,
-                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0"
+                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0",
+                    'notifications_count': notif_count
                 }
                 
             return JsonResponse({'status': 'success', 'data': stats})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class NotificationsAPIView(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+        
+        notifs = []
+        user = request.user
+        
+        if user.is_superuser:
+            # Started audits for admin
+            recent_started = ResultatAudit.objects.select_related('auditeur', 'audit').filter(en_cours=True).order_by('-id')[:10]
+            for r in recent_started:
+                notifs.append({
+                    'id': f"res-{r.id}",
+                    'message': f"L'auditeur {r.auditeur.username if r.auditeur else 'Inconnu'} a démarré l'audit {r.sujet or (r.audit.desc if r.audit else 'sans nom')}",
+                    'type': 'audit_started',
+                    'target_id': r.id,
+                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None
+                })
+        else:
+            # Planned audits for user
+            planifies = ListeAudit.objects.filter(
+                Q(affectation=user) | Q(participants=user), 
+                resultataudit__isnull=True
+            ).distinct().order_by('-id')[:10]
+            for p in planifies:
+                notifs.append({
+                    'id': f"plan-{p.id}",
+                    'message': f"Un nouvel audit a été planifié pour vous : {p.desc}",
+                    'type': 'audit_planned',
+                    'target_id': p.id,
+                    'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None
+                })
+        
+        return JsonResponse({'status': 'success', 'data': notifs})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ChartDataAPIView(View):
@@ -1509,9 +1566,17 @@ class ResultatAuditDetailAPIView(View):
             
         resultat = get_object_or_404(ResultatAudit, pk=pk)
         
-        # Check permissions
-        if not request.user.is_superuser and resultat.auditeur != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+        # Check permissions: allow superuser, lead auditor, co-auditors, and participants
+        user = request.user
+        if not user.is_superuser:
+            is_lead = resultat.auditeur == user
+            is_co = resultat.co_auditeur.filter(pk=user.pk).exists()
+            is_participant = resultat.audites.filter(pk=user.pk).exists()
+            is_liste_affectation = resultat.audit and resultat.audit.affectation.filter(pk=user.pk).exists()
+            is_liste_participant = resultat.audit and resultat.audit.participants.filter(pk=user.pk).exists()
+            
+            if not (is_lead or is_co or is_participant or is_liste_affectation or is_liste_participant):
+                return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
             
         details = resultat.detailresultataudit_set.all().order_by('id')
         
@@ -1609,8 +1674,16 @@ class DetailResultatAuditUpdateAPIView(View):
         if not resultat.en_cours:
             return JsonResponse({'status': 'error', 'message': 'Audit is closed'}, status=403)
 
-        if not request.user.is_superuser and resultat.auditeur != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+        user = request.user
+        if not user.is_superuser:
+            is_lead = resultat.auditeur == user
+            is_co = resultat.co_auditeur.filter(pk=user.pk).exists()
+            is_participant = resultat.audites.filter(pk=user.pk).exists()
+            is_liste_affectation = resultat.audit and resultat.audit.affectation.filter(pk=user.pk).exists()
+            is_liste_participant = resultat.audit and resultat.audit.participants.filter(pk=user.pk).exists()
+            
+            if not (is_lead or is_co or is_participant or is_liste_affectation or is_liste_participant):
+                return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
 
         try:
             # Handle both JSON and Form data (for file uploads)
@@ -1660,8 +1733,16 @@ class ResultatAuditFinishAPIView(View):
             
         resultat = get_object_or_404(ResultatAudit, pk=pk)
         
-        if not request.user.is_superuser and resultat.auditeur != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
+        user = request.user
+        if not user.is_superuser:
+            is_lead = resultat.auditeur == user
+            is_co = resultat.co_auditeur.filter(pk=user.pk).exists()
+            is_participant = resultat.audites.filter(pk=user.pk).exists()
+            is_liste_affectation = resultat.audit and resultat.audit.affectation.filter(pk=user.pk).exists()
+            is_liste_participant = resultat.audit and resultat.audit.participants.filter(pk=user.pk).exists()
+            
+            if not (is_lead or is_co or is_participant or is_liste_affectation or is_liste_participant):
+                return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
             
         import json
         try:
@@ -1687,6 +1768,17 @@ class ResultatAuditAISuggestionsAPIView(View):
             return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
         
         resultat = get_object_or_404(ResultatAudit, pk=pk)
+        
+        user = request.user
+        if not user.is_superuser:
+            is_lead = resultat.auditeur == user
+            is_co = resultat.co_auditeur.filter(pk=user.pk).exists()
+            is_participant = resultat.audites.filter(pk=user.pk).exists()
+            is_liste_affectation = resultat.audit and resultat.audit.affectation.filter(pk=user.pk).exists()
+            is_liste_participant = resultat.audit and resultat.audit.participants.filter(pk=user.pk).exists()
+            
+            if not (is_lead or is_co or is_participant or is_liste_affectation or is_liste_participant):
+                return JsonResponse({'status': 'error', 'message': 'Forbidden'}, status=403)
         details = resultat.detailresultataudit_set.all()
         
         # Simple heuristic analysis (copying logic from web view)

@@ -24,17 +24,11 @@ import AuditeurDashboard from './auditeur-dashboard';
 
 const { width } = Dimensions.get('window');
 
-const DashboardScreen = () => {
+const AdminDashboardContent = () => {
   const router = useRouter();
   const { openSidebar } = useSidebar();
   const { user, logout } = useAuth();
 
-  // Role Detection
-  const isAuditor = user?.role === 'Auditeur' || user?.role === 'Participant';
-
-  if (isAuditor) {
-    return <AuditeurDashboard />;
-  }
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
@@ -47,15 +41,29 @@ const DashboardScreen = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [chartData, setChartData] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get(getApiUrl(API_PATHS.NOTIFICATIONS));
+      if (res.data.status === 'success') {
+        setNotifications(res.data.data);
+      }
+    } catch (e) {
+      console.error('Notifications fetch error:', e);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
 
-    // Fetch Stats
+    // 1. Fetch Stats
     try {
       const statsRes = await api.get(getApiUrl(API_PATHS.STATS));
       if (statsRes.data.status === 'success') {
         const s = statsRes.data.data;
+        console.log('Admin Stats:', s);
         setStats({
           types_audit: s.type_audits || 0,
           formulaires: s.formulaires || 0,
@@ -68,7 +76,7 @@ const DashboardScreen = () => {
       console.error('Stats fetch error:', e);
     }
 
-    // Fetch Activity
+    // 2. Fetch Activity
     try {
       const activityRes = await api.get(getApiUrl(API_PATHS.ACTIVITIES));
       if (activityRes.data.status === 'success') {
@@ -76,7 +84,7 @@ const DashboardScreen = () => {
       }
     } catch (e) { console.error('Activity fetch error:', e); }
 
-    // Fetch Chart
+    // 3. Fetch Chart
     try {
       const chartRes = await api.get(getApiUrl(API_PATHS.CHART_DATA));
       if (chartRes.data.status === 'success') {
@@ -89,14 +97,13 @@ const DashboardScreen = () => {
       }
     } catch (e) {
       console.error('Chart fetch error:', e);
-      setChartData({
-        labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"],
-        datasets: { types_audit: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], formulaires: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], audits_planifies: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0], resultats: [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0] }
-      });
     }
 
     setLoading(false);
     setRefreshing(false);
+
+    // 4. Fetch Notifications (Background)
+    fetchNotifications();
   };
 
   useEffect(() => {
@@ -218,19 +225,74 @@ const DashboardScreen = () => {
         </TouchableOpacity>
         <Text style={styles.dashboardTitle}>Tableau de Bord</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerIconBtn}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowNotifMenu(true)}>
             <Ionicons name="notifications-outline" size={24} color="#475569" />
-            {stats.notifications_count > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>{stats.notifications_count}</Text>
+            {stats.notifications_count > 0 ? (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{stats.notifications_count}</Text>
               </View>
-            )}
+            ) : null}
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowUserMenu(true)}>
             <Feather name="user" size={24} color="#475569" />
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal visible={showNotifMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowNotifMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.userDropdown, { right: 50, width: 280 }]}>
+              <View style={styles.notifHeader}>
+                <Text style={styles.notifHeaderText}>Notifications</Text>
+                {stats.notifications_count > 0 ? (
+                  <View style={styles.notifCountBadge}>
+                    <Text style={styles.notifCountText}>{stats.notifications_count}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <TouchableOpacity
+                      key={notif.id}
+                      style={styles.notifItem}
+                      onPress={() => {
+                        setShowNotifMenu(false);
+                        if (notif.type === 'audit_started') {
+                          router.push(`/audit-detail?id=${notif.target_id}`);
+                        } else {
+                          router.push(`/audit-detail?id=${notif.target_id}`);
+                        }
+                      }}
+                    >
+                      <View style={[styles.notifIconCircle, { backgroundColor: notif.type === 'audit_started' ? '#eff6ff' : '#fff7ed' }]}>
+                        <Ionicons 
+                          name={notif.type === 'audit_started' ? "play-circle" : "calendar"} 
+                          size={18} 
+                          color={notif.type === 'audit_started' ? "#3b82f6" : "#f59e0b"} 
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.notifItemText} numberOfLines={2}>{notif.message}</Text>
+                        <Text style={styles.notifTime}>Il y a quelques instants</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.emptyNotif}>
+                    <Ionicons name="notifications-off-outline" size={32} color="#cbd5e1" />
+                    <Text style={styles.emptyNotifText}>Aucune notification</Text>
+                  </View>
+                )}
+              </ScrollView>
+              <TouchableOpacity style={styles.viewAllNotif} onPress={() => { setShowNotifMenu(false); router.push('/liste-audit'); }}>
+                <Text style={styles.viewAllNotifText}>VOIR TOUT</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       <Modal visible={showUserMenu} transparent animationType="fade">
         <TouchableWithoutFeedback onPress={() => setShowUserMenu(false)}>
@@ -264,9 +326,6 @@ const DashboardScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Actions Rapides</Text>
-              <TouchableOpacity onPress={() => router.push('/liste-audit')}>
-                <Text style={styles.sectionLink}>Toutes les actions</Text>
-              </TouchableOpacity>
             </View>
             <View style={styles.actionGrid}>
               <ActionButton
@@ -351,7 +410,7 @@ const DashboardScreen = () => {
                           color={item.action_type === 'add' ? '#10b981' : '#3b82f6'}
                         />
                       </View>
-                      {idx < recentActivity.length - 1 && <View style={styles.timelineLine} />}
+                      {idx < recentActivity.length - 1 ? <View style={styles.timelineLine} /> : null}
                     </View>
                     <View style={styles.timelineRight}>
                       <View style={styles.timelineHeader}>
@@ -385,8 +444,20 @@ const styles = StyleSheet.create({
   dashboardHeader: { height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   headerIconBtn: { padding: 8, marginLeft: 5, position: 'relative' },
-  notificationBadge: { position: 'absolute', top: 5, right: 5, backgroundColor: '#ef4444', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
-  badgeText: { color: '#fff', fontSize: 8, fontWeight: '800' },
+  notifBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#ef4444', borderRadius: 12, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff', zIndex: 10 },
+  notifBadgeText: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  notifHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  notifHeaderText: { fontSize: 14, fontWeight: '800', color: '#1e293b', letterSpacing: 0.5 },
+  notifCountBadge: { backgroundColor: '#eff6ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  notifCountText: { fontSize: 10, fontWeight: '900', color: '#3b82f6' },
+  notifItem: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderBottomColor: '#f8fafc', alignItems: 'center' },
+  notifIconCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  notifItemText: { fontSize: 12, fontWeight: '700', color: '#334155', lineHeight: 16 },
+  notifTime: { fontSize: 10, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
+  emptyNotif: { padding: 30, alignItems: 'center', justifyContent: 'center' },
+  emptyNotifText: { marginTop: 10, fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+  viewAllNotif: { padding: 12, alignItems: 'center', backgroundColor: '#f8fafc' },
+  viewAllNotifText: { fontSize: 10, fontWeight: '900', color: '#3b82f6', letterSpacing: 1 },
   menuBtn: { padding: 5 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.05)' },
@@ -448,5 +519,19 @@ const styles = StyleSheet.create({
   footerVersion: { fontSize: 10, color: '#cbd5e1' },
   emptyText: { textAlign: 'center', color: '#94a3b8', padding: 10 },
 });
+
+const DashboardScreen = () => {
+  const { user } = useAuth();
+  
+  // If user is null, the _layout will redirect to /login. Render nothing to prevent errors.
+  if (!user) return null;
+
+  const isAuditor = user.role === 'Auditeur' || user.role === 'Participant';
+  if (isAuditor) {
+    return <AuditeurDashboard />;
+  }
+  
+  return <AdminDashboardContent />;
+};
 
 export default DashboardScreen;

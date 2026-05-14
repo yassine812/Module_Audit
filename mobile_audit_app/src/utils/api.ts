@@ -51,10 +51,12 @@ export const API_PATHS = {
   DASHBOARD_STATS: '/audit/api/dashboard-stats/',
   STATS: '/audit/api/dashboard-stats/',
   CHART_DATA: '/audit/api/chart-data/',
+  NOTIFICATIONS: '/audit/api/notifications/',
   ACTIVITIES: '/audit/api/activities/',
   TEXT_REFS: '/audit/api/textref/',
   FORMULAIRES: '/audit/api/formulaire-audit/',
   START_AUDIT: (id: any) => `/audit/api/liste-audit/${id}/start/`,
   GET_STRUCTURE: '/audit/get-structure/',
   GET_FORM_STRUCTURE: '/audit/get-formulaire-structure/',
+  RESULTAT_SEND_EMAIL: (id: any) => `/audit/resultat/${id}/send-email/`,
 };

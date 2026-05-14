@@ -103,13 +103,13 @@ const ResultatAuditListScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 35 }]}><Text style={styles.headerText}>ID</Text></View>
-      <View style={[styles.headerCell, { flex: 1.5 }]}><Text style={styles.headerText}>SUJET / RÉF.</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>SITE</Text></View>
-      <View style={[styles.headerCell, { width: 65 }]}><Text style={styles.headerText}>DATE</Text></View>
-      <View style={[styles.headerCell, { width: 50, alignItems: 'center' }]}><Text style={styles.headerText}>SCORE</Text></View>
+      <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>ID</Text></View>
+      <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>SUJET / RÉF.</Text></View>
+      <View style={[styles.headerCell, { width: 50 }]}><Text style={styles.headerText}>SITE</Text></View>
+      <View style={[styles.headerCell, { width: 50 }]}><Text style={styles.headerText}>DATE</Text></View>
+      <View style={[styles.headerCell, { width: 45, alignItems: 'center' }]}><Text style={styles.headerText}>SCR.</Text></View>
       <View style={[styles.headerCell, { width: 65, alignItems: 'center' }]}><Text style={styles.headerText}>STATUT</Text></View>
-      <View style={[styles.headerCell, { width: 85, alignItems: 'center' }]}><Text style={styles.headerText}>ACTIONS</Text></View>
+      <View style={[styles.headerCell, { width: 100, alignItems: 'center' }]}><Text style={styles.headerText}>ACTIONS</Text></View>
     </View>
   );
 
@@ -118,35 +118,35 @@ const ResultatAuditListScreen = () => {
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 35 }]}><Text style={styles.cellText}>{item.id}</Text></View>
-        <View style={[styles.cell, { flex: 1.5 }]}>
-            <Text style={[styles.cellText, { fontWeight: '800' }]} numberOfLines={1}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
-            <Text style={[styles.cellText, { fontSize: 10, color: '#94a3b8', marginTop: 2 }]} numberOfLines={1}>{item.ref_audit || `ID-${item.id}`}</Text>
+        <View style={[styles.cell, { width: 25 }]}><Text style={[styles.cellText, { fontSize: 10 }]}>{item.id}</Text></View>
+        <View style={[styles.cell, { flex: 1 }]}>
+            <Text style={[styles.cellText, { fontWeight: '800', fontSize: 12 }]} numberOfLines={2}>{item.audit_desc || item.sujet || 'Sans nom'}</Text>
+            <Text style={[styles.cellText, { fontSize: 9, color: '#94a3b8' }]} numberOfLines={1}>{item.ref_audit || `ID-${item.id}`}</Text>
         </View>
-        <View style={[styles.cell, { width: 65 }]}><Text style={styles.cellText} numberOfLines={1}>{item.site_name || '-'}</Text></View>
-        <View style={[styles.cell, { width: 65 }]}><Text style={styles.cellText} numberOfLines={1}>{item.date_audit ? item.date_audit.split('T')[0].split('-').reverse().join('/') : '-'}</Text></View>
-        <View style={[styles.cell, { width: 50, alignItems: 'center' }]}>
-            <View style={styles.scoreBadge}>
-                <Text style={styles.scoreText}>{parseFloat(item.score_audit || 0).toFixed(2)}</Text>
+        <View style={[styles.cell, { width: 50 }]}><Text style={[styles.cellText, { fontSize: 10 }]} numberOfLines={1}>{item.site_name || '-'}</Text></View>
+        <View style={[styles.cell, { width: 50 }]}><Text style={[styles.cellText, { fontSize: 10 }]} numberOfLines={1}>{item.date_audit ? item.date_audit.split('T')[0].split('-').slice(1).reverse().join('/') : '-'}</Text></View>
+        <View style={[styles.cell, { width: 45, alignItems: 'center' }]}>
+            <View style={[styles.scoreBadge, { paddingHorizontal: 4 }]}>
+                <Text style={[styles.scoreText, { fontSize: 10 }]}>{parseFloat(item.score_audit || 0).toFixed(1)}</Text>
             </View>
         </View>
         <View style={[styles.cell, { width: 65, alignItems: 'center' }]}>
-            <View style={[styles.statusBadge, { backgroundColor: isTermine ? '#f0fdf4' : '#fff7ed', borderWidth: 1, borderColor: isTermine ? '#10b981' : '#f59e0b' }]}>
-                <Text style={[styles.statusText, { color: isTermine ? '#10b981' : '#f59e0b' }]}>{isTermine ? 'OK' : '...'}</Text>
+            <View style={[styles.statusBadge, { paddingHorizontal: 4, minWidth: 55, backgroundColor: isTermine ? '#f0fdf4' : '#fff7ed', borderWidth: 1, borderColor: isTermine ? '#10b981' : '#f59e0b' }]}>
+                <Text style={[styles.statusText, { color: isTermine ? '#10b981' : '#f59e0b', fontSize: 8.5 }]}>{isTermine ? 'Terminé' : 'En cours'}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 85, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }]}>
-            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#64748b' }]} onPress={() => handleReport(item)}>
-                <MaterialCommunityIcons name="file-document-outline" size={18} color="#fff" />
+        <View style={[styles.cell, { width: 100, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
+            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#64748b', width: 28, height: 28 }]} onPress={() => handleReport(item)}>
+                <MaterialCommunityIcons name="file-document-outline" size={16} color="#fff" />
             </TouchableOpacity>
             {!isTermine && (
-                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#f59e0b' }]} onPress={() => handleFinish(item)}>
-                    <Feather name="lock" size={18} color="#fff" />
+                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#f59e0b', width: 28, height: 28 }]} onPress={() => handleFinish(item)}>
+                    <Feather name="lock" size={16} color="#fff" />
                 </TouchableOpacity>
             )}
             {isAdmin && (
-                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#ef4444' }]} onPress={() => handleDelete(item)}>
-                    <Feather name="trash-2" size={18} color="#fff" />
+                <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#ef4444', width: 28, height: 28 }]} onPress={() => handleDelete(item)}>
+                    <Feather name="trash-2" size={16} color="#fff" />
                 </TouchableOpacity>
             )}
         </View>

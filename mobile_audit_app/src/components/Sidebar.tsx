@@ -105,7 +105,11 @@ const Sidebar = ({ onClose }) => {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.header}>
-        <View style={styles.logoContainer}>
+        <TouchableOpacity 
+          style={styles.logoContainer} 
+          onPress={() => navigateTo('/')}
+          activeOpacity={0.7}
+        >
           <Image 
             source={{ uri: 'http://192.168.1.17:8000/static/img/ab-serve-logo.png' }} 
             style={styles.logo}
@@ -118,7 +122,7 @@ const Sidebar = ({ onClose }) => {
                <Text style={styles.logoSubtext}>Beyond quality</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </SafeAreaView>
 
       <View style={styles.searchContainer}>

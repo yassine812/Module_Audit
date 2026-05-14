@@ -118,10 +118,10 @@ const SectionsManagementScreen = () => {
       <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]}>{item.name}</Text></View>
       <View style={[styles.cell, { width: 60, flexDirection: 'row', justifyContent: 'center' }]}>
         <TouchableOpacity onPress={() => handleEdit(item)} style={styles.miniActionBtn}>
-          <Feather name="edit-2" size={14} color="#f59e0b" />
+          <Feather name="edit-2" size={16} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniActionBtn}>
-          <Feather name="trash-2" size={14} color="#ef4444" />
+          <Feather name="trash-2" size={16} color="#ef4444" />
         </TouchableOpacity>
       </View>
     </View>
@@ -215,14 +215,14 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, marginLeft: 8, fontSize: 13, color: '#1e293b' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  headerCell: { padding: 8, justifyContent: 'center' },
-  headerText: { fontSize: 11, fontWeight: '700', color: '#64748b' },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 10, paddingTop: 5 },
+  headerCell: { paddingHorizontal: 8, justifyContent: 'center' },
+  headerText: { fontSize: 11, fontWeight: '800', color: '#1e293b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  cell: { padding: 8, justifyContent: 'center' },
-  cellText: { fontSize: 12, color: '#475569' },
-  miniActionBtn: { padding: 5, marginHorizontal: 2 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', minHeight: 55 },
+  cell: { paddingHorizontal: 8, justifyContent: 'center' },
+  cellText: { fontSize: 13, color: '#1e293b' },
+  miniActionBtn: { padding: 8, marginHorizontal: 2 },
   
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
   

@@ -53,7 +53,19 @@ const AuditFormScreen = () => {
     try {
       const res = await api.get(API_PATHS.RESULTAT_DETAIL(id));
       if (res.data.status === 'success') {
-        setAuditData(res.data.data);
+        const data = res.data.data;
+        setAuditData(data);
+        
+        // Find the first step that hasn't been evaluated yet
+        if (data.details && data.details.length > 0) {
+          const firstEmptyIndex = data.details.findIndex(d => !d.cotation || d.cotation === "");
+          if (firstEmptyIndex !== -1) {
+            setCurrentIndex(firstEmptyIndex);
+          } else {
+            // If all are completed, stay at the end
+            setCurrentIndex(data.details.length - 1);
+          }
+        }
       }
     } catch (error) {
       console.error(error);
@@ -99,10 +111,8 @@ const AuditFormScreen = () => {
         };
         newData.score_audit = res.data.score;
         setAuditData(newData);
-
-        if (currentIndex < totalSteps - 1) {
-          setCurrentIndex(currentIndex + 1);
-        }
+        
+        // Removed automatic navigation to the next step so the user can upload photos or add comments before manually proceeding.
       }
     } catch (error) {
       console.error(error);
@@ -113,6 +123,22 @@ const AuditFormScreen = () => {
   };
 
   const handleFinish = async () => {
+    // Check if there are any unevaluated steps before finalizing
+    if (auditData?.details) {
+      const missingEvalIndex = auditData.details.findIndex(d => !d.cotation || d.cotation === '');
+      if (missingEvalIndex !== -1) {
+        Alert.alert(
+          'Évaluation incomplète', 
+          `Vous n'avez pas encore évalué l'étape ${missingEvalIndex + 1} (${auditData.details[missingEvalIndex].sous_critere.substring(0, 30)}...). Veuillez compléter toutes les évaluations avant de finaliser.`,
+          [
+            { text: 'Annuler', style: 'cancel' },
+            { text: "Aller à l'étape", onPress: () => setCurrentIndex(missingEvalIndex) }
+          ]
+        );
+        return;
+      }
+    }
+
     setGenLoading(true);
     try {
       // 1. Fetch AI Suggestions
@@ -268,7 +294,118 @@ const AuditFormScreen = () => {
   };
 
   if (loading) return <View style={styles.loading}><ActivityIndicator size="large" color="#2563eb" /></View>;
-  if (!auditData || !currentDetail) return <View style={styles.loading}><Text>Aucune donnée</Text></View>;
+  if (!auditData) return <View style={styles.loading}><Text>Erreur de chargement</Text></View>;
+
+  if (totalSteps === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.webHeader}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 15 }}>
+              <Ionicons name="arrow-back" size={24} color="#1e3a6e" />
+            </TouchableOpacity>
+            <Text style={styles.normeTitle}>Audit sans critères</Text>
+          </View>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Ionicons name="document-text-outline" size={64} color="#cbd5e1" style={{ marginBottom: 16 }} />
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#334155', textAlign: 'center', marginBottom: 8 }}>
+            Formulaire vide
+          </Text>
+          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 24 }}>
+            Il n'y a aucun critère ou sous-critère à évaluer pour ce formulaire. Vous pouvez tout de même finaliser l'audit.
+          </Text>
+          <TouchableOpacity style={styles.suivantBtn} onPress={handleFinish}>
+            {genLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+            ) : (
+                <>
+                  <Text style={styles.suivantBtnText}>Finaliser l'Audit</Text>
+                  <Ionicons name="checkmark-circle" size={18} color="#fff" style={{ marginLeft: 8 }} />
+                </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Synthesis Modal (AI Suggestions) */}
+        <Modal visible={showSynthesisModal} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContent, { height: '85%' }]}>
+                    <View style={styles.modalHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 4, height: 20, backgroundColor: '#1e3a6e', borderRadius: 2, marginRight: 10 }} />
+                          <Text style={styles.modalTitle}>Synthèse de l'Audit (IA)</Text>
+                      </View>
+                      <TouchableOpacity onPress={() => setShowSynthesisModal(false)}>
+                          <Ionicons name="close" size={24} color="#64748b" />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <ScrollView style={{ flex: 1, padding: 16 }} showsVerticalScrollIndicator={false}>
+                        <Text style={styles.synthesisSub}>Synthèse générée par l'IA basée sur vos observations.</Text>
+                        
+                        <View style={styles.synthGrid}>
+                          <View style={styles.synthGridRow}>
+                            <View style={styles.synthBox}>
+                                <Text style={[styles.miniLabel, { color: '#1e3a6e' }]}>POINTS FORTS <Text style={{ color: '#22c55e' }}>●</Text></Text>
+                                <TextInput 
+                                  style={[styles.synthInput, { backgroundColor: '#fcfdfe' }]} 
+                                  multiline 
+                                  value={synthesis.point_fort}
+                                  onChangeText={(t) => setSynthesis({...synthesis, point_fort: t})}
+                                />
+                            </View>
+
+                            <View style={styles.synthBox}>
+                                <Text style={[styles.miniLabel, { color: '#1e3a6e' }]}>POINTS SENSIBLES <Text style={{ color: '#f97316' }}>●</Text></Text>
+                                <TextInput 
+                                  style={[styles.synthInput, { backgroundColor: '#fcfdfe' }]} 
+                                  multiline 
+                                  value={synthesis.point_sensible}
+                                  onChangeText={(t) => setSynthesis({...synthesis, point_sensible: t})}
+                                />
+                            </View>
+                          </View>
+
+                          <View style={styles.synthGridRow}>
+                            <View style={styles.synthBox}>
+                                <Text style={[styles.miniLabel, { color: '#1e3a6e' }]}>RISQUES <Text style={{ color: '#ef4444' }}>●</Text></Text>
+                                <TextInput 
+                                  style={[styles.synthInput, { backgroundColor: '#fff5f5' }]} 
+                                  multiline 
+                                  value={synthesis.risque}
+                                  onChangeText={(t) => setSynthesis({...synthesis, risque: t})}
+                                />
+                            </View>
+
+                            <View style={styles.synthBox}>
+                                <Text style={[styles.miniLabel, { color: '#1e3a6e' }]}>OPPORTUNITÉS <Text style={{ color: '#0ea5e9' }}>●</Text></Text>
+                                <TextInput 
+                                  style={[styles.synthInput, { backgroundColor: '#f0f9ff' }]} 
+                                  multiline 
+                                  value={synthesis.opportunite}
+                                  onChangeText={(t) => setSynthesis({...synthesis, opportunite: t})}
+                                />
+                            </View>
+                          </View>
+                        </View>
+                        <View style={{ height: 40 }} />
+                    </ScrollView>
+
+                    <View style={styles.modalFooter}>
+                        <TouchableOpacity style={styles.synthCancelBtn} onPress={() => setShowSynthesisModal(false)}>
+                            <Text style={styles.synthCancelText}>Annuler</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.synthSubmitBtn} onPress={handleFinalSubmit} disabled={saving}>
+                            {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.synthSubmitText}>Finaliser l'Audit</Text>}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -281,7 +418,10 @@ const AuditFormScreen = () => {
             {/* Header */}
             <View style={styles.webHeader}>
               <View style={styles.headerRow}>
-                <View style={styles.headerMain}>
+                <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12, justifyContent: 'center' }}>
+                  <Ionicons name="arrow-back" size={24} color="#1e3a6e" />
+                </TouchableOpacity>
+                <View style={[styles.headerMain, { flex: 1 }]}>
                   <Text style={styles.miniLabel}>NORME</Text>
                   <TouchableOpacity style={styles.normeRow} onPress={handleOpenPDF}>
                     <Text style={styles.normeTitle} numberOfLines={1}>{currentDetail.chapitre_norme || 'Chapitre'}</Text>

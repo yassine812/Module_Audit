@@ -132,10 +132,10 @@ const EquipementManagementScreen = () => {
             setIsSelectingSite(false);
             setModalVisible(true); 
         }} style={styles.miniActionBtn}>
-            <Feather name="edit-3" size={12} color="#f59e0b" />
+            <Feather name="edit-3" size={14} color="#f59e0b" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniActionBtn}>
-            <Feather name="trash-2" size={12} color="#ef4444" />
+            <Feather name="trash-2" size={14} color="#ef4444" />
         </TouchableOpacity>
       </View>
     </View>
@@ -272,18 +272,18 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, marginLeft: 8, fontSize: 12, color: '#1e293b' },
   
   tableContainer: { flex: 1, marginTop: 5 },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 8, backgroundColor: '#fff' },
-  headerCell: { paddingHorizontal: 1, justifyContent: 'center' },
-  headerText: { fontSize: 9, fontWeight: '800', color: '#1e293b' },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 10, paddingTop: 5, backgroundColor: '#fff' },
+  headerCell: { paddingHorizontal: 2, justifyContent: 'center' },
+  headerText: { fontSize: 11, fontWeight: '800', color: '#1e293b' },
   
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 45 },
-  cell: { paddingHorizontal: 1, justifyContent: 'center' },
-  cellText: { fontSize: 9, color: '#1e293b' },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minHeight: 55 },
+  cell: { paddingHorizontal: 2, justifyContent: 'center' },
+  cellText: { fontSize: 11, color: '#1e293b' },
   
-  typeBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#e2e8f0' },
-  typeBadgeText: { fontSize: 8, color: '#475569', fontWeight: '700' },
+  typeBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#e2e8f0' },
+  typeBadgeText: { fontSize: 10, color: '#475569', fontWeight: '700' },
   
-  miniActionBtn: { padding: 5, marginHorizontal: 1 },
+  miniActionBtn: { padding: 8, marginHorizontal: 2 },
   emptyText: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 12 },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },

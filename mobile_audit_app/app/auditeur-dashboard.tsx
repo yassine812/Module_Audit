@@ -10,6 +10,12 @@ import {
   Dimensions,
   TextInput,
   Image,
+  Modal,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -23,7 +29,7 @@ const { width } = Dimensions.get('window');
 const AuditeurDashboard = () => {
   const router = useRouter();
   const { openSidebar } = useSidebar();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,24 +38,60 @@ const AuditeurDashboard = () => {
     planifies: 0,
     en_cours: 0,
     termines: 0,
-    score_moy: '0.0'
+    score_moy: '0.0',
+    notifications_count: 0
   });
   const [recentAudits, setRecentAudits] = useState([]);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Voulez-vous vraiment vous déconnecter ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Déconnecter", 
+          style: "destructive", 
+          onPress: async () => {
+            await logout();
+          } 
+        }
+      ]
+    );
+  };
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get(getApiUrl(API_PATHS.NOTIFICATIONS));
+      if (res.data.status === 'success') {
+        setNotifications(res.data.data);
+      }
+    } catch (e) {
+      console.error('Notifications fetch error:', e);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      // 1. Fetch Stats first
       const statsRes = await api.get(getApiUrl(API_PATHS.STATS));
       if (statsRes.data.status === 'success') {
         const s = statsRes.data.data;
+        console.log('Auditor Stats:', s);
         setStats({
           planifies: s.planifies || 0,
           en_cours: s.en_cours || 0,
           termines: s.termines || 0,
-          score_moy: s.score_moy || '0.0'
+          score_moy: s.score_moy || '0.0',
+          notifications_count: s.notifications_count || 0
         });
       }
 
+      // 2. Fetch Audits second
       const auditsRes = await api.get(getApiUrl(API_PATHS.LISTE_AUDIT));
       if (auditsRes.data.status === 'success') {
         setRecentAudits(auditsRes.data.data);
@@ -57,8 +99,12 @@ const AuditeurDashboard = () => {
     } catch (e) {
       console.error('Fetch error:', e);
     }
+    
     setLoading(false);
     setRefreshing(false);
+
+    // 3. Fetch Notifications in background (non-blocking)
+    fetchNotifications();
   };
 
   useEffect(() => {
@@ -76,10 +122,45 @@ const AuditeurDashboard = () => {
     const matchesSearch = descMatch || siteMatch;
     
     if (activeFilter === 'all') return matchesSearch;
-    if (activeFilter === 'en_cours') return matchesSearch && (audit.statut_label === 'en_cours' || audit.statut_label === 'planifie');
+    if (activeFilter === 'en_cours') return matchesSearch && audit.statut_label === 'en_cours';
+    if (activeFilter === 'planifie') return matchesSearch && audit.statut_label === 'planifie';
     if (activeFilter === 'termine') return matchesSearch && audit.statut_label === 'termine';
     return matchesSearch;
   });
+
+  const [startModalVisible, setStartModalVisible] = useState(false);
+  const [selectedAuditId, setSelectedAuditId] = useState(null);
+  const [auditCommentaire, setAuditCommentaire] = useState('');
+  const [startingAuditId, setStartingAuditId] = useState(null);
+
+  const handleStartAudit = (auditId) => {
+    setSelectedAuditId(auditId);
+    setAuditCommentaire('');
+    setStartModalVisible(true);
+  };
+
+  const submitStartAudit = async () => {
+    if (startingAuditId) return;
+    setStartingAuditId(selectedAuditId);
+    try {
+      const res = await api.post(API_PATHS.START_AUDIT(selectedAuditId), {
+        commentaire: auditCommentaire
+      });
+      
+      if (res.data.status === 'success') {
+        setStartModalVisible(false);
+        // After starting, navigate to the execution screen
+        router.push(`/audit-form?id=${res.data.resultat_id}`);
+      } else {
+        Alert.alert('Erreur', res.data.message || "Échec du démarrage de l'audit");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', "Une erreur est survenue lors du démarrage");
+    } finally {
+      setStartingAuditId(null);
+    }
+  };
 
   const KPICard = ({ title, value, icon, color, borderBottomColor }) => (
     <View style={[styles.kpiCard, { borderBottomColor, borderBottomWidth: 4 }]}>
@@ -111,11 +192,159 @@ const AuditeurDashboard = () => {
             </View>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationBtn}>
-          <Ionicons name="notifications-outline" size={24} color="#64748b" />
-          <View style={styles.notifDot} />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowNotifMenu(true)}>
+            <Ionicons name="notifications-outline" size={24} color="#64748b" />
+            {stats.notifications_count > 0 ? (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{stats.notifications_count}</Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowUserMenu(true)}>
+            <Feather name="user" size={24} color="#64748b" />
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <Modal visible={showUserMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowUserMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.userDropdown}>
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={() => { setShowUserMenu(false); router.push('/profile'); }}
+              >
+                <Feather name="user" size={18} color="#475569" />
+                <Text style={styles.dropdownText}>Profil</Text>
+              </TouchableOpacity>
+              <View style={styles.dropdownDivider} />
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={() => { setShowUserMenu(false); handleLogout(); }}
+              >
+                <Feather name="log-out" size={18} color="#ef4444" />
+                <Text style={[styles.dropdownText, { color: '#ef4444' }]}>Déconnexion</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal visible={showNotifMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowNotifMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.notifDropdown}>
+              <View style={styles.notifHeader}>
+                <Text style={styles.notifHeaderText}>Notifications</Text>
+                {stats.notifications_count > 0 ? (
+                  <View style={styles.notifCountBadge}>
+                    <Text style={styles.notifCountText}>{stats.notifications_count}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <TouchableOpacity
+                      key={notif.id}
+                      style={styles.notifItem}
+                      onPress={() => {
+                        setShowNotifMenu(false);
+                        router.push(`/audit-detail?id=${notif.target_id}`);
+                      }}
+                    >
+                      <View style={[styles.notifIconCircle, { backgroundColor: notif.type === 'audit_started' ? '#eff6ff' : '#fff7ed' }]}>
+                        <Ionicons 
+                          name={notif.type === 'audit_started' ? "play-circle" : "calendar"} 
+                          size={18} 
+                          color={notif.type === 'audit_started' ? "#3b82f6" : "#f59e0b"} 
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.notifItemText} numberOfLines={2}>{notif.message}</Text>
+                        <Text style={styles.notifTime}>Il y a quelques instants</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.emptyNotif}>
+                    <Ionicons name="notifications-off-outline" size={32} color="#cbd5e1" />
+                    <Text style={styles.emptyNotifText}>Aucune notification</Text>
+                  </View>
+                )}
+              </ScrollView>
+              <TouchableOpacity style={styles.viewAllNotif} onPress={() => { setShowNotifMenu(false); router.push('/liste-audit'); }}>
+                <Text style={styles.viewAllNotifText}>VOIR TOUT</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Start Audit Context Modal */}
+      <Modal visible={startModalVisible} transparent animationType="slide" onRequestClose={() => setStartModalVisible(false)}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.startModalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.startModalContainer}>
+                  <View style={styles.startModalHeader}>
+                    <Text style={styles.startModalTitle}>Démarrer l'Audit</Text>
+                    <TouchableOpacity onPress={() => setStartModalVisible(false)}>
+                      <Ionicons name="close" size={24} color="#64748b" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.startModalBody}>
+                    <Text style={styles.startModalLabel}>Contexte de l'audit (Optionnel)</Text>
+                    <TextInput
+                      style={styles.startModalInput}
+                      placeholder="Ex: Audit de routine, suivi de non-conformité..."
+                      multiline
+                      numberOfLines={4}
+                      value={auditCommentaire}
+                      onChangeText={setAuditCommentaire}
+                      placeholderTextColor="#94a3b8"
+                      blurOnSubmit={true}
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                    <Text style={styles.startModalHelp}>
+                      Ce commentaire sera affiché dans l'entête du rapport final.
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.startModalFooter}>
+                    <TouchableOpacity 
+                      style={styles.startModalCancelBtn} 
+                      onPress={() => setStartModalVisible(false)}
+                    >
+                      <Text style={styles.startModalCancelText}>Annuler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.startModalSubmitBtn, startingAuditId && { opacity: 0.7 }]} 
+                      onPress={submitStartAudit}
+                      disabled={!!startingAuditId}
+                    >
+                      {startingAuditId ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <>
+                          <Text style={styles.startModalSubmitText}>Démarrer</Text>
+                          <Ionicons name="play-circle" size={18} color="#fff" style={{ marginLeft: 8 }} />
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <ScrollView 
         style={styles.scrollView}
@@ -180,6 +409,12 @@ const AuditeurDashboard = () => {
                 <Text style={[styles.filterTabText, activeFilter === 'en_cours' && styles.filterTabTextActive]}>En cours</Text>
               </TouchableOpacity>
               <TouchableOpacity 
+                style={[styles.filterTab, activeFilter === 'planifie' && styles.filterTabActive]}
+                onPress={() => setActiveFilter('planifie')}
+              >
+                <Text style={[styles.filterTabText, activeFilter === 'planifie' && styles.filterTabTextActive]}>Planifié</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
                 style={[styles.filterTab, activeFilter === 'termine' && styles.filterTabActive]}
                 onPress={() => setActiveFilter('termine')}
               >
@@ -205,7 +440,18 @@ const AuditeurDashboard = () => {
                 <TouchableOpacity 
                   key={audit.id} 
                   style={[styles.auditCard, { borderLeftColor: audit.statut_label === 'en_cours' ? '#f59e0b' : audit.statut_label === 'termine' ? '#10b981' : '#3b82f6' }]}
-                  onPress={() => router.push(`/audit-detail?id=${audit.id}`)}
+                  onPress={() => {
+                    if (audit.statut_label === 'termine' && audit.resultat_id) {
+                      router.push(`/report?id=${audit.resultat_id}`);
+                    } else if (audit.statut_label === 'en_cours' && audit.resultat_id) {
+                      router.push(`/audit-form?id=${audit.resultat_id}`);
+                    } else if (audit.statut_label === 'planifie') {
+                      handleStartAudit(audit.id);
+                    } else {
+                      router.push('/liste-audit');
+                    }
+                  }}
+                  disabled={startingAuditId === audit.id}
                 >
                   <View style={styles.auditMain}>
                     <View style={styles.auditHeader}>
@@ -228,11 +474,30 @@ const AuditeurDashboard = () => {
                         <Text style={styles.auditMetaText}>{new Date(audit.date_audit).toLocaleDateString()}</Text>
                       </View>
                       <TouchableOpacity 
-                        style={styles.continueBtn}
-                        onPress={() => router.push(`/audit-detail?id=${audit.id}`)}
+                        style={[styles.continueBtn, startingAuditId === audit.id && { opacity: 0.7 }]}
+                        onPress={() => {
+                          if (audit.statut_label === 'termine' && audit.resultat_id) {
+                            router.push(`/report?id=${audit.resultat_id}`);
+                          } else if (audit.statut_label === 'en_cours' && audit.resultat_id) {
+                            router.push(`/audit-form?id=${audit.resultat_id}`);
+                          } else if (audit.statut_label === 'planifie') {
+                            handleStartAudit(audit.id);
+                          } else {
+                            router.push('/liste-audit');
+                          }
+                        }}
+                        disabled={startingAuditId === audit.id}
                       >
-                        <Text style={styles.continueBtnText}>{audit.statut_label === 'termine' ? 'Voir' : 'Continuer'}</Text>
-                        <Ionicons name="chevron-forward" size={14} color="#fff" />
+                        {startingAuditId === audit.id ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Text style={styles.continueBtnText}>
+                              {audit.statut_label === 'termine' ? 'Voir' : audit.statut_label === 'planifie' ? 'Démarrer' : 'Continuer'}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={14} color="#fff" />
+                          </>
+                        )}
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -267,11 +532,34 @@ const styles = StyleSheet.create({
   menuBtn: { marginRight: 15 },
   userInfo: { flexDirection: 'row', alignItems: 'center' },
   avatar: { width: 44, height: 44, borderRadius: 22, marginRight: 12, borderWidth: 2, borderColor: '#3b82f6' },
-  greeting: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
-  roleBadge: { backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 2, alignSelf: 'flex-start' },
-  roleText: { fontSize: 10, fontWeight: '800', color: '#16a34a', fontStyle: 'italic' },
-  notificationBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
-  notifDot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, backgroundColor: '#ef4444', borderRadius: 4, borderWidth: 1.5, borderColor: '#fff' },
+  greeting: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  roleBadge: { backgroundColor: '#e0e7ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start', marginTop: 2 },
+  roleText: { color: '#4338ca', fontSize: 9, fontWeight: '800' },
+  
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  headerIconBtn: { padding: 6, marginLeft: 6, position: 'relative' },
+  notifBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#ef4444', borderRadius: 10, minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
+  notifBadgeText: { color: '#fff', fontSize: 8, fontWeight: '800' },
+
+  userDropdown: { position: 'absolute', top: 60, right: 15, backgroundColor: '#fff', borderRadius: 12, width: 160, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  dropdownItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
+  dropdownText: { fontSize: 15, color: '#475569', marginLeft: 12, fontWeight: '500' },
+  dropdownDivider: { height: 1, backgroundColor: '#f1f5f9', marginHorizontal: 8 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.05)' },
+  notifDropdown: { position: 'absolute', top: 65, right: 20, width: 280, backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5, overflow: 'hidden', borderWidth: 1, borderColor: '#f1f5f9' },
+  notifHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  notifHeaderText: { fontSize: 14, fontWeight: '800', color: '#1e293b', letterSpacing: 0.5 },
+  notifCountBadge: { backgroundColor: '#eff6ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  notifCountText: { fontSize: 10, fontWeight: '900', color: '#3b82f6' },
+  notifItem: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderBottomColor: '#f8fafc', alignItems: 'center' },
+  notifIconCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  notifItemText: { fontSize: 12, fontWeight: '700', color: '#334155', lineHeight: 16 },
+  notifTime: { fontSize: 10, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
+  emptyNotif: { padding: 30, alignItems: 'center', justifyContent: 'center' },
+  emptyNotifText: { marginTop: 10, fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+  viewAllNotif: { padding: 12, alignItems: 'center', backgroundColor: '#f8fafc' },
+  viewAllNotifText: { fontSize: 10, fontWeight: '900', color: '#3b82f6', letterSpacing: 1 },
 
   scrollView: { flex: 1 },
   content: { padding: 20 },
@@ -350,6 +638,21 @@ const styles = StyleSheet.create({
 
   emptyContainer: { alignItems: 'center', paddingVertical: 40, opacity: 0.5 },
   emptyText: { marginTop: 10, fontSize: 14, fontWeight: '600', color: '#64748b' },
+
+  // Start Modal Styles
+  startModalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  startModalContainer: { backgroundColor: '#fff', borderRadius: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10, overflow: 'hidden' },
+  startModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  startModalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
+  startModalBody: { padding: 20 },
+  startModalLabel: { fontSize: 14, fontWeight: '600', color: '#64748b', marginBottom: 10 },
+  startModalInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 12, fontSize: 14, color: '#1e293b', minHeight: 100, textAlignVertical: 'top' },
+  startModalHelp: { fontSize: 11, color: '#94a3b8', marginTop: 8, fontStyle: 'italic' },
+  startModalFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', gap: 12 },
+  startModalCancelBtn: { paddingVertical: 10, paddingHorizontal: 16 },
+  startModalCancelText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
+  startModalSubmitBtn: { backgroundColor: '#22c55e', flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, shadowColor: '#22c55e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  startModalSubmitText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
 
 export default AuditeurDashboard;

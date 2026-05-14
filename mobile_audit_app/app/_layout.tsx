@@ -34,14 +34,14 @@ function RootLayoutContent() {
   return (
     <View style={styles.container}>
       {/* Desktop Sidebar */}
-      {!isMobile && !isLoginPage && (
+      {!isMobile && !isLoginPage ? (
         <View style={styles.desktopSidebar}>
           <Sidebar />
         </View>
-      )}
+      ) : null}
 
       {/* Mobile Sidebar (Drawer-like Modal) */}
-      {isMobile && !isLoginPage && (
+      {isMobile && !isLoginPage ? (
         <Modal
           animationType="fade"
           transparent={true}
@@ -59,7 +59,7 @@ function RootLayoutContent() {
             />
           </View>
         </Modal>
-      )}
+      ) : null}
 
       <View style={styles.mainContent}>
         <Stack screenOptions={{ headerShown: false }} />

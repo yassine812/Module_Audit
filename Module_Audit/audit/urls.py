@@ -10,7 +10,7 @@ from .api_views import (
     SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView, TextRefDetailAPIView, 
     ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView, ListeAuditStartAPIView,
     ResultatAuditDetailAPIView, DetailResultatAuditUpdateAPIView, ResultatAuditFinishAPIView,
-    ResultatAuditAISuggestionsAPIView
+    ResultatAuditAISuggestionsAPIView, NotificationsAPIView
 )
 from .views import (
     UserListView, UserCreateView, 
@@ -167,6 +167,7 @@ urlpatterns = [
     path("api/change-password/", ChangePasswordAPIView.as_view(), name="api_change_password"),
     path("api/users/", UserListAPIView.as_view(), name="api_user_list"),
     path("api/activities/", ActivityAPIView.as_view(), name="api_activities"),
+    path("api/notifications/", NotificationsAPIView.as_view(), name="api_notifications"),
     path("api/dashboard-stats/", DashboardStatsAPIView.as_view(), name="api_dashboard_stats"),
     path("api/type-audit/", TypeAuditListAPIView.as_view(), name="api_typeaudit_list"),
     path("api/type-audit/<int:pk>/", TypeAuditDetailAPIView.as_view(), name="api_typeaudit_detail"),

@@ -38,7 +38,7 @@ const ListeAuditScreen = () => {
   const [selectedAuditId, setSelectedAuditId] = useState(null);
   const [auditCommentaire, setAuditCommentaire] = useState('');
   const [starting, setStarting] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigation = useNavigation();
 
   const fetchData = async () => {
@@ -78,7 +78,6 @@ const ListeAuditScreen = () => {
           style: "destructive", 
           onPress: async () => {
             await logout();
-            router.replace('/login');
           } 
         }
       ]
@@ -217,9 +216,11 @@ const ListeAuditScreen = () => {
                     <Ionicons name="play" size={18} color="#fff" />
                 </TouchableOpacity>
             )}
-            <TouchableOpacity style={{ marginLeft: 6 }} onPress={() => handleOptions(item)}>
-                <Entypo name="dots-three-horizontal" size={16} color="#3b82f6" />
-            </TouchableOpacity>
+            {user?.role?.toUpperCase() === 'ADMIN' ? (
+              <TouchableOpacity style={{ marginLeft: 6 }} onPress={() => handleOptions(item)}>
+                  <Entypo name="dots-three-horizontal" size={16} color="#3b82f6" />
+              </TouchableOpacity>
+            ) : null}
         </View>
       </View>
     );
@@ -240,19 +241,21 @@ const ListeAuditScreen = () => {
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.headerIconBtn}>
             <Ionicons name="notifications-outline" size={20} color="#475569" />
-            {notifCount > 0 && (
+            {notifCount > 0 ? (
               <View style={styles.notificationBadge}>
                 <Text style={styles.badgeText}>{notifCount}</Text>
               </View>
-            )}
+            ) : null}
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowUserMenu(true)}>
             <Feather name="user" size={20} color="#475569" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.planifierBtn} onPress={() => router.push('/audit-schedule')}>
-            <Ionicons name="add" size={16} color="#fff" />
-            <Text style={styles.planifierBtnText}>Planifier</Text>
-          </TouchableOpacity>
+          {user?.role?.toUpperCase() === 'ADMIN' ? (
+            <TouchableOpacity style={styles.planifierBtn} onPress={() => router.push('/audit-schedule')}>
+              <Ionicons name="add" size={16} color="#fff" />
+              <Text style={styles.planifierBtnText}>Planifier</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 

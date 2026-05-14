@@ -142,9 +142,6 @@
                </div>
 
                <div class="preuve-card-actions">
-                 <a href="{% url 'preuveattendu_detail' preuve.id %}" class="btn btn-light text-info px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Détails">
-                   <i data-lucide="eye" style="width: 18px;"></i>
-                 </a>
                  <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-light text-warning px-3 py-2 rounded-3 shadow-sm border-0 d-flex align-items-center justify-content-center" style="min-height: 40px;" title="Modifier">
                    <i data-lucide="edit" style="width: 18px;"></i>
                  </button>
@@ -194,9 +191,6 @@
                     </td>
                     <td class="text-center col-actions">
                       <div class="d-flex justify-content-center align-items-center gap-1">
-                        <a href="{% url 'preuveattendu_detail' preuve.id %}" class="btn btn-link text-info p-1" title="Détails">
-                          <i data-lucide="eye"></i>
-                        </a>
                         <button onclick="openPreuveAttenduModal('{% url 'preuveattendu_update' preuve.id %}')" class="btn btn-link text-warning p-1" title="Modifier">
                           <i data-lucide="edit"></i>
                         </button>

@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -74,11 +75,11 @@ const LoginScreen = () => {
     <LinearGradient colors={['#f8fafc', '#e2e8f0']} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.brandTitle}>Audit<Text style={{color: '#1e293b'}}>d'entreprise</Text></Text>
+          <Image source={require('../assets/images/ab-serve-logo.png')} style={styles.logo} resizeMode="contain" />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.subtitle}>SYSTÈME DE GESTION DE TERRAIN</Text>
+          <Text style={styles.subtitle}>SYSTÈME DE GESTION DES AUDITS</Text>
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
               <TextInput style={styles.input} placeholder="Nom d'utilisateur" value={username} onChangeText={setUsername} autoCapitalize="none" />
@@ -92,9 +93,6 @@ const LoginScreen = () => {
           <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleLogin} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Se connecter</Text>}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.testBtn} onPress={testConnection}>
-            <Text style={styles.testBtnText}>Vérifier la connexion</Text>
-          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -105,6 +103,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1, justifyContent: 'center', padding: 20 },
   header: { alignItems: 'center', marginBottom: 40 },
+  logo: { width: 120, height: 120, marginBottom: 16 },
   brandTitle: { fontSize: 42, fontWeight: '900', color: '#3b82f6', letterSpacing: -1 },
   card: { backgroundColor: '#fff', borderRadius: 24, padding: 24, elevation: 10 },
   subtitle: { textAlign: 'center', fontSize: 12, fontWeight: '700', color: '#64748b', letterSpacing: 2, marginBottom: 30 },
