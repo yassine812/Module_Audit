@@ -832,7 +832,8 @@
       // SweetAlert2 Confirmation for finishing audits
       $(document).on('click', '.btn-finish-audit', function (e) {
         e.preventDefault();
-        const form = $(this).closest('.finish-audit-form');
+        const form = $(this).closest('form');
+        if (!form.length) return;
         Swal.fire({
           title: 'Clôturer l\'audit ?',
           text: "Cette action va finaliser l'audit et générer le rapport final.",
@@ -843,7 +844,7 @@
           cancelButtonText: 'Annuler',
           reverseButtons: true,
           customClass: { popup: 'rounded-4 shadow-lg border-0' }
-        }).then((result) => { if (result.isConfirmed) form.submit(); });
+        }).then((result) => { if (result.isConfirmed) form.trigger('submit'); });
       });
 
       // --- 4. Sidebar Search: In-place Filtering ---

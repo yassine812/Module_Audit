@@ -1,3 +1,4 @@
+import datetime
 from django.urls import reverse_lazy, reverse
 import os
 from django.conf import settings
@@ -13,9 +14,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.admin.models import LogEntry, ADDITION
 from django.http import HttpResponseForbidden
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from textblob import TextBlob
@@ -44,6 +47,14 @@ from Organisation.models import Processus, TypeEquipement, Section
 from django import forms
 
 from django.contrib.auth.models import Group
+
+
+def to_local_display_datetime(value):
+    if not value:
+        return None
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value, datetime.timezone.utc)
+    return timezone.localtime(value, timezone.get_current_timezone())
 
 class UserForm(forms.ModelForm):
     ROLE_CHOICES = [
@@ -1161,6 +1172,21 @@ class FormulaireAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
     template_name = "audit/formulaire/formulaire_detail.html"
     context_object_name = "formulaire"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["formulaire_creation_log"] = (
+            LogEntry.objects.select_related("user")
+            .filter(
+                content_type__app_label=self.object._meta.app_label,
+                content_type__model=self.object._meta.model_name,
+                object_id=str(self.object.pk),
+                action_flag=ADDITION,
+            )
+            .order_by("action_time")
+            .first()
+        )
+        return context
+
 
 class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, CreateView):
     model = FormulaireAudit
@@ -1547,6 +1573,7 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
         context["details_json"] = details_json
         context["details"] = details
         context["readonly"] = not self.object.en_cours
+        context["audit_display_date"] = to_local_display_datetime(self.object.audit.date if self.object.audit else None)
         context["library_docs"] = [{"name": d.name, "url": d.content.url} for d in ProcessusDoc.objects.exclude(content="") if d.content]
         context["cotations"] = Cotation.objects.all().order_by('-valeur')
         return context
@@ -1801,10 +1828,17 @@ class CloseAuditView(LoginRequiredMixin, View):
         resultat.recalculate_score()
         resultat.save()
 
-        return JsonResponse({
-            "status": "success", 
-            "redirect_url": reverse("resultat_report", args=[resultat.pk])
-        })
+        redirect_to = request.POST.get("next")
+        if redirect_to == "liste_audit_list":
+            redirect_url = reverse("liste_audit_list")
+        else:
+            redirect_url = reverse("resultat_report", args=[resultat.pk])
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({
+                "status": "success",
+                "redirect_url": redirect_url
+            })
+        return redirect(redirect_url)
 
 
 class FinishAuditView(LoginRequiredMixin, View):
@@ -1880,8 +1914,8 @@ class ResultatAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
         order = self.request.GET.get('order', 'asc')
 
         qs = ResultatAudit.objects.select_related(
-            "audit", "auditeur"
-        )
+            "audit", "audit__section", "auditeur", "site"
+        ).filter(en_cours=False)
 
         # Determine sort field
         if sort == 'date':
@@ -1904,6 +1938,7 @@ class ResultatAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
         context = super().get_context_data(**kwargs)
         context['sort'] = self.request.GET.get('sort', 'id')
         context['order'] = self.request.GET.get('order', 'asc')
+        context['sections'] = Section.objects.all()
         return context
 
 class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):
@@ -2159,18 +2194,18 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
         # Consistent with models.py get_audit_status()
         if status_filter == 'planifie':
             # Audits without any ResultatAudit
-            return base_qs.exclude(resultataudit__isnull=False)
+            return base_qs.exclude(resultataudit__isnull=False).order_by("-id")
         elif status_filter == 'en_cours':
             # Audits with at least one active ResultatAudit
-            return base_qs.filter(resultataudit__en_cours=True).distinct()
+            return base_qs.filter(resultataudit__en_cours=True).distinct().order_by("-id")
         elif status_filter == 'termine':
             # Audits with ResultatAudit that are NOT en_cours 
             # (and no active ones to avoid double counting if that's possible, 
             # though usually it's 1:1)
-            return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct()
+            return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().order_by("-id")
         
-        # Final sort by ID ascending (oldest first)
-        return base_qs.order_by("id")
+        # Final sort by ID descending (newest first)
+        return base_qs.order_by("-id")
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2238,6 +2273,7 @@ class ListeAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         context['preuves_attendues'] = PreuveAttendu.objects.all()
         context['chapitres_list'] = ChapitreNorme.objects.all()
         context['critere_formset'] = CritereFormSet(prefix='critere')
+        context['audit_display_date'] = to_local_display_datetime(self.object.date) if getattr(self, "object", None) else None
         return context
 
     @transaction.atomic
@@ -2382,6 +2418,7 @@ class ListeAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         context['preuves_attendues'] = PreuveAttendu.objects.all()
         context['chapitres_list'] = ChapitreNorme.objects.all()
         context['critere_formset'] = CritereFormSet(prefix='critere')
+        context['audit_display_date'] = to_local_display_datetime(self.object.date) if getattr(self, "object", None) else None
         return context
 
     @transaction.atomic

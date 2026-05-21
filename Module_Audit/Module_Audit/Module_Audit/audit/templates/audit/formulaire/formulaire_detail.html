@@ -42,7 +42,21 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold   text-uppercase">Nom du cr&eacute;ateur</label>
+                    <div>
+                        {% if formulaire_creation_log and formulaire_creation_log.user %}
+                            {% if formulaire_creation_log.user.get_full_name %}
+                                {{ formulaire_creation_log.user.get_full_name }} ({{ formulaire_creation_log.user.username }})
+                            {% else %}
+                                {{ formulaire_creation_log.user.username }}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
                     <label class="fw-bold   text-uppercase">Date de Création</label>
                     <div class=" ">{{ formulaire.date_creation|date:"d/m/Y H:i" }}</div>
                 </div>
@@ -100,4 +114,5 @@
 
 </style>
 {% endblock %}
+
 

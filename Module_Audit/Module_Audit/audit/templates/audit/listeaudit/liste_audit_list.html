@@ -564,6 +564,16 @@
                                     title="Continuer">
                                     <span>Continuer</span> <i data-lucide="chevron-right"></i>
                                 </a>
+                                {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
+                                <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="button"
+                                        class="btn btn-sm btn-warning rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1 btn-finish-audit"
+                                        title="Clôturer">
+                                        <span>Clôturer</span> <i data-lucide="lock"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
                                 {% endif %}
                                 {% elif audit.get_audit_status == 'termine' %}
                                 {% if audit.resultataudit_set.first %}
@@ -665,6 +675,14 @@
                                 <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}" class="btn btn-sm btn-continuer rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
                                     Continuer
                                 </a>
+                                {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
+                                <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold btn-finish-audit" style="font-size: 11px;">
+                                        Clôturer
+                                    </button>
+                                </form>
+                                {% endif %}
                                 {% endif %}
                                 {% elif audit.get_audit_status == 'termine' %}
                                 {% if audit.resultataudit_set.first %}
@@ -838,6 +856,27 @@
 
                         form.appendChild(csrfInput);
                         document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
+        });
+        const finishButtons = document.querySelectorAll('.btn-finish-audit');
+        finishButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const form = this.closest('form');
+                if (!form) return;
+                Swal.fire({
+                    title: 'Clôturer l\\'audit ?',
+                    text: 'Vous ne pourrez plus modifier cet audit après clôture.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Oui, clôturer',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
                         form.submit();
                     }
                 });

@@ -599,9 +599,22 @@
                 </a>
                 <div class="space-y-0.5">
                     <h1 class="text-lg md:text-xl font-black text-slate-800 leading-tight">{{ resultat.sujet }}</h1>
-                    <div class="flex items-center gap-2 text-slate-400">
-                        <i data-lucide="map-pin" class="w-3 h-3"></i>
-                        <span class="text-[10px] font-bold uppercase tracking-widest">{{ resultat.site.name }}</span>
+                    <div class="flex flex-wrap items-center gap-3 text-slate-400">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-3 h-3"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">{{ resultat.site.name }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar-clock" class="w-3 h-3"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">
+                                Cr&eacute;&eacute; le
+                                {% if audit_display_date %}
+                                    {{ audit_display_date|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

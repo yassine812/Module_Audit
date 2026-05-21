@@ -1,6 +1,8 @@
+from datetime import timezone as dt_timezone
 from django import forms
 from django.forms import inlineformset_factory
-from .models import FormulaireAudit, Critere, SousCritere, TypeAudit, TypePreuve, PreuveAttendu
+from django.utils import timezone
+from .models import FormulaireAudit, Critere, SousCritere, TypeAudit, TypePreuve, PreuveAttendu, ListeAudit
 from Organisation.models import Section
 
 class FormulaireAuditForm(forms.ModelForm):
@@ -155,3 +157,38 @@ class PreuveAttenduForm(forms.ModelForm):
             'name': forms.Textarea(attrs={'class': 'custom-input', 'rows': 2, 'placeholder': 'Désignation de la preuve attendue...'}),
             'type_preuve': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
+
+
+class ListeAuditForm(forms.ModelForm):
+    class Meta:
+        model = ListeAudit
+        fields = [
+            "desc",
+            "status",
+            "section",
+            "formulaire_audit",
+            "date",
+            "affectation",
+            "participants",
+        ]
+        widgets = {
+            "date": forms.DateTimeInput(
+                attrs={"type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.date:
+            value = self.instance.date
+            if timezone.is_naive(value):
+                value = timezone.make_aware(value, dt_timezone.utc)
+            value = timezone.localtime(value, timezone.get_current_timezone())
+            self.initial["date"] = value.strftime("%Y-%m-%dT%H:%M")
+
+    def clean_date(self):
+        value = self.cleaned_data.get("date")
+        if value and timezone.is_naive(value):
+            value = timezone.make_aware(value, timezone.get_current_timezone())
+        return value

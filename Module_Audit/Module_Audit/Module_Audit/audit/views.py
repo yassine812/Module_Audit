@@ -1821,18 +1821,18 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
         # Consistent with models.py get_audit_status()
         if status_filter == 'planifie':
             # Audits without any ResultatAudit
-            return base_qs.exclude(resultataudit__isnull=False)
+            return base_qs.exclude(resultataudit__isnull=False).order_by("-id")
         elif status_filter == 'en_cours':
             # Audits with at least one active ResultatAudit
-            return base_qs.filter(resultataudit__en_cours=True).distinct()
+            return base_qs.filter(resultataudit__en_cours=True).distinct().order_by("-id")
         elif status_filter == 'termine':
             # Audits with ResultatAudit that are NOT en_cours 
             # (and no active ones to avoid double counting if that's possible, 
             # though usually it's 1:1)
-            return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct()
+            return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().order_by("-id")
         
-        # Final sort by ID ascending (oldest first)
-        return base_qs.order_by("id")
+        # Final sort by ID descending (newest first)
+        return base_qs.order_by("-id")
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

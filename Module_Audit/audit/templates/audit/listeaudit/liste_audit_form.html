@@ -617,6 +617,22 @@ Créer un Audit
                                 </div>
                                 {% endif %}
                             </div>
+                            {% if object and object.pk %}
+                            <div class="mt-4">
+                                <label class="form-label fw-bold text-uppercase mb-2">Date de cr&eacute;ation</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i data-lucide="calendar-clock"
+                                            class=""></i></span>
+                                    <div class="form-control bg-light">
+                                        {% if audit_display_date %}
+                                            {{ audit_display_date|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div> <!-- Close Section/Paramètres Row -->
 

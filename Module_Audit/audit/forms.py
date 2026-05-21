@@ -1,5 +1,7 @@
+from datetime import timezone as dt_timezone
 from django import forms
 from django.forms import inlineformset_factory, modelformset_factory
+from django.utils import timezone
 from .models import (
     FormulaireAudit, Critere, SousCritere, ResultatAudit,
     ChapitreNorme, TypeAudit, TypeCotation, PreuveAttendu,
@@ -183,12 +185,17 @@ class ListeAuditForm(forms.ModelForm):
             
         # Handle date formatting
         if self.instance and self.instance.date:
-            self.initial['date'] = self.instance.date.strftime('%Y-%m-%dT%H:%M')
+            value = self.instance.date
+            if timezone.is_naive(value):
+                value = timezone.make_aware(value, dt_timezone.utc)
+            value = timezone.localtime(value, timezone.get_current_timezone())
+            self.initial['date'] = value.strftime('%Y-%m-%dT%H:%M')
 
     def clean_date(self):
         date = self.cleaned_data.get('date')
         if date:
-            from django.utils import timezone
+            if timezone.is_naive(date):
+                date = timezone.make_aware(date, timezone.get_current_timezone())
             
             # Check if this is an update and the date hasn't changed
             is_changed = True

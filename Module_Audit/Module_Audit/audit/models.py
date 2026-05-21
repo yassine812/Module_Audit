@@ -98,6 +98,7 @@ class ListeAudit(models.Model):
     status = models.BooleanField(default=False)
     number_audit = models.PositiveIntegerField(default=0, editable=False)
     date = models.DateTimeField(default=timezone.now)
+    date_creation = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     affectation = models.ManyToManyField(User, related_name='liste_audit_affectation')
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True)
     formulaire_audit = models.ForeignKey(FormulaireAudit, on_delete=models.SET_NULL, null=True, blank=True)

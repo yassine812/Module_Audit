@@ -108,14 +108,6 @@
                             Résultats d'Audit
                         </h3>
                     </div>
-                    {% if user.is_superuser %}
-                    <div class="ml-auto">
-                        <a href="{% url 'liste_audit_list' %}" class="btn btn-primary shadow-sm rounded-pill px-4 btn-sm-block">
-                            <i data-lucide="plus" class="mr-1"></i>
-                            Nouvel Audit
-                        </a>
-                    </div>
-                    {% endif %}
                 </div>
                 
                 <div class="card-body p-0">
@@ -178,15 +170,7 @@
                                         </div>
 
                                         <div class="d-flex gap-1">
-                                            {% if resultat.en_cours and user.is_superuser or resultat.en_cours and user == resultat.auditeur %}
-                                            <form method="post" action="{% url 'resultat_close' resultat.id %}" class="m-0">
-                                                {% csrf_token %}
-                                                <button type="button" class="btn-mobile-action text-danger btn-finish-audit">
-                                                    <i data-lucide="lock" style="width: 16px;"></i>
-                                                </button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
+                                            </div>
                                     </div>
                                 </div>
                             </div>
@@ -250,14 +234,6 @@
                                                 <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
                                                     <i data-lucide="file-text" ></i>
                                                 </a>
-                                                {% if resultat.en_cours and user.is_superuser or resultat.en_cours and user == resultat.auditeur %}
-                                                <form method="post" action="{% url 'resultat_close' resultat.id %}" class="d-inline m-0">
-                                                    {% csrf_token %}
-                                                    <button type="button" class="btn btn-danger btn-finish-audit" title="Clôturer" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                                        <i data-lucide="lock" ></i>
-                                                    </button>
-                                                </form>
-                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>
