@@ -108,6 +108,22 @@
     color: #1d4ed8;
   }
 
+  .norme-badge {
+    font-size: 13px;
+    color: #475569;
+    font-weight: 700;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .norme-badge:empty {
+    display: none !important;
+  }
+
   .hdr-person {
     font-weight: 700;
     color: #1e293b;
@@ -915,17 +931,19 @@
 
     <!-- Section 1: Header -->
     <div class="audit-top-grid">
-      <div class="top-left">
-        <span class="lbl">NORME</span>
-        <a id="item-chapitre-link" href="javascript:void(0)" class="norme-link">
-          <span id="item-chapitre">--</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        </a>
-        <div id="item-norme" style="font-size:11px;color:#94a3b8;margin-top:2px;"></div>
+      <div class="top-left" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span class="lbl" style="margin-top: 0 !important; margin-bottom: 0 !important; display: inline-block !important;">NORME :</span>
+        <div style="display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 0;">
+          <a id="item-chapitre-link" href="javascript:void(0)" class="norme-link" style="margin-top: 0;">
+            <span id="item-chapitre">--</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </a>
+          <span id="item-norme" class="norme-badge"></span>
+        </div>
       </div>
       <div class="top-right">
         <div>
@@ -950,16 +968,29 @@
 
     <!-- Section 2: Body -->
     <div class="audit-body-grid">
-      <div class="body-left">
-        <span class="lbl d-md-none">CRITÈRE</span>
-        <div class="critere-row">
-          <div class="critere-title" id="item-title">Critère</div>
-          <div class="score-txt">SCORE: <span id="current-score">--</span></div>
+      <div class="body-left" style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <!-- CRITÈRE BLOCK -->
+        <div style="border-left: 3px solid #2563eb; padding-left: 12px; margin-bottom: 2px;">
+          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #2563eb !important; font-size: 11px !important;">CRITÈRE</span>
+          <div class="critere-row" style="margin-bottom: 0 !important;">
+            <div class="critere-title" id="item-title">Critère</div>
+            <div class="score-txt">SCORE: <span id="current-score">--</span></div>
+          </div>
         </div>
-        <span class="lbl d-md-none">SOUS-CRITÈRE</span>
-        <p class="desc-text" id="item-description"></p>
-        <span class="lbl d-md-none">PREUVE ATTENDUE</span>
-        <p class="preuve-text" id="item-preuve"></p>
+
+        <!-- SOUS-CRITÈRE BLOCK -->
+        <div style="border-left: 3px solid #7c3aed; padding-left: 12px; margin-bottom: 2px;">
+          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #7c3aed !important; font-size: 11px !important;">SOUS-CRITÈRE</span>
+          <p class="desc-text" id="item-description" style="margin-bottom: 0 !important;"></p>
+        </div>
+
+        <!-- PREUVE ATTENDUE BLOCK -->
+        <div style="border-left: 3px solid #059669; padding-left: 12px; margin-bottom: 2px;">
+          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #059669 !important; font-size: 11px !important;">PREUVE ATTENDUE</span>
+          <p class="preuve-text" id="item-preuve" style="margin-bottom: 0 !important;"></p>
+        </div>
+
       </div>
       <div class="body-right">
         <!-- Card Triggers -->

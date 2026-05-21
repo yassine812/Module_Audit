@@ -156,12 +156,11 @@ class ListeAuditForm(forms.ModelForm):
     class Meta:
         model = ListeAudit
         fields = [
-            "desc", "status", "site", "section", "type_audit", "formulaire_audit", 
+            "desc", "site", "section", "type_audit", "formulaire_audit", 
             "date", "affectation", "participants", "participants_externes"
         ]
         widgets = {
             'desc': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Description de l\'audit...'}),
-            'status': forms.CheckboxInput(attrs={'class': 'switch-input'}),
             'site': forms.Select(attrs={'class': 'custom-input form-select'}),
             'section': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
@@ -185,6 +184,29 @@ class ListeAuditForm(forms.ModelForm):
         # Handle date formatting
         if self.instance and self.instance.date:
             self.initial['date'] = self.instance.date.strftime('%Y-%m-%dT%H:%M')
+
+    def clean_date(self):
+        date = self.cleaned_data.get('date')
+        if date:
+            from django.utils import timezone
+            
+            # Check if this is an update and the date hasn't changed
+            is_changed = True
+            if self.instance and self.instance.pk:
+                try:
+                    db_date = type(self.instance).objects.get(pk=self.instance.pk).date
+                    if db_date and date == db_date:
+                        is_changed = False
+                except type(self.instance).DoesNotExist:
+                    pass
+            
+            if is_changed:
+                local_now = timezone.localtime(timezone.now())
+                local_today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+                local_date = timezone.localtime(date)
+                if local_date < local_today_start:
+                    raise forms.ValidationError("La date de l'audit ne peut pas être antérieure à aujourd'hui.")
+        return date
 
     def clean_participants_externes(self):
         # Since it's a CharField with a SelectMultiple widget, we need to handle the list of values

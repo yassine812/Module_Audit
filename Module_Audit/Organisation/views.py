@@ -89,7 +89,7 @@ class SectionDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["org/section/section_delete_modal.html"]
         return ["org/section/section_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -196,7 +196,7 @@ class SiteDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["org/site/site_delete_modal.html"]
         return ["org/site/site_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -330,7 +330,7 @@ class ProcessusDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             return ["org/processus/processus_delete_modal.html"]
         return ["org/processus/processus_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -416,7 +416,7 @@ class ProcessusDocDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             return ["org/processusdoc/processusdoc_delete_modal.html"]
         return ["org/processusdoc/processusdoc_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -635,7 +635,7 @@ class NiveauAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
             return ["org/niveauattendu/niveauattendu_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()

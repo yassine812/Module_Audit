@@ -1837,6 +1837,19 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_filter'] = self.request.GET.get('status', 'all')
+        
+        # Calculate statistics counts using the same permission rules
+        qs = ListeAudit.objects.all()
+        if self.request.user.is_superuser:
+            base_qs = qs
+        else:
+            from django.db.models import Q
+            base_qs = qs.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
+            
+        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).count()
+        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True).distinct().count()
+        context['termines_count'] = base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+        
         return context
 
 class ListeAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):

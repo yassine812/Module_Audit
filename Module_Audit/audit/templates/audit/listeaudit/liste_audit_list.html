@@ -408,6 +408,98 @@
             display: none !important;
         }
     }
+
+    /* Premium Stats Cards Styling */
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        gap: 1.25rem;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+
+    .stat-card.planifies::after {
+        background: #2563eb;
+    }
+
+    .stat-card.en-cours::after {
+        background: #f59e0b;
+    }
+
+    .stat-card.termines::after {
+        background: #10b981;
+    }
+
+    .stat-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .planifies .stat-icon-wrapper {
+        background-color: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .en-cours .stat-icon-wrapper {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .termines .stat-icon-wrapper {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-card:hover .stat-icon-wrapper {
+        transform: scale(1.1);
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+        margin-top: 2px;
+    }
 </style>
 {% endblock %}
 
@@ -433,6 +525,43 @@
         </div>
         {% endif %}
         {% endif %}
+    </div>
+
+    <!-- Audit Statistics Dashboard -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="stat-card planifies">
+                <div class="stat-icon-wrapper">
+                    <i data-lucide="calendar" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Planifiés</span>
+                    <span class="stat-value">{{ planifies_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="stat-card en-cours">
+                <div class="stat-icon-wrapper">
+                    <i data-lucide="play" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">En cours</span>
+                    <span class="stat-value">{{ en_cours_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="stat-card termines">
+                <div class="stat-icon-wrapper">
+                    <i data-lucide="check-circle" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Terminés</span>
+                    <span class="stat-value">{{ termines_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modern Search + Filters -->

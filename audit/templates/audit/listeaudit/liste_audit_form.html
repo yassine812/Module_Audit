@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 
 {% block extra_css %}
@@ -2000,20 +2000,24 @@ Créer un Audit
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="formulaire" value="${formulaireId}">`);
                     }
 
+                    // Hide type_audit entirely -- auto-derived from the selected formulaire
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        // Hide the whole column/wrapper (covers any Bootstrap col-* or form-group)
+                        const wrapper = typeAuditSelect.closest('[class*="col-"], .form-group, .mb-3, .mb-4') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
+                        // Also hide any Select2 container already rendered next to the select
+                        const s2 = typeAuditSelect.nextElementSibling;
+                        if (s2 && s2.classList.contains('select2-container')) s2.style.display = 'none';
+                        // Disable the select so it does not submit, then inject a hidden input with the real value
+                        typeAuditSelect.name = '';
                         if (window.currentFormulaireTypeAuditId) {
-                            const option = Array.from(typeAuditSelect.options).find(o => o.value == window.currentFormulaireTypeAuditId);
-                            if (option) {
-                                option.selected = true;
-                            } else {
-                                typeAuditSelect.insertAdjacentHTML('beforeend', `<option value="${window.currentFormulaireTypeAuditId}" selected></option>`);
-                            }
+                            formNode.insertAdjacentHTML('beforeend',
+                                `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                         }
                     } else if (window.currentFormulaireTypeAuditId) {
-                        formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
+                        formNode.insertAdjacentHTML('beforeend',
+                            `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                     }
 
                     /* 🚀 START: Tab Sanitization (Remove Sous-Critères from Modal) */

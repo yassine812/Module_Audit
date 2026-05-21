@@ -321,6 +321,22 @@
         margin-right: 4px !important;
     }
 
+    /* Hide the X remove button on Select2 tags (multi-select) */
+    #critereModal .select2-container--bootstrap4 .select2-selection__choice__remove {
+        display: none !important;
+    }
+
+    /* Hide the X clear button on Select2 single selects */
+    #critereModal .select2-container--bootstrap4 .select2-selection__clear {
+        display: none !important;
+    }
+
+    /* Fallback: hide globally in case Select2 renders outside modal scope */
+    .select2-selection__clear,
+    .select2-selection__choice__remove {
+        display: none !important;
+    }
+
     /* Textareas and Custom selects */
     #critereModal textarea.form-control {
         border-radius: 10px !important;
@@ -456,7 +472,7 @@
                 width: '100%',
                 dropdownParent: $modal.length ? $modal : $('body'),
                 placeholder: "Sélectionnez...",
-                allowClear: true
+                allowClear: false
             });
             // Ensure the value is reflected visually
             $el.trigger('change.select2');

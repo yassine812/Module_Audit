@@ -76,12 +76,20 @@
                     <i data-lucide="file-text" class="select2-prefix-icon"></i>
                     <select name="preuve_attendu" id="id_preuve_attendu" class="form-control select2-multiple" multiple="multiple" data-placeholder="Sélectionner les preuves...">
                         {% for choice in form.preuve_attendu.field.choices %}
+                        {% if choice.0 %}
                         <option value="{{ choice.0 }}" 
                             {% if form.preuve_attendu.value %}
-                                {% if choice.0|slugify in form.preuve_attendu.value|slugify %}selected{% endif %}
+                                {% if choice.0 in form.preuve_attendu.value or choice.0|stringformat:"s" in form.preuve_attendu.value or choice.0 in form.instance.preuve_attendu.all %}
+                                    selected
+                                {% else %}
+                                    {% for selected_obj in form.preuve_attendu.value %}
+                                        {% if selected_obj.id == choice.0 %}selected{% endif %}
+                                    {% endfor %}
+                                {% endif %}
                             {% endif %}>
                             {{ choice.1 }}
                         </option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>

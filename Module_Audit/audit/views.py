@@ -300,7 +300,7 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             return ["audit/typeaudit/typeaudit_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -309,7 +309,7 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des formulaires d'audit existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #textref
 class TextRefListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = TextRef
@@ -371,7 +371,7 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["audit/textref/textref_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -382,7 +382,7 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
                     'success': False,
                     'message': "Cette référence ne peut pas être supprimée car elle est utilisée ailleurs."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #chapiteNorme
 class ChapitreNormeListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = ChapitreNorme
@@ -442,7 +442,7 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
             return ["audit/chapitre/chapitre_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -453,7 +453,7 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
                     'success': False,
                     'message': "Ce chapitre ne peut pas être supprimé car il est utilisé."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #critere
 class CritereListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, ListView):
     model = Critere
@@ -609,7 +609,7 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
             return ["audit/critere/critere_delete_modal.html"]
         return ["audit/critere/critere_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -626,7 +626,7 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
                         f"{len(related_sous_criteres)} sous-critère(s): {', '.join(sc_names)}{'...' if len(related_sous_criteres) > 3 else ''}."
                     )
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 #SousCritère
 class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -743,7 +743,7 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
             return ["audit/souscritere/souscritere_delete_modal.html"]
         return ["audit/souscritere/souscritere_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -753,7 +753,7 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
                 # Add specific error handling if it's protected
                 error_msg = f"Impossible de supprimer le sous-critère car il possède des dépendances actives."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 #TypePreuve
 class TypePreuveListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -816,7 +816,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
             return ["audit/typepreuve/typepreuve_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -833,7 +833,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
         
         try:
-            return super().delete(request, *args, **kwargs)
+            return super().form_valid(form)
         except ProtectedError:
             from django.contrib import messages
             messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
@@ -907,7 +907,7 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
     template_name = "org/preuveattendu/preuveattendu_confirm_delete.html"
     success_url = reverse_lazy("preuveattendu_list")
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -926,7 +926,7 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
         
         try:
-            return super().delete(request, *args, **kwargs)
+            return super().form_valid(form)
         except ProtectedError:
             from django.contrib import messages
             messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
@@ -1009,7 +1009,7 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             return ["audit/typecotation/typecotation_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -1018,7 +1018,7 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des cotations existantes."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 # =====================================================
 # COTATION VIEWS
@@ -1122,7 +1122,7 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             return ["audit/cotation/cotation_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -1131,7 +1131,7 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             except ProtectedError:
                 error_msg = "Impossible de supprimer cette cotation car elle est utilisée dans des audits existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 
 # =====================================================
@@ -2175,6 +2175,19 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_filter'] = self.request.GET.get('status', 'all')
+        
+        # Calculate statistics counts using the same permission rules
+        qs = ListeAudit.objects.all()
+        if self.request.user.is_superuser:
+            base_qs = qs
+        else:
+            from django.db.models import Q
+            base_qs = qs.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
+            
+        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).count()
+        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True).distinct().count()
+        context['termines_count'] = base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+        
         return context
 
 class ListeAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DetailView):

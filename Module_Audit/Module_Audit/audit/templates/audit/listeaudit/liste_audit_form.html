@@ -3,6 +3,20 @@
 
 {% block extra_css %}
 <style>
+    /* Hide ciblage / type audit fields inside criteria modal in liste_audit_form */
+    #ajaxFormModal .col-12:has(select[name="ciblage"]),
+    #ajaxFormModal .col-12:has(select[name="type_audit"]),
+    #ajaxFormModal .col-md-12:has(select[name="ciblage"]),
+    #ajaxFormModal .col-md-12:has(select[name="type_audit"]),
+    #ajaxFormModal .col-6:has(select[name="ciblage"]),
+    #ajaxFormModal .col-6:has(select[name="type_audit"]),
+    #ajaxFormModal .col-md-6:has(select[name="ciblage"]),
+    #ajaxFormModal .col-md-6:has(select[name="type_audit"]),
+    #ajaxFormModal .form-group:has(select[name="ciblage"]),
+    #ajaxFormModal .form-group:has(select[name="type_audit"]) {
+        display: none !important;
+    }
+
     /* Fix Select2 placeholder positioning - ensure it's inside the field */
     .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
         color: #6c757d !important;
@@ -474,20 +488,6 @@ Créer un Audit
                         <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0">
                             <i data-lucide="info" class="me-2 "></i>Informations Générales
                         </h5>
-                        <!-- Premium Status Toggle -->
-                        <div
-                            class="status-toggle-wrapper d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm align-self-start align-self-sm-center">
-                            <label class="switch mb-0">
-                                {{ form.status }}
-                                <span class="slider"></span>
-                            </label>
-                            <span class="switch-label">
-                                <span id="statusText"
-                                    class="{% if form.status.value %}status-active{% else %}status-inactive{% endif %}">
-                                    {% if form.status.value %}Actif{% else %}Inactif{% endif %}
-                                </span>
-                            </span>
-                        </div>
                     </div>
 
                     <div class="row g-4 mb-5">
@@ -1190,6 +1190,17 @@ Créer un Audit
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // 📅 Restrict date input to future dates only (today and beyond)
+        const dateInput = document.querySelector('#auditForm input[type="datetime-local"]');
+        if (dateInput) {
+            const now = new Date();
+            // Round up to next minute and format as YYYY-MM-DDTHH:MM
+            now.setSeconds(0, 0);
+            const pad = n => String(n).padStart(2, '0');
+            const minVal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            dateInput.min = minVal;
+        }
+
         // Dynamic Form Styling
         const formInputs = document.querySelectorAll('#auditForm input[type="text"], #auditForm input[type="datetime-local"], #auditForm select:not([multiple])');
         formInputs.forEach(input => {
@@ -1897,9 +1908,9 @@ Créer un Audit
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="formulaire" value="${formulaireId}">`);
                     }
 
-                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    const typeAuditSelect = formNode.querySelector('select[name="ciblage"]') || formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                         if (window.currentFormulaireTypeAuditId) {
                             const option = Array.from(typeAuditSelect.options).find(o => o.value == window.currentFormulaireTypeAuditId);
@@ -1910,6 +1921,7 @@ Créer un Audit
                             }
                         }
                     } else if (window.currentFormulaireTypeAuditId) {
+                        formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="ciblage" value="${window.currentFormulaireTypeAuditId}">`);
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                     }
 
@@ -1947,9 +1959,9 @@ Créer un Audit
                         if (wrapper) wrapper.style.display = 'none';
                     }
 
-                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    const typeAuditSelect = formNode.querySelector('select[name="ciblage"]') || formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
 
@@ -2010,7 +2022,7 @@ Créer un Audit
                     // Pre-select Type Audit automatically and hide the field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                         if (window.currentFormulaireTypeAuditId) {
                             formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
@@ -2036,7 +2048,7 @@ Créer un Audit
                     // Hide Type Audit field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
                 }

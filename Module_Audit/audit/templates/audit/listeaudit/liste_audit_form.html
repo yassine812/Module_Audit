@@ -3,6 +3,20 @@
 
 {% block extra_css %}
 <style>
+    /* Hide ciblage / type audit fields inside criteria modal in liste_audit_form */
+    #ajaxFormModal .col-12:has(select[name="ciblage"]),
+    #ajaxFormModal .col-12:has(select[name="type_audit"]),
+    #ajaxFormModal .col-md-12:has(select[name="ciblage"]),
+    #ajaxFormModal .col-md-12:has(select[name="type_audit"]),
+    #ajaxFormModal .col-6:has(select[name="ciblage"]),
+    #ajaxFormModal .col-6:has(select[name="type_audit"]),
+    #ajaxFormModal .col-md-6:has(select[name="ciblage"]),
+    #ajaxFormModal .col-md-6:has(select[name="type_audit"]),
+    #ajaxFormModal .form-group:has(select[name="ciblage"]),
+    #ajaxFormModal .form-group:has(select[name="type_audit"]) {
+        display: none !important;
+    }
+
     /* Fix Select2 placeholder positioning - ensure it's inside the field */
     .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
         color: #6c757d !important;
@@ -474,20 +488,6 @@ Créer un Audit
                         <h5 class="fw-bold text-dark border-start border-4 border-primary ps-3 mb-0">
                             <i data-lucide="info" class="me-2 "></i>Informations Générales
                         </h5>
-                        <!-- Premium Status Toggle -->
-                        <div
-                            class="status-toggle-wrapper d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm align-self-start align-self-sm-center">
-                            <label class="switch mb-0">
-                                {{ form.status }}
-                                <span class="slider"></span>
-                            </label>
-                            <span class="switch-label">
-                                <span id="statusText"
-                                    class="{% if form.status.value %}status-active{% else %}status-inactive{% endif %}">
-                                    {% if form.status.value %}Actif{% else %}Inactif{% endif %}
-                                </span>
-                            </span>
-                        </div>
                     </div>
 
                     <div class="row g-4 mb-5">
@@ -1286,6 +1286,17 @@ Créer un Audit
             });
         }
 
+        // 📅 Restrict date input to future dates only (today and beyond)
+        const dateInput = document.querySelector('#auditForm input[type="datetime-local"]');
+        if (dateInput) {
+            const now = new Date();
+            // Round up to next minute and format as YYYY-MM-DDTHH:MM
+            now.setSeconds(0, 0);
+            const pad = n => String(n).padStart(2, '0');
+            const minVal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            dateInput.min = minVal;
+        }
+
         // Dynamic Form Styling
         const formInputs = document.querySelectorAll('#auditForm input[type="text"], #auditForm input[type="datetime-local"], #auditForm select:not([multiple])');
         formInputs.forEach(input => {
@@ -1771,8 +1782,7 @@ Créer un Audit
                                     allowClear: true,
                                     selectOnClose: false, // Critical for spaces
                                     tags: $(this).hasClass('select2-tags') || $(this).prop('multiple'),
-                                    tokenSeparators: [','],
-                                    matcher: function(params, data) { return null; }
+                                    tokenSeparators: [',', ';', '|'] // Modified tokenSeparators
                                 });
 
                                 // Manual Save on Blur for modal fields
@@ -2007,18 +2017,27 @@ Créer un Audit
                 },
                 (formNode) => {
                     const formulaireId = formulaireSelect ? formulaireSelect.value : null;
+                    
+                    // Always hide and handle formulaire field
                     const formSelect = formNode.querySelector('select[name="formulaire"]');
-                    if (formSelect && formulaireId) {
-                        formSelect.value = formulaireId;
-                        const wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || formSelect.parentElement;
+                    if (formSelect) {
+                        // Try multiple wrapper selectors to ensure we find it
+                        let wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3, .row, .col');
+                        if (!wrapper) wrapper = formSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
-                    } else if (formulaireId) {
+                        if (formulaireId) {
+                            formSelect.value = formulaireId;
+                        }
+                    }
+                    if (formulaireId) {
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="formulaire" value="${formulaireId}">`);
                     }
 
-                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    // Always hide and handle type_audit/ciblage field
+                    const typeAuditSelect = formNode.querySelector('select[name="ciblage"]') || formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        let wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3, .row, .col');
+                        if (!wrapper) wrapper = typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                         if (window.currentFormulaireTypeAuditId) {
                             const option = Array.from(typeAuditSelect.options).find(o => o.value == window.currentFormulaireTypeAuditId);
@@ -2028,7 +2047,9 @@ Créer un Audit
                                 typeAuditSelect.insertAdjacentHTML('beforeend', `<option value="${window.currentFormulaireTypeAuditId}" selected></option>`);
                             }
                         }
-                    } else if (window.currentFormulaireTypeAuditId) {
+                    }
+                    if (window.currentFormulaireTypeAuditId) {
+                        formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="ciblage" value="${window.currentFormulaireTypeAuditId}">`);
                         formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
                     }
 
@@ -2049,7 +2070,7 @@ Créer un Audit
                             generalPane.style.display = 'block';
                         }
                     }
-                    /* 🚀 END: Tab Sanitization */
+                    /* END: Tab Sanitization */
                 }
             );
         };
@@ -2062,17 +2083,19 @@ Créer un Audit
                 (formNode) => {
                     const formSelect = formNode.querySelector('select[name="formulaire"]');
                     if (formSelect) {
-                        const wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || formSelect.parentElement;
+                        let wrapper = formSelect.closest('.col-6, .col-md-12, .form-group, .mb-3, .row, .col');
+                        if (!wrapper) wrapper = formSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
 
-                    const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
+                    const typeAuditSelect = formNode.querySelector('select[name="ciblage"]') || formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3') || typeAuditSelect.parentElement;
+                        let wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-3, .row, .col');
+                        if (!wrapper) wrapper = typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
 
-                    /* 🚀 START: Tab Sanitization (Remove Sous-Critères from Modal) */
+                    /* START: Tab Sanitization (Remove Sous-Critères from Modal) */
                     const modal = document.querySelector('#ajaxFormModal');
                     if (modal) {
                         modal.querySelectorAll('[href="#souscritere"], [data-bs-target="#souscritere"]').forEach(el => el.remove());
@@ -2086,7 +2109,7 @@ Créer un Audit
                             generalPane.style.display = 'block';
                         }
                     }
-                    /* 🚀 END: Tab Sanitization */
+                    /* END: Tab Sanitization */
                 }
             );
         };
@@ -2129,7 +2152,7 @@ Créer un Audit
                     // Pre-select Type Audit automatically and hide the field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                         if (window.currentFormulaireTypeAuditId) {
                             formNode.insertAdjacentHTML('beforeend', `<input type="hidden" name="type_audit" value="${window.currentFormulaireTypeAuditId}">`);
@@ -2155,7 +2178,7 @@ Créer un Audit
                     // Hide Type Audit field to clean up the UI
                     const typeAuditSelect = formNode.querySelector('select[name="type_audit"]');
                     if (typeAuditSelect) {
-                        const wrapper = typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
+                        const wrapper = typeAuditSelect.closest('.col-12') || typeAuditSelect.closest('.col-6, .col-md-12, .form-group, .mb-2') || typeAuditSelect.parentElement;
                         if (wrapper) wrapper.style.display = 'none';
                     }
                 }
@@ -2249,84 +2272,9 @@ Créer un Audit
             });
         };
 
-        // 🚀 Inline Critère Form Toggle
+        // 🚀 Inline Critère Form Toggle - Opens Modal Instead
         document.getElementById("btnAddCritere").addEventListener("click", function () {
-            const container = document.getElementById("inlineCritereContainer");
-
-            // Create form if it doesn't exist
-            if (!container.querySelector('#inlineCritereForm')) {
-                const formHtml = `
-                        <div id="inlineCritereForm" class="mt-3 pt-3 border-top">
-                            <h6 class=" mb-3">
-                                <i data-lucide="plus" class="me-2"></i>Nouveau Critère
-                            </h6>
-
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Nom du critère <span class="text-danger">*</span></label>
-                                    <input type="text" id="critereName" class="form-control" placeholder="Ex: Management de la Qualité...">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Chapitre norme</label>
-                                    <select id="critereChapitre" class="form-control select2-chapitre">
-                                        <option value="">🔍 Rechercher un chapitre...</option>
-                                        {% for chap in chapitres_list %}
-                                        <option value="{{ chap.id }}">📘 {{ chap.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-semibold mb-0">Sous-critères</label>
-                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addSousCritere()">
-                                        <i data-lucide="plus" class="me-1"></i>Ajouter
-                                    </button>
-                                </div>
-
-                                <div id="sousCriteresList" class="border rounded-2 p-3 bg-light">
-                                    <div class=" text-center py-2">
-                                        <i data-lucide="info" class="me-1"></i>
-                                        Aucun sous-critère ajouté
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-light border btn-sm" onclick="closeInlineCritereForm()">
-                                    Annuler
-                                </button>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="saveCritere()">
-                                    <i data-lucide="check" class="me-1"></i>Enregistrer
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                container.insertAdjacentHTML('beforeend', formHtml);
-
-                // Initialize Select2 for the new chapitre dropdown
-                setTimeout(() => {
-                    if (typeof window.initializeChapitreSelect2 === 'function') {
-                        window.initializeChapitreSelect2();
-                    }
-                }, 100);
-            }
-
-            // Show/hide form
-            container.classList.toggle('d-none');
-            const form = document.getElementById("inlineCritereForm");
-
-            if (!container.classList.contains('d-none')) {
-                // Scroll smoothly to form
-                container.scrollIntoView({ behavior: "smooth", block: "start" });
-
-                // Auto-focus first input
-                setTimeout(() => {
-                    document.getElementById('critereName').focus();
-                }, 300);
-            }
+            window.openAddCritereModal();
         });
 
         function closeInlineCritereForm() {
@@ -2391,7 +2339,13 @@ Créer un Audit
                 const structContainer = document.querySelector('#inlineStructureContainer');
                 if (structContainer) {
                     structContainer.classList.add('d-none');
-                    document.querySelector('#inlineStructureContent').innerHTML = '';
+                    // Only clear the tbody & mobile list — do NOT wipe #inlineStructureContent
+                    // because that would remove #structureTableBody from the DOM,
+                    // causing a TypeError the next time "Synchroniser" is clicked.
+                    const tbClear = document.querySelector('#structureTableBody');
+                    if (tbClear) tbClear.innerHTML = '';
+                    const mobClear = document.querySelector('#mobileStructureList');
+                    if (mobClear) mobClear.innerHTML = '';
                 }
             }
         };
@@ -2414,12 +2368,20 @@ Créer un Audit
                 try {
                     const response = await fetch(`/audit/get-structure/?type_audit_id=${typeId}`);
                     const data = await response.json();
+
+                    // Guard: server returned an error object instead of an array
+                    if (!response.ok || (data && data.status === 'error')) {
+                        const msg = (data && data.message) ? data.message : `Erreur serveur (${response.status})`;
+                        alert("Erreur lors de la synchronisation : " + msg);
+                        return;
+                    }
+
                     const container = document.querySelector('#inlineStructureContainer');
                     const tableBody = document.querySelector('#structureTableBody');
 
                     if (tableBody) tableBody.innerHTML = '';
 
-                    if (data.length === 0) {
+                    if (!Array.isArray(data) || data.length === 0) {
                         if (tableBody) {
                             tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><i data-lucide="inbox" class="d-inline-block mb-2 w-8 h-8 opacity-50"></i><br>Aucune structure trouvée.</td></tr>';
                         }
@@ -2564,7 +2526,7 @@ Créer un Audit
                                 </div>`;
                         });
 
-                        document.querySelector('#structureTableBody').innerHTML = listHtml;
+                        if (tableBody) tableBody.innerHTML = listHtml;
                         const mobList = document.querySelector('#mobileStructureList');
                         if (mobList) mobList.innerHTML = mobileHtml;
 
@@ -2600,8 +2562,10 @@ Créer un Audit
                         attachSmartLogic();
                     }
 
-                    container.classList.remove('d-none');
-                    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (container) {
+                        container.classList.remove('d-none');
+                        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
 
                 } catch (error) {
                     console.error('Error:', error);

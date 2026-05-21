@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorateur de Base de Données Graphique - Module Audit</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Mermaid CDN for ERD Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131b2e;
+            --bg-tertiary: #1e2942;
+            --border-color: #2e3c5d;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --accent-primary: #6366f1; /* Indigo */
+            --accent-secondary: #a855f7; /* Purple */
+            --accent-cyan: #06b6d4; /* Cyan */
+            --accent-emerald: #10b981; /* Emerald */
+            --accent-rose: #f43f5e; /* Rose */
+            
+            --glass-bg: rgba(19, 27, 46, 0.7);
+            --glass-border: rgba(46, 60, 93, 0.4);
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-neon: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--bg-primary);
+        }
+
+        /* Scrollbar Styling */
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        *::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 9999px;
+            border: 2px solid var(--bg-primary);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #111827 100%);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-neon);
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .stat-badge {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-badge strong {
+            color: var(--text-primary);
+        }
+
+        .stat-badge i {
+            width: 14px;
+            height: 14px;
+        }
+
+        .badge-audit { border-color: var(--accent-primary); color: #818cf8; }
+        .badge-org { border-color: var(--accent-cyan); color: #22d3ee; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+        }
+
+        /* Sidebar Stylings */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .search-box {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 0.75rem;
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        .tables-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .app-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .app-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-count {
+            background-color: var(--bg-tertiary);
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+        }
+
+        .table-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 0.25rem;
+            transition: all 0.15s ease;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+
+        .table-item:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .table-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .table-name-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-name-wrapper i {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        .table-item.active .table-name-wrapper i {
+            color: var(--accent-primary);
+        }
+
+        .relation-count {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background-color: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        /* Content Area Stylings */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: var(--bg-primary);
+        }
+
+        .tab-bar {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.5rem 1.5rem 0 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem 1.25rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.15s;
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-button.active {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--accent-cyan), var(--accent-primary));
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        .tab-button i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+            display: none;
+            position: relative;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* ERD View styling */
+        .erd-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .erd-toolbar {
+            background-color: rgba(19, 27, 46, 0.8);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.15s;
+        }
+
+        .btn:hover {
+            background-color: var(--border-color);
+            border-color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .erd-canvas {
+            flex: 1;
+            overflow: auto;
+            background: radial-gradient(circle, #1a2238 1px, transparent 1px);
+            background-size: 24px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            cursor: grab;
+        }
+
+        .erd-canvas:active {
+            cursor: grabbing;
+        }
+
+        /* Data Dictionary View */
+        .dictionary-container {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .dict-main {
+            flex: 1;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dict-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .table-title i {
+            color: var(--accent-cyan);
+            background-color: rgba(6, 182, 212, 0.1);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .table-title h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .table-title span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: var(--bg-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .table-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .dict-table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-tertiary);
+            z-index: 5;
+        }
+
+        th {
+            padding: 0.85rem 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(46, 60, 93, 0.3);
+            transition: background-color 0.15s;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            vertical-align: top;
+            color: var(--text-secondary);
+        }
+
+        td strong {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .col-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #ec4899; /* Pink */
+        }
+
+        .badge-pk, .badge-fk, .badge-null {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 0.25rem;
+        }
+
+        .badge-pk {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-fk {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+        }
+
+        .badge-fk:hover {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+
+        .badge-null {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .relations-panel {
+            width: 320px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .relations-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .relations-header i {
+            color: var(--accent-secondary);
+        }
+
+        .relations-list {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .relation-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            transition: all 0.15s;
+        }
+
+        .relation-card:hover {
+            border-color: var(--text-muted);
+            transform: translateX(2px);
+        }
+
+        .rel-direction {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .rel-source {
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .rel-target {
+            color: var(--accent-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+        }
+
+        .rel-target:hover {
+            text-decoration: underline;
+        }
+
+        .rel-arrow {
+            color: var(--text-muted);
+        }
+
+        .rel-field {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background-color: var(--bg-tertiary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            align-self: flex-start;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .rel-type-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .empty-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 2rem;
+            gap: 1rem;
+        }
+
+        .empty-selection i {
+            width: 48px;
+            height: 48px;
+            color: var(--border-color);
+        }
+
+        /* Mermaid Graph Styles Overrides */
+        .mermaid {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        .no-results {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-logo">
+            <div class="logo-icon">
+                <i data-lucide="database"></i>
+            </div>
+            <div class="header-title">
+                <h1>Module Audit - Base de Données</h1>
+                <p>Visualisation interactive et dictionnaire de données Django</p>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-badge badge-audit">
+                <i data-lucide="shield-check"></i>
+                <span>Application Audit : <strong>13 Tables</strong></span>
+            </div>
+            <div class="stat-badge badge-org">
+                <i data-lucide="building-2"></i>
+                <span>Application Organisation : <strong>6 Tables</strong></span>
+            </div>
+            <div class="stat-badge">
+                <i data-lucide="git-branch"></i>
+                <span>Relations : <strong>24 Clés Étrangères</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar with Tables List -->
+        <aside class="sidebar">
+            <div class="search-box">
+                <div class="search-wrapper">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Rechercher une table..." oninput="filterTables()">
+                </div>
+            </div>
+            
+            <div class="tables-list-container">
+                <!-- App Audit -->
+                <div class="app-section" id="section-audit">
+                    <div class="app-section-title">
+                        <span>Application Audit</span>
+                        <span class="app-count">13</span>
+                    </div>
+                    <div id="audit-tables-list">
+                        <!-- Filled by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- App Organisation -->
+                <div class="app-section" id="section-organisation">
+                    <div class="app-section-title">
+                        <span>Organisation & Référentiel</span>
+                        <span class="app-count">6</span>
+                    </div>
+                    <div id="org-tables-list">
+                        <!-- Filled by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <div class="tab-bar">
+                <button class="tab-button active" onclick="switchTab('erd-tab', this)">
+                    <i data-lucide="network"></i>
+                    Schéma Relationnel Graphique
+                </button>
+                <button class="tab-button" onclick="switchTab('dictionary-tab', this)">
+                    <i data-lucide="book-open"></i>
+                    Dictionnaire de Données
+                </button>
+            </div>
+
+            <!-- Tab: ERD Schema -->
+            <div id="erd-tab" class="tab-content active">
+                <div class="erd-container">
+                    <div class="erd-toolbar">
+                        <div class="toolbar-group">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                <i data-lucide="info" style="width:14px; height:14px; display:inline; vertical-align:middle; margin-right:4px;"></i>
+                                Double-cliquez ou pincez pour zoomer. Glissez pour déplacer le schéma.
+                            </span>
+                        </div>
+                        <div class="toolbar-group">
+                            <button class="btn" onclick="resetZoom()"><i data-lucide="maximize"></i> Recentrer</button>
+                            <button class="btn btn-primary" onclick="exportSVG()"><i data-lucide="download"></i> Exporter l'image</button>
+                        </div>
+                    </div>
+                    <div class="erd-canvas" id="erdCanvas" onwheel="handleZoom(event)" onmousedown="startDrag(event)" onmouseup="endDrag()" onmousemove="drag(event)">
+                        <div class="mermaid" id="mermaidContainer">
+classDiagram
+    direction LR
+    
+    class ListeAudit {
+        +int id [PK]
+        +string desc
+        +boolean status
+        +int number_audit
+        +datetime date
+        +int section_id [FK]
+        +int formulaire_audit_id [FK]
+        +int site_id [FK]
+        +int type_audit_id [FK]
+        +text participants_externes
+    }
+    
+    class ResultatAudit {
+        +int id [PK]
+        +int ref_audit
+        +int audit_id [FK]
+        +string users
+        +datetime date_audit
+        +decimal score_audit
+        +string sujet
+        +int site_id [FK]
+        +json niveau_attendu
+        +int auditeur_id [FK]
+        +string reference_gamme
+        +string processus
+        +text point_fort
+        +text point_sensible
+        +text risque
+        +text opportunite
+        +text commentaire
+        +boolean en_cours
+    }
+    
+    class DetailResultatAudit {
+        +int id [PK]
+        +int resultat_audit_id [FK]
+        +string critere
+        +string norme
+        +string sous_critere
+        +string chapitre_norme
+        +string text_ref_url
+        +text element_preuve
+        +image justificatif
+        +image justificatif_bis
+        +text commentaire
+        +json cotation_option
+        +string cotation
+        +string code
+        +float value
+        +float value_max
+    }
+    
+    class EvidenceAudit {
+        +int id [PK]
+        +int detail_id [FK]
+        +file file
+        +datetime uploaded_at
+    }
+
+    class FormulaireAudit {
+        +int id [PK]
+        +string name
+        +datetime date_creation
+        +int processus_id [FK]
+        +int type_audit_id [FK]
+        +int type_equipement_id [FK]
+    }
+
+    class Critere {
+        +int id [PK]
+        +string name
+        +int formulaire_id [FK]
+        +int chapitre_norme_id [FK]
+    }
+
+    class SousCritere {
+        +int id [PK]
+        +text reaction
+        +text content
+        +int type_cotation_id [FK]
+        +int critere_id [FK]
+    }
+
+    class PreuveAttendu {
+        +int id [PK]
+        +text name
+        +string code
+        +int type_preuve_id [FK]
+    }
+
+    class TypeAudit {
+        +int id [PK]
+        +string name
+        +datetime date_creation
+    }
+
+    class Section {
+        +int id [PK]
+        +string name
+    }
+
+    class Site {
+        +int id [PK]
+        +string name
+        +int section_id [FK]
+    }
+
+    class Equipement {
+        +int id [PK]
+        +string name
+        +string serial_number
+        +text commentaire
+        +int type_equipement_id [FK]
+        +int site_id [FK]
+    }
+
+    class ProcessusDoc {
+        +int id [PK]
+        +string name
+        +file content
+    }
+
+    class TextRef {
+        +int id [PK]
+        +string norme
+        +int text_ref_id [FK]
+    }
+
+    class ChapitreNorme {
+        +int id [PK]
+        +string name
+        +int page
+        +int text_ref_id [FK]
+    }
+
+    %% Relationships
+    Site --> Section : Section de localisation
+    Equipement --> Site : Localisé sur
+    Equipement --> TypeEquipement : Type de matériel
+    ProcessusDoc --> Processus : Lié aux processus (M2M)
+    
+    TextRef --> ProcessusDoc : Réf. Documentaire
+    ChapitreNorme --> TextRef : Relatif à la norme
+    Critere --> FormulaireAudit : Partie de
+    Critere --> ChapitreNorme : Associe chapitre
+    
+    PreuveAttendu --> TypePreuve : Catégorisé par
+    SousCritere --> Critere : Découle du critère
+    SousCritere --> TypeCotation : Grille de cotation
+    SousCritere --> PreuveAttendu : Exige preuves (M2M)
+
+    FormulaireAudit --> Processus : Concerne
+    FormulaireAudit --> TypeAudit : Mode d'évaluation
+    FormulaireAudit --> TypeEquipement : Cible équipement
+    
+    ListeAudit --> Section : Secteur d'audit
+    ListeAudit --> FormulaireAudit : Utilise le formulaire
+    ListeAudit --> Site : Site audité
+    ListeAudit --> TypeAudit : Nature de l'audit
+    
+    ResultatAudit --> ListeAudit : Évalue l'audit
+    ResultatAudit --> Site : Concerne le site
+    ResultatAudit --> User : Auditeur principal (FK)
+    
+    DetailResultatAudit --> ResultatAudit : Résultat détaillé
+    EvidenceAudit --> DetailResultatAudit : Justificatif physique
+
+    style ListeAudit fill:#1d1b3a,stroke:#6366f1,stroke-width:2px;
+    style ResultatAudit fill:#1d1b3a,stroke:#6366f1,stroke-width:2px;
+    style DetailResultatAudit fill:#1d1b3a,stroke:#6366f1,stroke-width:2px;
+    style FormulaireAudit fill:#1b2a3a,stroke:#06b6d4,stroke-width:2px;
+    style SousCritere fill:#1b2a3a,stroke:#06b6d4,stroke-width:2px;
+    style Site fill:#132a23,stroke:#10b981,stroke-width:2px;
+    style Equipement fill:#132a23,stroke:#10b981,stroke-width:2px;
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Data Dictionary -->
+            <div id="dictionary-tab" class="tab-content">
+                <div class="dictionary-container">
+                    
+                    <!-- Table columns and details -->
+                    <div class="dict-main">
+                        <div id="dictTableContent">
+                            <div class="empty-selection">
+                                <i data-lucide="database"></i>
+                                <h3>Aucune table sélectionnée</h3>
+                                <p>Sélectionnez une table dans le panneau latéral gauche pour afficher sa structure détaillée, ses clés et ses types de données.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar showing references & relations of selected table -->
+                    <div class="relations-panel">
+                        <div class="relations-header">
+                            <i data-lucide="git-fork"></i>
+                            <h3>Relations Clés</h3>
+                        </div>
+                        <div id="relationsList" class="relations-list">
+                            <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-top: 2rem;">
+                                Sélectionnez une table pour voir ses relations parent-enfant.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Database Schema Definition Data
+        const dbSchema = {
+            // APP AUDIT
+            "ListeAudit": {
+                app: "audit",
+                desc: "Représente la planification et l'affectation d'un audit individuel basé sur un formulaire.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Identifiant unique de la planification." },
+                    { name: "desc", type: "CharField(50)", key: "", nullable: false, desc: "Description textuelle / Nom court de l'audit." },
+                    { name: "status", type: "BooleanField", key: "", nullable: false, desc: "État d'activation de la planification (Actif/Inactif)." },
+                    { name: "number_audit", type: "PositiveIntegerField", key: "", nullable: false, desc: "Numéro incrémentiel automatique d'audit (ex: AUD-0001)." },
+                    { name: "date", type: "DateTimeField", key: "", nullable: false, desc: "Date et heure prévues pour l'exécution de l'audit." },
+                    { name: "affectation", type: "ManyToManyField(User)", key: "M2M", nullable: false, desc: "Auditeurs assignés à cette tâche d'audit." },
+                    { name: "section", type: "ForeignKey(Section)", key: "FK", nullable: true, desc: "Secteur ou département concerné par l'audit." },
+                    { name: "formulaire_audit", type: "ForeignKey(FormulaireAudit)", key: "FK", nullable: true, desc: "Formulaire d'audit qui sera utilisé pour l'évaluation." },
+                    { name: "site", type: "ForeignKey(Site)", key: "FK", nullable: true, desc: "Site physique sur lequel se déroule l'audit." },
+                    { name: "type_audit", type: "ForeignKey(TypeAudit)", key: "FK", nullable: true, desc: "Catégorie de l'audit (Équipement, Poste, Site, Interne)." },
+                    { name: "participants", type: "ManyToManyField(User)", key: "M2M", nullable: true, desc: "Collaborateurs internes participant à la séance." },
+                    { name: "participants_externes", type: "TextField", key: "", nullable: true, desc: "Noms des intervenants externes présents, saisis librement." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "ListeAudit", to: "Section", field: "section_id", desc: "Associe un département d'organisation." },
+                    { type: "ForeignKey", from: "ListeAudit", to: "FormulaireAudit", field: "formulaire_audit_id", desc: "Définit les questions issues du modèle de formulaire." },
+                    { type: "ForeignKey", from: "ListeAudit", to: "Site", field: "site_id", desc: "Rattache à une implantation géographique." },
+                    { type: "ForeignKey", from: "ListeAudit", to: "TypeAudit", field: "type_audit_id", desc: "Indique la catégorie globale." },
+                    { type: "ManyToMany", from: "ListeAudit", to: "User", field: "affectation", desc: "Liaison d'affectation aux comptes utilisateurs." }
+                ]
+            },
+            "ResultatAudit": {
+                app: "audit",
+                desc: "Enregistre l'exécution globale et consolidée d'un audit avec son score calculé et ses notes de synthèse.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Identifiant unique du résultat." },
+                    { name: "ref_audit", type: "PositiveIntegerField", key: "", nullable: false, desc: "Copie de sauvegarde du numéro d'audit de planification." },
+                    { name: "audit", type: "ForeignKey(ListeAudit)", key: "FK", nullable: false, desc: "Référence vers l'audit planifié d'origine." },
+                    { name: "users", type: "CharField(50)", key: "", nullable: false, desc: "Noms concaténés des personnes présentes." },
+                    { name: "date_audit", type: "DateTimeField", key: "", nullable: false, desc: "Horodatage de la création du résultat." },
+                    { name: "score_audit", type: "DecimalField(15, 2)", key: "", nullable: false, desc: "Moyenne des cotations des sous-critères (de 0.00 à 1.00 ou convertie en %)." },
+                    { name: "sujet", type: "CharField(50)", key: "", nullable: false, desc: "Sujet ou titre de l'audit de terrain." },
+                    { name: "site", type: "ForeignKey(Site)", key: "FK", nullable: true, desc: "Site physique inspecté." },
+                    { name: "niveau_attendu", type: "JSONField", key: "", nullable: true, desc: "Historique en format JSON des scores cibles pour comparaison." },
+                    { name: "auditeur", type: "ForeignKey(User)", key: "FK", nullable: false, desc: "Utilisateur ayant créé et validé l'audit (auditeur principal)." },
+                    { name: "co_auditeur", type: "ManyToManyField(User)", key: "M2M", nullable: true, desc: "Autres auditeurs accompagnateurs." },
+                    { name: "audites", type: "ManyToManyField(User)", key: "M2M", nullable: true, desc: "Membres du personnel audités." },
+                    { name: "reference_gamme", type: "CharField(50)", key: "", nullable: true, desc: "Référence technique ou gamme de fabrication." },
+                    { name: "processus", type: "CharField(50)", key: "", nullable: true, desc: "Nom textuel du processus concerné." },
+                    { name: "point_fort", type: "TextField", key: "", nullable: true, desc: "Constats positifs notables dégagés." },
+                    { name: "point_sensible", type: "TextField", key: "", nullable: true, desc: "Points faibles n'exigeant pas d'action immédiate." },
+                    { name: "risque", type: "TextField", key: "", nullable: true, desc: "Risques majeurs ou non-conformités sévères relevées." },
+                    { name: "opportunite", type: "TextField", key: "", nullable: true, desc: "Pistes d'amélioration continue suggérées." },
+                    { name: "commentaire", type: "TextField", key: "", nullable: true, desc: "Remarques générales sur la session d'audit." },
+                    { name: "en_cours", type: "BooleanField", key: "", nullable: false, desc: "Indique si l'audit est modifiable (True) ou clos et figé (False)." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "ResultatAudit", to: "ListeAudit", field: "audit_id", desc: "Référence la planification d'origine." },
+                    { type: "ForeignKey", from: "ResultatAudit", to: "Site", field: "site_id", desc: "Rattache le site final inspecté." },
+                    { type: "ForeignKey", from: "ResultatAudit", to: "User", field: "auditeur_id", desc: "Responsable technique de l'audit (auditeur principal)." }
+                ]
+            },
+            "DetailResultatAudit": {
+                app: "audit",
+                desc: "Contient les évaluations individuelles pour chaque question/sous-critère lors de l'exécution d'un audit.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé primaire unique." },
+                    { name: "resultat_audit", type: "ForeignKey(ResultatAudit)", key: "FK", nullable: false, desc: "Rattachement au dossier d'audit parent." },
+                    { name: "critere", type: "CharField(50)", key: "", nullable: false, desc: "Copie textuelle du nom du critère parent (dénormalisation pour rapports rapides)." },
+                    { name: "norme", type: "CharField(50)", key: "", nullable: true, desc: "Copie textuelle de la norme associée." },
+                    { name: "sous_critere", type: "CharField(255)", key: "", nullable: false, desc: "Copie textuelle de l'intitulé de la question évaluée." },
+                    { name: "chapitre_norme", type: "CharField(50)", key: "", nullable: true, desc: "Chapitre précis de la norme (ex: Chapitre 4.2)." },
+                    { name: "text_ref_url", type: "CharField(255)", key: "", nullable: true, desc: "Lien de consultation vers le document de référence." },
+                    { name: "element_preuve", type: "TextField", key: "", nullable: true, desc: "Constats réels de terrain décrivant la preuve apportée." },
+                    { name: "justificatif", type: "ImageField", key: "", nullable: true, desc: "Première photo de preuve (téléversée dans evidence/)." },
+                    { name: "justificatif_bis", type: "ImageField", key: "", nullable: true, desc: "Deuxième photo optionnelle de preuve." },
+                    { name: "commentaire", type: "TextField", key: "", nullable: true, desc: "Notes supplémentaires sur la conformité de ce point." },
+                    { name: "cotation_option", type: "JSONField", key: "", nullable: true, desc: "Options de notation applicables enregistrées en JSON." },
+                    { name: "cotation", type: "CharField(50)", key: "", nullable: false, desc: "Label de l'évaluation choisie (ex: Conforme, N/A, Non Conforme)." },
+                    { name: "code", type: "CharField(3)", key: "", nullable: true, desc: "Code abrégé de cotation (ex: C, NC, PC, NA)." },
+                    { name: "value", type: "FloatField", key: "", nullable: false, desc: "Valeur numérique attribuée à ce niveau de conformité (ex: 1.0, 0.5, 0.0)." },
+                    { name: "value_max", type: "FloatField", key: "", nullable: false, desc: "Valeur maximale possible pour ce critère (généralement 1.0)." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "DetailResultatAudit", to: "ResultatAudit", field: "resultat_audit_id", desc: "Rattachement au dossier d'audit consolidé." }
+                ]
+            },
+            "EvidenceAudit": {
+                app: "audit",
+                desc: "Stocke les pièces justificatives multiples (fichiers, images, rapports) annexées à un point de contrôle d'audit.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Identifiant unique de la preuve." },
+                    { name: "detail", type: "ForeignKey(DetailResultatAudit)", key: "FK", nullable: false, desc: "Le sous-critère spécifique auquel se rattache cette preuve." },
+                    { name: "file", type: "FileField", key: "", nullable: false, desc: "Fichier physique téléversé stocké sur le serveur." },
+                    { name: "uploaded_at", type: "DateTimeField", key: "", nullable: false, desc: "Date et heure de versement du fichier." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "EvidenceAudit", to: "DetailResultatAudit", field: "detail_id", desc: "Lie la pièce jointe au détail de résultat correspondant." }
+                ]
+            },
+            "FormulaireAudit": {
+                app: "audit",
+                desc: "Modèle de formulaire d'audit structuré regroupant des critères et sous-critères applicables.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé primaire du modèle." },
+                    { name: "name", type: "CharField(100)", key: "", nullable: false, desc: "Nom ou libellé descriptif du formulaire." },
+                    { name: "processus", type: "ForeignKey(Processus)", key: "FK", nullable: true, desc: "Processus d'affaires évalué par ce document." },
+                    { name: "type_audit", type: "ForeignKey(TypeAudit)", key: "FK", nullable: true, desc: "Type d'audit ciblé par ce formulaire." },
+                    { name: "type_equipement", type: "ForeignKey(TypeEquipement)", key: "FK", nullable: true, desc: "Si c'est un audit d'équipement, définit la famille ciblée." },
+                    { name: "section", type: "ManyToManyField(Section)", key: "M2M", nullable: true, desc: "Départements dans lesquels ce formulaire est valide." },
+                    { name: "liste_sous_criteres", type: "ManyToManyField(SousCritere)", key: "M2M", nullable: true, desc: "Sous-critères inclus dans le formulaire (via la table intermédiaire FormulaireSousCritere)." },
+                    { name: "date_creation", type: "DateTimeField", key: "", nullable: false, desc: "Date de création de la structure." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "FormulaireAudit", to: "Processus", field: "processus_id", desc: "Rattache le formulaire à un processus métier." },
+                    { type: "ForeignKey", from: "FormulaireAudit", to: "TypeAudit", field: "type_audit_id", desc: "Lie le questionnaire à un type d'évaluation." },
+                    { type: "ForeignKey", from: "FormulaireAudit", to: "TypeEquipement", field: "type_equipement_id", desc: "Filtre pour les audits d'équipements spécifiques." }
+                ]
+            },
+            "Critere": {
+                app: "audit",
+                desc: "Catégorie principale regroupant des points de contrôle, généralement liée à une norme ou à un chapitre technique.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé primaire unique." },
+                    { name: "name", type: "CharField(255)", key: "", nullable: false, desc: "Intitulé du critère d'audit (ex: Propreté, Sécurité, Process)." },
+                    { name: "formulaire", type: "ForeignKey(FormulaireAudit)", key: "FK", nullable: true, desc: "Le formulaire d'appartenance de ce critère." },
+                    { name: "chapitre_norme", type: "ForeignKey(ChapitreNorme)", key: "FK", nullable: true, desc: "Lien avec le chapitre d'une norme internationale de référence." },
+                    { name: "type_audit", type: "ManyToManyField(TypeAudit)", key: "M2M", nullable: true, desc: "Classification d'audits compatibles avec ce critère." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "Critere", to: "FormulaireAudit", field: "formulaire_id", desc: "Définit le formulaire d'appartenance." },
+                    { type: "ForeignKey", from: "Critere", to: "ChapitreNorme", field: "chapitre_norme_id", desc: "Lie le critère à un chapitre de conformité légale." }
+                ]
+            },
+            "SousCritere": {
+                app: "audit",
+                desc: "La question élémentaire, point de contrôle ou consigne évaluée par l'auditeur.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique du sous-critère." },
+                    { name: "reaction", type: "TextField", key: "", nullable: true, desc: "Action immédiate préconisée en cas de non-conformité." },
+                    { name: "content", type: "TextField", key: "", nullable: false, desc: "Énoncé textuel précis de la consigne ou de la question." },
+                    { name: "type_cotation", type: "ForeignKey(TypeCotation)", key: "FK", nullable: true, desc: "La grille d'évaluation utilisable pour cette question." },
+                    { name: "critere", type: "ForeignKey(Critere)", key: "FK", nullable: false, desc: "Critère parent dont découle ce point." },
+                    { name: "preuve_attendu", type: "ManyToManyField(PreuveAttendu)", key: "M2M", nullable: true, desc: "Preuves requises pour prouver la conformité." },
+                    { name: "type_audit", type: "ManyToManyField(TypeAudit)", key: "M2M", nullable: true, desc: "Types d'audit autorisant ce sous-critère (via table intermédiaire)." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "SousCritere", to: "Critere", field: "critere_id", desc: "Rattache la question à sa thématique parente." },
+                    { type: "ForeignKey", from: "SousCritere", to: "TypeCotation", field: "type_cotation_id", desc: "Indique la grille d'échelle (0/1, Conforme/Partiel, etc.)." },
+                    { type: "ManyToMany", from: "SousCritere", to: "PreuveAttendu", field: "preuve_attendu", desc: "Assigne les documents ou photos exigés." }
+                ]
+            },
+            "PreuveAttendu": {
+                app: "audit",
+                desc: "Définition d'un élément de preuve (document, photo, signature) exigé pour valider une réponse.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Identifiant unique de la preuve attendue." },
+                    { name: "name", type: "TextField", key: "", nullable: false, desc: "Description précise de ce qui doit être fourni." },
+                    { name: "code", type: "CharField(2)", key: "", nullable: true, desc: "Code de conformité visé par cette preuve (ex: C, PC)." },
+                    { name: "type_preuve", type: "ForeignKey(TypePreuve)", key: "FK", nullable: true, desc: "Catégorisation de la preuve attendue." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "PreuveAttendu", to: "TypePreuve", field: "type_preuve_id", desc: "Associe un format (Photo, Document, etc.)." }
+                ]
+            },
+            "TypePreuve": {
+                app: "audit",
+                desc: "Typologie ou format des preuves attendues (ex: Photo de la machine, Enregistrement de nettoyage, etc.).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(350)", key: "", nullable: false, desc: "Libellé de la catégorie de preuve." }
+                ],
+                relations: []
+            },
+            "TextRef": {
+                app: "audit",
+                desc: "Document normatif ou texte de loi de référence (ex: ISO 9001, ISO 14001, etc.).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "norme", type: "CharField(255)", key: "", nullable: false, desc: "Intitulé officiel de la norme." },
+                    { name: "text_ref", type: "ForeignKey(ProcessusDoc)", key: "FK", nullable: true, desc: "Fichier PDF ou document lié stocké dans l'organisation." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "TextRef", to: "ProcessusDoc", field: "text_ref_id", desc: "Rattache le texte de loi à sa source PDF." }
+                ]
+            },
+            "ChapitreNorme": {
+                app: "audit",
+                desc: "Section ou chapitre spécifique à l'intérieur d'un texte normatif de référence.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(300)", key: "", nullable: false, desc: "Numéro ou titre du chapitre (ex: Chapitre 7.1.5 - Ressources de surveillance)." },
+                    { name: "text_ref", type: "ForeignKey(TextRef)", key: "FK", nullable: true, desc: "Norme mère de laquelle découle ce paragraphe." },
+                    { name: "page", type: "IntegerField", key: "", nullable: true, desc: "Numéro de page dans le document PDF pour un renvoi rapide." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "ChapitreNorme", to: "TextRef", field: "text_ref_id", desc: "Relie au document légal global." }
+                ]
+            },
+            "Cotation": {
+                app: "audit",
+                desc: "Élément d'évaluation unitaire (une option de réponse possible) avec sa valeur de score associée.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "valeur", type: "FloatField", key: "", nullable: false, desc: "Valeur décimale servant au calcul de conformité (ex: 1.0 pour conforme, 0.0 pour non-conforme)." },
+                    { name: "content", type: "CharField(50)", key: "", nullable: false, desc: "Description textuelle affichée (ex: Conforme, Écart Mineur)." },
+                    { name: "code", type: "CharField(3)", key: "", nullable: false, desc: "Code court de saisie rapide (ex: OK, KO, NA)." },
+                    { name: "type_cotation", type: "ForeignKey(TypeCotation)", key: "FK", nullable: true, desc: "Groupe d'échelle d'appartenance de cette option." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "Cotation", to: "TypeCotation", field: "type_cotation_id", desc: "Organise cette note dans un barème standardisé." }
+                ]
+            },
+            "TypeCotation": {
+                app: "audit",
+                desc: "Regroupement ou typologie d'échelle d'évaluation (ex: Échelle Oui/Non/NA, Échelle à 4 niveaux, etc.).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(50)", key: "", nullable: false, desc: "Libellé de l'échelle d'évaluation." }
+                ],
+                relations: []
+            },
+            "TypeAudit": {
+                app: "audit",
+                desc: "Classification principale du mode d'évaluation (Poste, Équipement, Site, Interne).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(50)", key: "", nullable: false, desc: "Libellé restreint (choix prédéfinis : Audit équipement, interne, de poste, de site)." },
+                    { name: "section", type: "ManyToManyField(Section)", key: "M2M", nullable: true, desc: "Secteurs autorisés à utiliser ce type d'audit." },
+                    { name: "date_creation", type: "DateTimeField", key: "", nullable: true, desc: "Horodatage de création de la catégorie." }
+                ],
+                relations: []
+            },
+            
+            // APP ORGANISATION
+            "Section": {
+                app: "organisation",
+                desc: "Représente un département d'activité, secteur ou atelier de l'entreprise (ex: Montage, Usinage, Administratif).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique du secteur." },
+                    { name: "name", type: "CharField(120)", key: "", nullable: false, desc: "Nom officiel du service ou atelier." }
+                ],
+                relations: []
+            },
+            "NiveauAttendu": {
+                app: "organisation",
+                desc: "Objectif chiffré cible de conformité fixé (ex: Objectif de 95% de conformité pour le 5S).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "valeur", type: "DecimalField(15, 2)", key: "", nullable: false, desc: "Valeur cible exprimée en pourcentage." },
+                    { name: "commentaire", type: "TextField", key: "", nullable: false, desc: "Notes ou directives expliquant cette cible de conformité." }
+                ],
+                relations: []
+            },
+            "Site": {
+                app: "organisation",
+                desc: "Emplacement ou établissement industriel physique de l'entreprise.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique de l'usine ou bureau." },
+                    { name: "name", type: "CharField(150)", key: "", nullable: false, desc: "Nom usuel de l'implantation géographique." },
+                    { name: "niveau_evaluation", type: "ManyToManyField(NiveauAttendu)", key: "M2M", nullable: false, desc: "Cibles de conformité rattachées à cet établissement." },
+                    { name: "section", type: "ForeignKey(Section)", key: "FK", nullable: true, desc: "Section principale d'organisation hébergée." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "Site", to: "Section", field: "section_id", desc: "Rattache le site à sa section parente." }
+                ]
+            },
+            "Processus": {
+                app: "organisation",
+                desc: "Processus d'affaires de l'entreprise (ex: Logistique, Management, Production).",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(150)", key: "", nullable: false, desc: "Intitulé du processus d'affaires." }
+                ],
+                relations: []
+            },
+            "ProcessusDoc": {
+                app: "organisation",
+                desc: "Fichier ou fiche documentaire décrivant les procédures du processus.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique." },
+                    { name: "name", type: "CharField(50)", key: "", nullable: false, desc: "Nom ou référence de la procédure documentaire." },
+                    { name: "content", type: "FileField", key: "", nullable: true, desc: "Fichier joint (généralement PDF ou DOCX)." },
+                    { name: "document_processus", type: "ManyToManyField(Processus)", key: "M2M", nullable: false, desc: "Processus opérationnels concernés par cette procédure." }
+                ],
+                relations: [
+                    { type: "ManyToMany", from: "ProcessusDoc", to: "Processus", field: "document_processus", desc: "Relie la documentation à des domaines de processus." }
+                ]
+            },
+            "Equipement": {
+                app: "organisation",
+                desc: "Une machine, poste de travail ou équipement industriel soumis à des contrôles qualité/audit.",
+                fields: [
+                    { name: "id", type: "AutoField", key: "PK", nullable: false, desc: "Clé unique du matériel." },
+                    { name: "name", type: "CharField(150)", key: "", nullable: false, desc: "Désignation usuelle de la machine." },
+                    { name: "serial_number", type: "CharField(120)", key: "", nullable: true, desc: "Numéro de série du constructeur." },
+                    { name: "commentaire", type: "TextField", key: "", nullable: true, desc: "Remarques sur l'état de l'équipement." },
+                    { name: "type_equipement", type: "ForeignKey(TypeEquipement)", key: "FK", nullable: true, desc: "Famille technique du matériel." },
+                    { name: "site", type: "ForeignKey(Site)", key: "FK", nullable: false, desc: "Implantation et affectation géographique de la machine." }
+                ],
+                relations: [
+                    { type: "ForeignKey", from: "Equipement", to: "Site", field: "site_id", desc: "Spécifie l'usine de stockage physique." },
+                    { type: "ForeignKey", from: "Equipement", to: "TypeEquipement", field: "type_equipement_id", desc: "Associe une catégorie technique." }
+                ]
+            }
+        };
+
+        // Initialize Lucid Icons
+        lucide.createIcons();
+
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+        });
+
+        // Tab switcher function
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+            
+            if (tabId === 'erd-tab') {
+                setTimeout(resetZoom, 100);
+            }
+        }
+
+        // Fill lists in sidebar
+        function renderTablesList() {
+            const auditList = document.getElementById('audit-tables-list');
+            const orgList = document.getElementById('org-tables-list');
+            
+            auditList.innerHTML = '';
+            orgList.innerHTML = '';
+
+            Object.keys(dbSchema).forEach(tableName => {
+                const info = dbSchema[tableName];
+                const relCount = info.relations.length;
+                const countBadge = relCount > 0 ? `<span class="relation-count">${relCount} rel</span>` : '';
+                
+                const element = document.createElement('div');
+                element.className = `table-item table-item-${tableName}`;
+                element.innerHTML = `
+                    <div class="table-name-wrapper">
+                        <i data-lucide="table"></i>
+                        <span>${tableName}</span>
+                    </div>
+                    ${countBadge}
+                `;
+                
+                element.onclick = () => selectTable(tableName);
+
+                if (info.app === 'audit') {
+                    auditList.appendChild(element);
+                } else {
+                    orgList.appendChild(element);
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // Search/Filter function
+        function filterTables() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            let visibleAuditCount = 0;
+            let visibleOrgCount = 0;
+
+            Object.keys(dbSchema).forEach(tableName => {
+                const info = dbSchema[tableName];
+                const element = document.querySelector(`.table-item-${tableName}`);
+                const isMatch = tableName.toLowerCase().includes(query) || info.desc.toLowerCase().includes(query);
+                
+                if (element) {
+                    if (isMatch) {
+                        element.style.display = 'flex';
+                        if (info.app === 'audit') visibleAuditCount++;
+                        else visibleOrgCount++;
+                    } else {
+                        element.style.display = 'none';
+                    }
+                }
+            });
+
+            // Update section counts
+            document.querySelector('#section-audit .app-count').textContent = visibleAuditCount;
+            document.querySelector('#section-organisation .app-count').textContent = visibleOrgCount;
+        }
+
+        // View model details
+        function selectTable(tableName) {
+            // Update active states
+            document.querySelectorAll('.table-item').forEach(item => item.classList.remove('active'));
+            const selectedItem = document.querySelector(`.table-item-${tableName}`);
+            if (selectedItem) selectedItem.classList.add('active');
+
+            const info = dbSchema[tableName];
+            const dictContent = document.getElementById('dictTableContent');
+            
+            // Build the fields table
+            let fieldsRowsHTML = '';
+            info.fields.forEach(f => {
+                let badge = '';
+                if (f.key === 'PK') badge = `<span class="badge-pk">PK</span>`;
+                else if (f.key === 'FK') badge = `<span class="badge-fk" onclick="selectTable('${f.type.replace('ForeignKey(', '').replace(')', '')}')">FK</span>`;
+                else if (f.key === 'M2M') badge = `<span class="badge-fk" onclick="selectTable('${f.type.replace('ManyToManyField(', '').replace(')', '')}')">M2M</span>`;
+                
+                const nullBadge = f.nullable ? `<span class="badge-null">Null ok</span>` : `<span class="badge-null" style="border-color: rgba(244,63,94,0.3); color:#f43f5e;">NOT NULL</span>`;
+
+                fieldsRowsHTML += `
+                    <tr>
+                        <td>
+                            <strong>${f.name}</strong>
+                            <div style="margin-top: 4px;">${badge}${nullBadge}</div>
+                        </td>
+                        <td class="col-type">${f.type}</td>
+                        <td>${f.desc}</td>
+                    </tr>
+                `;
+            });
+
+            // Render details
+            dictContent.innerHTML = `
+                <div class="dict-header">
+                    <div class="table-title">
+                        <i data-lucide="layout-grid"></i>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <h2>${tableName}</h2>
+                                <span>app: ${info.app}</span>
+                            </div>
+                            <p class="table-desc">${info.desc}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="dict-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25%">Champ / Attribut</th>
+                                <th style="width: 25%">Type Django</th>
+                                <th style="width: 50%">Description & Rôle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${fieldsRowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Render relationships sidebar
+            const relationsList = document.getElementById('relationsList');
+            relationsList.innerHTML = '';
+
+            if (info.relations.length === 0) {
+                relationsList.innerHTML = `
+                    <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-top: 2rem;">
+                        Aucune clé étrangère sortante configurée sur ce modèle.
+                    </div>
+                `;
+            } else {
+                info.relations.forEach(r => {
+                    relationsList.innerHTML += `
+                        <div class="relation-card">
+                            <div class="rel-direction">
+                                <span class="rel-source">${r.from}</span>
+                                <span class="rel-arrow"><i data-lucide="arrow-right" style="width:12px; height:12px; display:inline-block;"></i></span>
+                                <span class="rel-target" onclick="selectTable('${r.to}')">${r.to}</span>
+                            </div>
+                            <div class="rel-field">Clé : ${r.field}</div>
+                            <div class="rel-type-desc">${r.desc}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            lucide.createIcons();
+
+            // Highlight in Mermaid ERD if visual tab is active
+            highlightInERD(tableName);
+        }
+
+        // Highlight table node in Mermaid
+        function highlightInERD(tableName) {
+            const svgDoc = document.querySelector('#mermaidContainer svg');
+            if (!svgDoc) return;
+
+            // Remove previous highlights
+            svgDoc.querySelectorAll('.node').forEach(node => {
+                node.style.filter = '';
+                node.style.opacity = '0.35';
+            });
+            svgDoc.querySelectorAll('.edgePaths path').forEach(path => {
+                path.style.strokeWidth = '';
+                path.style.opacity = '0.15';
+            });
+
+            // Find current node
+            // Mermaid appends id to nodes like "classid-ListeAudit-xx"
+            const nodes = Array.from(svgDoc.querySelectorAll('.node'));
+            const targetNode = nodes.find(n => n.id.includes(`-${tableName}-`) || n.textContent.includes(tableName));
+            
+            if (targetNode) {
+                targetNode.style.filter = 'drop-shadow(0px 0px 8px #6366f1)';
+                targetNode.style.opacity = '1';
+                
+                // Dim other nodes
+                nodes.forEach(n => {
+                    if (n !== targetNode) {
+                        n.style.opacity = '0.35';
+                    }
+                });
+
+                // Scroll the diagram to this node
+                // Center node in container
+                const canvas = document.getElementById('erdCanvas');
+                const containerRect = canvas.getBoundingClientRect();
+                const nodeRect = targetNode.getBoundingClientRect();
+                
+                // Calculate position relative to canvas content
+                const svgRect = svgDoc.getBoundingClientRect();
+                const relativeX = (nodeRect.left - svgRect.left) + nodeRect.width/2;
+                const relativeY = (nodeRect.top - svgRect.top) + nodeRect.height/2;
+
+                // Center view
+                zoomScale = 1.0;
+                translateX = (containerRect.width / 2) - relativeX;
+                translateY = (containerRect.height / 2) - relativeY;
+                applyTransform();
+            } else {
+                // If not found, reset opacities
+                svgDoc.querySelectorAll('.node').forEach(node => {
+                    node.style.opacity = '1';
+                });
+                svgDoc.querySelectorAll('.edgePaths path').forEach(path => {
+                    path.style.opacity = '1';
+                });
+            }
+        }
+
+        // ZOOM & PAN HANDLERS
+        let zoomScale = 0.7;
+        let translateX = 50;
+        let translateY = 20;
+        let isDragging = false;
+        let startX, startY;
+
+        function applyTransform() {
+            const svg = document.querySelector('#mermaidContainer svg');
+            if (svg) {
+                svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+                svg.style.transformOrigin = '50% 50%';
+                svg.style.transition = 'transform 0.1s ease-out';
+            }
+        }
+
+        function handleZoom(event) {
+            event.preventDefault();
+            const zoomSpeed = 0.05;
+            if (event.deltaY < 0) {
+                zoomScale = Math.min(zoomScale + zoomSpeed, 2.5);
+            } else {
+                zoomScale = Math.max(zoomScale - zoomSpeed, 0.2);
+            }
+            applyTransform();
+        }
+
+        function startDrag(event) {
+            if (event.target.closest('button')) return; // ignore buttons
+            isDragging = true;
+            startX = event.clientX - translateX;
+            startY = event.clientY - translateY;
+            document.getElementById('erdCanvas').style.cursor = 'grabbing';
+        }
+
+        function drag(event) {
+            if (!isDragging) return;
+            translateX = event.clientX - startX;
+            translateY = event.clientY - startY;
+            applyTransform();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            document.getElementById('erdCanvas').style.cursor = 'grab';
+        }
+
+        function resetZoom() {
+            zoomScale = 0.65;
+            translateX = 40;
+            translateY = 30;
+            
+            // reset opacities
+            const svgDoc = document.querySelector('#mermaidContainer svg');
+            if (svgDoc) {
+                svgDoc.querySelectorAll('.node').forEach(node => {
+                    node.style.opacity = '1';
+                    node.style.filter = '';
+                });
+                svgDoc.querySelectorAll('.edgePaths path').forEach(path => {
+                    path.style.opacity = '1';
+                    path.style.strokeWidth = '';
+                });
+            }
+            
+            applyTransform();
+        }
+
+        function exportSVG() {
+            const svg = document.querySelector('#mermaidContainer svg');
+            if (!svg) return;
+            
+            const serializer = new XMLSerializer();
+            const source = serializer.serializeToString(svg);
+            
+            const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "schema_base_de_donnees_audit.svg";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTablesList();
+            
+            // Wait for Mermaid to finish rendering then apply initial transform
+            setTimeout(() => {
+                resetZoom();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
