@@ -487,13 +487,17 @@ class FormulaireAuditListAPIView(View):
     def get(self, request):
         # Temporarily removed authentication for testing
         formulaires = FormulaireAudit.objects.all().select_related(
-            'processus', 'type_audit', 'type_equipement'
-        ).prefetch_related('section', 'liste_sous_criteres')
+            'processus', 'type_audit'
+        ).prefetch_related('section', 'type_equipement', 'liste_sous_criteres')
         
         data = []
         for f in formulaires:
             sections = list(f.section.values('id', 'name'))
             section_names = ", ".join([s['name'] for s in sections])
+            
+            equipements = list(f.type_equipement.values('id', 'name'))
+            equipement_names = ", ".join([e['name'] for e in equipements])
+            equipement_ids = [e['id'] for e in equipements]
             
             data.append({
                 'id': f.id,
@@ -502,8 +506,9 @@ class FormulaireAuditListAPIView(View):
                 'processus_name': f.processus.name if f.processus else '-',
                 'type_audit_id': f.type_audit.id if f.type_audit else None,
                 'type_audit_name': f.type_audit.name if f.type_audit else '-',
-                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
-                'type_equipement_name': f.type_equipement.name if f.type_equipement else '-',
+                'type_equipement_id': equipement_ids[0] if equipement_ids else None,
+                'type_equipement_name': equipement_names or '-',
+                'type_equipement_ids': equipement_ids,
                 'section_names': section_names or '-',
                 'sc_count': f.liste_sous_criteres.count(),
                 'date_creation': f.date_creation.strftime('%d/%m/%Y %H:%M') if f.date_creation else '-'
@@ -518,9 +523,15 @@ class FormulaireAuditListAPIView(View):
             formulaire = FormulaireAudit.objects.create(
                 name=data['name'],
                 processus_id=data.get('processus'),
-                type_audit_id=data.get('type_audit'),
-                type_equipement_id=data.get('type_equipement')
+                type_audit_id=data.get('type_audit')
             )
+            
+            if data.get('type_equipement'):
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    formulaire.type_equipement.set(te_ids)
+                else:
+                    formulaire.type_equipement.set([te_ids] if te_ids else [])
             
             if data.get('sections'):
                 formulaire.section.set(data['sections'])
@@ -1001,8 +1012,24 @@ class CotationListAPIView(View):
 class FormulaireAuditDetailAPIView(View):
     def get(self, request, pk):
         try:
-            f = FormulaireAudit.objects.get(pk=pk)
-            return JsonResponse({'status': 'success', 'data': {'id': f.id, 'name': f.name}})
+            f = FormulaireAudit.objects.prefetch_related('section', 'type_equipement', 'liste_sous_criteres').get(pk=pk)
+            sections = [s.id for s in f.section.all()]
+            equipements = [e.id for e in f.type_equipement.all()]
+            scs = [sc.id for sc in f.liste_sous_criteres.all()]
+            return JsonResponse({
+                'status': 'success',
+                'data': {
+                    'id': f.id,
+                    'name': f.name,
+                    'processus_id': f.processus.id if f.processus else None,
+                    'type_audit_id': f.type_audit.id if f.type_audit else None,
+                    'type_equipement_id': equipements[0] if equipements else None,
+                    'type_equipement_ids': equipements,
+                    'section_id': sections[0] if sections else None,
+                    'sections_ids': sections,
+                    'sous_criteres_ids': scs
+                }
+            })
         except FormulaireAudit.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
 
@@ -1011,7 +1038,22 @@ class FormulaireAuditDetailAPIView(View):
             f = FormulaireAudit.objects.get(pk=pk)
             data = json.loads(request.body)
             f.name = data.get('name', f.name)
+            if 'processus' in data:
+                f.processus_id = data['processus']
+            if 'type_audit' in data:
+                f.type_audit_id = data['type_audit']
             f.save()
+            
+            if 'type_equipement' in data:
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    f.type_equipement.set(te_ids)
+                else:
+                    f.type_equipement.set([te_ids] if te_ids else [])
+            
+            if 'sections' in data:
+                f.section.set(data['sections'])
+                
             return JsonResponse({'status': 'success', 'data': {'id': f.id, 'name': f.name}})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

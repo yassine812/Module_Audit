@@ -245,6 +245,30 @@
           margin-bottom: 4px;
       }
   }
+
+  /* Responsive Pagination */
+  .pagination-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+  }
+  .pagination-info {
+      white-space: nowrap;
+      color: #64748b;
+      font-weight: 500;
+  }
+  @media (max-width: 576px) {
+      .pagination-container {
+          flex-direction: column;
+          justify-content: center;
+      }
+      .pagination-info {
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+      }
+  }
 </style>
 {% endblock %}
 
@@ -299,6 +323,7 @@
                 <span class="card-field-value">{{ souscritere.reaction|default:"-"|truncatechars:30 }}</span>
               </div>
 
+
               <div class="card-actions-row">
                 <button onclick="openSousCritereModal('{% url 'souscritere_update' souscritere.id %}')" class="card-btn card-btn-primary" title="Modifier">
                   <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
@@ -311,6 +336,7 @@
             {% endfor %}
           </div>
 
+          <!-- Desktop Table View -->
           <div class="desktop-table-container px-3">
             <table class="table table-bordered table-striped synchronized-table mb-0">
               <thead>
@@ -365,8 +391,6 @@
               </tbody>
             </table>
           </div>
-              </table>
-            </div>
           {% else %}
           <div class="text-center py-5">
             <i data-lucide="list-checks" class="w-12 h-12 mb-3 opacity-25"></i>
@@ -383,6 +407,7 @@
 
         {% if is_paginated %}
         <div class="card-footer bg-white border-top-0 pt-3 pb-3">
+        <div class="card-footer bg-white border-top-0 pt-3">
           <div class="pagination-container">
             <div class="pagination-info px-2">
               <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
@@ -447,9 +472,32 @@
     </div>
   </div>
 </div>
+
+
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
   function openSousCritereModal(url) {
     $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-teal" role="status"></div><p class="mt-2">Chargement...</p></div>');
@@ -476,13 +524,13 @@
         success: function (response) {
           if (response.success) {
             $('#souscritereModal').modal('hide');
-            Swal.fire({
-              icon: 'success',
-              title: 'Succès',
-              text: response.message || 'Opération réussie',
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => location.reload());
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.message || 'Opération réussie',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
           } else {
             $('#modalBodyContent').html(response);
             initModalBehaviors();
@@ -492,57 +540,60 @@
     });
   }
 
-  function openDeleteModal(url, name) {
-    Swal.fire({
-      title: 'Confirmer la suppression',
-      text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#e74a3b',
-      cancelButtonColor: '#858796',
-      confirmButtonText: 'Oui, supprimer',
-      cancelButtonText: 'Annuler',
-      reverseButtons: true,
-      customClass: {
-        popup: 'rounded-4 shadow-lg border-0',
-        confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
-        cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $.ajax({
-          type: "POST",
-          url: url,
-          data: {
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-          },
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          success: function (response) {
-            if (response.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Supprimé',
-                text: response.message || "L'élément a été supprimé",
-                timer: 1500,
-                showConfirmButton: false
-              }).then(() => location.reload());
+              function openDeleteModal(url, name) {
+        Swal.fire({
+            title: 'Confirmer la suppression',
+            text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'rounded-3 px-4 py-2 font-weight-bold',
+                cancelButton: 'rounded-3 px-4 py-2 font-weight-bold'
             }
-          },
-          error: function (xhr) {
-            const response = xhr.responseJSON;
-            Swal.fire({
-              icon: 'error',
-              title: 'Erreur',
-              text: response ? response.message : "Une erreur est survenue lors de la suppression."
-            });
-          }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: response.message || "L'élément a été supprimé",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: response ? response.message : "Une erreur est survenue lors de la suppression."
+                        });
+                    }
+                });
+            }
         });
-      }
-    });
-  }
+    }
+    
+    // Alias for compatibility
+    function confirmDelete(url, name) {
+        openDeleteModal(url, name);
+    }
 
-  function confirmDelete(url, name) {
-    openDeleteModal(url, name);
-  }
+
 </script>
 {% endblock %}

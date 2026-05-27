@@ -127,7 +127,7 @@ const ListeAuditScreen = () => {
           />
         </View>
         <View style={styles.filterContainer}>
-          {['Tous', 'Planifiés', 'En cours', 'Terminés'].map(t => (
+          {['Tous', 'Planifiés', 'En cours', 'Terminés', 'En retard'].map(t => (
             <TouchableOpacity 
               key={t} 
               style={[styles.filterTab, filter === t && styles.filterTabActive]}
@@ -150,6 +150,7 @@ const ListeAuditScreen = () => {
               if (filter === 'Tous') return matchesSearch;
               if (filter === 'Terminés') return matchesSearch && !item.en_cours;
               if (filter === 'En cours') return matchesSearch && item.en_cours;
+              if (filter === 'En retard') return matchesSearch && item.status === 'en_retard';
               return matchesSearch;
             })}
             renderItem={renderItem}

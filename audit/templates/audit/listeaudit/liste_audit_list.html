@@ -262,6 +262,10 @@
         background: #fff !important;
         color: #2563eb !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+     }
+
+    #mobileAuditList {
+        display: none;
     }
 
     @media (max-width: 767.98px) {
@@ -603,7 +607,7 @@
                             <span class="">{{ audit.section|default:"-" }}</span>
                         </td>
                         <td class="text-nowrap col-date" data-label="Date">
-                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}
+                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y" }}
                         </td>
                         <td class="col-auditores" data-label="Auditeurs">
                             {% if audit.affectation.all %}
@@ -1148,37 +1152,47 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Search Filtering
         const searchInput = document.getElementById('searchInput');
         const auditRows = document.querySelectorAll('.audit-row');
 
-        searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-
-            auditRows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                auditRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
-        });
-        // Delete Audit Confirmation
+        }
+
+        // 2. Delete Audit Confirmation via SweetAlert2
         const deleteButtons = document.querySelectorAll('.btn-delete-audit');
         deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
                 const auditId = this.getAttribute('data-id');
                 const auditDesc = this.getAttribute('data-desc') || 'cet audit';
 
                 Swal.fire({
                     title: 'Supprimer l\'audit ?',
-                    text: `Êtes-vous sûr de vouloir supprimer"${auditDesc}" ? Cette action est irréversible.`,
+                    text: `Êtes-vous sûr de vouloir supprimer "${auditDesc}" ? Cette action est irréversible.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Oui, supprimer',
-                    cancelButtonText: 'Annuler'
+                    cancelButtonText: 'Annuler',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg border-0'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const form = document.createElement('form');
@@ -1197,7 +1211,8 @@
                 });
             });
         });
-        // Dropdown z-index fix for mobile cards
+
+        // 3. Dropdown z-index fix for mobile cards
         document.addEventListener('show.bs.dropdown', function (e) {
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1050';
@@ -1206,10 +1221,8 @@
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1';
         });
-    });
 
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
+        // 4. Preserve URL parameters in pagination links
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.toString()) {
             document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
@@ -1227,8 +1240,10 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}

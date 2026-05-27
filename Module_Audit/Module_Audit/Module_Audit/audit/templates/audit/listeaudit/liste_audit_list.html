@@ -262,6 +262,10 @@
         background: #fff !important;
         color: #2563eb !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+     }
+
+    #mobileAuditList {
+        display: none;
     }
 
     @media (max-width: 767.98px) {
@@ -400,12 +404,6 @@
             color: #fff;
             border-color: #2563eb;
             box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-        }
-    }
-
-    @media (min-width: 768px) {
-        #mobileAuditList {
-            display: none !important;
         }
     }
 
@@ -591,7 +589,6 @@
                         <th scope="col" class="col-id ps-2">N°</th>
                         <th scope="col" class="col-name">Nom Audit</th>
                         <th scope="col" class="col-dep">Département</th>
-                        <th scope="col" class="col-site">Site</th>
                         <th scope="col" class="col-date">Date</th>
                         <th scope="col" class="col-auditores">Auditeurs</th>
                         <th scope="col" class="col-form">Formulaire</th>
@@ -609,9 +606,6 @@
                         <td class="col-dep" data-label="Département">
                             <span class="">{{ audit.section|default:"-" }}</span>
                         </td>
-                        <td class="col-site" data-label="Site">
-                            <span class="">{{ audit.site|default:"-" }}</span>
-                        </td>
                         <td class="text-nowrap col-date" data-label="Date">
                             <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}
                         </td>
@@ -621,7 +615,7 @@
                             <span class="badge badge-auditeur rounded-pill me-1">{{ user.username }}</span>
                             {% endfor %}
                             {% else %}
-                            <span class=" italic">Non assignÃ©</span>
+                            <span class=" italic">Non assigné</span>
                             {% endif %}
                         </td>
                         <td class="col-form" data-label="Formulaire">
@@ -654,7 +648,6 @@
                                     title="Continuer">
                                     <span>Continuer</span> <i data-lucide="chevron-right"></i>
                                 </a>
-
                                 {% endif %}
                                 {% elif audit.get_audit_status == 'termine' %}
                                 {% if audit.resultataudit_set.first %}
@@ -667,7 +660,7 @@
                                 {% endif %}
 
                                 <!-- Secondary Actions (Admin only) -->
-                                {% if user.is_superuser or audit.get_audit_status == 'en_cours' and audit.resultataudit_set.first and user == audit.resultataudit_set.first.auditeur %}
+                                {% if user.is_superuser %}
                                 <div class="dropdown">
                                     <button class="btn btn-link text-slate-400 p-0" type="button" data-toggle="dropdown"
                                         data-boundary="window">
@@ -688,20 +681,6 @@
                                                 Supprimer
                                             </button>
                                         </li>
-                                        {% if audit.get_audit_status == 'en_cours' and audit.resultataudit_set.first %}
-                                        {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
-                                        <li>
-                                            <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="finish-audit-form m-0">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="next" value="liste_audit_list">
-                                                <button type="button" class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-warning btn-finish-audit">
-                                                    <i data-lucide="lock"></i>
-                                                    Clôturer
-                                                </button>
-                                            </form>
-                                        </li>
-                                        {% endif %}
-                                        {% endif %}
                                     </ul>
                                 </div>
                                 {% endif %}
@@ -750,7 +729,6 @@
                             style="font-size: 11px; white-space: nowrap;">
                             Continuer
                         </a>
-
                         {% endif %}
                         {% elif audit.get_audit_status == 'termine' %}
                         {% if audit.resultataudit_set.first %}
@@ -763,7 +741,7 @@
                         {% endif %}
 
                         <!-- Admin dropdown (Modifier / Supprimer) -->
-                        {% if user.is_superuser or audit.get_audit_status == 'en_cours' and audit.resultataudit_set.first and user == audit.resultataudit_set.first.auditeur %}
+                        {% if user.is_superuser %}
                         <div class="dropdown">
                             <button class="btn btn-link p-1 d-flex align-items-center" type="button"
                                 data-toggle="dropdown" data-boundary="window" style="color: #94a3b8;">
@@ -784,19 +762,6 @@
                                         <i data-lucide="trash-2" style="width:16px;"></i> Supprimer
                                     </button>
                                 </li>
-                                {% if audit.get_audit_status == 'en_cours' and audit.resultataudit_set.first %}
-                                {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
-                                <li>
-                                    <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="finish-audit-form m-0">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="liste_audit_list">
-                                        <button type="button" class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-warning btn-finish-audit">
-                                            <i data-lucide="lock" style="width:16px;"></i> Clôturer
-                                        </button>
-                                    </form>
-                                </li>
-                                {% endif %}
-                                {% endif %}
                             </ul>
                         </div>
                         {% endif %}
@@ -819,7 +784,7 @@
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="PrÃ©cÃ©dente">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédente">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
@@ -852,7 +817,7 @@
                     </a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="DerniÃ¨re">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Dernière">
                         <span aria-hidden="true">&raquo;&raquo;</span>
                     </a>
                 </li>
@@ -891,7 +856,7 @@
                 La liste de planification est actuellement vide. Commencez par planifier votre premier audit pour suivre
                 les performances.
                 {% else %}
-                Vous n'avez aucun audit assignÃ© dans votre calendrier pour le moment.
+                Vous n'avez aucun audit assigné dans votre calendrier pour le moment.
                 {% endif %}
             </p>
             {% if user.is_superuser %}
@@ -1076,7 +1041,7 @@
     <div class="audit-modal-container">
         <div class="audit-modal-header">
             <div>
-                <h2>Démarrage de l'audit</h2>
+                <h2>Démarrage de l’audit</h2>
                 <p>Saisissez le contexte initial avant de commencer</p>
             </div>
             <button type="button" class="audit-modal-close" onclick="closeStartModal()">
@@ -1165,7 +1130,7 @@
         if (icon) icon.style.display = 'none';
         if (text) text.innerText = 'Initialisation...';
 
-        // Build a real HTML form and submit â€” lets the browser follow the Django redirect naturally
+        // Build a real HTML form and submit — lets the browser follow the Django redirect naturally
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/audit/liste-audit/${auditId}/start/`;
@@ -1187,37 +1152,47 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Search Filtering
         const searchInput = document.getElementById('searchInput');
         const auditRows = document.querySelectorAll('.audit-row');
 
-        searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-
-            auditRows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                auditRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
-        });
-        // Delete Audit Confirmation
+        }
+
+        // 2. Delete Audit Confirmation via SweetAlert2
         const deleteButtons = document.querySelectorAll('.btn-delete-audit');
         deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
                 const auditId = this.getAttribute('data-id');
                 const auditDesc = this.getAttribute('data-desc') || 'cet audit';
 
                 Swal.fire({
                     title: 'Supprimer l\'audit ?',
-                    text: `ÃŠtes-vous sÃ»r de vouloir supprimer"${auditDesc}" ? Cette action est irrÃ©versible.`,
+                    text: `Êtes-vous sûr de vouloir supprimer "${auditDesc}" ? Cette action est irréversible.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Oui, supprimer',
-                    cancelButtonText: 'Annuler'
+                    cancelButtonText: 'Annuler',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg border-0'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const form = document.createElement('form');
@@ -1236,7 +1211,8 @@
                 });
             });
         });
-        // Dropdown z-index fix for mobile cards
+
+        // 3. Dropdown z-index fix for mobile cards
         document.addEventListener('show.bs.dropdown', function (e) {
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1050';
@@ -1245,10 +1221,8 @@
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1';
         });
-    });
 
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
+        // 4. Preserve URL parameters in pagination links
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.toString()) {
             document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
@@ -1266,11 +1240,10 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}
-
-
-

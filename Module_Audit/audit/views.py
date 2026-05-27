@@ -138,17 +138,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Include audits where user is Auditor OR Participant
             audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
             
-            planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
-            en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
+            from django.utils import timezone
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+            en_retard = audits_assigned.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().count()
             
             # Score average remains for results where user is the lead Auditor
             score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
             
             context['planifies_count'] = planifies
-            en_cours_count = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
+            context['en_retard_count'] = en_retard
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
@@ -506,7 +514,8 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
         return data
 
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        self.object.save()
         form.save_m2m() # Ensure M2M is saved
 
         # Handle formset only if present in POST
@@ -557,7 +566,8 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         return data
 
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        self.object.save()
         form.save_m2m() 
         
         # Handle formset only if present in POST
@@ -1153,7 +1163,7 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["id"]
+    ordering = ["-id"]
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
@@ -1833,7 +1843,12 @@ class CloseAuditView(LoginRequiredMixin, View):
             redirect_url = reverse("liste_audit_list")
         else:
             redirect_url = reverse("resultat_report", args=[resultat.pk])
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        if (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest" 
+            or request.headers.get("x-requested-with") == "XMLHttpRequest"
+            or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+            or 'application/json' in request.headers.get("accept", "")
+        ):
             return JsonResponse({
                 "status": "success",
                 "redirect_url": redirect_url
@@ -2192,17 +2207,26 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
         status_filter = self.request.GET.get('status', 'all')
         
         # Consistent with models.py get_audit_status()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
         if status_filter == 'planifie':
-            # Audits without any ResultatAudit
-            return base_qs.exclude(resultataudit__isnull=False).order_by("-id")
+            # Audits without any ResultatAudit and not overdue
+            return base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).order_by("-id")
         elif status_filter == 'en_cours':
-            # Audits with at least one active ResultatAudit
-            return base_qs.filter(resultataudit__en_cours=True).distinct().order_by("-id")
+            # Audits with at least one active ResultatAudit and not overdue
+            return base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().order_by("-id")
         elif status_filter == 'termine':
-            # Audits with ResultatAudit that are NOT en_cours 
-            # (and no active ones to avoid double counting if that's possible, 
-            # though usually it's 1:1)
+            # Audits with ResultatAudit that are completed (regardless of date)
             return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().order_by("-id")
+        elif status_filter == 'en_retard':
+            # Audits not completed whose planned date has passed
+            return base_qs.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().order_by("-id")
         
         # Final sort by ID descending (newest first)
         return base_qs.order_by("-id")
@@ -2219,9 +2243,18 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
             from django.db.models import Q
             base_qs = qs.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
             
-        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).count()
-        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True).distinct().count()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
         context['termines_count'] = base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+        context['en_retard_count'] = base_qs.filter(
+            Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+            date__lt=today_start
+        ).distinct().count()
         
         return context
 
@@ -2538,13 +2571,25 @@ def get_structure(request):
         # Get all criteria
         criteres = Critere.objects.all().select_related('chapitre_norme__text_ref')
         
-        # Get sous-critères for this type audit
-        # This handles the filter carefully
-        sous_criteres = SousCritere.objects.filter(type_audit=type_id)
+        # Get all sub-criteria
+        all_sous_criteres = SousCritere.objects.all()
+
+        # Get IDs of sub-criteria that are linked to this type audit
+        linked_sc_ids = set(
+            SousCritereTypeAudit.objects.filter(type_audit_id=type_id)
+            .values_list('sous_critere_id', flat=True)
+        )
+
+        # Group sub-criteria in memory by critere_id to optimize performance
+        sc_by_critere = {}
+        for sc in all_sous_criteres:
+            if sc.critere_id not in sc_by_critere:
+                sc_by_critere[sc.critere_id] = []
+            sc_by_critere[sc.critere_id].append(sc)
 
         result = []
         for critere in criteres:
-            sc_list = sous_criteres.filter(critere=critere)
+            sc_list = sc_by_critere.get(critere.id, [])
             
             result.append({
                 "critere_id": critere.id,
@@ -2554,7 +2599,8 @@ def get_structure(request):
                 "sous_criteres": [
                     {
                         "id": sc.id,
-                        "nom": sc.content
+                        "nom": sc.content,
+                        "is_linked": sc.id in linked_sc_ids
                     }
                     for sc in sc_list
                 ]
@@ -2573,12 +2619,17 @@ def get_formulaire_structure(request):
         return JsonResponse([], safe=False)
 
     try:
-        formulaire = FormulaireAudit.objects.get(pk=formulaire_id)
+        formulaire = FormulaireAudit.objects.select_related(
+            'processus', 'type_audit', 'creator'
+        ).prefetch_related('section', 'type_equipement').get(pk=formulaire_id)
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # 1. Get ALL Critères linked to this formulaire
-    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    # 1. Get ALL Critères linked to this formulaire (directly or via FormulaireSousCritere)
+    from django.db.models import Q
+    criteres = Critere.objects.filter(
+        Q(formulaire=formulaire) | Q(souscritere__formulairesouscritere__formulaire=formulaire)
+    ).distinct().select_related('chapitre_norme__text_ref').order_by('name')
     
     # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
@@ -2633,9 +2684,29 @@ def get_formulaire_structure(request):
             "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
+    # 4. Build the flat structure for the mobile app
+    flat_structure = []
+    for crit in grouped:
+        for sc in crit["sous_criteres"]:
+            flat_structure.append({
+                "id": sc["id"],
+                "critere_nom": crit["critere_nom"],
+                "sous_critere_nom": sc["nom"],
+                "cotation": sc["type_cotation_name"] or "-"
+            })
+
     return JsonResponse({
+        "id": formulaire.id,
+        "name": formulaire.name,
+        "processus": formulaire.processus.name if formulaire.processus else "-",
+        "type_audit": formulaire.type_audit.name if formulaire.type_audit else "-",
+        "type_equipement": ", ".join([te.name for te in formulaire.type_equipement.all()]) or "-",
+        "date_creation": formulaire.date_creation.strftime('%d/%m/%Y %H:%M') if formulaire.date_creation else "-",
+        "creator_username": formulaire.creator.username if formulaire.creator else "admin",
+        "sections": list(formulaire.section.values_list('name', flat=True)),
         "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
-        "criteres": grouped
+        "criteres": grouped,
+        "structure": flat_structure
     }, safe=False)
 
 @transaction.atomic
@@ -2666,8 +2737,11 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
-                type_equipement_id=type_equipement_id if type_equipement_id else None
+                creator=request.user if request.user.is_authenticated else None
             )
+            
+            if type_equipement_id:
+                formulaire.type_equipement.set([type_equipement_id])
             
             # Set ManyToMany sections
             if section_ids:
@@ -2678,8 +2752,10 @@ def quick_create_formulaire(request):
                 
                 # 1. Existing sub-criteria
                 if sous_critere_ids:
-                    for sc_id in sous_critere_ids:
-                        FormulaireSousCritere.objects.create(
+                    # Filter out duplicate IDs
+                    unique_sc_ids = list(dict.fromkeys(sous_critere_ids))
+                    for sc_id in unique_sc_ids:
+                        FormulaireSousCritere.objects.get_or_create(
                             formulaire=formulaire,
                             sous_critere_id=sc_id
                         )
@@ -2723,7 +2799,7 @@ def quick_create_formulaire(request):
                             types_audit_ids = item.get('types_audit')
                             if types_audit_ids:
                                 for ta_id in types_audit_ids:
-                                    SousCritereTypeAudit.objects.create(
+                                    SousCritereTypeAudit.objects.get_or_create(
                                         sous_critere=new_sc,
                                         type_audit_id=ta_id
                                     )
@@ -2734,7 +2810,7 @@ def quick_create_formulaire(request):
                                 new_sc.preuve_attendu.set(preuve_ids)
 
                             # Link it to the formulaire
-                            FormulaireSousCritere.objects.create(
+                            FormulaireSousCritere.objects.get_or_create(
                                 formulaire=formulaire,
                                 sous_critere=new_sc
                             )
@@ -2756,7 +2832,7 @@ def quick_create_formulaire(request):
 @transaction.atomic
 def save_sous_critere_inline(request):
     """AJAX view to save a single SousCritere linked to an existing Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2801,7 +2877,7 @@ def save_sous_critere_inline(request):
 @transaction.atomic
 def save_critere_inline(request):
     """AJAX view to save a single Critere and its SousCriteres independently."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2869,7 +2945,7 @@ def save_critere_inline(request):
 @transaction.atomic
 def update_critere_inline(request, pk):
     """AJAX view to update a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2912,7 +2988,7 @@ def update_critere_inline(request, pk):
 @transaction.atomic
 def update_sous_critere_inline(request, pk):
     """AJAX view to update a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -3054,7 +3130,7 @@ def copy_formulaire(request, pk):
 @transaction.atomic
 def delete_critere_inline(request, pk):
     """AJAX view to delete a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -3072,7 +3148,7 @@ def delete_critere_inline(request, pk):
 @transaction.atomic
 def delete_sous_critere_inline(request, pk):
     """AJAX view to delete a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:

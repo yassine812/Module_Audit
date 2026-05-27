@@ -121,7 +121,7 @@
   </div>
 
   <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
-    <div class="small-box bg-success h-100 mb-0">
+    <div class="small-box bg-purple h-100 mb-0">
       <div class="inner">
         <h3 id="total-formulaires">{{ formulaires_count }}</h3>
         <p>Formulaires</p>
@@ -151,7 +151,7 @@
   </div>
 
   <div class="col-xl-3 col-lg-6 col-md-6 col-6 mb-3">
-    <div class="small-box bg-danger h-100 mb-0">
+    <div class="small-box bg-success h-100 mb-0">
       <div class="inner">
         <h3 id="total-resultats">{{ resultats_count }}</h3>
         <p>Résultats</p>
@@ -481,9 +481,9 @@
     const baseConfig = { borderWidth: 3, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 };
     return [
       { ...baseConfig, label:"Types d'Audit", data: data.datasets.types_audit, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)' },
-      { ...baseConfig, label: 'Formulaires', data: data.datasets.formulaires, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+      { ...baseConfig, label: 'Formulaires', data: data.datasets.formulaires, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.05)' },
       { ...baseConfig, label: 'Audits Planifiés', data: data.datasets.audits_planifies, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.05)' },
-      { ...baseConfig, label: 'Résultats', data: data.datasets.resultats, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)' }
+      { ...baseConfig, label: 'Résultats', data: data.datasets.resultats, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' }
     ];
   }
 

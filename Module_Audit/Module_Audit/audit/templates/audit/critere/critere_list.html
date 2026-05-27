@@ -186,7 +186,6 @@
                   <th class="ps-3 col-id text-center">ID</th>
                   <th class="col-name">Désignation du Critère</th>
                   <th class="col-chapitre">Chapitre de Norme</th>
-                  <th class="col-form">Formulaire associé</th>
                   <th class="text-center col-actions">Actions</th>
                 </tr>
               </thead>
@@ -205,16 +204,6 @@
                         </span>
                     {% else %}
                         <span class="  italic">Aucun</span>
-                    {% endif %}
-                  </td>
-                  <td class="col-form" data-label="Formulaire associé">
-                    {% if critere.formulaire %}
-                        <span class="badge rounded-pill bg-light  px-3 py-1 border font-weight-normal">
-                            <i data-lucide="file-text" class="mr-1" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                            {{ critere.formulaire.name|truncatechars:10 }}
-                        </span>
-                    {% else %}
-                        <span class="  italic">-</span>
                     {% endif %}
                   </td>
                   <td class="text-center col-actions" data-label="Actions">

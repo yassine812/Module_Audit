@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import api, { getApiUrl, API_PATHS } from '../src/utils/api';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -144,7 +145,146 @@ const AuditScheduleScreen = () => {
     affectation: [],
     participants: [],
     participants_externes: '',
+    date_creation: '',
+    creator_username: '',
   });
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const MONTHS_FR = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+
+  const openDatePicker = () => {
+    if (formData.date) {
+      const parts = formData.date.split(' ');
+      if (parts.length > 0) {
+        const parsed = Date.parse(parts[0] + 'T00:00:00');
+        if (!isNaN(parsed)) {
+          setViewDate(new Date(parsed));
+          setShowDatePicker(true);
+          return;
+        }
+      }
+    }
+    setViewDate(new Date());
+    setShowDatePicker(true);
+  };
+
+  const handlePrevMonth = () => {
+    setViewDate(prev => {
+      const year = prev.getFullYear();
+      const month = prev.getMonth();
+      return new Date(year, month - 1, 1);
+    });
+  };
+
+  const handleNextMonth = () => {
+    setViewDate(prev => {
+      const year = prev.getFullYear();
+      const month = prev.getMonth();
+      return new Date(year, month + 1, 1);
+    });
+  };
+
+  const isDateInPast = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    return checkDate < today;
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
+
+  const isSelectedDate = (date: Date) => {
+    if (!formData.date) return false;
+    const parsed = Date.parse(formData.date.split(' ')[0] + 'T00:00:00');
+    if (isNaN(parsed)) return false;
+    const selected = new Date(parsed);
+    return date.getDate() === selected.getDate() &&
+      date.getMonth() === selected.getMonth() &&
+      date.getFullYear() === selected.getFullYear();
+  };
+
+  const generateCalendarDays = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const startDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+    const days = [];
+
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    for (let i = startDayIndex - 1; i >= 0; i--) {
+      days.push({
+        day: daysInPrevMonth - i,
+        isCurrentMonth: false,
+        date: new Date(year, month - 1, daysInPrevMonth - i),
+      });
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({
+        day: i,
+        isCurrentMonth: true,
+        date: new Date(year, month, i),
+      });
+    }
+
+    const remainingSlots = 42 - days.length;
+    for (let i = 1; i <= remainingSlots; i++) {
+      days.push({
+        day: i,
+        isCurrentMonth: false,
+        date: new Date(year, month + 1, i),
+      });
+    }
+
+    return days;
+  };
+
+  const handleSelectDate = (selectedDate: Date) => {
+    const yyyy = selectedDate.getFullYear();
+    const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(selectedDate.getDate()).padStart(2, '0');
+    
+    let hh = '08';
+    let min = '00';
+    let ss = '00';
+    
+    if (formData.date) {
+      const parts = formData.date.split(' ');
+      if (parts.length === 2) {
+        const timeParts = parts[1].split(':');
+        if (timeParts.length >= 2) {
+          hh = timeParts[0];
+          min = timeParts[1];
+          ss = timeParts[2] || '00';
+        }
+      }
+    } else {
+      const now = new Date();
+      hh = String(now.getHours()).padStart(2, '0');
+      min = String(now.getMinutes()).padStart(2, '0');
+      ss = String(now.getSeconds()).padStart(2, '0');
+    }
+    
+    const formattedDate = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+    setFormData(prev => ({ ...prev, date: formattedDate }));
+    setShowDatePicker(false);
+  };
+
 
   // Quick Create State
   const [showQuickCreate, setShowQuickCreate] = useState(false);
@@ -242,10 +382,12 @@ const AuditScheduleScreen = () => {
               date: audit.date_audit || new Date().toISOString().slice(0, 19).replace('T', ' '),
               section: audit.section || '',
               formulaire_audit: audit.formulaire_audit || '',
-              site: audit.site || '',
+              site: audit.site_id || audit.site || '',
               affectation: audit.affectation || [],
               participants: audit.participants || [],
               participants_externes: audit.participants_externes || '',
+              date_creation: audit.date_creation || '',
+              creator_username: audit.creator_username || '',
             });
           }
         } catch (detailErr) {
@@ -279,6 +421,42 @@ const AuditScheduleScreen = () => {
       Alert.alert('Erreur', 'Impossible de récupérer la structure du formulaire');
     } finally {
       setLoadingStructure(false);
+    }
+  };
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      const yyyy = selectedDate.getFullYear();
+      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(selectedDate.getDate()).padStart(2, '0');
+      
+      let hh = '08';
+      let min = '00';
+      let ss = '00';
+      
+      if (formData.date) {
+        const parts = formData.date.split(' ');
+        if (parts.length === 2) {
+          const timeParts = parts[1].split(':');
+          if (timeParts.length >= 2) {
+            hh = timeParts[0];
+            min = timeParts[1];
+            ss = timeParts[2] || '00';
+          }
+        }
+      } else {
+        const now = new Date();
+        hh = String(now.getHours()).padStart(2, '0');
+        min = String(now.getMinutes()).padStart(2, '0');
+        ss = String(now.getSeconds()).padStart(2, '0');
+      }
+      
+      const formattedDate = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+      setFormData(prev => ({ ...prev, date: formattedDate }));
     }
   };
 
@@ -629,16 +807,6 @@ const AuditScheduleScreen = () => {
               </View>
               <Text style={styles.sectionTitle}>Informations Générales</Text>
            </View>
-           <View style={styles.statusToggle}>
-              <Switch 
-                value={formData.status} 
-                onValueChange={(val) => setFormData({...formData, status: val})}
-                trackColor={{ false: '#e2e8f0', true: '#22c55e' }}
-              />
-              <Text style={[styles.statusLabel, { color: formData.status ? '#22c55e' : '#94a3b8' }]}>
-                {formData.status ? 'Actif' : 'Inactif'}
-              </Text>
-           </View>
         </View>
 
         <View style={styles.fieldGroup}>
@@ -655,6 +823,27 @@ const AuditScheduleScreen = () => {
              />
           </View>
         </View>
+
+        {id && (formData.date_creation || formData.creator_username) ? (
+          <View style={styles.metadataContainer}>
+            {formData.date_creation ? (
+              <View style={styles.metaRow}>
+                <Ionicons name="calendar-outline" size={14} color="#64748b" />
+                <Text style={styles.metaLabel}>Date de création : </Text>
+                <Text style={styles.metaValue}>
+                  {formData.date_creation.includes('/') ? formData.date_creation : formData.date_creation.split('T')[0].split(' ')[0].split('-').reverse().join('/')}
+                </Text>
+              </View>
+            ) : null}
+            {formData.creator_username ? (
+              <View style={styles.metaRow}>
+                <Ionicons name="person-outline" size={14} color="#64748b" />
+                <Text style={styles.metaLabel}>Créateur : </Text>
+                <Text style={styles.metaValue}>{formData.creator_username}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={styles.sectionHeader}>
            <View style={styles.sectionTitleWithIcon}>
@@ -720,17 +909,22 @@ const AuditScheduleScreen = () => {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>DATE D'AUDIT PRÉVUE *</Text>
-          <View style={styles.inputGroup}>
+          <TouchableOpacity 
+             style={styles.inputGroup} 
+             onPress={openDatePicker}
+             activeOpacity={0.7}
+          >
              <View style={styles.inputGroupIcon}>
                 <Feather name="calendar" size={18} color="#475569" />
              </View>
              <TextInput 
-                style={styles.input}
-                value={formData.date}
-                onChangeText={(val) => setFormData({...formData, date: val})}
-                placeholder="AAAA-MM-JJ HH:MM:SS"
+                style={[styles.input, { color: '#1e293b' }]}
+                value={formData.date ? formData.date.split(' ')[0] : ''}
+                editable={false}
+                pointerEvents="none"
+                placeholder="AAAA-MM-JJ"
              />
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.fieldGroup}>
@@ -774,7 +968,7 @@ const AuditScheduleScreen = () => {
         <NormalDropdown 
           label="AUDITEURS ASSIGNÉS"
           value={formData.affectation}
-          options={users.filter(u => u.role === 'Auditeur' || u.role === 'Admin')}
+          options={users.filter(u => u.role === 'Auditeur')}
           multi={true}
           onSelect={(id) => toggleUserSelection(id, 'affectation')}
           placeholder="Rechercher des auditeurs..."
@@ -1399,6 +1593,95 @@ const AuditScheduleScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {showDatePicker && (
+        <Modal
+          transparent={true}
+          animationType="fade"
+          visible={showDatePicker}
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { padding: 20 }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Sélectionner une Date</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Ionicons name="close" size={24} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Custom Month Nav */}
+              <View style={styles.monthNavRow}>
+                <TouchableOpacity 
+                  onPress={handlePrevMonth} 
+                  style={styles.monthNavBtn}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="chevron-back" size={18} color="#4f46e5" />
+                </TouchableOpacity>
+                <Text style={styles.monthTitle}>
+                  {MONTHS_FR[viewDate.getMonth()]} {viewDate.getFullYear()}
+                </Text>
+                <TouchableOpacity 
+                  onPress={handleNextMonth} 
+                  style={styles.monthNavBtn}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="chevron-forward" size={18} color="#4f46e5" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Week Day Labels */}
+              <View style={styles.weekDaysRow}>
+                {['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'].map((day, idx) => (
+                  <Text key={idx} style={styles.weekDayLabel}>{day}</Text>
+                ))}
+              </View>
+
+              {/* Days Grid */}
+              <View style={styles.daysGrid}>
+                {generateCalendarDays().map((item, idx) => {
+                  const past = isDateInPast(item.date);
+                  const selected = isSelectedDate(item.date);
+                  const today = isToday(item.date);
+                  
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      disabled={past}
+                      onPress={() => handleSelectDate(item.date)}
+                      style={[
+                        styles.dayBox,
+                        selected && styles.selectedDayBox,
+                        today && !selected && styles.todayDayBox,
+                        past && styles.pastDayBox,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dayText,
+                          selected && styles.selectedDayText,
+                          today && !selected && styles.todayDayText,
+                          !item.isCurrentMonth && styles.otherMonthDayText,
+                        ]}
+                      >
+                        {item.day}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.saveBtn, { width: '100%', justifyContent: 'center', height: 48, borderRadius: 12, marginTop: 15 }]}
+                onPress={() => setShowDatePicker(false)}
+              >
+                <Text style={styles.saveBtnText}>Confirmer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -1586,6 +1869,107 @@ const styles = StyleSheet.create({
   cancelBtnText: { fontSize: 15, color: '#64748b', fontWeight: '500' },
   modernSubmitBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#4f46e5', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 30, shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   modernSubmitBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  // Custom Calendar Styles
+  monthNavRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 6,
+  },
+  monthNavBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  monthTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  weekDaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 5,
+  },
+  weekDayLabel: {
+    width: (SCREEN_WIDTH - 80) / 7,
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94a3b8',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+  },
+  dayBox: {
+    width: (SCREEN_WIDTH - 80) / 7 - 4,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderRadius: 19,
+  },
+  dayText: {
+    fontSize: 14,
+    color: '#334155',
+    fontWeight: '500',
+  },
+  selectedDayBox: {
+    backgroundColor: '#4f46e5',
+  },
+  selectedDayText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  todayDayBox: {
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+  },
+  todayDayText: {
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  pastDayBox: {
+    opacity: 0.25,
+  },
+  otherMonthDayText: {
+    color: '#cbd5e1',
+  },
+  metadataContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: -8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metaLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  metaValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#334155',
+  },
 });
 
 export default AuditScheduleScreen;

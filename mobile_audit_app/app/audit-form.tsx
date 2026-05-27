@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // Version: 2026-05-13T01:50
 import {
   View,
@@ -16,11 +16,12 @@ import {
   Modal,
   Keyboard,
   TouchableWithoutFeedback,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api, { API_PATHS } from '../src/utils/api';
+import api, { API_PATHS, TUNNEL_URL } from '../src/utils/api';
 import * as ImagePicker from 'expo-image-picker';
 import { WebView } from 'react-native-webview';
 
@@ -38,6 +39,28 @@ const AuditFormScreen = () => {
   const [showStepsModal, setShowStepsModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [pdfHtml, setPdfHtml] = useState('');
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (auditData) {
+      fadeAnim.setValue(0.3);
+      slideAnim.setValue(8);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [currentIndex]);
 
   // AI Synthesis States
   const [showSynthesisModal, setShowSynthesisModal] = useState(false);
@@ -217,15 +240,22 @@ const AuditFormScreen = () => {
     
     setSaving(true);
     try {
-      const res = await api.post(API_PATHS.UPDATE_DETAIL(currentDetail.id), formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post(API_PATHS.UPDATE_DETAIL(currentDetail.id), formData);
       if (res.data.status === 'success') {
         const newData = { ...auditData };
         newData.details[currentIndex].evidences = res.data.evidences;
         setAuditData(newData);
       }
-    } catch (error) { Alert.alert('Erreur', 'Échec upload'); }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      if (error.response) {
+        console.error('Upload error response:', error.response.status, error.response.data);
+      }
+      Alert.alert(
+        'Erreur', 
+        `Échec upload: ${error.message || error}\n${error.response ? JSON.stringify(error.response.data) : ''}`
+      );
+    }
     finally { setSaving(false); }
   };
 
@@ -236,7 +266,7 @@ const AuditFormScreen = () => {
     }
     const baseUrl = currentDetail.text_ref_url.startsWith('http') 
         ? currentDetail.text_ref_url 
-        : `http://192.168.1.17:8000${currentDetail.text_ref_url}`;
+        : `${TUNNEL_URL}${currentDetail.text_ref_url}`;
     
     const page = currentDetail.pdf_page || 1;
     
@@ -244,45 +274,88 @@ const AuditFormScreen = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
         <style>
-          body { margin: 0; padding: 0; background: #fff; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
-          #canvas-container { width: 100%; display: flex; justify-content: center; padding: 10px 0; }
-          canvas { max-width: 95%; height: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; }
-          #loading { padding: 40px; color: #64748b; font-weight: bold; text-align: center; }
+          * { box-sizing: border-box; }
+          body { margin: 0; padding: 0; background: #f1f5f9; display: flex; flex-direction: column; align-items: center; font-family: -apple-system, sans-serif; }
+          #controls { position: sticky; top: 0; z-index: 100; background: #1e3a6e; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+          #controls button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+          #controls button:disabled { opacity: 0.35; }
+          #page-info { color: #fff; font-size: 14px; font-weight: 600; }
+          #canvas-container { width: 100%; display: flex; justify-content: center; padding: 12px; }
+          canvas { max-width: 100%; height: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.18); border-radius: 4px; background: #fff; }
+          #loading { padding: 60px 20px; color: #64748b; font-weight: bold; text-align: center; font-size: 16px; width: 100%; }
+          #error { padding: 40px 20px; color: #ef4444; text-align: center; font-size: 14px; width: 100%; }
         </style>
       </head>
       <body>
+        <div id="controls">
+          <button id="prev-btn" onclick="changePage(-1)" disabled>◀ Préc</button>
+          <span id="page-info">Page ${page}</span>
+          <button id="next-btn" onclick="changePage(1)" disabled>Suiv ▶</button>
+        </div>
         <div id="loading">Chargement de la page ${page}...</div>
+        <div id="error" style="display:none"></div>
         <div id="canvas-container">
           <canvas id="pdf-canvas"></canvas>
         </div>
         <script>
-          const url = '${baseUrl}';
-          const pageNum = ${page};
-          
+          var url = '${baseUrl}';
+          var currentPage = ${page};
+          var totalPages = 0;
+          var pdfDoc = null;
+          var rendering = false;
+
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-          
-          pdfjsLib.getDocument(url).promise.then(pdf => {
-            pdf.getPage(pageNum).then(page => {
-              const viewport = page.getViewport({ scale: 2.0 });
-              const canvas = document.getElementById('pdf-canvas');
-              const context = canvas.getContext('2d');
+
+          function renderPage(num) {
+            if (rendering) return;
+            rendering = true;
+            document.getElementById('loading').style.display = 'block';
+            pdfDoc.getPage(num).then(function(page) {
+              var devicePixelRatio = window.devicePixelRatio || 1;
+              var viewport = page.getViewport({ scale: 1.5 * devicePixelRatio });
+              var canvas = document.getElementById('pdf-canvas');
+              var ctx = canvas.getContext('2d');
               canvas.height = viewport.height;
               canvas.width = viewport.width;
-              
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-              };
-              
-              page.render(renderContext).promise.then(() => {
+              canvas.style.width = (viewport.width / devicePixelRatio) + 'px';
+              canvas.style.height = (viewport.height / devicePixelRatio) + 'px';
+              page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+                rendering = false;
                 document.getElementById('loading').style.display = 'none';
+                document.getElementById('page-info').textContent = 'Page ' + currentPage + ' / ' + totalPages;
+                document.getElementById('prev-btn').disabled = currentPage <= 1;
+                document.getElementById('next-btn').disabled = currentPage >= totalPages;
               });
+            }).catch(function(err) {
+              rendering = false;
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('error').style.display = 'block';
+              document.getElementById('error').innerHTML = 'Erreur rendu page: ' + err.message;
             });
-          }).catch(err => {
-            document.getElementById('loading').innerHTML = 'Erreur: ' + err.message + '<br><small>Vérifiez la connexion au serveur</small>';
+          }
+
+          function changePage(delta) {
+            var newPage = currentPage + delta;
+            if (newPage < 1 || newPage > totalPages) return;
+            currentPage = newPage;
+            renderPage(currentPage);
+          }
+
+          pdfjsLib.getDocument({
+            url: url,
+            httpHeaders: { 'Bypass-Tunnel-Reminder': 'true' }
+          }).promise.then(function(pdf) {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            if (currentPage > totalPages) currentPage = 1;
+            renderPage(currentPage);
+          }).catch(function(err) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = 'Erreur chargement PDF:<br>' + err.message + '<br><small>URL: ' + url + '</small>';
           });
         </script>
       </body>
@@ -422,9 +495,9 @@ const AuditFormScreen = () => {
                   <Ionicons name="arrow-back" size={24} color="#1e3a6e" />
                 </TouchableOpacity>
                 <View style={[styles.headerMain, { flex: 1 }]}>
-                  <Text style={styles.miniLabel}>NORME</Text>
+                  <Text style={styles.normeLabel}>NORME: {currentDetail?.norme || 'ISO9001'}</Text>
                   <TouchableOpacity style={styles.normeRow} onPress={handleOpenPDF}>
-                    <Text style={styles.normeTitle} numberOfLines={1}>{currentDetail.chapitre_norme || 'Chapitre'}</Text>
+                    <Text style={styles.normeText} numberOfLines={1}>{currentDetail?.chapitre_norme || 'Chapitre'}</Text>
                     <Ionicons name="document-text-outline" size={18} color="#2563eb" style={{ marginLeft: 6 }} />
                   </TouchableOpacity>
                 </View>
@@ -446,7 +519,7 @@ const AuditFormScreen = () => {
                 contentContainerStyle={styles.contentContainer}
                 showsVerticalScrollIndicator={false}
             >
-              <View style={styles.auditBody}>
+              <Animated.View style={[styles.auditBody, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
                 <View style={styles.titleRow}>
                     <Text style={styles.scoreText}>SCORE: {auditData.score_audit > 0 ? (auditData.score_audit * 100).toFixed(0) + '%' : '--'}</Text>
                     <Text style={styles.stepIndicator}>{currentIndex + 1} / {totalSteps}</Text>
@@ -480,7 +553,7 @@ const AuditFormScreen = () => {
                         
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
                             {currentDetail.evidences?.map((ev, idx) => (
-                                <Image key={idx} source={{ uri: ev.url.startsWith('http') ? ev.url : `http://192.168.1.17:8000${ev.url}` }} style={styles.evidenceThumb} />
+                                <Image key={idx} source={{ uri: ev.url.startsWith('http') ? ev.url : `${TUNNEL_URL}${ev.url}` }} style={styles.evidenceThumb} />
                             ))}
                         </ScrollView>
                     </View>
@@ -497,7 +570,7 @@ const AuditFormScreen = () => {
                         />
                     </View>
                 </View>
-              </View>
+              </Animated.View>
 
               {/* Evaluation Section */}
               <View style={styles.evalContainer}>
@@ -692,6 +765,8 @@ const styles = StyleSheet.create({
   miniLabel: { fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, marginBottom: 4 },
   normeRow: { flexDirection: 'row', alignItems: 'center' },
   normeTitle: { fontSize: 18, fontWeight: '900', color: '#1e3a6e' },
+  normeText: { fontSize: 18, fontWeight: '900', color: '#2563eb' },
+  normeLabel: { fontSize: 11, fontWeight: '800', color: '#0f172a', letterSpacing: 0.5, marginBottom: 4 },
   headerSide: { flexDirection: 'row', gap: 20 },
   infoBox: { alignItems: 'flex-start' },
   infoText: { fontSize: 13, fontWeight: '700', color: '#1e293b' },

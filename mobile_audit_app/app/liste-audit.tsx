@@ -34,7 +34,26 @@ const ListeAuditScreen = () => {
   const [filter, setFilter] = useState('Tous');
   const [notifCount, setNotifCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const [startModalVisible, setStartModalVisible] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get(getApiUrl(API_PATHS.NOTIFICATIONS));
+      if (res.data.status === 'success') {
+        setNotifications(res.data.data);
+      }
+    } catch (e) {
+      console.error('Notifications fetch error:', e);
+    }
+  };
+
+  const displayStatus = (statusLabel: string) => {
+    if (!statusLabel) return '-';
+    let formatted = statusLabel.replace(/_/g, ' ');
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
   const [selectedAuditId, setSelectedAuditId] = useState(null);
   const [auditCommentaire, setAuditCommentaire] = useState('');
   const [starting, setStarting] = useState(false);
@@ -51,6 +70,7 @@ const ListeAuditScreen = () => {
       if (statsRes.data.status === 'success') {
         setNotifCount(statsRes.data.data.notifications_count || 0);
       }
+      fetchNotifications();
     } catch (error) {
       console.error(error);
     } finally {
@@ -119,25 +139,70 @@ const ListeAuditScreen = () => {
   };
 
   const handleOptions = (item) => {
+    const options = [
+      {
+        text: "Modifier",
+        onPress: () => router.push({ pathname: '/audit-schedule', params: { id: item.id } }),
+      },
+      {
+        text: "Supprimer",
+        onPress: () => confirmDelete(item.id),
+        style: 'destructive'
+      }
+    ];
+
+    if (item.status === 'en_cours') {
+      options.unshift({
+        text: "Clôturer",
+        onPress: () => confirmCloturer(item.resultat_id || item.id),
+      });
+    }
+
+    options.push({
+      text: "Annuler",
+      style: "cancel"
+    });
+
     Alert.alert(
       "Options de l'audit",
       `Audit: ${item.audit_desc || item.sujet}`,
+      options as any
+    );
+  };
+
+  const confirmCloturer = (resultatId) => {
+    Alert.alert(
+      "Clôturer l'audit",
+      "Voulez-vous vraiment clôturer cet audit en cours ?",
       [
-        {
-          text: "Modifier",
-          onPress: () => router.push({ pathname: '/audit-schedule', params: { id: item.id } }),
-        },
-        {
-          text: "Supprimer",
-          onPress: () => confirmDelete(item.id),
-          style: 'destructive'
-        },
-        {
-          text: "Annuler",
-          style: "cancel"
-        }
+        { text: "Annuler", style: "cancel" },
+        { text: "Clôturer", onPress: () => handleCloturer(resultatId) }
       ]
     );
+  };
+
+  const handleCloturer = async (resultatId) => {
+    if (!resultatId) return;
+    setLoading(true);
+    try {
+      const res = await api.post(API_PATHS.RESULTAT_FINISH(resultatId), {
+        point_fort: '',
+        point_sensible: '',
+        risque: '',
+        opportunite: ''
+      });
+      if (res.data.status === 'success') {
+        Alert.alert('Succès', 'Audit clôturé avec succès');
+        fetchData();
+      } else {
+        Alert.alert('Erreur', res.data.message || 'Échec de la clôture');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', "Impossible de clôturer l'audit.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmDelete = (id) => {
@@ -167,12 +232,12 @@ const ListeAuditScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.tableHeader}>
-      <View style={[styles.headerCell, { width: 30 }]}><Text style={styles.headerText}>#</Text></View>
-      <View style={[styles.headerCell, { flex: 1.2 }]}><Text style={styles.headerText}>NOM AUDIT</Text></View>
-      <View style={[styles.headerCell, { flex: 1 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
-      <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DATE</Text></View>
+      <View style={[styles.headerCell, { width: 25 }]}><Text style={styles.headerText}>#</Text></View>
+      <View style={[styles.headerCell, { flex: 1 }]}><Text style={styles.headerText}>NOM AUDIT</Text></View>
+      <View style={[styles.headerCell, { flex: 1.2 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DÉPT</Text></View>
+      <View style={[styles.headerCell, { width: 60 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>DATE</Text></View>
       <View style={[styles.headerCell, { width: 65 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>STATUT</Text></View>
-      <View style={[styles.headerCell, { width: 85 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>ACTIONS</Text></View>
+      <View style={[styles.headerCell, { width: 75 }]}><Text style={[styles.headerText, { textAlign: 'center' }]}>ACTIONS</Text></View>
     </View>
   );
 
@@ -180,23 +245,24 @@ const ListeAuditScreen = () => {
     const isPlanifie = item.status === 'planifie';
     const isEnCours = item.status === 'en_cours';
     const isTermine = item.status === 'termine';
+    const isEnRetard = item.status === 'en_retard';
     
     return (
       <View style={styles.tableRow}>
-        <View style={[styles.cell, { width: 30 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
+        <View style={[styles.cell, { width: 25 }]}><Text style={[styles.cellText, { color: '#94a3b8' }]}>{index + 1}</Text></View>
         <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { fontWeight: '600' }]} numberOfLines={3}>{item.audit_desc || item.sujet || 'Sans nom'}</Text></View>
-        <View style={[styles.cell, { flex: 1 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={3}>{item.departement_name || '-'}</Text></View>
-        <View style={[styles.cell, { width: 75, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+        <View style={[styles.cell, { flex: 1.2 }]}><Text style={[styles.cellText, { textAlign: 'center' }]} numberOfLines={3}>{item.departement_name || '-'}</Text></View>
+        <View style={[styles.cell, { width: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
             <Text style={styles.cellText}>{item.date_audit ? item.date_audit.split('T')[0].substring(2).split('-').reverse().join('/') : '-'}</Text>
         </View>
         <View style={[styles.cell, { width: 65, alignItems: 'center' }]}>
             <View style={[styles.statusBadge, { 
-              backgroundColor: isTermine ? '#10b981' : isEnCours ? '#3b82f6' : '#94a3b8' 
+              backgroundColor: isTermine ? '#10b981' : isEnCours ? '#3b82f6' : isEnRetard ? '#ef4444' : '#94a3b8' 
             }]}>
-                <Text style={styles.statusText}>{item.status_label}</Text>
+                <Text style={styles.statusText}>{displayStatus(item.status_label)}</Text>
             </View>
         </View>
-        <View style={[styles.cell, { width: 85, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
+        <View style={[styles.cell, { width: 75, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }]}>
             {isTermine ? (
                 <TouchableOpacity 
                     style={styles.rapportBtn}
@@ -226,6 +292,34 @@ const ListeAuditScreen = () => {
     );
   };
 
+  const renderStatsBar = () => {
+    const planifies = data.filter(item => item.status === 'planifie').length;
+    const enCours = data.filter(item => item.status === 'en_cours').length;
+    const enRetard = data.filter(item => item.status === 'en_retard').length;
+    const termines = data.filter(item => item.status === 'termine').length;
+
+    return (
+      <View style={styles.statsBarContainer}>
+        <View style={[styles.statMiniCard, { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+          <Text style={[styles.statMiniLabel, { color: '#64748b' }]}>Planifiés</Text>
+          <Text style={[styles.statMiniVal, { color: '#334155' }]}>{planifies}</Text>
+        </View>
+        <View style={[styles.statMiniCard, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+          <Text style={[styles.statMiniLabel, { color: '#2563eb' }]}>En cours</Text>
+          <Text style={[styles.statMiniVal, { color: '#1d4ed8' }]}>{enCours}</Text>
+        </View>
+        <View style={[styles.statMiniCard, { backgroundColor: '#fef2f2', borderColor: '#fca5a5' }]}>
+          <Text style={[styles.statMiniLabel, { color: '#ef4444' }]}>En retard</Text>
+          <Text style={[styles.statMiniVal, { color: '#b91c1c' }]}>{enRetard}</Text>
+        </View>
+        <View style={[styles.statMiniCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+          <Text style={[styles.statMiniLabel, { color: '#16a34a' }]}>Terminés</Text>
+          <Text style={[styles.statMiniVal, { color: '#15803d' }]}>{termines}</Text>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -239,7 +333,7 @@ const ListeAuditScreen = () => {
           <Text style={styles.headerTitle}>Liste de mes audits</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerIconBtn}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowNotifMenu(true)}>
             <Ionicons name="notifications-outline" size={20} color="#475569" />
             {notifCount > 0 ? (
               <View style={styles.notificationBadge}>
@@ -258,6 +352,56 @@ const ListeAuditScreen = () => {
           ) : null}
         </View>
       </View>
+
+      {renderStatsBar()}
+
+      <Modal visible={showNotifMenu} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setShowNotifMenu(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.userDropdown, { right: 50, width: 280 }]}>
+              <View style={styles.notifHeader}>
+                <Text style={styles.notifHeaderText}>Notifications</Text>
+                {notifCount > 0 ? (
+                  <View style={styles.notifCountBadge}>
+                    <Text style={styles.notifCountText}>{notifCount}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <TouchableOpacity
+                      key={notif.id}
+                      style={styles.notifItem}
+                      onPress={() => {
+                        setShowNotifMenu(false);
+                        router.push({ pathname: '/audit-form', params: { id: notif.target_id } });
+                      }}
+                    >
+                      <View style={[styles.notifIconCircle, { backgroundColor: notif.type === 'audit_started' ? '#eff6ff' : '#fff7ed' }]}>
+                        <Ionicons 
+                          name={notif.type === 'audit_started' ? "play-circle" : "calendar"} 
+                          size={18} 
+                          color={notif.type === 'audit_started' ? "#3b82f6" : "#f59e0b"} 
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.notifItemText} numberOfLines={2}>{notif.message}</Text>
+                        <Text style={styles.notifTime}>Il y a quelques instants</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.emptyNotif}>
+                    <Ionicons name="notifications-off-outline" size={32} color="#cbd5e1" />
+                    <Text style={styles.emptyNotifText}>Aucune notification</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       <Modal visible={showUserMenu} transparent animationType="fade">
         <TouchableWithoutFeedback onPress={() => setShowUserMenu(false)}>
@@ -359,7 +503,7 @@ const ListeAuditScreen = () => {
           />
         </View>
         <View style={styles.filterContainer}>
-          {['Tous', 'Planifiés', 'En cours', 'Terminés'].map(t => (
+          {['Tous', 'Planifiés', 'En cours', 'Terminés', 'En retard'].map(t => (
             <TouchableOpacity 
               key={t} 
               style={[styles.filterTab, filter === t && styles.filterTabActive]}
@@ -383,6 +527,7 @@ const ListeAuditScreen = () => {
               if (filter === 'Terminés') return matchesSearch && item.status === 'termine';
               if (filter === 'En cours') return matchesSearch && item.status === 'en_cours';
               if (filter === 'Planifiés') return matchesSearch && item.status === 'planifie';
+              if (filter === 'En retard') return matchesSearch && item.status === 'en_retard';
               return matchesSearch;
             })}
             renderItem={renderItem}
@@ -463,6 +608,101 @@ const styles = StyleSheet.create({
   startModalCancelText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
   startModalSubmitBtn: { backgroundColor: '#22c55e', flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, shadowColor: '#22c55e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   startModalSubmitText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  // Stats Bar Styles
+  statsBarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    gap: 8,
+  },
+  statMiniCard: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  statMiniLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  statMiniVal: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  // Notification Dropdown Styles
+  notifHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    padding: 12, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9' 
+  },
+  notifHeaderText: { 
+    fontSize: 13, 
+    fontWeight: '800', 
+    color: '#1e293b', 
+    letterSpacing: 0.5 
+  },
+  notifCountBadge: { 
+    backgroundColor: '#eff6ff', 
+    paddingHorizontal: 6, 
+    paddingVertical: 2, 
+    borderRadius: 6 
+  },
+  notifCountText: { 
+    fontSize: 9, 
+    fontWeight: '900', 
+    color: '#3b82f6' 
+  },
+  notifItem: { 
+    flexDirection: 'row', 
+    padding: 12, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f8fafc', 
+    alignItems: 'center' 
+  },
+  notifIconCircle: { 
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginRight: 10 
+  },
+  notifItemText: { 
+    fontSize: 11, 
+    fontWeight: '700', 
+    color: '#334155', 
+    lineHeight: 14 
+  },
+  notifTime: { 
+    fontSize: 9, 
+    color: '#94a3b8', 
+    marginTop: 2, 
+    fontWeight: '600' 
+  },
+  emptyNotif: { 
+    padding: 20, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  emptyNotifText: { 
+    marginTop: 8, 
+    fontSize: 12, 
+    color: '#94a3b8', 
+    fontWeight: '600' 
+  },
 });
 
 export default ListeAuditScreen;

@@ -146,6 +146,7 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/processus_docs/'
 MEDIA_ROOT = BASE_DIR / "processus_docs"
 
+
 # Configuration Email SMTP (Gmail)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -161,7 +162,8 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000', 
     'http://127.0.0.1:8000',
-    'http://192.168.1.17:8000'
+    'http://192.168.1.17:8000',
+    'http://192.168.1.193:8000'
 ]
 
 # Session and Cookie settings for Mobile/CORS
@@ -170,6 +172,7 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_SAVE_EVERY_REQUEST = True
+
 
 # CORS settings (for django-cors-headers if ever installed, though we use custom middleware)
 CORS_ALLOW_CREDENTIALS = True

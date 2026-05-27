@@ -45,7 +45,7 @@ const FormulaireFormScreen = () => {
     processus: '',
     type_audit: '',
     section: '',
-    type_equipement: '',
+    type_equipement: [] as number[],
     selectedScIds: [] as number[],
   });
 
@@ -80,7 +80,7 @@ const FormulaireFormScreen = () => {
           processus: form.processus_id || '',
           type_audit: form.type_audit_id || '',
           section: form.section_id || '',
-          type_equipement: form.type_equipement_id || '',
+          type_equipement: form.type_equipement_ids || (form.type_equipement_id ? [form.type_equipement_id] : []),
           selectedScIds: form.sous_criteres_ids || [],
         });
         // Auto-sync if type_audit exists
@@ -162,7 +162,7 @@ const FormulaireFormScreen = () => {
         processus: formData.processus || null,
         type_audit: formData.type_audit || null,
         section: formData.section || null,
-        type_equipement: formData.type_equipement || null,
+        type_equipement: formData.type_equipement,
         sous_criteres: formData.selectedScIds,
       };
 
@@ -393,18 +393,33 @@ const FormulaireFormScreen = () => {
               style={[styles.picker, isSelectingEquipement && styles.pickerActive]} 
               onPress={() => { setIsSelectingEquipement(!isSelectingEquipement); setIsSelectingProcessus(false); setIsSelectingType(false); setIsSelectingSection(false); }}
             >
-              <Text style={[styles.pickerText, !formData.type_equipement && { color: '#94a3b8' }]}>
-                {formData.type_equipement ? typesEquipement.find((t:any) => t.id === formData.type_equipement)?.name : "Choisir un type..."}
+              <Text style={[styles.pickerText, formData.type_equipement.length === 0 && { color: '#94a3b8' }]} numberOfLines={1}>
+                {formData.type_equipement.length > 0 
+                  ? formData.type_equipement.map((id:any) => typesEquipement.find((t:any) => t.id === id)?.name).filter(Boolean).join(', ')
+                  : "Choisir des types..."}
               </Text>
               <Ionicons name={isSelectingEquipement ? "chevron-up" : "chevron-down"} size={18} color="#3b82f6" />
             </TouchableOpacity>
             {isSelectingEquipement && (
               <View style={styles.dropdown}>
-                {typesEquipement.map((t:any) => (
-                  <TouchableOpacity key={t.id} style={styles.dropdownItem} onPress={() => { setFormData({...formData, type_equipement: t.id}); setIsSelectingEquipement(false); }}>
-                    <Text style={styles.dropdownItemText}>{t.name}</Text>
-                  </TouchableOpacity>
-                ))}
+                {typesEquipement.map((t:any) => {
+                  const isSelected = formData.type_equipement.includes(t.id);
+                  return (
+                    <TouchableOpacity 
+                      key={t.id} 
+                      style={[styles.dropdownItem, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]} 
+                      onPress={() => {
+                        const newEquipements = isSelected 
+                          ? formData.type_equipement.filter((id:any) => id !== t.id)
+                          : [...formData.type_equipement, t.id];
+                        setFormData({...formData, type_equipement: newEquipements});
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{t.name}</Text>
+                      {isSelected && <Ionicons name="checkmark" size={16} color="#3b82f6" />}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </View>

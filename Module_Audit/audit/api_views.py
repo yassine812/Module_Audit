@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 import json
-from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit
+from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit, EvidenceAudit
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -587,13 +587,17 @@ class FormulaireAuditListAPIView(View):
     def get(self, request):
         # Temporarily removed authentication for testing
         formulaires = FormulaireAudit.objects.all().select_related(
-            'processus', 'type_audit', 'type_equipement'
-        ).prefetch_related('section', 'liste_sous_criteres')
+            'processus', 'type_audit'
+        ).prefetch_related('section', 'type_equipement', 'liste_sous_criteres')
         
         data = []
         for f in formulaires:
             sections = list(f.section.values('id', 'name'))
             section_names = ", ".join([s['name'] for s in sections])
+            
+            equipements = list(f.type_equipement.values('id', 'name'))
+            equipement_names = ", ".join([e['name'] for e in equipements])
+            equipement_ids = [e['id'] for e in equipements]
             
             data.append({
                 'id': f.id,
@@ -602,8 +606,9 @@ class FormulaireAuditListAPIView(View):
                 'processus_name': f.processus.name if f.processus else '-',
                 'type_audit_id': f.type_audit.id if f.type_audit else None,
                 'type_audit_name': f.type_audit.name if f.type_audit else '-',
-                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
-                'type_equipement_name': f.type_equipement.name if f.type_equipement else '-',
+                'type_equipement_id': equipement_ids[0] if equipement_ids else None,
+                'type_equipement_name': equipement_names or '-',
+                'type_equipement_ids': equipement_ids,
                 'section_names': section_names or '-',
                 'sc_count': f.liste_sous_criteres.count(),
                 'date_creation': f.date_creation.strftime('%d/%m/%Y %H:%M') if f.date_creation else '-'
@@ -619,8 +624,15 @@ class FormulaireAuditListAPIView(View):
                 name=data['name'],
                 processus_id=data.get('processus'),
                 type_audit_id=data.get('type_audit'),
-                type_equipement_id=data.get('type_equipement')
+                creator=request.user if request.user.is_authenticated else None
             )
+            
+            if data.get('type_equipement'):
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    formulaire.type_equipement.set(te_ids)
+                else:
+                    formulaire.type_equipement.set([te_ids] if te_ids else [])
             
             if data.get('sections'):
                 sections = data['sections']
@@ -659,7 +671,7 @@ class ListeAuditListAPIView(View):
 
         if pk:
             try:
-                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site').get(pk=pk)
+                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site', 'creator').get(pk=pk)
                 return JsonResponse({
                     'status': 'success',
                     'data': {
@@ -677,7 +689,9 @@ class ListeAuditListAPIView(View):
                         'statut_label': a.get_audit_status(),
                         'affectation': list(a.affectation.values_list('id', flat=True)),
                         'participants': list(a.participants.values_list('id', flat=True)),
-                        'participants_externes': a.participants_externes or ""
+                        'participants_externes': a.participants_externes or "",
+                        'date_creation': a.date_creation.strftime('%d/%m/%Y') if a.date_creation else "-",
+                        'creator_username': a.creator.username if a.creator else "admin"
                     }
                 })
             except ListeAudit.DoesNotExist:
@@ -694,15 +708,12 @@ class ListeAuditListAPIView(View):
         for a in audits:
             # Optimize status check by using prefetched set
             resultats = a.resultataudit_set.all()
-            status = 'planifie'
+            status = a.get_audit_status()
             first_res = resultats[0] if len(resultats) > 0 else None
-            if resultats:
-                status = 'en_cours' if any(r.en_cours for r in resultats) else 'termine'
-            
             data.append({
                 'id': a.id,
                 'desc': a.desc,
-                'status': a.status,
+                'status': status,
                 'date_audit': a.date,
                 'departement_name': a.section.name if a.section else '-',
                 'site_name': a.site.name if a.site else '-',
@@ -724,7 +735,8 @@ class ListeAuditListAPIView(View):
                 section_id=data.get('section') or None,
                 formulaire_audit_id=data.get('formulaire_audit') or None,
                 site_id=data.get('site') or None,
-                participants_externes=data.get('participants_externes') or ""
+                participants_externes=data.get('participants_externes') or "",
+                creator=request.user if request.user.is_authenticated else None
             )
 
             if 'affectation' in data and data['affectation']:
@@ -801,9 +813,7 @@ class ResultatAuditListAPIView(View):
             results = a.resultataudit_set.all()
             res = results[0] if results else None
             
-            status = 'planifie'
-            if results:
-                status = 'en_cours' if any(r.en_cours for r in results) else 'termine'
+            status = a.get_audit_status()
 
             data.append({
                 'id': a.id,
@@ -1150,19 +1160,19 @@ class DashboardStatsAPIView(View):
                 }
             else:
                 from django.db.models import Avg, Q, Count
+                from django.utils import timezone
                 # Include audits where user is Auditor OR Participant
                 audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user)).distinct()
                 
-                # Planned: No results yet
-                planifies = audits_assigned.annotate(res_count=Count('resultataudit')).filter(res_count=0).count()
-                
-                # In Progress: Has at least one result in progress
-                en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
-                
-                # Finished: Has results and NONE are in progress
-                # This is a bit complex, let's simplify for performance if needed, 
-                # but let's try to be accurate first.
-                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(id__in=audits_assigned.filter(resultataudit__en_cours=True)).distinct().count()
+                local_now = timezone.localtime(timezone.now())
+                today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+                planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+                en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
+                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+                en_retard = audits_assigned.filter(
+                    Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                    date__lt=today_start
+                ).distinct().count()
                 
                 # Score average
                 score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
@@ -1174,6 +1184,7 @@ class DashboardStatsAPIView(View):
                     'planifies': planifies,
                     'en_cours': en_cours,
                     'termines': termines,
+                    'en_retard': en_retard,
                     'score_moy': round(float(score_moy), 1) if score_moy else "0.0",
                     'notifications_count': notif_count
                 }
@@ -1190,34 +1201,130 @@ class NotificationsAPIView(View):
         
         notifs = []
         user = request.user
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
         
+        def make_aware_if_naive(dt):
+            if dt and timezone.is_naive(dt):
+                return timezone.make_aware(dt, timezone.get_current_timezone())
+            return dt
+
         if user.is_superuser:
-            # Started audits for admin
-            recent_started = ResultatAudit.objects.select_related('auditeur', 'audit').filter(en_cours=True).order_by('-id')[:10]
+            # 1. En Retard (planned and overdue)
+            late_audits = ListeAudit.objects.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().order_by('-date')[:10]
+            for p in late_audits:
+                formatted_date = p.date.strftime('%d/%m/%Y')
+                notifs.append({
+                    'id': f"late-{p.id}",
+                    'message': f"L'audit '{p.desc}' (prévu le {formatted_date}) est en retard !",
+                    'type': 'audit_late',
+                    'target_id': p.id,
+                    'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
+                    'date_sort': make_aware_if_naive(p.date)
+                })
+                
+            # 2. Started (in progress)
+            recent_started = ResultatAudit.objects.select_related('auditeur', 'audit').filter(en_cours=True).order_by('-date_audit')[:10]
             for r in recent_started:
                 notifs.append({
-                    'id': f"res-{r.id}",
+                    'id': f"res-start-{r.id}",
                     'message': f"L'auditeur {r.auditeur.username if r.auditeur else 'Inconnu'} a démarré l'audit {r.sujet or (r.audit.desc if r.audit else 'sans nom')}",
                     'type': 'audit_started',
                     'target_id': r.id,
-                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None
+                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None,
+                    'date_sort': make_aware_if_naive(r.date_audit)
                 })
+                
+            # 3. Finished (completed)
+            recent_finished = ResultatAudit.objects.select_related('auditeur', 'audit').filter(en_cours=False).order_by('-date_audit')[:10]
+            for r in recent_finished:
+                score_pct = round(r.score_audit * 100) if r.score_audit else 0
+                notifs.append({
+                    'id': f"res-finish-{r.id}",
+                    'message': f"L'auditeur {r.auditeur.username if r.auditeur else 'Inconnu'} a finalisé l'audit {r.sujet or (r.audit.desc if r.audit else 'sans nom')} (Score: {score_pct}%)",
+                    'type': 'audit_finished',
+                    'target_id': r.id,
+                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None,
+                    'date_sort': make_aware_if_naive(r.date_audit)
+                })
+                
         else:
-            # Planned audits for user
+            # For Auditeur / Participant
+            # 1. En Retard (planned and overdue)
+            late_audits = ListeAudit.objects.filter(
+                Q(affectation=user) | Q(participants=user),
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().order_by('-date')[:10]
+            for p in late_audits:
+                formatted_date = p.date.strftime('%d/%m/%Y')
+                notifs.append({
+                    'id': f"late-{p.id}",
+                    'message': f"Votre audit '{p.desc}' (prévu le {formatted_date}) est en retard !",
+                    'type': 'audit_late',
+                    'target_id': p.id,
+                    'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
+                    'date_sort': make_aware_if_naive(p.date)
+                })
+                
+            # 2. Started (in progress)
+            recent_started = ResultatAudit.objects.select_related('auditeur', 'audit').filter(
+                Q(co_auditeur=user) | Q(audites=user) | Q(auditeur=user),
+                en_cours=True
+            ).order_by('-date_audit')[:10]
+            for r in recent_started:
+                notifs.append({
+                    'id': f"res-start-{r.id}",
+                    'message': f"Vous avez démarré l'audit {r.sujet or (r.audit.desc if r.audit else 'sans nom')}",
+                    'type': 'audit_started',
+                    'target_id': r.id,
+                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None,
+                    'date_sort': make_aware_if_naive(r.date_audit)
+                })
+                
+            # 3. Finished (completed)
+            recent_finished = ResultatAudit.objects.select_related('auditeur', 'audit').filter(
+                Q(co_auditeur=user) | Q(audites=user) | Q(auditeur=user),
+                en_cours=False
+            ).order_by('-date_audit')[:10]
+            for r in recent_finished:
+                score_pct = round(r.score_audit * 100) if r.score_audit else 0
+                notifs.append({
+                    'id': f"res-finish-{r.id}",
+                    'message': f"Vous avez finalisé l'audit {r.sujet or (r.audit.desc if r.audit else 'sans nom')} (Score: {score_pct}%)",
+                    'type': 'audit_finished',
+                    'target_id': r.id,
+                    'date': r.date_audit.strftime('%Y-%m-%d %H:%M:%S') if r.date_audit else None,
+                    'date_sort': make_aware_if_naive(r.date_audit)
+                })
+                
+            # 4. Planned but not overdue
             planifies = ListeAudit.objects.filter(
                 Q(affectation=user) | Q(participants=user), 
-                resultataudit__isnull=True
-            ).distinct().order_by('-id')[:10]
+                resultataudit__isnull=True,
+                date__gte=today_start
+            ).distinct().order_by('-date')[:10]
             for p in planifies:
                 notifs.append({
                     'id': f"plan-{p.id}",
                     'message': f"Un nouvel audit a été planifié pour vous : {p.desc}",
                     'type': 'audit_planned',
                     'target_id': p.id,
-                    'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None
+                    'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
+                    'date_sort': make_aware_if_naive(p.date)
                 })
+                
+        # Sort all notifications from newest to oldest
+        notifs.sort(key=lambda x: x['date_sort'], reverse=True)
         
-        return JsonResponse({'status': 'success', 'data': notifs})
+        # Strip the date_sort key before returning
+        for n in notifs:
+            n.pop('date_sort', None)
+            
+        return JsonResponse({'status': 'success', 'data': notifs[:15]})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ChartDataAPIView(View):
@@ -1318,15 +1425,20 @@ class CotationListAPIView(View):
 class FormulaireAuditDetailAPIView(View):
     def get(self, request, pk):
         try:
-            f = FormulaireAudit.objects.get(pk=pk)
+            f = FormulaireAudit.objects.prefetch_related('section', 'type_equipement', 'liste_sous_criteres').get(pk=pk)
+            sections = [s.id for s in f.section.all()]
+            equipements = [e.id for e in f.type_equipement.all()]
+            scs = [sc.id for sc in f.liste_sous_criteres.all()]
             return JsonResponse({'status': 'success', 'data': {
                 'id': f.id,
                 'name': f.name,
                 'processus_id': f.processus.id if f.processus else None,
                 'type_audit_id': f.type_audit.id if f.type_audit else None,
-                'section_id': f.section.first().id if f.section.exists() else None,
-                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
-                'sous_criteres_ids': list(f.liste_sous_criteres.values_list('id', flat=True))
+                'type_equipement_id': equipements[0] if equipements else None,
+                'type_equipement_ids': equipements,
+                'section_id': sections[0] if sections else None,
+                'sections_ids': sections,
+                'sous_criteres_ids': scs
             }})
         except FormulaireAudit.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
@@ -1338,8 +1450,14 @@ class FormulaireAuditDetailAPIView(View):
             f.name = data.get('name', f.name)
             f.processus_id = data.get('processus', f.processus_id)
             f.type_audit_id = data.get('type_audit', f.type_audit_id)
-            f.type_equipement_id = data.get('type_equipement', f.type_equipement_id)
             f.save()
+            
+            if 'type_equipement' in data:
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    f.type_equipement.set(te_ids)
+                else:
+                    f.type_equipement.set([te_ids] if te_ids else [])
 
             if 'section' in data:
                 sections = data['section']
@@ -1610,6 +1728,16 @@ class ResultatAuditDetailAPIView(View):
                 preuve_text = "Aucune preuve spécifiée"
                 pass
 
+            # Resolve pdf_page from ChapitreNorme by matching name stored on the detail row
+            pdf_page = 1
+            if d.chapitre_norme:
+                try:
+                    chapitre = ChapitreNorme.objects.filter(name=d.chapitre_norme).first()
+                    if chapitre and chapitre.page:
+                        pdf_page = chapitre.page
+                except Exception:
+                    pass
+
             details_data.append({
                 'id': d.id,
                 'critere': d.critere,
@@ -1617,6 +1745,7 @@ class ResultatAuditDetailAPIView(View):
                 'sous_critere': d.sous_critere,
                 'chapitre_norme': d.chapitre_norme,
                 'text_ref_url': d.text_ref_url,
+                'pdf_page': pdf_page,
                 'commentaire': d.commentaire,
                 'cotation': d.cotation,
                 'code': d.code,

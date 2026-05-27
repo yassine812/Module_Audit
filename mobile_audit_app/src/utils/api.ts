@@ -1,6 +1,5 @@
-// export const TUNNEL_URL = 'https://bids-deborah-florists-carefully.trycloudflare.com'; // Public Localtunnel (Permanent name)
-// export const TUNNEL_URL = 'http://10.0.2.2:8000'; // emulator
-export const TUNNEL_URL = 'http://192.168.1.17:8000'; // Physical device or local network
+export const TUNNEL_URL = 'https://hungry-moles-happen.loca.lt'; // Active public localtunnel
+// export const TUNNEL_URL = 'http://192.168.1.17:8000'; // Current Local Wi-Fi IP (Django running on port 8000)
 // export const TUNNEL_URL = 'https://0a69-105-159-204-58.ngrok-free.app'; // ngrok
 
 export const getApiUrl = (path: string) => {
@@ -8,12 +7,40 @@ export const getApiUrl = (path: string) => {
 };
 
 import axios from 'axios';
+import { removeStorageItem } from './storage';
 
 const api = axios.create({
   baseURL: TUNNEL_URL,
   timeout: 60000,
   withCredentials: true,
+  headers: {
+    'Bypass-Tunnel-Reminder': 'true',
+  },
 });
+
+let unauthorizedHandler: (() => void) | null = null;
+
+export const onUnauthorized = (handler: () => void) => {
+  unauthorizedHandler = handler;
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('API Interceptor: Detected 401 Unauthorized');
+      try {
+        await removeStorageItem('user');
+        if (unauthorizedHandler) {
+          unauthorizedHandler();
+        }
+      } catch (e) {
+        console.error('API Interceptor: Storage clear failed:', e);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 export default api;
 

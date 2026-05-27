@@ -60,38 +60,15 @@
                             </div>
                         </div>
                         <div class="col-md-6 text-md-right mt-3 mt-md-0">
-                            <div class="btn-group border rounded-pill shadow-sm p-1 bg-light w-100 w-md-auto justify-content-center" style="overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; flex-wrap: nowrap;">
-                                <button onclick="filterResults('all')" id="tab-all" class="btn btn-sm px-4 filter-btn active-filter" style="border-radius: 20px; white-space: nowrap;">Tout</button>
-                                <button onclick="filterResults('en-cours')" id="tab-en-cours" class="btn btn-sm px-4 filter-btn" style="border-radius: 20px; white-space: nowrap;">En cours</button>
-                                <button onclick="filterResults('termine')" id="tab-termine" class="btn btn-sm px-4 filter-btn" style="border-radius: 20px; white-space: nowrap;">Terminé</button>
+                            <div class="d-flex align-items-center justify-content-md-end gap-2">
+                                <label for="sectionFilter" class="text-muted mb-0" style="white-space:nowrap; font-size:13px; font-weight:600;">Section :</label>
+                                <select id="sectionFilter" class="form-control form-control-sm" style="max-width:220px; border-radius:20px;">
+                                    <option value="">Toutes les sections</option>
+                                    {% for section in sections %}
+                                    <option value="{{ section.name|lower }}">{{ section.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                            <style>
-                                .btn-group::-webkit-scrollbar { display: none; }
-                            
-  /* Responsive Pagination */
-  .pagination-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-  }
-  .pagination-info {
-      white-space: nowrap;
-      color: #64748b;
-      font-weight: 500;
-  }
-  @media (max-width: 576px) {
-      .pagination-container {
-          flex-direction: column;
-          justify-content: center;
-      }
-      .pagination-info {
-          font-size: 0.9rem;
-          margin-bottom: 4px;
-      }
-  }
-</style>
                         </div>
                     </div>
                 </div>
@@ -116,6 +93,7 @@
                         {% for resultat in resultats %}
                         <div class="mobile-row-item result-row"
                              data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
+                             data-section="{{ resultat.audit.section.name|lower|default:'' }}"
                              data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
                             
                             <div class="mobile-row-top" data-toggle="collapse" data-target="#mob-result-collapse-{{ resultat.id }}" 
@@ -154,7 +132,7 @@
                                         <div class="meta-item">
                                             <span class="meta-label">Score</span>
                                             <span class="meta-value">
-                                                <span class="badge badge-light border text-slate-800">{{ resultat.score_audit }}</span>
+                                                <span class="badge badge-light border text-slate-800">{{ resultat.score_percentage|floatformat:"0" }}%</span>
                                             </span>
                                         </div>
                                     </div>
@@ -199,7 +177,6 @@
                                         <th class="col-site">Site</th>
                                         <th class="col-date">Date</th>
                                         <th class="col-score text-center">Score</th>
-                                        <th class="col-status text-center">Statut</th>
                                         <th class="text-center col-actions">Actions</th>
                                     </tr>
                                 </thead>
@@ -207,6 +184,7 @@
                                      {% for resultat in resultats %}
                                     <tr class="result-row"
                                         data-status="{% if resultat.en_cours %}en-cours{% else %}termine{% endif %}"
+                                        data-section="{{ resultat.audit.section.name|lower|default:'' }}"
                                         data-search="{{ resultat.sujet|lower }} {{ resultat.auditeur.username|lower }} {{ resultat.site|lower|default:'' }}">
                                         <td class="col-id ps-3  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                                         <td class="col-name" data-label="Sujet">
@@ -218,19 +196,11 @@
                                         <td class="col-date" data-label="Date">{{ resultat.date_audit|date:"d/m/Y" }}</td>
                                         <td class="col-score text-center" data-label="Score">
                                             <span class="badge badge-light border text-slate-800">
-                                                {{ resultat.score_audit }}
-                                            </span>
-                                        </td>
-                                        <td class="col-status text-center" data-label="Statut">
-                                            <span class="badge {% if resultat.en_cours %}badge-warning{% else %}badge-success{% endif %} text-uppercase shadow-sm">
-                                                {% if resultat.en_cours %}En cours{% else %}Terminé{% endif %}
+                                                {{ resultat.score_percentage|floatformat:"0" }}%
                                             </span>
                                         </td>
                                         <td class="text-center col-actions" data-label="Actions">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <a href="{% url 'resultat_detail' resultat.id %}" class="btn btn-link text-info p-1" title="Détails">
-                                                    <i data-lucide="eye" ></i>
-                                                </a>
                                                 <a href="{% url 'resultat_report' resultat.id %}" class="btn btn-secondary" title="Rapport PDF">
                                                     <i data-lucide="file-text" ></i>
                                                 </a>
@@ -239,7 +209,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="8" class="text-center py-5 ">
+                                        <td colspan="7" class="text-center py-5 ">
                                             <i data-lucide="search-x" class="mb-3" ></i>
                                             <h4>Aucun résultat trouvé</h4>
                                         </td>
@@ -472,35 +442,23 @@
     }
 
     const searchInput = document.getElementById('resultSearchInput');
+    const sectionFilter = document.getElementById('sectionFilter');
     const rows = document.querySelectorAll('.result-row');
-    let currentStatusFilter = 'all';
-
-    function filterResults(status) {
-        currentStatusFilter = status;
-        
-        // UI Tabs update
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
-        document.getElementById(`tab-${status}`).classList.add('active-filter');
-
-        applyFilters();
-    }
 
     function applyFilters() {
         const query = searchInput.value.toLowerCase();
-        
+        const section = sectionFilter ? sectionFilter.value.toLowerCase() : '';
+
         rows.forEach(row => {
-            const statusMatch = (currentStatusFilter === 'all' || row.dataset.status === currentStatusFilter);
             const searchMatch = row.dataset.search.includes(query);
-            
-            if (statusMatch && searchMatch) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            const sectionMatch = !section || (row.dataset.section || '').includes(section);
+
+            row.style.display = (searchMatch && sectionMatch) ? '' : 'none';
         });
     }
 
     searchInput.addEventListener('input', applyFilters);
+    if (sectionFilter) sectionFilter.addEventListener('change', applyFilters);
 
     // Close Audit Confirmation (using event delegation for reliability)
     document.addEventListener('click', function(e) {

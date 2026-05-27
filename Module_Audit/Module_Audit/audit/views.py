@@ -135,9 +135,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Include audits where user is Auditor OR Participant
             audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
             
-            planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
-            en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
+            from django.utils import timezone
+            now = timezone.now()
+            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=now).count()
+            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=now).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+            en_retard = audits_assigned.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=now
+            ).distinct().count()
             
             # Score average remains for results where user is the lead Auditor
             score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
@@ -145,6 +151,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['planifies_count'] = planifies
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
+            context['en_retard_count'] = en_retard
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             # --- DEBUG LOGGING ---
@@ -1105,7 +1112,7 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["id"]
+    ordering = ["-id"]
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
@@ -2304,8 +2311,10 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
-                type_equipement_id=type_equipement_id if type_equipement_id else None
             )
+            
+            if type_equipement_id:
+                formulaire.type_equipement.set([type_equipement_id])
             
             # Set ManyToMany sections
             if section_ids:

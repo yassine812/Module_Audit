@@ -49,46 +49,18 @@ class FormulaireAuditForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du formulaire...'}),
             'processus': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'type_equipement': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_equipement': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': "Sélectionner les types d'équipement...", 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
             'section': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Sélectionner les sections...', 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
         }
 
 class CritereForm(forms.ModelForm):
-    ciblage = forms.ModelChoiceField(
-        queryset=TypeAudit.objects.all(),
-        required=False,
-        empty_label="Sélectionnez...",
-        label="Ciblage (Type Audit)",
-        widget=forms.Select(attrs={'class': 'custom-input select2-modal', 'id': 'id_ciblage', 'name': 'ciblage'})
-    )
     class Meta:
         model = Critere
-        fields = ['name', 'chapitre_norme', 'formulaire', 'ciblage']
+        fields = ['name', 'chapitre_norme']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du critère...'}),
             'chapitre_norme': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'formulaire': forms.Select(attrs={'class': 'custom-input form-select'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['ciblage'].queryset = TypeAudit.objects.all()
-        if self.instance and self.instance.pk:
-            # For M2M, take the first one as initial for single select
-            self.fields['ciblage'].initial = self.instance.type_audit.first()
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        if commit:
-            instance.save()
-            if 'ciblage' in self.cleaned_data:
-                selected_type = self.cleaned_data['ciblage']
-                if selected_type:
-                    instance.type_audit.set([selected_type])
-                else:
-                    instance.type_audit.clear()
-            self.save_m2m()
-        return instance
 
 class SousCritereForm(forms.ModelForm):
     class Meta:
@@ -167,7 +139,7 @@ class ListeAuditForm(forms.ModelForm):
             'section': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
             'formulaire_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'date': forms.DateTimeInput(attrs={'class': 'custom-input', 'type': 'datetime-local'}),
+            'date': forms.DateInput(attrs={'class': 'custom-input', 'type': 'date'}),
             'affectation': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Assigner des auditeurs...'}),
             'participants': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Ajouter des participants...'}),
         }
@@ -189,11 +161,14 @@ class ListeAuditForm(forms.ModelForm):
             if timezone.is_naive(value):
                 value = timezone.make_aware(value, dt_timezone.utc)
             value = timezone.localtime(value, timezone.get_current_timezone())
-            self.initial['date'] = value.strftime('%Y-%m-%dT%H:%M')
+            self.initial['date'] = value.strftime('%Y-%m-%d')
 
     def clean_date(self):
         date = self.cleaned_data.get('date')
         if date:
+            import datetime
+            if isinstance(date, datetime.date) and not isinstance(date, datetime.datetime):
+                date = datetime.datetime.combine(date, datetime.time.min)
             if timezone.is_naive(date):
                 date = timezone.make_aware(date, timezone.get_current_timezone())
             
@@ -230,3 +205,5 @@ SousCritereFormSet = inlineformset_factory(
 CritereFormSet = modelformset_factory(
     Critere, form=CritereForm, extra=0
 )
+
+

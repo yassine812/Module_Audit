@@ -644,7 +644,9 @@
 </div>
 <script>
   function initFormulaireForm() {
-    const scope = document.getElementById('ajaxFormModalBody') || document;
+    const formAudit = document.getElementById('form-audit');
+    const modalBody = document.getElementById('ajaxFormModalBody');
+    const scope = (modalBody && formAudit && modalBody.contains(formAudit)) ? modalBody : document;
     const getEl = (id) => scope.querySelector('#modal-' + id) || scope.querySelector('#' + id) || document.getElementById(id);
     
     const btnSync = getEl('btn-sync');
@@ -691,7 +693,7 @@
 
     if (scCount > 0) {
       crit.sous_criteres.forEach((sc, scIndex) => {
-        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (sc.is_linked || selectedScIds.includes(sc.id));
 
         scRowsHtml += `
           <tr id="sc-item-${sc.id}">
@@ -769,7 +771,7 @@
 
     if (scCount > 0) {
       crit.sous_criteres.forEach(sc => {
-        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (sc.is_linked || selectedScIds.includes(sc.id));
         scHtml += `
           <div class="mobile-sc-item">
             <input class="form-check-input sc-checkbox sc-crit-${crit.critere_id}" type="checkbox" name="sous_criteres" value="${sc.id}" ${isChecked ? 'checked' : ''}>
@@ -903,7 +905,43 @@
       method: 'GET',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
       success: function (html) {
-        $body.html(html);
+        const isCritereModal = html.includes('id="critereModalForm"');
+        if (isCritereModal) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const sourceForm = parsed.querySelector('#critereModalForm');
+          if (sourceForm) {
+            const csrfHtml = sourceForm.querySelector('input[name="csrfmiddlewaretoken"]')?.outerHTML || '';
+            const action = sourceForm.getAttribute('action') || fetchUrl;
+            const nameValue = sourceForm.querySelector('[name="name"]')?.value || '';
+            const chapitreSelect = sourceForm.querySelector('[name="chapitre_norme"]');
+            const chapitreOptions = chapitreSelect ? chapitreSelect.innerHTML : '<option value="">Sélectionnez...</option>';
+            
+            // Beautiful layout with two input fields + context fields
+            $body.html(`
+              <form id="critereModalForm" method="post" action="${action}" autocomplete="off">
+                ${csrfHtml}
+                <div style="padding: 24px 32px 8px;">
+                  <div style="margin-bottom: 18px;">
+                    <label for="id_name" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:14px;">Désignation du Critère <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="id_name" value="${nameValue}" placeholder="Ex: Management de la Qualité..." required
+                      style="width:100%; height:44px; border:1px solid #dbe4f0; border-radius:12px; padding:10px 14px; font-size:14px; color:#0f172a; background:#fff;">
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <label for="id_chapitre_norme" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:14px;">Norme</label>
+                    <select name="chapitre_norme" id="id_chapitre_norme"
+                      style="width:100%; height:44px; border:1px solid #dbe4f0; border-radius:12px; padding:10px 14px; font-size:14px; color:#0f172a; background:#fff;">
+                      ${chapitreOptions}
+                    </select>
+                  </div>
+                </div>
+              </form>
+            `);
+          } else {
+            $body.html(html);
+          }
+        } else {
+          $body.html(html);
+        }
 
         // Re-execute scripts
         $body.find('script').each(function () {
@@ -927,6 +965,19 @@
         $body.find('.modal-footer, .card-footer, button[type="submit"]').remove();
 
         if (prefillFn) prefillFn($form[0]);
+
+        // Initialize Select2 dynamically for all selects inside the modal
+        if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
+          $body.find('select').each(function () {
+            $(this).select2({
+              theme: 'bootstrap4',
+              width: '100%',
+              dropdownParent: $modal,
+              placeholder: "Sélectionnez...",
+              allowClear: true
+            });
+          });
+        }
 
         // Clean the footer target and inject buttons into the explicit modal-footer
         const $footer = $(getEl('ajaxFormModalFooter'));
@@ -964,36 +1015,6 @@
         });
       },
       (formNode) => {
-        // Hide the Sous-Critères tab and header
-        const modalBody = formNode.closest('.modal-body') || document;
-
-        /* REMOVE ONLY THE TAB NAVIGATION */
-        modalBody.querySelectorAll(
-          '#critereTabs, .nav-tabs, .nav-pills'
-        ).forEach(el => {
-          el.remove();
-        });
-
-        /* REMOVE ONLY SOUS-CRITÈRES PANE */
-        modalBody.querySelectorAll('#souscritere').forEach(el => {
-          el.remove();
-        });
-
-        /* KEEP GENERAL CONTENT VISIBLE */
-        const generalPane = modalBody.querySelector('#general');
-
-        if (generalPane) {
-          generalPane.style.display = 'block';
-          generalPane.classList.add('show', 'active');
-        }
-
-        /* REMOVE HIDDEN/BOOTSTRAP CLASSES THAT HIDE CONTENT */
-        modalBody.querySelectorAll('.tab-pane').forEach(pane => {
-          if (pane.id !== 'general') {
-            pane.remove();
-          }
-        });
-
         // Set values for context fields if they exist
         const typeAuditField = formNode.querySelector('[name="type_audit"]');
         if (typeAuditField && typeAuditSelect && typeAuditSelect.value) {
@@ -1018,7 +1039,7 @@
           $(formNode).append(`<input type="hidden" name="formulaire" value="${currentFormId}">`);
         }
 
-        // Hide the fields
+        // Hide context fields
         const fieldsToHide = ['type_audit', 'formulaire', 'ciblage'];
         fieldsToHide.forEach(name => {
           const el = formNode.querySelector(`[name="${name}"]`);
@@ -1037,35 +1058,6 @@
       `/audit/critere/${id}/update-inline/`,
       () => btnSync.click(),
       (formNode) => {
-        const modalBody = formNode.closest('.modal-body') || document;
-
-        /* REMOVE ONLY THE TAB NAVIGATION */
-        modalBody.querySelectorAll(
-          '#critereTabs, .nav-tabs, .nav-pills'
-        ).forEach(el => {
-          el.remove();
-        });
-
-        /* REMOVE ONLY SOUS-CRITÈRES PANE */
-        modalBody.querySelectorAll('#souscritere').forEach(el => {
-          el.remove();
-        });
-
-        /* KEEP GENERAL CONTENT VISIBLE */
-        const generalPane = modalBody.querySelector('#general');
-
-        if (generalPane) {
-          generalPane.style.display = 'block';
-          generalPane.classList.add('show', 'active');
-        }
-
-        /* REMOVE HIDDEN/BOOTSTRAP CLASSES THAT HIDE CONTENT */
-        modalBody.querySelectorAll('.tab-pane').forEach(pane => {
-          if (pane.id !== 'general') {
-            pane.remove();
-          }
-        });
-
         // Hide context fields during edit too
         ['type_audit', 'formulaire', 'ciblage'].forEach(name => {
           const el = formNode.querySelector(`[name="${name}"]`);
@@ -1321,6 +1313,19 @@
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = false);
     });
   }
+
+  // Synchronize checkboxes between desktop and mobile views (to prevent duplicate hidden checkboxes from overriding unchecked state)
+  scope.addEventListener('change', (e) => {
+    if (e.target && e.target.classList.contains('sc-checkbox')) {
+      const val = e.target.value;
+      const checked = e.target.checked;
+      scope.querySelectorAll(`.sc-checkbox[value="${val}"]`).forEach(cb => {
+        if (cb !== e.target) {
+          cb.checked = checked;
+        }
+      });
+    }
+  });
   }
 
   if (document.readyState === 'loading') {
@@ -1707,7 +1712,6 @@
     box-shadow: none !important;
     border-radius: 0 !important;
   }
-  }
 </style>
 
 <!-- Ported Ajax Modal -->
@@ -1732,3 +1736,4 @@
   </div>
 </div>
 {% endblock %}
+

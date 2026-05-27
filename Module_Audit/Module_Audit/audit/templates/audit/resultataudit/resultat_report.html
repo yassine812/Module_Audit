@@ -1,390 +1,315 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Rapport d'Audit - {{ resultat.sujet }}{% endblock %}
-
 {% block extra_css %}
-<!-- v19.0 - Zero-Margin Resolution -->
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        corePlugins: {
-            preflight: false,
-        }
-    }
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
+<script>tailwind.config={corePlugins:{preflight:false}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-    .content-wrapper {
-        padding: 0 !important;
-    }
-
-    .report-body {
-        font-family: 'Inter', sans-serif;
-        background-color: #fcfcfc;
-    }
-
-    @media print {
-
-        .no-print,
-        nav,
-        footer,
-        header,
-        .sidebar,
-        .navbar,
-        [data-html2canvas-ignore] {
-            display: none !important;
-        }
-
-        body {
-            background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        #report-container {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .report-paper {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 10mm !important;
-        }
-    }
-
-    #report-container {
-        width: 1000px;
-        margin: 0 auto;
-        padding: 20px;
-        box-sizing: border-box;
-        overflow: visible !important;
-    }
-
-    .report-paper {
-        background: white;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        overflow: visible !important;
-    }
+.content-wrapper{padding:0!important;margin-top:0!important;min-height:0!important}
+.report-body{font-family:'Inter',sans-serif;background-color:#f8fafc}
+*{box-sizing:border-box}
+@media print{
+  .no-print,nav,footer,header,.sidebar,.navbar,[data-html2canvas-ignore]{display:none!important}
+  body{background:white!important;padding:0!important;margin:0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  #report-container{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;border:none!important}
+  .report-paper{box-shadow:none!important;border:none!important;padding:10mm!important}
+  .pdf-section{page-break-inside:avoid!important;break-inside:avoid!important;margin-bottom:20px!important}
+  .audit-table{page-break-inside:avoid!important}
+  .sc-row{page-break-inside:avoid!important}
+}
+#report-container{width:1250px;max-width:98%;margin:0 auto;padding:0 20px 20px 20px;box-sizing:border-box;overflow:visible!important}
+.report-paper{background:white;border:1px solid #e2e8f0;box-shadow:0 10px 25px -5px rgba(0,0,0,.1);overflow:visible!important}
+.audit-table{width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;border:2px solid #000;table-layout:fixed;margin-bottom:0}
+.audit-table th{background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;padding:10px 15px;border:1px solid #000;text-align:left}
+.critere-row{background:#f1f5f9}
+.critere-row td{padding:8px 15px;border:1px solid #000;font-weight:900;color:#1e3a8a;font-size:15px}
+.sc-row td{border:1px solid #000;padding:0;vertical-align:top;height:auto}
+.sc-meta-cell{text-align:center;color:#cbd5e1;font-weight:900;padding-top:10px!important;width:45px}
+.sc-score-cell{text-align:right;background:#f8fafc;padding:10px!important;border:1px solid #000;width:85px;vertical-align:top}
+.sc-score-val{display:block;font-weight:900;color:#1e3a8a;font-size:22px;line-height:1}
+.sc-sub-head{background:#dbeafe;color:#1e3a8a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:4px 15px;border-bottom:1px solid #000}
+.sc-sub-body{padding:4px 15px 6px 15px;border-bottom:1px solid #cbd5e1;height:auto}
+.sc-sub-body:last-child{border-bottom:none}
+.txt-main{font-size:14px;font-weight:700;color:#1e293b;line-height:1.3}
+.txt-obs{font-size:13px;color:#475569;font-style:italic;line-height:1.3}
+.just-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;width:100%;height:auto}
+.just-item{flex:0 0 auto;width:150px;max-width:100%;height:auto}
+.just-item img{max-width:100%;height:auto;max-height:150px;object-fit:contain;border-radius:4px;border:1px solid #e2e8f0;background:#fff;display:block}
+.pdf-btn{width:100%;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;border:1px solid #fca5a5;background:#fff5f5;gap:4px}
+.pdf-btn span{font-size:10px;font-weight:700}
+.pdf-section-wrapper{margin-bottom:12px;background:white;width:100%}
+/* Email chips */
+#email-chips-container{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;padding:6px 10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;cursor:text;transition:border-color .2s}
+#email-chips-container:focus-within{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.email-chip{display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border-radius:20px;padding:3px 10px 3px 12px;font-size:12px;font-weight:700;border:1px solid #bfdbfe;white-space:nowrap}
+.email-chip.invalid{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.email-chip button{background:none;border:none;cursor:pointer;padding:0;line-height:1;color:inherit;font-size:14px;opacity:.7}
+.email-chip button:hover{opacity:1}
+#chip-input{border:none;outline:none;background:transparent;font-size:13px;font-weight:600;color:#1e293b;min-width:180px;flex:1;padding:2px 0}
+/* Orient cards */
+.orient-card{cursor:pointer;border:2px solid #e2e8f0;border-radius:16px;padding:20px 16px;transition:all .2s;position:relative;background:#fff}
+.orient-card.selected{border-color:#2563eb;background:#eff6ff}
+.orient-card .check-badge{position:absolute;top:8px;right:8px;width:20px;height:20px;background:#2563eb;border-radius:50%;display:none;align-items:center;justify-content:center}
+.orient-card.selected .check-badge{display:flex}
+.orient-card span{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.orient-card.selected span{color:#1d4ed8}
+.orient-card:not(.selected) span{color:#94a3b8}
+.swal-btn-primary{background:#2563eb;color:#fff;padding:10px 28px;border-radius:10px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:.05em;border:none;cursor:pointer;margin-left:8px}
+.swal-btn-primary:hover{background:#1d4ed8}
+.swal-btn-cancel{background:#fff;color:#64748b;padding:10px 24px;border-radius:10px;font-weight:700;font-size:13px;border:1.5px solid #e2e8f0;cursor:pointer}
+.swal-btn-cancel:hover{background:#f8fafc;color:#334155}
+.swal-popup-rounded{border-radius:20px!important}
 </style>
 {% endblock %}
-
 {% block content %}
-<div class="report-body py-10 px-4">
+<div class="report-body pt-2 pb-10 px-4">
+<div id="pdf-export-container" style="position:absolute;left:-9999px;top:-9999px;width:210mm;background:white;"></div>
+<!-- Actions -->
+<div class="flex justify-end max-w-7xl mx-auto mb-4 no-print" data-html2canvas-ignore="true">
+  <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+    <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
+    <button id="downloadPdfBtn" onclick="openPdfModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="PDF"><i data-lucide="file-down" class="w-5 h-5"></i></button>
+    <button onclick="openPrintModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="Print"><i data-lucide="printer" class="w-5 h-5"></i></button>
+  </div>
+</div>
+<div id="report-container">
+<div class="report-paper p-8 md:p-12 text-black" id="actual-paper-content">
 
-    <!-- Actions -->
-    <div class="flex justify-end max-w-5xl mx-auto mb-4 no-print" data-html2canvas-ignore="true">
-        <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-            <button onclick="openEmailModal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700"
-                title="Email"><i data-lucide="mail" class="w-5 h-5"></i></button>
-            <button id="downloadPdfBtn" onclick="generatePDF()"
-                class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700" title="PDF"><i
-                    data-lucide="file-down" class="w-5 h-5"></i></button>
-            <button onclick="window.print()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700"
-                title="Print"><i data-lucide="printer" class="w-5 h-5"></i></button>
-        </div>
+<!-- HEADER -->
+<div class="pdf-section w-full flex border-[3px] border-[#dbeafe] mb-8 h-36 overflow-hidden bg-white shadow-sm">
+  <div class="w-[12%] border-r-[3px] border-[#dbeafe] flex items-center justify-start pl-6 py-6">
+    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-16 w-auto object-contain">
+  </div>
+  <div class="w-[76%] bg-[#dbeafe] text-[#1e3a8a] flex flex-col items-center justify-center text-center relative">
+    <h1 class="font-black text-[34px] uppercase tracking-[0.25em] m-0">Rapport d'Audit</h1>
+  </div>
+  <div class="w-[12%] border-l-[1px] border-[#dbeafe] flex flex-col bg-white">
+    <div class="flex-1 flex flex-col justify-center px-4">
+      <span class="text-[9px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
+      <span class="text-[13px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y" }}</span>
     </div>
-
-    <!-- THE CONTAINER -->
-    <div id="report-container">
-        <!-- Paper Document -->
-        <div class="report-paper p-8 md:p-12 text-black">
-
-            <!-- HEADER -->
-            <div class="w-full flex border-[3px] border-[#1e3a8a] mb-12 h-36 overflow-hidden bg-white shadow-sm">
-                <div class="w-[32%] border-r-[3px] border-[#1e3a8a] flex items-center justify-center p-8">
-                    <img src="{% static 'img/ab-serve-logo.png' %}" class="max-h-28 w-auto object-contain">
-                </div>
-                <div
-                    class="w-[38%] bg-[#1e3a8a] text-white flex flex-col items-center justify-center text-center px-4 relative">
-                    <h1 class="font-black text-[34px] uppercase tracking-[0.25em] leading-[1.1] m-0 drop-shadow-md">
-                        Rapport<br>d'Audit</h1>
-                </div>
-                <div class="w-[30%] border-l-[1px] border-[#1e3a8a] flex flex-col bg-white">
-                    <div class="flex-1 border-b-[3px] border-[#1e3a8a] flex flex-col justify-center px-6">
-                        <span class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Date</span>
-                        <span class="text-[16px] font-black text-slate-900">{{ resultat.date_audit|date:"d/m/Y"
-                            }}</span>
-                    </div>
-                    <div class="flex-1 flex flex-col justify-center px-6">
-                        <span
-                            class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Auditeur</span>
-                        <span class="text-[16px] font-black text-slate-900">{{
-                            resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SCORE GLOBAL -->
-            <div class="mb-8 flex items-center gap-6 bg-white border-2 border-[#1e3a8a] p-6 rounded-lg shadow-sm">
-                <div class="flex-1">
-                    <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global
-                    </div>
-                    <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
-                </div>
-                <div class="w-px h-12 bg-slate-200"></div>
-                <div class="text-5xl font-black text-[#1e3a8a]">{{ resultat.score_audit|floatformat:2 }}</div>
-            </div>
-
-            <!-- COMMENTAIRE -->
-            <div class="mb-8">
-                <div
-                    class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">
-                    Commentaire / Contexte de l'audit</div>
-                <div
-                    class="border-2 border-[#1e3a8a] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">
-                    {{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
-            </div>
-
-            <!-- SYNTHESE -->
-            <div class="mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#1e3a8a]">
-                <div class="bg-[#1e3a8a] text-white px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse
-                    de l'Audit</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
-                    <div class="border-b-2 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
-                        <h4
-                            class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">
-                            Points Forts</h4>
-                        <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_fort|default:"" }}
-                        </div>
-                    </div>
-                    <div class="border-b-2 border-[#1e3a8a] p-6 min-h-[140px]">
-                        <h4
-                            class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">
-                            Points Sensibles</h4>
-                        <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_sensible|default:"" }}
-                        </div>
-                    </div>
-                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#1e3a8a] p-6 min-h-[140px]">
-                        <h4
-                            class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-rose-800">
-                            Risques</h4>
-                        <div class="text-[14px] leading-relaxed text-rose-900 font-bold">{{ resultat.risque|default:""
-                            }}</div>
-                    </div>
-                    <div class="p-6 min-h-[140px]">
-                        <h4
-                            class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block text-emerald-800">
-                            Opportunités</h4>
-                        <div class="text-[14px] leading-relaxed text-emerald-900 font-bold">{{
-                            resultat.opportunite|default:"" }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TABLE -->
-            <div class="mt-8 overflow-x-auto">
-                <table class="w-full border-collapse text-black text-[10px] md:text-[11px] border-2 border-black">
-                    <thead>
-                        <tr class="bg-[#1e3a8a] text-white uppercase font-bold text-center">
-                            <th class="border border-black p-3 w-10">#</th>
-                            <th class="border border-black p-3 text-left uppercase">Critères &amp; Sous-Critères</th>
-                            <th class="border border-black p-3 text-left uppercase w-[22%]">Observations</th>
-                            <th class="border border-black p-3 text-left uppercase w-[18%]">Justificatifs</th>
-                            <th class="border border-black p-3 w-14 text-right">Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for group in grouped_results %}
-                        {# ── Critère header row ── #}
-                        <tr class="bg-slate-100 font-black">
-                            <td class="border border-black p-3 text-center align-middle">{{ forloop.counter }}</td>
-                            <td class="border border-black p-3 uppercase align-middle" colspan="3">
-                                <span class="text-[#1e3a8a] mr-2">Critère :</span> {{ group.critere.text_ref }}
-                            </td>
-                            <td class="border border-black p-3 text-right align-middle text-blue-800">{{
-                                group.score|floatformat:"-1" }}</td>
-                        </tr>
-                        {# ── Sous-Critère rows ── #}
-                        {% for d in group.details %}
-                        <tr class="hover:bg-slate-50">
-                            <td class="border border-black p-2 text-center text-slate-300 align-top">•</td>
-
-                            {# Sous-critère name #}
-                            <td class="border border-black p-2 align-top">
-                                <div class="font-semibold text-slate-800 text-[12px]">
-                                    <span class="text-[9px] uppercase text-slate-400 font-black mr-1">Sous-Critère
-                                        :</span>
-                                    {{ d.sous_critere }}
-                                </div>
-                            </td>
-
-                            {# Observations / Commentaire #}
-                            <td class="border border-black p-2 align-top">
-                                {% if d.commentaire and d.commentaire != 'None' and d.commentaire.strip %}
-                                <div
-                                    class="text-[11px] text-slate-700 italic leading-relaxed border-l-2 border-blue-300 pl-2">
-                                    {{ d.commentaire }}
-                                </div>
-                                {% else %}
-                                <span class="text-slate-300 text-[10px]">—</span>
-                                {% endif %}
-                            </td>
-
-                            {# Justificatifs (evidence thumbnails) #}
-                            <td class="border border-black p-2 align-top">
-                                {% with evs=d.evidences.all %}
-                                {% if d.justificatif or d.justificatif_bis or evs %}
-                                <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                                    {# New multi-evidence records #}
-                                    {% for ev in evs %}
-                                    {% if ev.file.name|lower|slice:"-4:" == ".pdf" or ev.file.name|lower|slice:"-4:" ==
-                                    "f%2F" %}
-                                    <a href="{{ ev.file.url }}" target="_blank"
-                                        style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:4px; border:1px solid #fca5a5; background:#fff5f5; text-decoration:none;">
-                                        <span style="font-size:8px; font-weight:900; color:#ef4444;">PDF</span>
-                                    </a>
-                                    {% else %}
-                                    <a href="{{ ev.file.url }}" target="_blank">
-                                        <img src="{{ ev.file.url }}"
-                                            style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0;"
-                                            alt="Justificatif">
-                                    </a>
-                                    {% endif %}
-                                    {% endfor %}
-                                    {# Legacy fields #}
-                                    {% if d.justificatif %}
-                                    <a href="{{ d.justificatif.url }}" target="_blank">
-                                        <img src="{{ d.justificatif.url }}"
-                                            style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0;"
-                                            alt="Justificatif">
-                                    </a>
-                                    {% endif %}
-                                    {% if d.justificatif_bis %}
-                                    <a href="{{ d.justificatif_bis.url }}" target="_blank">
-                                        <img src="{{ d.justificatif_bis.url }}"
-                                            style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0;"
-                                            alt="Justificatif (bis)">
-                                    </a>
-                                    {% endif %}
-                                </div>
-                                {% else %}
-                                <span class="text-slate-300 text-[10px]">—</span>
-                                {% endif %}
-                                {% endwith %}
-                            </td>
-
-                            {# Score #}
-                            <td
-                                class="border border-black p-2 text-right font-black align-top tabular-nums bg-slate-50">
-                                {% if d.value >= 0 %}{{ d.value|floatformat:"-1" }}{% else %}-{% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="flex-1 flex flex-col justify-center px-4 border-t border-[#dbeafe]">
+      <span class="text-[9px] font-black text-[#1e3a8a] uppercase tracking-widest mb-0.5">Auditeur</span>
+      <span class="text-[13px] font-black text-slate-900">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</span>
     </div>
+  </div>
 </div>
 
-<div id="emailModal" class="fixed inset-0 z-[100] hidden no-print">
-    <div class="flex items-center justify-center min-h-screen p-4 text-center">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEmailModal()"></div>
-        <div class="relative bg-white rounded-2xl text-left shadow-2xl w-full max-w-md border overflow-hidden p-6">
-            <h3 class="font-black text-slate-900 mb-4">Envoyer le rapport</h3>
-            <div class="space-y-4">
-                <input type="email" id="email_to" placeholder="Email"
-                    class="w-full px-3 py-2 border rounded-lg outline-none font-medium text-slate-900">
-                <textarea id="email_message" rows="4"
-                    class="w-full px-3 py-2 border rounded-lg text-sm font-medium outline-none">Veuillez trouver ci-joint le rapport.</textarea>
-            </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeEmailModal()" class="px-4 py-2 font-bold text-slate-600">Annuler</button>
-                <button id="sendEmailBtn" onclick="sendEmail()"
-                    class="px-4 py-2 bg-[#1e3a8a] text-white rounded-lg font-bold">Envoyer</button>
-            </div>
-        </div>
-    </div>
+<!-- SCORE GLOBAL -->
+<div class="pdf-section mb-8 flex items-center gap-6 bg-white border-2 border-[#dbeafe] p-6 rounded-lg shadow-sm">
+  <div class="flex-1">
+    <div class="text-[10px] font-black text-[#1e3a8a] uppercase tracking-[0.2em] mb-1">Score Global</div>
+    <div class="text-3xl font-black text-slate-900 tracking-tight">Indice de Conformité</div>
+  </div>
+  <div class="w-px h-12 bg-slate-200"></div>
+  <div class="text-5xl font-black text-[#1e3a8a]">{{ resultat.score_percentage|floatformat:"0" }}<span class="text-3xl">%</span></div>
 </div>
 
+<!-- COMMENTAIRE -->
+<div class="pdf-section mb-8">
+  <div class="bg-[#dbeafe] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider rounded-t-lg">Commentaire / Contexte de l'audit</div>
+  <div class="border-2 border-[#dbeafe] border-t-0 p-4 text-[13px] text-slate-700 italic bg-slate-50 rounded-b-lg shadow-sm">{{ resultat.commentaire|default:"Aucun commentaire spécifié." }}</div>
+</div>
+
+<!-- SYNTHESE -->
+<div class="pdf-section mb-8 overflow-hidden rounded-lg shadow-sm border-2 border-[#dbeafe]">
+  <div class="bg-[#dbeafe] text-[#1e3a8a] px-4 py-2 font-black text-[12px] uppercase tracking-wider">Synthèse de l'Audit</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 bg-white">
+    <div class="border-b-2 md:border-r-2 border-[#dbeafe] p-6 min-h-[140px]">
+      <h4 class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Forts</h4>
+      <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_fort|default:"" }}</div>
+    </div>
+    <div class="border-b-2 border-[#dbeafe] p-6 min-h-[140px]">
+      <h4 class="text-[14px] font-black text-[#1e3a8a] uppercase mb-3 tracking-widest border-b border-blue-100 pb-1 inline-block">Points Sensibles</h4>
+      <div class="text-[14px] leading-relaxed text-slate-800">{{ resultat.point_sensible|default:"" }}</div>
+    </div>
+    <div class="border-b-2 md:border-b-0 md:border-r-2 border-[#dbeafe] p-6 min-h-[140px]">
+      <h4 class="text-[14px] font-black text-rose-800 uppercase mb-3 tracking-widest border-b border-rose-100 pb-1 inline-block">Risques</h4>
+      <div class="text-[14px] leading-relaxed text-rose-900 font-bold">{{ resultat.risque|default:"" }}</div>
+    </div>
+    <div class="p-6 min-h-[140px]">
+      <h4 class="text-[14px] font-black text-emerald-800 uppercase mb-3 tracking-widest border-b border-emerald-100 pb-1 inline-block">Opportunités</h4>
+      <div class="text-[14px] leading-relaxed text-emerald-900 font-bold">{{ resultat.opportunite|default:"" }}</div>
+    </div>
+  </div>
+</div>
+<!-- EVALUATION TABLE -->
+<div class="mt-8" id="evaluation-container">
+<div id="pdf-table-header-source" class="no-print" style="position:absolute;left:-9999px;width:1200px;">
+  <table class="audit-table" style="width:100%;">
+    <thead><tr id="audit-table-head">
+      <th style="width:45px;text-align:center;background:#dbeafe;border:1px solid #000;">#</th>
+      <th style="background:#dbeafe;border:1px solid #000;">Critères &amp; Évaluations</th>
+      <th style="width:85px;text-align:right;background:#dbeafe;border:1px solid #000;">Score</th>
+    </tr></thead>
+  </table>
+</div>
+
+{% for group in grouped_results %}
+<div class="pdf-section pdf-section-wrapper critere-group-block" data-is-criteria="true">
+  <table class="audit-table">
+    <tbody class="critere-group">
+      <tr class="critere-row" style="background:#e0f2fe;">
+        <td style="width:45px;text-align:center;border:1px solid #000;">{{ forloop.counter }}</td>
+        <td style="text-transform:uppercase;border:1px solid #000;">
+          <span style="opacity:.6;margin-right:8px;font-size:10px;">Critère :</span>{{ group.critere.text_ref }}
+        </td>
+        <td style="width:85px;text-align:right;border:1px solid #000;">{{ group.score|floatformat:"-1" }}</td>
+      </tr>
+      {% for d in group.details %}
+      <tr class="sc-row">
+        <td class="sc-meta-cell">•</td>
+        <td style="padding:0;">
+          <div class="sc-sub-body"><div class="txt-main">{{ d.sous_critere }}</div></div>
+          {% if d.commentaire %}
+          <div class="sc-sub-head">Observations</div>
+          <div class="sc-sub-body"><div class="txt-obs">{{ d.commentaire }}</div></div>
+          {% endif %}
+          {% with evs=d.evidences.all %}
+          {% if evs or d.justificatif or d.justificatif_bis %}
+          <div class="sc-sub-head">Justificatifs</div>
+          <div class="sc-sub-body">
+            <div class="just-gallery">
+              {% for ev in evs %}<div class="just-item"><a href="{{ ev.file.url }}" target="_blank"><img src="{{ ev.file.url }}" alt="Evidence"></a></div>{% endfor %}
+              {% if d.justificatif %}<div class="just-item"><a href="{{ d.justificatif.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif PDF</span></a></div>{% endif %}
+              {% if d.justificatif_bis %}<div class="just-item"><a href="{{ d.justificatif_bis.url }}" target="_blank" class="pdf-btn"><i data-lucide="file-text" class="text-rose-500"></i><span>Justificatif Bis</span></a></div>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
+        </td>
+        <td class="sc-score-cell"><span class="sc-score-val">{{ d.value|floatformat:"-1" }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+</div>
+
+</div></div></div>
 <script>
-    function openEmailModal() { document.getElementById('emailModal').classList.remove('hidden'); lucide.createIcons(); }
-    function closeEmailModal() { document.getElementById('emailModal').classList.add('hidden'); }
+let selectedOrientation='portrait', selectedPrintOrientation='portrait';
 
-    function generatePDF() {
-        const element = document.getElementById('report-container');
-        const btn = document.getElementById('downloadPdfBtn');
-        btn.disabled = true;
-
-        window.scrollTo(0, 0);
-
-        // v19.0 - THE ZERO-MARGIN RESOLUTION
-        // To "Fit the page" perfectly edge-to-edge, we remove all PDF margins.
-        const wrapper = document.createElement('div');
-        wrapper.style.backgroundColor = 'white';
-        wrapper.style.padding = '80px 0 0 0'; // Header safety buffer only
-
-        element.parentNode.insertBefore(wrapper, element);
-        wrapper.appendChild(element);
-
-        setTimeout(() => {
-            const opt = {
-                margin: 0, // NO MARGINS - Content will stretch to occupy 100% of the paper width
-                filename: 'Rapport_Audit_{{ resultat.id }}.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2.5,
-                    useCORS: true,
-                    logging: false,
-                    scrollY: 0,
-                    scrollX: 0
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function (pdf) {
-                const pages = pdf.internal.getNumberOfPages();
-                for (let i = pages; i > 1; i--) { pdf.deletePage(i); }
-            }).save().then(() => {
-                wrapper.parentNode.insertBefore(element, wrapper);
-                wrapper.parentNode.removeChild(wrapper);
-                btn.disabled = false;
-            }).catch(() => {
-                wrapper.parentNode.insertBefore(element, wrapper);
-                wrapper.parentNode.removeChild(wrapper);
-                btn.disabled = false;
-            });
-        }, 300);
+async function openEmailModal(){
+  const {value:fv}=await Swal.fire({
+    title:'<span style="font-size:1.1rem;font-weight:900;text-transform:uppercase;color:#1e293b;">Envoyer le Rapport</span>',
+    width:560,
+    html:`<style>#email-chips-container{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;padding:6px 10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;cursor:text}#email-chips-container:focus-within{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.15)}.email-chip{display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border-radius:20px;padding:3px 10px 3px 12px;font-size:12px;font-weight:700;border:1px solid #bfdbfe}.email-chip.invalid{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.email-chip button{background:none;border:none;cursor:pointer;padding:0;line-height:1;color:inherit;font-size:14px;opacity:.7}#chip-input{border:none;outline:none;background:transparent;font-size:13px;font-weight:600;color:#1e293b;min-width:180px;flex:1;padding:2px 0}</style>
+    <div style="text-align:left;padding:4px 2px;">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:16px;">
+        <div style="width:38px;height:38px;background:#2563eb;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <div><div style="font-size:10px;font-weight:900;color:#2563eb;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">Rapport prêt à l'envoi</div><div style="font-size:12px;color:#64748b;font-weight:700;font-style:italic;">Rapport_Audit_{{ resultat.id }}.pdf</div></div>
+        <div style="margin-left:auto;background:#dcfce7;color:#16a34a;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:10px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Destinataires</label>
+        <div id="email-chips-container" onclick="document.getElementById('chip-input').focus()"><input id="chip-input" type="text" placeholder="Tapez un email et appuyez sur Entrée..."></div>
+        <div id="chip-error" style="color:#ef4444;font-size:11px;font-weight:700;margin-top:4px;display:none;">Veuillez ajouter au moins une adresse email valide.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Message</label>
+        <textarea id="swal-msg" rows="4" style="width:100%;padding:10px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#334155;outline:none;resize:vertical;box-sizing:border-box;">Bonjour,\n\nVeuillez trouver ci-joint le rapport d'audit "{{ resultat.sujet }}".\n\nCordialement.</textarea>
+      </div>
+    </div>`,
+    showCancelButton:true,confirmButtonText:'Envoyer',cancelButtonText:'Annuler',
+    customClass:{confirmButton:'swal-btn-primary',cancelButton:'swal-btn-cancel',popup:'swal-popup-rounded'},
+    buttonsStyling:false,reverseButtons:true,
+    didOpen:()=>{
+      const cont=document.getElementById('email-chips-container'),inp=document.getElementById('chip-input');
+      function isValid(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())}
+      function addChip(v){v.split(/[,;\s]+/).map(e=>e.trim()).filter(Boolean).forEach(email=>{const c=document.createElement('span');c.className='email-chip'+(isValid(email)?'':' invalid');c.dataset.email=email;c.innerHTML=email+'<button type="button" onclick="this.parentElement.remove()">×</button>';cont.insertBefore(c,inp)});inp.value=''}
+      inp.addEventListener('keydown',e=>{if(['Enter',',',';','Tab'].includes(e.key)){e.preventDefault();if(inp.value.trim())addChip(inp.value)}else if(e.key==='Backspace'&&!inp.value){const l=cont.querySelector('.email-chip:last-of-type');if(l)l.remove()}});
+      inp.addEventListener('blur',()=>{if(inp.value.trim())addChip(inp.value)});
+      inp.addEventListener('paste',e=>{e.preventDefault();addChip((e.clipboardData||window.clipboardData).getData('text'))});
+    },
+    preConfirm:()=>{
+      const cont=document.getElementById('email-chips-container'),inp=document.getElementById('chip-input');
+      if(inp.value.trim()){inp.value.split(/[,;\s]+/).map(e=>e.trim()).filter(Boolean).forEach(email=>{const c=document.createElement('span');c.className='email-chip';c.dataset.email=email;c.innerHTML=email+'<button>\u00d7</button>';cont.insertBefore(c,inp)});inp.value=''}
+      const valid=Array.from(cont.querySelectorAll('.email-chip')).map(c=>c.dataset.email).filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+      if(!valid.length){document.getElementById('chip-error').style.display='block';Swal.showValidationMessage('Veuillez ajouter au moins une adresse email valide.');return false}
+      return{emails:valid.join(','),msg:document.getElementById('swal-msg').value}
     }
+  });
+  if(fv)startEmailFlow(fv.emails,fv.msg);
+}
 
-    function sendEmail() {
-        const btn = document.getElementById('sendEmailBtn');
-        const emailTo = document.getElementById('email_to').value;
-        if (!emailTo) return alert("Email requis");
-        const element = document.getElementById('report-container');
-        const opt = {
-            html2canvas: { scale: 1.5, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4' }
-        };
-        html2pdf().set(opt).from(element).outputPdf('datauristring').then(pdfBase64 => {
-            fetch('{% url "resultat_send_email" resultat.id %}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ email_to: emailTo, pdf_data: pdfBase64 })
-            }).then(() => { closeEmailModal(); alert("Envoyé !"); });
-        });
+async function startEmailFlow(to,message){
+  Swal.fire({title:'Envoi en cours...',html:'Génération du rapport PDF...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),customClass:{popup:'swal-popup-rounded'}});
+  try{
+    const pdfBlob=await executePDFGeneration('portrait',true);
+    const fd=new FormData();fd.append('file',pdfBlob,'Rapport_Audit_{{ resultat.id }}.pdf');fd.append('to',to);fd.append('message',message);fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
+    const r=await fetch("{% url 'resultat_send_email' resultat.id %}",{method:'POST',body:fd});
+    if(r.ok)Swal.fire({icon:'success',title:'Envoyé !',text:'Le rapport a été envoyé avec succès.',customClass:{popup:'swal-popup-rounded'}});
+    else throw new Error("Erreur lors de l'envoi");
+  }catch(e){Swal.fire({icon:'error',title:'Erreur',text:e.message,customClass:{popup:'swal-popup-rounded'}})}
+}
+
+function _orientHtml(mode){
+  return '<p style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;text-align:center;">Choisir l\'orientation</p>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+    +'<div class="orient-card selected" id="opt-portrait-'+mode+'" onclick="selOrient(\'portrait\',\''+mode+'\')"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="width:44px;height:58px;border:2px solid #2563eb;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;"><div style="width:30px;height:40px;background:#dbeafe;border-radius:3px;"></div></div><span>Portrait</span></div><div class="check-badge"><svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div></div>'
+    +'<div class="orient-card" id="opt-landscape-'+mode+'" onclick="selOrient(\'landscape\',\''+mode+'\')"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="width:58px;height:44px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;"><div style="width:42px;height:30px;background:#f1f5f9;border-radius:3px;"></div></div><span>Paysage</span></div><div class="check-badge"><svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div></div>'
+    +'</div>';
+}
+window.selOrient=function(o,mode){
+  if(mode==='print')selectedPrintOrientation=o;else selectedOrientation=o;
+  ['portrait','landscape'].forEach(x=>{const c=document.getElementById('opt-'+x+'-'+mode);if(c){if(x===o)c.classList.add('selected');else c.classList.remove('selected')}});
+};
+
+function openPdfModal(){
+  selectedOrientation='portrait';
+  Swal.fire({title:'<span style="font-size:1.1rem;font-weight:900;text-transform:uppercase;color:#1e293b;">Télécharger le PDF</span>',width:420,html:_orientHtml('pdf'),showCancelButton:true,confirmButtonText:'Télécharger',cancelButtonText:'Annuler',customClass:{confirmButton:'swal-btn-primary',cancelButton:'swal-btn-cancel',popup:'swal-popup-rounded'},buttonsStyling:false,reverseButtons:true,willOpen:()=>{selectedOrientation='portrait'}}).then(r=>{if(r.isConfirmed)generatePDF(selectedOrientation)});
+}
+function openPrintModal(){
+  selectedPrintOrientation='portrait';
+  Swal.fire({title:'<span style="font-size:1.1rem;font-weight:900;text-transform:uppercase;color:#1e293b;">Imprimer le Rapport</span>',width:420,html:_orientHtml('print'),showCancelButton:true,confirmButtonText:'Imprimer',cancelButtonText:'Annuler',customClass:{confirmButton:'swal-btn-primary',cancelButton:'swal-btn-cancel',popup:'swal-popup-rounded'},buttonsStyling:false,reverseButtons:true,willOpen:()=>{selectedPrintOrientation='portrait'}}).then(r=>{if(r.isConfirmed)doPrint(selectedPrintOrientation)});
+}
+function doPrint(o){
+  Swal.close();
+  setTimeout(()=>{
+    const id='__po__';let s=document.getElementById(id);if(s)s.remove();
+    s=document.createElement('style');s.id=id;s.innerHTML='@page{size:A4 '+(o==='landscape'?'landscape':'portrait')+';margin:10mm}';
+    document.head.appendChild(s);
+    window.print();
+    setTimeout(()=>{const x=document.getElementById(id);if(x)x.remove()},3000);
+  },400);
+}
+async function generatePDF(orientation='portrait'){await executePDFGeneration(orientation,false)}
+async function executePDFGeneration(orientation='portrait',returnBlob=false){
+  if(!returnBlob){const b=document.getElementById('downloadPdfBtn');b.disabled=true;b.innerHTML='<i class="animate-spin" data-lucide="loader-2" style="width:20px;height:20px;"></i>';lucide.createIcons()}
+  try{
+    let Lib=window.jspdf?window.jspdf.jsPDF:window.jsPDF;
+    if(!Lib&&typeof html2pdf!=='undefined'){const w=html2pdf().from(document.createElement('div')).toPdf().get('pdf');Lib=(await w).constructor}
+    if(!Lib)throw new Error('jsPDF introuvable');
+    const pdf=new Lib({orientation,unit:'mm',format:'a4',compress:true});
+    const pw=orientation==='portrait'?210:297,ph=orientation==='portrait'?297:210,mg=10,cw=pw-2*mg;
+    let y=mg;
+    const secs=document.querySelectorAll('.pdf-section'),hSrc=document.getElementById('audit-table-head');
+    let hImg=null,hH=0;
+    if(hSrc){const hc=await html2canvas(hSrc,{scale:2,useCORS:true});if(hc.width>0){hImg=hc.toDataURL('image/jpeg',.95);hH=(hc.height*cw)/hc.width}}
+    let hOnPage=false;
+    for(let i=0;i<secs.length;i++){
+      const sec=secs[i],isCrit=sec.getAttribute('data-is-criteria')==='true';
+      const c=await html2canvas(sec,{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'});
+      if(!c.width)continue;
+      const img=c.toDataURL('image/jpeg',.9),sh=(c.height*cw)/c.width;
+      const need=(isCrit&&!hOnPage&&hImg)?sh+hH:sh;
+      if(y+need>ph-mg){pdf.addPage();y=mg;hOnPage=false}
+      if(isCrit&&!hOnPage&&hImg){pdf.addImage(hImg,'JPEG',mg,y,cw,hH);y+=hH;hOnPage=true}
+      pdf.addImage(img,'JPEG',mg,y,cw,sh);y+=sh+1;
     }
-    lucide.createIcons();
+    if(returnBlob)return pdf.output('blob');
+    else pdf.save('Rapport_Audit_{{ resultat.id }}_'+orientation+'.pdf');
+  }catch(e){console.error(e);if(!returnBlob)alert('Erreur: '+e.message);else throw e}
+  finally{if(!returnBlob){const b=document.getElementById('downloadPdfBtn');b.disabled=false;b.innerHTML='<i data-lucide="file-down" class="w-5 h-5"></i>';lucide.createIcons()}}
+}
+lucide.createIcons();
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-

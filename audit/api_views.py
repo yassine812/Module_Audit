@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 import json
-from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit
+from .models import TypeAudit, TextRef, ChapitreNorme, Critere, SousCritere, TypePreuve, TypeCotation, Cotation, FormulaireAudit, ListeAudit, ResultatAudit, PreuveAttendu, SousCritereTypeAudit, FormulaireSousCritere, DetailResultatAudit, EvidenceAudit
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -586,13 +586,17 @@ class FormulaireAuditListAPIView(View):
     def get(self, request):
         # Temporarily removed authentication for testing
         formulaires = FormulaireAudit.objects.all().select_related(
-            'processus', 'type_audit', 'type_equipement'
-        ).prefetch_related('section', 'liste_sous_criteres')
+            'processus', 'type_audit'
+        ).prefetch_related('section', 'type_equipement', 'liste_sous_criteres')
         
         data = []
         for f in formulaires:
             sections = list(f.section.values('id', 'name'))
             section_names = ", ".join([s['name'] for s in sections])
+            
+            equipements = list(f.type_equipement.values('id', 'name'))
+            equipement_names = ", ".join([e['name'] for e in equipements])
+            equipement_ids = [e['id'] for e in equipements]
             
             data.append({
                 'id': f.id,
@@ -601,8 +605,9 @@ class FormulaireAuditListAPIView(View):
                 'processus_name': f.processus.name if f.processus else '-',
                 'type_audit_id': f.type_audit.id if f.type_audit else None,
                 'type_audit_name': f.type_audit.name if f.type_audit else '-',
-                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
-                'type_equipement_name': f.type_equipement.name if f.type_equipement else '-',
+                'type_equipement_id': equipement_ids[0] if equipement_ids else None,
+                'type_equipement_name': equipement_names or '-',
+                'type_equipement_ids': equipement_ids,
                 'section_names': section_names or '-',
                 'sc_count': f.liste_sous_criteres.count(),
                 'date_creation': f.date_creation.strftime('%d/%m/%Y %H:%M') if f.date_creation else '-'
@@ -617,9 +622,15 @@ class FormulaireAuditListAPIView(View):
             formulaire = FormulaireAudit.objects.create(
                 name=data['name'],
                 processus_id=data.get('processus'),
-                type_audit_id=data.get('type_audit'),
-                type_equipement_id=data.get('type_equipement')
+                type_audit_id=data.get('type_audit')
             )
+            
+            if data.get('type_equipement'):
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    formulaire.type_equipement.set(te_ids)
+                else:
+                    formulaire.type_equipement.set([te_ids] if te_ids else [])
             
             if data.get('sections'):
                 sections = data['sections']
@@ -658,7 +669,7 @@ class ListeAuditListAPIView(View):
 
         if pk:
             try:
-                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site').get(pk=pk)
+                a = ListeAudit.objects.select_related('section', 'formulaire_audit', 'site', 'creator').get(pk=pk)
                 return JsonResponse({
                     'status': 'success',
                     'data': {
@@ -675,7 +686,9 @@ class ListeAuditListAPIView(View):
                         'en_cours': a.get_audit_status() == 'en_cours',
                         'statut_label': a.get_audit_status(),
                         'affectation': list(a.affectation.values_list('id', flat=True)),
-                        'participants': list(a.participants.values_list('id', flat=True))
+                        'participants': list(a.participants.values_list('id', flat=True)),
+                        'date_creation': a.date_creation.strftime('%Y-%m-%d %H:%M:%S') if a.date_creation else '-',
+                        'creator_username': a.creator.username if a.creator else '-'
                     }
                 })
             except ListeAudit.DoesNotExist:
@@ -713,7 +726,8 @@ class ListeAuditListAPIView(View):
                 date=data.get('date', timezone.now()),
                 section_id=data.get('section') or None,
                 formulaire_audit_id=data.get('formulaire_audit') or None,
-                site_id=data.get('site') or None
+                site_id=data.get('site') or None,
+                creator=request.user if request.user.is_authenticated else None
             )
 
             if 'affectation' in data and data['affectation']:
@@ -731,6 +745,55 @@ class ListeAuditListAPIView(View):
             })
         except Exception as e:
             print(f"Error creating ListeAudit: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def put(self, request, pk):
+        try:
+            data = json.loads(request.body)
+            try:
+                liste_audit = ListeAudit.objects.get(pk=pk)
+            except ListeAudit.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Audit not found'}, status=404)
+            
+            liste_audit.desc = data.get('desc', liste_audit.desc)
+            liste_audit.status = data.get('status', liste_audit.status)
+            if 'date' in data:
+                liste_audit.date = data['date']
+            if 'section' in data:
+                liste_audit.section_id = data['section'] or None
+            if 'formulaire_audit' in data:
+                liste_audit.formulaire_audit_id = data['formulaire_audit'] or None
+            if 'site' in data:
+                liste_audit.site_id = data['site'] or None
+                
+            liste_audit.save()
+            
+            if 'affectation' in data:
+                liste_audit.affectation.set(data['affectation'] or [])
+            
+            if 'participants' in data:
+                liste_audit.participants.set(data['participants'] or [])
+                
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Audit updated successfully',
+                'data': {
+                    'id': liste_audit.id,
+                    'desc': liste_audit.desc
+                }
+            })
+        except Exception as e:
+            print(f"Error updating ListeAudit: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    def delete(self, request, pk):
+        try:
+            liste_audit = ListeAudit.objects.get(pk=pk)
+            liste_audit.delete()
+            return JsonResponse({'status': 'success', 'message': 'Deleted successfully'})
+        except ListeAudit.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+        except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
@@ -1208,16 +1271,24 @@ class CotationListAPIView(View):
 class FormulaireAuditDetailAPIView(View):
     def get(self, request, pk):
         try:
-            f = FormulaireAudit.objects.get(pk=pk)
-            return JsonResponse({'status': 'success', 'data': {
-                'id': f.id,
-                'name': f.name,
-                'processus_id': f.processus.id if f.processus else None,
-                'type_audit_id': f.type_audit.id if f.type_audit else None,
-                'section_id': f.section.first().id if f.section.exists() else None,
-                'type_equipement_id': f.type_equipement.id if f.type_equipement else None,
-                'sous_criteres_ids': list(f.liste_sous_criteres.values_list('id', flat=True))
-            }})
+            f = FormulaireAudit.objects.prefetch_related('section', 'type_equipement', 'liste_sous_criteres').get(pk=pk)
+            sections = [s.id for s in f.section.all()]
+            equipements = [e.id for e in f.type_equipement.all()]
+            scs = [sc.id for sc in f.liste_sous_criteres.all()]
+            return JsonResponse({
+                'status': 'success',
+                'data': {
+                    'id': f.id,
+                    'name': f.name,
+                    'processus_id': f.processus.id if f.processus else None,
+                    'type_audit_id': f.type_audit.id if f.type_audit else None,
+                    'type_equipement_id': equipements[0] if equipements else None,
+                    'type_equipement_ids': equipements,
+                    'section_id': sections[0] if sections else None,
+                    'sections_ids': sections,
+                    'sous_criteres_ids': scs
+                }
+            })
         except FormulaireAudit.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
 
@@ -1228,8 +1299,14 @@ class FormulaireAuditDetailAPIView(View):
             f.name = data.get('name', f.name)
             f.processus_id = data.get('processus', f.processus_id)
             f.type_audit_id = data.get('type_audit', f.type_audit_id)
-            f.type_equipement_id = data.get('type_equipement', f.type_equipement_id)
             f.save()
+            
+            if 'type_equipement' in data:
+                te_ids = data['type_equipement']
+                if isinstance(te_ids, list):
+                    f.type_equipement.set(te_ids)
+                else:
+                    f.type_equipement.set([te_ids] if te_ids else [])
 
             if 'section' in data:
                 sections = data['section']
@@ -1492,6 +1569,16 @@ class ResultatAuditDetailAPIView(View):
                 preuve_text = "Aucune preuve spécifiée"
                 pass
 
+            # Resolve pdf_page from ChapitreNorme by matching name stored on the detail row
+            pdf_page = 1
+            if d.chapitre_norme:
+                try:
+                    chapitre = ChapitreNorme.objects.filter(name=d.chapitre_norme).first()
+                    if chapitre and chapitre.page:
+                        pdf_page = chapitre.page
+                except Exception:
+                    pass
+
             details_data.append({
                 'id': d.id,
                 'critere': d.critere,
@@ -1499,6 +1586,7 @@ class ResultatAuditDetailAPIView(View):
                 'sous_critere': d.sous_critere,
                 'chapitre_norme': d.chapitre_norme,
                 'text_ref_url': d.text_ref_url,
+                'pdf_page': pdf_page,
                 'commentaire': d.commentaire,
                 'cotation': d.cotation,
                 'code': d.code,

@@ -14,6 +14,7 @@ import { Ionicons, MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/v
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
+import { TUNNEL_URL } from '../utils/api';
 
 const Sidebar = ({ onClose }) => {
   const router = useRouter();
@@ -111,7 +112,7 @@ const Sidebar = ({ onClose }) => {
           activeOpacity={0.7}
         >
           <Image 
-            source={{ uri: 'http://192.168.1.17:8000/static/img/ab-serve-logo.png' }} 
+            source={{ uri: `${TUNNEL_URL}/static/img/ab-serve-logo.png` }} 
             style={styles.logo}
             resizeMode="contain"
           />

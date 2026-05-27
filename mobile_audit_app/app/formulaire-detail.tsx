@@ -73,30 +73,38 @@ const FormulaireDetailScreen = () => {
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Nom</Text>
-              <Text style={styles.infoValue}>{form.name}</Text>
+              <Text style={styles.infoValue}>{form.name || '-'}</Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Processus</Text>
-              <Text style={styles.infoValue}>{form.processus}</Text>
+              <Text style={styles.infoValue}>{form.processus || '-'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Type d'Audit</Text>
-              <Text style={styles.infoValue}>{form.type_audit}</Text>
+              <Text style={styles.infoValue}>{form.type_audit || '-'}</Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Type d'Équipement</Text>
-              <Text style={styles.infoValue}>{form.type_equipement}</Text>
+              <Text style={styles.infoValue}>{form.type_equipement || '-'}</Text>
             </View>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Date Création</Text>
-              <Text style={styles.infoValue}>{form.date_creation}</Text>
+              <Text style={styles.infoLabel}>Créateur</Text>
+              <Text style={styles.infoValue}>{form.creator_username || '-'}</Text>
             </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Date Création</Text>
+              <Text style={styles.infoValue}>{form.date_creation || '-'}</Text>
+            </View>
+            <View style={styles.infoItem} />
           </View>
 
           <View style={styles.infoItem}>

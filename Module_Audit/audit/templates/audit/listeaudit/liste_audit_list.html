@@ -262,6 +262,10 @@
         background: #fff !important;
         color: #2563eb !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+     }
+
+    #mobileAuditList {
+        display: none;
     }
 
     @media (max-width: 767.98px) {
@@ -403,12 +407,6 @@
         }
     }
 
-    @media (min-width: 768px) {
-        #mobileAuditList {
-            display: none !important;
-        }
-    }
-
     /* Premium Stats Cards Styling */
     .stat-card {
         background: #ffffff;
@@ -450,6 +448,10 @@
         background: #10b981;
     }
 
+    .stat-card.en-retard::after {
+        background: #ef4444;
+    }
+
     .stat-icon-wrapper {
         width: 48px;
         height: 48px;
@@ -474,6 +476,11 @@
     .termines .stat-icon-wrapper {
         background-color: rgba(16, 185, 129, 0.1);
         color: #10b981;
+    }
+
+    .en-retard .stat-icon-wrapper {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
     }
 
     .stat-card:hover .stat-icon-wrapper {
@@ -529,7 +536,7 @@
 
     <!-- Audit Statistics Dashboard -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card planifies">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="calendar" style="width: 24px; height: 24px;"></i>
@@ -540,7 +547,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card en-cours">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="play" style="width: 24px; height: 24px;"></i>
@@ -551,7 +558,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card termines">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="check-circle" style="width: 24px; height: 24px;"></i>
@@ -559,6 +566,17 @@
                 <div class="stat-info">
                     <span class="stat-label">Terminés</span>
                     <span class="stat-value">{{ termines_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card en-retard">
+                <div class="stat-icon-wrapper">
+                    <i data-lucide="alert-circle" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">En retard</span>
+                    <span class="stat-value">{{ en_retard_count|default:0 }}</span>
                 </div>
             </div>
         </div>
@@ -580,6 +598,8 @@
                 cours</a>
             <a href="?status=termine"
                 class="filter-pill {% if current_filter == 'termine' %}active{% endif %}">Terminés</a>
+            <a href="?status=en_retard"
+                class="filter-pill {% if current_filter == 'en_retard' %}active{% endif %}">En retard</a>
         </div>
     </div> <!-- Table Desktop -->
     {% if audits %}
@@ -591,7 +611,6 @@
                         <th scope="col" class="col-id ps-2">N°</th>
                         <th scope="col" class="col-name">Nom Audit</th>
                         <th scope="col" class="col-dep">Département</th>
-                        <th scope="col" class="col-site">Site</th>
                         <th scope="col" class="col-date">Date</th>
                         <th scope="col" class="col-auditores">Auditeurs</th>
                         <th scope="col" class="col-form">Formulaire</th>
@@ -609,11 +628,8 @@
                         <td class="col-dep" data-label="Département">
                             <span class="">{{ audit.section|default:"-" }}</span>
                         </td>
-                        <td class="col-site" data-label="Site">
-                            <span class="">{{ audit.site|default:"-" }}</span>
-                        </td>
                         <td class="text-nowrap col-date" data-label="Date">
-                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}
+                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y" }}
                         </td>
                         <td class="col-auditores" data-label="Auditeurs">
                             {% if audit.affectation.all %}
@@ -634,6 +650,7 @@
                                     {% if audit.get_audit_status == 'en_cours' %}bg-warning text-dark
                                     {% elif audit.get_audit_status == 'planifie' %}bg-primary
                                     {% elif audit.get_audit_status == 'termine' %}bg-success
+                                    {% elif audit.get_audit_status == 'en_retard' %}bg-danger
                                     {% else %}bg-secondary{% endif %}">
                                 {{ audit.get_audit_status_display|default:audit.get_audit_status|capfirst }}
                             </span>
@@ -641,13 +658,13 @@
                         <td class="text-center col-actions" data-label="Actions">
                             <div class="d-flex justify-content-end align-items-center gap-1">
                                 <!-- Main Actions based on Status -->
-                                {% if audit.get_audit_status == 'planifie' %}
+                                {% if audit.get_audit_status == 'planifie' or audit.get_audit_status == 'en_retard' and not audit.resultataudit_set.first %}
                                 <button type="button" onclick="startAuditWithContext({{ audit.id }}, '{{ audit.desc|escapejs }}', '{{ audit.section|escapejs }}')" 
                                     class="btn btn-sm btn-demarrer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
                                     title="Démarrer">
                                     <span>Démarrer</span> <i data-lucide="play-circle"></i>
                                 </button>
-                                {% elif audit.get_audit_status == 'en_cours' %}
+                                {% elif audit.get_audit_status == 'en_cours' or audit.get_audit_status == 'en_retard' and audit.resultataudit_set.first %}
                                 {% if audit.resultataudit_set.first %}
                                 <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}"
                                     class="btn btn-sm btn-continuer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
@@ -713,6 +730,7 @@
                                     {% if audit.get_audit_status == 'en_cours' %}bg-warning text-dark
                                     {% elif audit.get_audit_status == 'planifie' %}bg-primary
                                     {% elif audit.get_audit_status == 'termine' %}bg-success
+                                    {% elif audit.get_audit_status == 'en_retard' %}bg-danger
                                     {% else %}bg-secondary{% endif %}" style="font-size: 8px; padding: 2px 6px;">
                                 {{ audit.get_audit_status_display|default:audit.get_audit_status|capfirst }}
                             </span>
@@ -723,12 +741,12 @@
                     <div class="d-flex align-items-center gap-2 flex-shrink-0">
 
                         <!-- Main action button directly on card -->
-                        {% if audit.get_audit_status == 'planifie' %}
+                        {% if audit.get_audit_status == 'planifie' or audit.get_audit_status == 'en_retard' and not audit.resultataudit_set.first %}
                         <button type="button" onclick="startAuditWithContext({{ audit.id }}, '{{ audit.desc|escapejs }}', '{{ audit.section|escapejs }}')" 
                                 class="btn btn-sm btn-demarrer rounded-pill px-3 py-1 fw-bold" style="font-size: 11px; white-space: nowrap;">
                             Démarrer
                         </button>
-                        {% elif audit.get_audit_status == 'en_cours' %}
+                        {% elif audit.get_audit_status == 'en_cours' or audit.get_audit_status == 'en_retard' and audit.resultataudit_set.first %}
                         {% if audit.resultataudit_set.first %}
                         <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}"
                             class="btn btn-sm btn-continuer rounded-pill px-3 py-1 fw-bold"
@@ -1158,37 +1176,47 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Search Filtering
         const searchInput = document.getElementById('searchInput');
         const auditRows = document.querySelectorAll('.audit-row');
 
-        searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-
-            auditRows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                auditRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
-        });
-        // Delete Audit Confirmation
+        }
+
+        // 2. Delete Audit Confirmation via SweetAlert2
         const deleteButtons = document.querySelectorAll('.btn-delete-audit');
         deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
                 const auditId = this.getAttribute('data-id');
                 const auditDesc = this.getAttribute('data-desc') || 'cet audit';
 
                 Swal.fire({
                     title: 'Supprimer l\'audit ?',
-                    text: `Êtes-vous sûr de vouloir supprimer"${auditDesc}" ? Cette action est irréversible.`,
+                    text: `Êtes-vous sûr de vouloir supprimer "${auditDesc}" ? Cette action est irréversible.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Oui, supprimer',
-                    cancelButtonText: 'Annuler'
+                    cancelButtonText: 'Annuler',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg border-0'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const form = document.createElement('form');
@@ -1207,7 +1235,8 @@
                 });
             });
         });
-        // Dropdown z-index fix for mobile cards
+
+        // 3. Dropdown z-index fix for mobile cards
         document.addEventListener('show.bs.dropdown', function (e) {
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1050';
@@ -1216,10 +1245,8 @@
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1';
         });
-    });
 
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
+        // 4. Preserve URL parameters in pagination links
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.toString()) {
             document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
@@ -1237,8 +1264,10 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}

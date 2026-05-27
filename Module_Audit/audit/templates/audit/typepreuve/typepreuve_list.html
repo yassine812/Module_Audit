@@ -78,7 +78,7 @@
             <tbody>
                {% for typepreuve in page_obj %}
                 <tr>
-                  <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                  <td class="text-center col-id  " data-label="ID">{{ page_obj.start_index|add:forloop.counter0 }}</td>
                   <td class="col-name text-truncate" data-label="Nom">
                     <strong class="text-dark ">{{ typepreuve.name }}</strong>
                   </td>
@@ -175,9 +175,32 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Deletion -->
+
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Preserve URL parameters in pagination links
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
+              const href = link.getAttribute('href');
+              if (href && href.startsWith('?page=')) {
+                  const pageNum = href.split('=')[1];
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', pageNum);
+                  link.setAttribute('href', '?' + newParams.toString());
+              }
+          });
+      }
+  });
+</script>
 <script>
     function openTypePreuveModal(url) {
         $('#modalBodyContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2  ">Chargement...</p></div>');
@@ -220,7 +243,7 @@
         });
     }
 
-    function openDeleteModal(url, name) {
+                function openDeleteModal(url, name) {
         Swal.fire({
             title: 'Confirmer la suppression',
             text: name ? `Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.` : "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
@@ -268,9 +291,12 @@
             }
         });
     }
-
+    
+    // Alias for compatibility
     function confirmDelete(url, name) {
         openDeleteModal(url, name);
     }
+
+
 </script>
 {% endblock %}

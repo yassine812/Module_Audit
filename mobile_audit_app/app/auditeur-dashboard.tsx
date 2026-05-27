@@ -38,6 +38,7 @@ const AuditeurDashboard = () => {
     planifies: 0,
     en_cours: 0,
     termines: 0,
+    en_retard: 0,
     score_moy: '0.0',
     notifications_count: 0
   });
@@ -86,6 +87,7 @@ const AuditeurDashboard = () => {
           planifies: s.planifies || 0,
           en_cours: s.en_cours || 0,
           termines: s.termines || 0,
+          en_retard: s.en_retard || 0,
           score_moy: s.score_moy || '0.0',
           notifications_count: s.notifications_count || 0
         });
@@ -125,6 +127,7 @@ const AuditeurDashboard = () => {
     if (activeFilter === 'en_cours') return matchesSearch && audit.statut_label === 'en_cours';
     if (activeFilter === 'planifie') return matchesSearch && audit.statut_label === 'planifie';
     if (activeFilter === 'termine') return matchesSearch && audit.statut_label === 'termine';
+    if (activeFilter === 'en_retard') return matchesSearch && audit.statut_label === 'en_retard';
     return matchesSearch;
   });
 
@@ -368,6 +371,13 @@ const AuditeurDashboard = () => {
               borderBottomColor="#f59e0b"
             />
             <KPICard 
+              title="EN RETARD" 
+              value={stats.en_retard} 
+              icon={<Feather name="alert-circle" size={20} color="#ef4444" />} 
+              color="#ef4444" 
+              borderBottomColor="#ef4444"
+            />
+            <KPICard 
               title="TERMINÉS" 
               value={stats.termines} 
               icon={<Feather name="check-circle" size={20} color="#10b981" />} 
@@ -420,6 +430,12 @@ const AuditeurDashboard = () => {
               >
                 <Text style={[styles.filterTabText, activeFilter === 'termine' && styles.filterTabTextActive]}>Terminé</Text>
               </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.filterTab, activeFilter === 'en_retard' && styles.filterTabActive]}
+                onPress={() => setActiveFilter('en_retard')}
+              >
+                <Text style={[styles.filterTabText, activeFilter === 'en_retard' && styles.filterTabTextActive]}>En retard</Text>
+              </TouchableOpacity>
             </ScrollView>
           </View>
 
@@ -439,7 +455,7 @@ const AuditeurDashboard = () => {
               filteredAudits.map((audit) => (
                 <TouchableOpacity 
                   key={audit.id} 
-                  style={[styles.auditCard, { borderLeftColor: audit.statut_label === 'en_cours' ? '#f59e0b' : audit.statut_label === 'termine' ? '#10b981' : '#3b82f6' }]}
+                  style={[styles.auditCard, { borderLeftColor: audit.statut_label === 'en_cours' ? '#f59e0b' : audit.statut_label === 'termine' ? '#10b981' : audit.statut_label === 'en_retard' ? '#ef4444' : '#3b82f6' }]}
                   onPress={() => {
                     if (audit.statut_label === 'termine' && audit.resultat_id) {
                       router.push(`/report?id=${audit.resultat_id}`);
@@ -456,9 +472,9 @@ const AuditeurDashboard = () => {
                   <View style={styles.auditMain}>
                     <View style={styles.auditHeader}>
                       <Text style={styles.auditTitle} numberOfLines={1}>{audit.desc}</Text>
-                      <View style={[styles.statusBadge, { backgroundColor: audit.statut_label === 'en_cours' ? '#fff7ed' : audit.statut_label === 'termine' ? '#f0fdf4' : '#eff6ff' }]}>
-                        <Text style={[styles.statusBadgeText, { color: audit.statut_label === 'en_cours' ? '#c2410c' : audit.statut_label === 'termine' ? '#15803d' : '#1d4ed8' }]}>
-                          {audit.statut_label === 'en_cours' ? 'EN COURS' : audit.statut_label === 'termine' ? 'TERMINÉ' : 'PLANIFIÉ'}
+                      <View style={[styles.statusBadge, { backgroundColor: audit.statut_label === 'en_cours' ? '#fff7ed' : audit.statut_label === 'termine' ? '#f0fdf4' : audit.statut_label === 'en_retard' ? '#fef2f2' : '#eff6ff' }]}>
+                        <Text style={[styles.statusBadgeText, { color: audit.statut_label === 'en_cours' ? '#c2410c' : audit.statut_label === 'termine' ? '#15803d' : audit.statut_label === 'en_retard' ? '#b91c1c' : '#1d4ed8' }]}>
+                          {audit.statut_label === 'en_cours' ? 'EN COURS' : audit.statut_label === 'termine' ? 'TERMINÉ' : audit.statut_label === 'en_retard' ? 'EN RETARD' : 'PLANIFIÉ'}
                         </Text>
                       </View>
                     </View>

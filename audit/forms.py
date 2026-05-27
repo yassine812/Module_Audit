@@ -47,7 +47,7 @@ class FormulaireAuditForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'custom-input', 'placeholder': 'Nom du formulaire...'}),
             'processus': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'type_equipement': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_equipement': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': "Sélectionner les types d'équipement...", 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
             'section': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Sélectionner les sections...', 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
         }
 
@@ -166,7 +166,7 @@ class ListeAuditForm(forms.ModelForm):
             'section': forms.Select(attrs={'class': 'custom-input form-select'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
             'formulaire_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'date': forms.DateTimeInput(attrs={'class': 'custom-input', 'type': 'datetime-local'}),
+            'date': forms.DateInput(attrs={'class': 'custom-input', 'type': 'date'}),
             'affectation': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Assigner des auditeurs...'}),
             'participants': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': 'Ajouter des participants...'}),
         }
@@ -184,7 +184,34 @@ class ListeAuditForm(forms.ModelForm):
             
         # Handle date formatting
         if self.instance and self.instance.date:
-            self.initial['date'] = self.instance.date.strftime('%Y-%m-%dT%H:%M')
+            self.initial['date'] = self.instance.date.strftime('%Y-%m-%d')
+
+    def clean_date(self):
+        date = self.cleaned_data.get('date')
+        if date:
+            import datetime
+            if isinstance(date, datetime.date) and not isinstance(date, datetime.datetime):
+                date = datetime.datetime.combine(date, datetime.time.min)
+            if timezone.is_naive(date):
+                date = timezone.make_aware(date, timezone.get_current_timezone())
+            
+            # Check if this is an update and the date hasn't changed
+            is_changed = True
+            if self.instance and self.instance.pk:
+                try:
+                    db_date = type(self.instance).objects.get(pk=self.instance.pk).date
+                    if db_date and date == db_date:
+                        is_changed = False
+                except type(self.instance).DoesNotExist:
+                    pass
+            
+            if is_changed:
+                local_now = timezone.localtime(timezone.now())
+                local_today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+                local_date = timezone.localtime(date)
+                if local_date < local_today_start:
+                    raise forms.ValidationError("La date de l'audit ne peut pas être antérieure à aujourd'hui.")
+        return date
 
     def clean_participants_externes(self):
         # Since it's a CharField with a SelectMultiple widget, we need to handle the list of values

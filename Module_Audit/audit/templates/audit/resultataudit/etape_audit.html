@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Exécution de l'Audit - {{ resultat.sujet }}{% endblock %}
 
 {% block extra_css %}
@@ -7,1327 +8,263 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-  /* ── Scope to content area only – do NOT touch sidebar/navbar ── */
-  .content-wrapper {
-    overflow: hidden !important;
-    height: calc(100vh - 57px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    background: #f5f7fb !important;
-    padding: 0 !important;
-  }
-
-  .content-wrapper>.content {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .content-wrapper>.content>.container-fluid {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* ── Page wrapper fills space beside sidebar ── */
-  .audit-page-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    padding: 16px 24px;
-    background: #f5f7fb;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  /* ── Single audit card ── */
-  .audit-card {
-    width: 100%;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #fff;
-    border: 1px solid #e4e7ec;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, .05);
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    height: auto !important;
-  }
-
-  /* ── Section 1: top header grid ── */
-  .audit-top-grid {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    border-bottom: 1px solid #e4e7ec;
-    flex-shrink: 0;
-  }
-
-  .top-left {
-    padding: 18px 24px;
-    border-right: 1px solid #e4e7ec;
-  }
-
-  .top-right {
-    padding: 18px 28px;
-    display: flex;
-    gap: 48px;
-    align-items: flex-start;
-  }
-
-  .lbl {
-    font-size: 13px !important;
-    font-weight: 800 !important;
-    color: #1e3a5f !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    display: block !important;
-    margin-top: 12px !important;
-    margin-bottom: 4px !important;
-    line-height: 1.2 !important;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .norme-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #2563eb;
-    font-size: 18px;
-    font-weight: 800;
-    text-decoration: none;
-    margin-top: 2px;
-  }
-
-  .norme-link:hover {
-    color: #1d4ed8;
-  }
-
-  .norme-badge {
-    font-size: 13px;
-    color: #475569;
-    font-weight: 700;
-    background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-  }
-  .norme-badge:empty {
-    display: none !important;
-  }
-
-  .hdr-person {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 15px;
-  }
-
-  /* ── Section 2: body grid ── */
-  .audit-body-grid {
-    display: grid;
-    grid-template-columns: 6.5fr 3.5fr;
-    border-bottom: 1px solid #e4e7ec;
-    flex: 1;
-    min-height: 0;
-    overflow: visible;
-  }
-
-  .body-left {
-    padding: 24px 32px 30px !important;
-    border-right: 1px solid #e4e7ec;
-    overflow: visible !important;
-  }
-
-  .body-right {
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    background: #f9fafb;
-    overflow-y: auto;
-    max-height: 400px;
-  }
-
-  .critere-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    flex-shrink: 0;
-  }
-
-  .critere-title {
-    font-size: 22px !important;
-    font-weight: 900 !important;
-    color: #0f172a !important;
-    letter-spacing: -0.01em !important;
-  }
-
-  .score-txt {
-    font-size: 14px;
-    font-weight: 900;
-    color: #2563eb;
-    letter-spacing: 0.05em;
-  }
-
-  .desc-text {
-    color: #334155 !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    line-height: 1.5 !important;
-    margin-bottom: 12px !important;
-  }
-
-  .preuve-text {
-    color: #475569 !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    line-height: 1.6 !important;
-  }
-
-  /* ── Justif buttons ── */
-  .justif-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
-    flex-shrink: 0;
-  }
-
-  .justif-btn {
-    border: 1.5px dashed #e2e8f0;
-    border-radius: 10px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    background: #fcfdfe;
-    width: 100%;
-    height: 72px !important;
-    transition: all 0.2s ease;
-    overflow: hidden;
-  }
-
-  .justif-btn:hover {
-    border-color: #3b82f6;
-    background: #f8faff;
-    transform: scale(1.01);
-  }
-
-  .justif-btn svg {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    max-height: 20px !important;
-    flex-shrink: 0 !important;
-    color: #3b82f6;
-  }
-
-  .justif-btn span {
-    font-size: 10px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    text-align: center;
-    letter-spacing: 0.01em;
-  }
-
-  .lbl {
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    color: #163b68 !important;
-    text-transform: uppercase !important;
-    letter-spacing: .06em !important;
-    margin-bottom: 4px !important;
-    display: block !important;
-    font-family: 'Inter', sans-serif !important;
-  }
-
-  .hdr-person,
-  .desc-text,
-  .preuve-text {
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    color: #0f172a !important;
-    margin-bottom: 16px !important;
-    line-height: 1.4 !important;
-  }
-
-  /* ── Sidebar Card Triggers ── */
-  .sidebar-cards-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-    flex-shrink: 0;
-  }
-
-  .trigger-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    height: 64px !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    text-align: center;
-    position: relative;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  }
-
-  .trigger-card:hover {
-    border-color: #cbd5e1;
-    background: #fbfcfe;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  }
-
-  .trigger-card.active {
-    border-color: #3b82f6;
-    background: #f0f7ff;
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
-  }
-
-  .trigger-card span {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.025em !important;
-    font-family: 'Inter', sans-serif;
-    transition: color 0.2s;
-  }
-
-  .trigger-card.active span {
-    color: #2563eb !important;
-  }
-
-  .trigger-card .card-icon {
-    width: 18px !important;
-    height: 18px !important;
-    max-width: 18px !important;
-    max-height: 18px !important;
-    flex-shrink: 0 !important;
-    color: #64748b;
-    transition: all 0.2s;
-  }
-
-  .trigger-card.active .card-icon {
-    color: #3b82f6;
-    transform: scale(1.05);
-  }
-
-  .trigger-card .chevron {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 10px !important;
-    height: 10px !important;
-    flex-shrink: 0 !important;
-    color: #94a3b8;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .trigger-card.active .chevron {
-    transform: rotate(180deg);
-    color: #3b82f6;
-  }
-
-
-  /* ── Modal System ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .modal-overlay.active {
-    display: flex;
-    opacity: 1;
-  }
-
-  .modal-container {
-    background: #fff;
-    width: 90%;
-    max-width: 550px;
-    border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .modal-overlay.active .modal-container {
-    transform: scale(1);
-  }
-
-  .modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fff;
-  }
-
-  .modal-title {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1e293b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .modal-close {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: #f1f5f9;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .modal-close:hover {
-    background: #fee2e2;
-    color: #ef4444;
-  }
-
-  .modal-body {
-    padding: 24px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-
-  .modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    background: #f8fafc;
-  }
-
-  .modal-btn {
-    padding: 10px 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .modal-btn-cancel {
-    background: #fff;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
-  }
-
-  .modal-btn-save {
-    background: #3b82f6;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-  }
-
-  .modal-btn-save:hover {
-    background: #2563eb;
-  }
-
-  .obs-area-modal {
-    width: 100%;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 16px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #334155;
-    line-height: 1.5;
-    font-family: 'Inter', sans-serif;
-    min-height: 180px;
-    outline: none;
-    transition: border-color 0.2s;
-    resize: none;
-  }
-
-  .obs-area-modal:focus {
-    border-color: #3b82f6;
-  }
-
-  body.modal-open {
-    overflow: hidden;
-  }
-
-  /* ── Section 3: Evaluation ── */
-  .evaluation-section {
-    padding: 16px 24px 24px;
-    flex-shrink: 0;
-    background: #fff;
-  }
-
-  .evaluation-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    text-align: center;
-    margin-top: 16px;
-  }
-
-  .eval-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 12px;
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    border-radius: 14px;
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 100%;
-    position: relative;
-  }
-
-  .eval-btn:hover {
-    background: rgba(0, 0, 0, .02);
-    transform: translateY(-1px);
-  }
-
-  /* Status Colors */
-  .ic-green {
-    background: #22c55e;
-  }
-
-  .ic-orange {
-    background: #f97316;
-  }
-
-  .ic-red {
-    background: #ef4444;
-  }
-
-  .ic-dark {
-    background: #1e293b;
-  }
-
-  /* Premium Selected States */
-  .eval-btn.selected-conforme {
-    background: rgba(34, 197, 94, 0.10) !important;
-    border: 1px solid rgba(34, 197, 94, 0.35) !important;
-    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.12) !important;
-    transform: translateY(-1px);
-  }
-
-  .eval-btn.selected-partiellement-conforme,
-  .eval-btn.selected-partielllement-conforme {
-    background: rgba(249, 115, 22, 0.10) !important;
-    border: 1px solid rgba(249, 115, 22, 0.35) !important;
-    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.12) !important;
-    transform: translateY(-1px);
-  }
-
-  .eval-btn.selected-non-conforme {
-    background: rgba(239, 68, 68, 0.10) !important;
-    border: 1px solid rgba(239, 68, 68, 0.35) !important;
-    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.12) !important;
-    transform: translateY(-1px);
-  }
-
-  .eval-btn.selected-non-applicable {
-    background: rgba(15, 23, 42, 0.08) !important;
-    border: 1px solid rgba(15, 23, 42, 0.25) !important;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10) !important;
-    transform: translateY(-1px);
-  }
-
-  .eval-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-  }
-
-  .eval-icon svg {
-    width: 24px;
-    height: 24px;
-    color: #fff;
-  }
-
-  .eval-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e293b;
-    line-height: 1.3;
-    text-align: center;
-  }
-
-  .eval-sub {
-    font-size: 10px;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  .cl-green {
-    color: #22c55e;
-  }
-
-  .cl-orange {
-    color: #f97316;
-  }
-
-  .cl-red {
-    color: #ef4444;
-  }
-
-  .cl-dark {
-    color: #1e293b;
-  }
-
-  /* ── Footer nav ── */
-  .audit-footer {
-    flex-shrink: 0;
-    background: #fff;
-    border-top: 1px solid #e5e7eb;
-    padding: 10px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .btn-prev {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 22px;
-    background: #fff;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #475569;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all .2s;
-  }
-
-  .btn-prev:hover {
-    background: #f8fafc;
-  }
-
-  .btn-prev:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-  }
-
-  .btn-next {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 28px;
-    background: #1e3a6e;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 800;
-    color: #fff;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: background .2s;
-  }
-
-  .btn-next:hover {
-    background: #1e40af;
-  }
-
-  .btn-finish {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 28px;
-    background: #16a34a;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 800;
-    color: #fff;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .save-ind {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    color: #3b82f6;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .spin-icon {
-    animation: spin 1s linear infinite;
-  }
-
-  /* PDF Modal Desktop Base Styles */
-  .pdf-close-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    z-index: 10002;
-    transition: all 0.2s;
-    color: #64748b;
-  }
-
-  .pdf-close-btn:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-    transform: scale(1.05);
-  }
-
-  #pdf-pages-container canvas {
-    display: block;
-    margin: 0 auto;
-    background: #fff;
-    max-width: 100%;
-    height: auto !important;
-  }
-
-  #pdf-paper-wrapper::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #pdf-paper-wrapper::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 0 16px 16px 0;
-  }
-
-  #pdf-paper-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-    border: 2px solid #f8fafc;
-  }
-
-  #pdf-paper-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
-
-  /* 📱 EXTREME MOBILE REDESIGN (370x615) - NON-COMPRESSED WORKSTATION */
-  @media (max-width: 767.98px) {
-
-    body,
-    html {
-      overflow: hidden !important;
-      height: 100dvh !important;
-      background: #F8FAFC !important;
-    }
-
-    .content-wrapper {
-      height: auto !important;
-      min-height: 0 !important;
-    }
-
-    .audit-page-wrapper {
-      padding: 0 !important;
-      height: calc(100dvh - 65px) !important;
-      overflow: hidden !important;
-      display: flex !important;
-      flex-direction: column !important;
-      background: #fff !important;
-      position: relative !important;
-    }
-
-    .audit-card {
-      border-radius: 0 !important;
-      border: none !important;
-      box-shadow: none !important;
-      flex: 1 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      min-height: 0 !important;
-    }
-
-    /* 1. SLIM TOP BAR */
-    .audit-top-grid {
-      display: block !important;
-      flex-shrink: 0 !important;
-      border-bottom: none !important;
-    }
-
-    .top-left {
-      padding: 8px 16px 4px !important;
-      border-right: none !important;
-    }
-
-    .top-right {
-      display: flex !important;
-      padding: 6px 16px !important;
-      background: #f8fafc !important;
-      margin: 0 !important;
-      gap: 12px !important;
-      border-top: 1px solid #f1f5f9 !important;
-      border-bottom: none !important;
-      border-radius: 0 !important;
-    }
-
-    .top-right>div {
-      display: flex;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 0 !important;
-    }
-
-    .lbl {
-      display: block !important;
-      font-size: 9px !important;
-      font-weight: 800 !important;
-      color: #1e3a6e !important;
-      text-transform: uppercase !important;
-      margin-top: 4px !important;
-      margin-bottom: 2px !important;
-      letter-spacing: 0.05em !important;
-      opacity: 0.8;
-    }
-
-    .hdr-person {
-      font-size: 11px !important;
-      color: #475569 !important;
-      font-weight: 600 !important;
-    }
-
-    .norme-link {
-      font-size: 13px !important;
-      margin-top: 0 !important;
-    }
-
-    /* 2. MAIN CONTENT SCROLL AREA */
-    .audit-body-grid {
-      flex: 1 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      overflow-y: auto !important;
-      min-height: 0 !important;
-      padding: 12px 16px 8px !important;
-      background: #fff !important;
-    }
-
-    .body-left {
-      padding: 0 !important;
-      border: none !important;
-    }
-
-    .body-right {
-      display: block !important;
-      padding: 0 !important;
-      background: transparent !important;
-      max-height: none !important;
-      margin-top: 8px !important;
-      flex: none !important;
-    }
-
-    /* Modern Typography */
-    .critere-row {
-      margin-bottom: 4px !important;
-    }
-
-    .critere-title {
-      font-size: 1.1rem !important;
-      font-weight: 900 !important;
-      color: #1e293b !important;
-      line-height: 1.2 !important;
-      margin-bottom: 2px !important;
-    }
-
-    .score-txt {
-      font-size: 9px !important;
-      font-weight: 800 !important;
-    }
-
-    .desc-text {
-      font-size: 0.85rem !important;
-      font-weight: 500 !important;
-      color: #475569 !important;
-      line-height: 1.4 !important;
-      margin-bottom: 8px !important;
-      display: -webkit-box !important;
-      -webkit-line-clamp: 4 !important;
-      -webkit-box-orient: vertical !important;
-      overflow: hidden !important;
-    }
-
-    .preuve-text {
-      font-size: 0.8rem !important;
-      color: #64748b !important;
-      margin-top: 4px !important;
-    }
-
-    /* Interaction Row (Obs/Justif) */
-    .sidebar-cards-row {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 12px !important;
-      margin: 4px 0 8px !important;
-      width: 100% !important;
-    }
-
-    .trigger-card {
-      height: 44px !important;
-      border-radius: 12px !important;
-      background: #f8fafc !important;
-      border: 1px solid #e2e8f0 !important;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-      padding: 6px !important;
-    }
-
-    .trigger-card span {
-      font-size: 9px !important;
-      font-weight: 800 !important;
-      color: #475569 !important;
-    }
-
-    .trigger-card .card-icon {
-      width: 14px !important;
-      height: 14px !important;
-    }
-
-    /* Evaluation Grid 2x2 */
-    .evaluation-section {
-      flex: 0 0 auto !important;
-      padding: 8px 16px 8px !important;
-      border-top: 1px solid #f1f5f9 !important;
-      background: #fff !important;
-    }
-
-    .evaluation-grid {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 8px !important;
-      margin-top: 4px !important;
-    }
-
-    .eval-btn {
-      height: 60px !important;
-      border-radius: 14px !important;
-      border: 1px solid #e2e8f0 !important;
-      background: #fff !important;
-      padding: 4px !important;
-      flex-direction: column !important;
-    }
-
-    .eval-icon {
-      width: 24px !important;
-      height: 24px !important;
-      margin-bottom: 2px !important;
-    }
-
-    .eval-icon svg {
-      width: 12px !important;
-      height: 12px !important;
-    }
-
-    .eval-title {
-      font-size: 9px !important;
-      line-height: 1.1 !important;
-    }
-
-    /* 3. FIXED BOTTOM NAVIGATION */
-    .audit-footer {
-      flex: 0 0 auto !important;
-      padding: 8px 16px 12px !important;
-      background: white !important;
-      border-top: 1px solid #e2e8f0 !important;
-      z-index: 100 !important;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03) !important;
-    }
-
-    .btn-prev,
-    .btn-next,
-    .btn-finish {
-      height: 38px !important;
-      border-radius: 10px !important;
-      font-size: 12px !important;
-      font-weight: 800 !important;
-      padding: 0 10px !important;
-    }
-
-    .btn-prev {
-      background: #f8fafc !important;
-    }
-
-    #step-counter {
-      font-size: 10px !important;
-      padding: 4px 8px !important;
-    }
-
-    /* 4. PDF MODAL MOBILE OPTIMIZATION */
-    #pdf-modal {
-      padding: 10px !important;
-    }
-
-    #pdf-modal-title {
-      font-size: 14px !important;
-    }
-
-    .pdf-close-btn {
-      width: 36px !important;
-      height: 36px !important;
-    }
-
-    #pdf-pages-container {
-      padding: 10px 0 !important;
-    }
-
-    #pdf-pages-container canvas {
-      width: 100% !important;
-      margin-bottom: 10px !important;
-    }
-  }
+.content-wrapper{overflow:hidden!important;height:calc(100vh - 57px)!important;display:flex!important;flex-direction:column!important;background:#f5f7fb!important;padding:0!important}
+.content-wrapper>.content{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important}
+.content-wrapper>.content>.container-fluid{flex:1!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important}
+.audit-page-wrapper{display:flex;flex-direction:column;flex:1;min-height:0;padding:16px 24px;background:#f5f7fb;box-sizing:border-box;overflow:hidden}
+.audit-card{width:100%;border-radius:16px;overflow:hidden;background:#fff;border:1px solid #e4e7ec;box-shadow:0 2px 10px rgba(15,23,42,.05);display:flex;flex-direction:column;flex:1;min-height:0;height:auto!important}
+.audit-top-grid{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid #e4e7ec;flex-shrink:0}
+.top-left{padding:18px 24px;border-right:1px solid #e4e7ec}
+.top-right{padding:18px 28px;display:flex;gap:48px;align-items:flex-start}
+.lbl{font-size:13px!important;font-weight:800!important;color:#1e3a5f!important;text-transform:uppercase!important;letter-spacing:.05em!important;display:block!important;margin-top:12px!important;margin-bottom:4px!important;line-height:1.2!important;font-family:'Inter',sans-serif}
+.norme-link{display:inline-flex;align-items:center;gap:8px;color:#2563eb;font-size:18px;font-weight:800;text-decoration:none;margin-top:2px}
+.norme-link:hover{color:#1d4ed8}
+.hdr-person{font-weight:700;color:#1e293b;font-size:15px}
+.audit-body-grid{display:grid;grid-template-columns:6.5fr 3.5fr;border-bottom:1px solid #e4e7ec;flex:1;min-height:0;overflow:visible}
+.body-left{padding:24px 32px 30px!important;border-right:1px solid #e4e7ec;overflow:visible!important}
+.body-right{padding:20px 24px;display:flex;flex-direction:column;background:#f9fafb;overflow-y:auto;max-height:400px}
+.critere-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0}
+.critere-title{font-size:22px!important;font-weight:900!important;color:#0f172a!important;letter-spacing:-.01em!important}
+.score-txt{font-size:14px;font-weight:900;color:#2563eb;letter-spacing:.05em}
+.desc-text{color:#334155!important;font-size:16px!important;font-weight:600!important;line-height:1.5!important;margin-bottom:12px!important}
+.preuve-text{color:#475569!important;font-size:15px!important;font-weight:600!important;line-height:1.6!important}
+.justif-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;flex-shrink:0}
+.justif-btn{border:1.5px dashed #e2e8f0;border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:#fcfdfe;width:100%;height:72px!important;transition:all .2s ease;overflow:hidden}
+.justif-btn:hover{border-color:#3b82f6;background:#f8faff;transform:scale(1.01)}
+.justif-btn svg{width:20px!important;height:20px!important;flex-shrink:0!important;color:#3b82f6}
+.justif-btn span{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:center;letter-spacing:.01em}
+.sidebar-cards-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;flex-shrink:0}
+.trigger-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;height:64px!important;transition:all .25s cubic-bezier(.4,0,.2,1);text-align:center;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.trigger-card:hover{border-color:#cbd5e1;background:#fbfcfe;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.trigger-card.active{border-color:#3b82f6;background:#f0f7ff;box-shadow:0 4px 14px rgba(59,130,246,.12)}
+.trigger-card span{font-size:13px!important;font-weight:600!important;color:#475569!important;text-transform:uppercase!important;letter-spacing:.025em!important;font-family:'Inter',sans-serif;transition:color .2s}
+.trigger-card.active span{color:#2563eb!important}
+.trigger-card .card-icon{width:18px!important;height:18px!important;flex-shrink:0!important;color:#64748b;transition:all .2s}
+.trigger-card.active .card-icon{color:#3b82f6;transform:scale(1.05)}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:10000;opacity:0;transition:opacity .3s ease}
+.modal-overlay.active{display:flex;opacity:1}
+.modal-container{background:#fff;width:90%;max-width:550px;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);transform:scale(.9);transition:all .3s cubic-bezier(.34,1.56,.64,1);overflow:hidden;display:flex;flex-direction:column}
+.modal-overlay.active .modal-container{transform:scale(1)}
+.modal-header{padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.modal-title{font-size:16px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:.05em}
+.modal-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:none;background:#f1f5f9;color:#64748b;cursor:pointer;transition:all .2s}
+.modal-close:hover{background:#fee2e2;color:#ef4444}
+.modal-body{padding:24px;max-height:70vh;overflow-y:auto}
+.modal-footer{padding:16px 24px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:12px;background:#f8fafc}
+.modal-btn{padding:10px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;border:none;font-family:'Inter',sans-serif}
+.modal-btn-cancel{background:#fff;color:#64748b;border:1px solid #e2e8f0}
+.modal-btn-save{background:#3b82f6;color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.2)}
+.modal-btn-save:hover{background:#2563eb}
+.obs-area-modal{width:100%;border:1.5px solid #e2e8f0;border-radius:16px;padding:16px;font-size:15px;font-weight:500;color:#334155;line-height:1.5;font-family:'Inter',sans-serif;min-height:180px;outline:none;transition:border-color .2s;resize:none}
+.obs-area-modal:focus{border-color:#3b82f6}
+body.modal-open{overflow:hidden}
+.evaluation-section{padding:16px 24px 24px;flex-shrink:0;background:#fff}
+.evaluation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;margin-top:16px}
+.eval-btn{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 12px;background:transparent;border:1px solid transparent;cursor:pointer;border-radius:14px;transition:all .3s cubic-bezier(.4,0,.2,1);width:100%;position:relative}
+.eval-btn:hover{background:rgba(0,0,0,.02);transform:translateY(-1px)}
+.ic-green{background:#22c55e}.ic-orange{background:#f97316}.ic-red{background:#ef4444}.ic-dark{background:#1e293b}
+.eval-btn.selected-conforme{background:rgba(34,197,94,.10)!important;border:1px solid rgba(34,197,94,.35)!important;box-shadow:0 6px 18px rgba(34,197,94,.12)!important;transform:translateY(-1px)}
+.eval-btn.selected-partiellement-conforme,.eval-btn.selected-partielllement-conforme{background:rgba(249,115,22,.10)!important;border:1px solid rgba(249,115,22,.35)!important;box-shadow:0 6px 18px rgba(249,115,22,.12)!important;transform:translateY(-1px)}
+.eval-btn.selected-non-conforme{background:rgba(239,68,68,.10)!important;border:1px solid rgba(239,68,68,.35)!important;box-shadow:0 6px 18px rgba(239,68,68,.12)!important;transform:translateY(-1px)}
+.eval-btn.selected-non-applicable{background:rgba(15,23,42,.08)!important;border:1px solid rgba(15,23,42,.25)!important;box-shadow:0 6px 18px rgba(15,23,42,.10)!important;transform:translateY(-1px)}
+.eval-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.eval-icon svg{width:24px;height:24px;color:#fff}
+.eval-title{font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;text-align:center}
+.audit-footer{flex-shrink:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 24px;display:flex;justify-content:space-between;align-items:center}
+.btn-prev{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#fff;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-weight:700;color:#475569;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.btn-prev:hover{background:#f8fafc}
+.btn-prev:disabled{opacity:.4;cursor:not-allowed}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:#1e3a6e;border:none;border-radius:10px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.btn-next:hover{background:#1e40af}
+.btn-finish{display:none;align-items:center;gap:8px;padding:11px 28px;background:#16a34a;border:none;border-radius:10px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;font-family:'Inter',sans-serif}
+.save-ind{display:none;align-items:center;gap:6px;color:#3b82f6;font-size:12px;font-weight:700}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-icon{animation:spin 1s linear infinite}
+.pdf-close-btn{position:fixed;top:20px;right:20px;background:#fff;border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,.1);z-index:10002;transition:all .2s;color:#64748b}
+.pdf-close-btn:hover{background:#f1f5f9;color:#0f172a;transform:scale(1.05)}
+#pdf-pages-container canvas{display:block;margin:0 auto;background:#fff;max-width:100%;height:auto!important}
+@media(max-width:767.98px){
+  body,html{overflow:hidden!important;height:100dvh!important;background:#F8FAFC!important}
+  .content-wrapper{height:auto!important;min-height:0!important}
+  .audit-page-wrapper{padding:0!important;height:calc(100dvh - 65px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:#fff!important;position:relative!important}
+  .audit-card{border-radius:0!important;border:none!important;box-shadow:none!important;flex:1!important;display:flex!important;flex-direction:column!important;min-height:0!important}
+  .audit-top-grid{display:block!important;flex-shrink:0!important;border-bottom:none!important}
+  .top-left{padding:8px 16px 4px!important;border-right:none!important}
+  .top-right{display:flex!important;padding:6px 16px!important;background:#f8fafc!important;margin:0!important;gap:12px!important;border-top:1px solid #f1f5f9!important}
+  .lbl{font-size:9px!important;margin-top:4px!important;margin-bottom:2px!important}
+  .hdr-person{font-size:11px!important;color:#475569!important;font-weight:600!important}
+  .norme-link{font-size:13px!important;margin-top:0!important}
+  .audit-body-grid{flex:1!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;min-height:0!important;padding:12px 16px 8px!important;background:#fff!important}
+  .body-left{padding:0!important;border:none!important}
+  .body-right{display:block!important;padding:0!important;background:transparent!important;max-height:none!important;margin-top:8px!important;flex:none!important}
+  .critere-title{font-size:1.1rem!important;font-weight:900!important;color:#1e293b!important}
+  .desc-text{font-size:.85rem!important;font-weight:500!important;color:#475569!important;margin-bottom:8px!important}
+  .sidebar-cards-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;margin:4px 0 8px!important;width:100%!important}
+  .trigger-card{height:44px!important;border-radius:12px!important;background:#f8fafc!important;border:1px solid #e2e8f0!important;padding:6px!important}
+  .trigger-card span{font-size:9px!important;font-weight:800!important}
+  .trigger-card .card-icon{width:14px!important;height:14px!important}
+  .evaluation-section{flex:0 0 auto!important;padding:8px 16px!important;border-top:1px solid #f1f5f9!important;background:#fff!important}
+  .evaluation-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:8px!important;margin-top:4px!important}
+  .eval-btn{height:60px!important;border-radius:14px!important;border:1px solid #e2e8f0!important;background:#fff!important;padding:4px!important}
+  .eval-icon{width:24px!important;height:24px!important;margin-bottom:2px!important}
+  .eval-icon svg{width:12px!important;height:12px!important}
+  .eval-title{font-size:9px!important;line-height:1.1!important}
+  .audit-footer{flex:0 0 auto!important;padding:8px 16px 12px!important;background:white!important;border-top:1px solid #e2e8f0!important;z-index:100!important}
+  .btn-prev,.btn-next,.btn-finish{height:38px!important;border-radius:10px!important;font-size:12px!important;font-weight:800!important;padding:0 10px!important}
+}
+
+.updated-step-effect{animation:bodyLeftFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards!important}
+@keyframes bodyLeftFadeIn{from{opacity:0.3;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 {% endblock %}
-
 {% block content %}
 <div class="audit-page-wrapper">
-
-  <!-- ── AUDIT CARD ── -->
-  <div class="audit-card">
-
-    <!-- Section 1: Header -->
-    <div class="audit-top-grid">
-      <div class="top-left">
-        <!-- Row 1: NORME : ISO9001 -->
-        <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 0 !important; display: inline-block !important;">NORME :</span>
-          <span id="item-norme" class="norme-badge"></span>
-        </div>
-        <!-- Row 2: chapitre link -->
-        <div style="margin-top: 4px;">
-          <a id="item-chapitre-link" href="javascript:void(0)" class="norme-link" style="margin-top: 0;">
-            <span id="item-chapitre">--</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-          </a>
-        </div>
-      </div>
-      <div class="top-right">
-        <div>
-          <span class="lbl">AUDITEUR</span>
-          <div class="hdr-person">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
-        </div>
-        <div>
-          <span class="lbl">PARTICIPANT</span>
-          <div class="hdr-person">
-            {% for p in resultat.audit.participants.all %}
-            {{ p.get_full_name|default:p.username }}{% if not forloop.last or resultat.audit.participants_externes %},
-            {% endif %}
-            {% endfor %}
-            {% if resultat.audit.participants_externes %}
-            {{ resultat.audit.participants_externes }}
-            {% endif %}
-            {% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}--{% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Body -->
-    <div class="audit-body-grid">
-      <div class="body-left" style="display: flex; flex-direction: column; gap: 16px;">
-        
-        <!-- CRITÈRE BLOCK -->
-        <div style="border-left: 3px solid #2563eb; padding-left: 12px; margin-bottom: 2px;">
-          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #2563eb !important; font-size: 11px !important;">CRITÈRE</span>
-          <div class="critere-row" style="margin-bottom: 0 !important;">
-            <div class="critere-title" id="item-title">Critère</div>
-            <div class="score-txt">SCORE: <span id="current-score">--</span></div>
-          </div>
-        </div>
-
-        <!-- SOUS-CRITÈRE BLOCK -->
-        <div style="border-left: 3px solid #7c3aed; padding-left: 12px; margin-bottom: 2px;">
-          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #7c3aed !important; font-size: 11px !important;">SOUS-CRITÈRE</span>
-          <p class="desc-text" id="item-description" style="margin-bottom: 0 !important;"></p>
-        </div>
-
-        <!-- PREUVE ATTENDUE BLOCK -->
-        <div style="border-left: 3px solid #059669; padding-left: 12px; margin-bottom: 2px;">
-          <span class="lbl" style="margin-top: 0 !important; margin-bottom: 4px !important; color: #059669 !important; font-size: 11px !important;">PREUVE ATTENDUE</span>
-          <p class="preuve-text" id="item-preuve" style="margin-bottom: 0 !important;"></p>
-        </div>
-
-      </div>
-      <div class="body-right">
-        <!-- Card Triggers -->
-        <div class="sidebar-cards-row">
-          <div class="trigger-card" id="trigger-justif" onclick="openModal('justif')">
-            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-              <circle cx="12" cy="13" r="3" />
-            </svg>
-            <span>JUSTIFICATIF</span>
-            <div id="justif-badge" class="hidden"
-              style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#10b981;border-radius:50%;border:2px solid #fff;">
-            </div>
-          </div>
-          <div class="trigger-card" id="trigger-obs" onclick="openModal('obs')">
-            <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <span>OBSERVATIONS</span>
-            <div id="obs-badge" class="hidden"
-              style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid #fff;">
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Section 3: Evaluation -->
-    <div class="evaluation-section">
-      <span class="lbl d-md-none">ÉVALUATION DE CONFORMITÉ</span>
-      <div class="evaluation-grid">
-        {% for cot in cotations %}
-        <button type="button" class="eval-btn" data-status="{{ cot.content|escapejs }}"
-          data-value="{{ cot.valeur|stringformat:'f' }}"
-          onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',', '.')))">
-          <div
-            class="eval-icon {% if forloop.counter == 1 %}ic-green{% elif forloop.counter == 2 %}ic-orange{% elif forloop.counter == 3 %}ic-red{% else %}ic-dark{% endif %}">
-            {% if forloop.counter == 1 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            {% elif forloop.counter == 2 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            {% elif forloop.counter == 3 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-            {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-              stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>{% endif %}
-          </div>
-          <div class="eval-title">{{ cot.content }}</div>
-        </button>
-        {% endfor %}
-      </div>
-    </div>
-
-  </div><!-- end audit-card -->
-
-  <!-- ── Footer Nav ── -->
-  <div class="audit-footer">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <button id="prevBtn" class="btn-prev" onclick="changeStep(-1)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
-        Précédent
-      </button>
-      <div id="step-counter"
-        style="font-size:13px; font-weight:700; color:#64748b; background:#f1f5f9; padding:4px 12px; border-radius:20px;">
-        Étape <span id="current-idx">1</span> / <span id="total-idx">1</span>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div id="save-indicator" class="save-ind">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="spin-icon">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-        Sauvegarde...
-      </div>
-      <button id="nextBtn" class="btn-next" onclick="changeStep(1)">
-        Suivant
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
-      </button>
-      <button id="finishBtn" class="btn-finish" onclick="finalizeAudit()">
-        Finaliser
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
-      </button>
-    </div>
+<div class="audit-card">
+<!-- Header -->
+<div class="audit-top-grid">
+  <div class="top-left">
+    <span class="lbl">NORME<span id="item-norme-sep">: </span><span id="item-norme">--</span></span>
+    <a id="item-chapitre-link" href="javascript:void(0)" class="norme-link">
+      <span id="item-chapitre">--</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </a>
   </div>
-
-</div><!-- end audit-page-wrapper -->
-
-<!-- PDF Modal -->
-<div id="pdf-modal"
-  style="display:none;position:fixed;inset:0;background:rgba(255, 255, 255, 0.2);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
-  <button class="pdf-close-btn" onclick="closePdfModal()">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-      stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  </button>
-  <div id="pdf-paper-wrapper"
-    style="background:transparent;overflow-y:auto;width:auto;min-width:300px;max-width:98vw;height:92vh;position:relative;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.1);scroll-behavior:smooth;">
-    <div id="pdf-loading"
-      style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:10;">
-      <div
-        style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;">
-      </div>
+  <div class="top-right">
+    <div>
+      <span class="lbl">AUDITEUR</span>
+      <div class="hdr-person">{{ resultat.auditeur.get_full_name|default:resultat.auditeur.username }}</div>
     </div>
-    <div id="pdf-pages-container" style="display:flex; flex-direction:column; align-items:center; padding:0;"></div>
+    <div>
+      <span class="lbl">PARTICIPANT</span>
+      <div class="hdr-person">{% for p in resultat.audit.participants.all %}{{ p.get_full_name|default:p.username }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if resultat.audit.participants_externes %}{% if resultat.audit.participants.all %}, {% endif %}{{ resultat.audit.participants_externes }}{% endif %}{% if not resultat.audit.participants.all and not resultat.audit.participants_externes %}--{% endif %}</div>
+    </div>
   </div>
 </div>
-
+<!-- Body -->
+<div class="audit-body-grid">
+  <div class="body-left">
+    <div class="mb-4">
+      <span class="lbl" style="margin-top:0!important; margin-bottom: 6px!important; color: #64748b!important;">Critère</span>
+      <div class="critere-row" style="margin-bottom:0!important;">
+        <div class="critere-title" id="item-title">Critere</div>
+        <div class="score-txt">SCORE: <span id="current-score">--</span></div>
+      </div>
+    </div>
+    <div class="mb-4">
+      <span class="lbl" style="margin-top:0!important; margin-bottom: 6px!important; color: #64748b!important;">Sous-critère</span>
+      <p class="desc-text" id="item-description" style="margin-bottom:0!important;"></p>
+    </div>
+    <div class="mb-0">
+      <span class="lbl" style="margin-top:0!important; margin-bottom: 6px!important; color: #64748b!important;">Preuve Attendue</span>
+      <p class="preuve-text" id="item-preuve" style="margin-bottom:0!important;"></p>
+    </div>
+  </div>
+  <div class="body-right">
+    <div class="sidebar-cards-row">
+      <div class="trigger-card" id="trigger-justif" onclick="openModal('justif')">
+        <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        <span>JUSTIFICATIF</span>
+        <div id="justif-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#10b981;border-radius:50%;border:2px solid #fff;"></div>
+      </div>
+      <div class="trigger-card" id="trigger-obs" onclick="openModal('obs')">
+        <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>OBSERVATIONS</span>
+        <div id="obs-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid #fff;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Evaluation -->
+<div class="evaluation-section">
+  <div class="evaluation-grid">
+    {% for cot in cotations %}
+    <button type="button" class="eval-btn" data-status="{{ cot.content|escapejs }}" data-value="{{ cot.valeur|stringformat:'f' }}" onclick="setStatus('{{ cot.content|escapejs }}', parseFloat('{{ cot.valeur|stringformat:'f' }}'.replace(',','.')))">
+      <div class="eval-icon {% if forloop.counter == 1 %}ic-green{% elif forloop.counter == 2 %}ic-orange{% elif forloop.counter == 3 %}ic-red{% else %}ic-dark{% endif %}">
+        {% if forloop.counter == 1 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        {% elif forloop.counter == 2 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        {% elif forloop.counter == 3 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>{% endif %}
+      </div>
+      <div class="eval-title">{{ cot.content }}</div>
+    </button>
+    {% endfor %}
+  </div>
+</div>
+</div><!-- end audit-card -->
+<!-- Footer -->
+<div class="audit-footer">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <button id="prevBtn" class="btn-prev" onclick="changeStep(-1)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Precedent
+    </button>
+    <div id="step-counter" style="font-size:13px;font-weight:700;color:#64748b;background:#f1f5f9;padding:4px 12px;border-radius:20px;">Etape <span id="current-idx">1</span> / <span id="total-idx">1</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div id="save-indicator" class="save-ind">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      Sauvegarde...
+    </div>
+    <button id="nextBtn" class="btn-next" onclick="changeStep(1)">
+      Suivant
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+    <button id="finishBtn" class="btn-finish" onclick="finalizeAudit()">
+      Finaliser
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </button>
+  </div>
+</div>
+</div><!-- end audit-page-wrapper -->
+<!-- PDF Modal -->
+<div id="pdf-modal" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.2);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
+  <button class="pdf-close-btn" onclick="closePdfModal()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div id="pdf-paper-wrapper" style="background:transparent;overflow-y:auto;width:auto;min-width:300px;max-width:98vw;height:92vh;position:relative;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.1);scroll-behavior:smooth;">
+    <div id="pdf-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:10;"><div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;"></div></div>
+    <div id="pdf-pages-container" style="display:flex;flex-direction:column;align-items:center;padding:0;"></div>
+  </div>
+</div>
 {{ details_json|json_script:"details-data" }}
 {{ library_docs|json_script:"library-docs-data" }}
-
-<!-- 🔳 MODAL: JUSTIFICATIF -->
-<div id="modal-justif" class="modal-overlay" onclick="handleOutsideClick(event, 'justif')">
+<!-- MODAL: JUSTIFICATIF -->
+<div id="modal-justif" class="modal-overlay" onclick="handleOutsideClick(event,'justif')">
   <div class="modal-container" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">Ajouter un Justificatif</h3>
-      <button class="modal-close" onclick="closeModal('justif')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      <button class="modal-close" onclick="closeModal('justif')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="justif-row" style="margin-bottom:20px;">
-        <label class="justif-btn" style="height:120px !important;">
-          <div
-            style="width:48px; height:48px; background:#f5f3ff; color:#7c3aed; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-          </div>
+        <label class="justif-btn" style="height:120px!important;">
+          <div style="width:48px;height:48px;background:#f5f3ff;color:#7c3aed;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <span style="font-size:12px;">PRENDRE UNE PHOTO</span>
-          <input type="file" accept="image/*" capture="camera" multiple style="display:none"
-            onchange="handleFileUpload(this)">
+          <input type="file" accept="image/*" capture="camera" multiple style="display:none" onchange="handleFileUpload(this)">
         </label>
-        <label class="justif-btn" style="height:120px !important;">
-          <div
-            style="width:48px; height:48px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
-          <span style="font-size:12px;">TÉLÉVERSER UN FICHIER</span>
-          <input type="file" accept="image/*,application/pdf" multiple style="display:none"
-            onchange="handleFileUpload(this)">
+        <label class="justif-btn" style="height:120px!important;">
+          <div style="width:48px;height:48px;background:#eff6ff;color:#3b82f6;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <span style="font-size:12px;">TELEVERSER UN FICHIER</span>
+          <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handleFileUpload(this)">
         </label>
       </div>
-
-      <!-- Evidence Gallery Area (Inside Modal) -->
       <div id="file-preview-container" class="hidden" style="margin-top:20px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-          <span class="lbl" style="margin:0 !important; font-size:12px !important;">Preuves jointes</span>
-          <button onclick="clearFile(event)"
-            style="background:#fee2e2; color:#ef4444; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition: all 0.2s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
-            TOUT SUPPRIMER
-          </button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span class="lbl" style="margin:0!important;font-size:12px!important;">Preuves jointes</span>
+          <button onclick="clearFile(event)" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">TOUT SUPPRIMER</button>
         </div>
-        <div id="evidence-gallery"
-          style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:12px;">
-          <!-- Items will be injected here -->
-        </div>
+        <div id="evidence-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;"></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="modal-btn modal-btn-save" onclick="closeModal('justif')">Enregistrer et Fermer</button>
-    </div>
+    <div class="modal-footer"><button class="modal-btn modal-btn-save" onclick="closeModal('justif')">Enregistrer et Fermer</button></div>
   </div>
 </div>
-
-<!-- 🔳 MODAL: OBSERVATIONS -->
-<div id="modal-obs" class="modal-overlay" onclick="handleOutsideClick(event, 'obs')">
+<!-- MODAL: OBSERVATIONS -->
+<div id="modal-obs" class="modal-overlay" onclick="handleOutsideClick(event,'obs')">
   <div class="modal-container" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">Observations & Commentaires</h3>
-      <button class="modal-close" onclick="closeModal('obs')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      <button class="modal-close" onclick="closeModal('obs')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <textarea id="observation-input" class="obs-area-modal" placeholder="Saisissez vos remarques ici..."></textarea>
-    </div>
+    <div class="modal-body"><textarea id="observation-input" class="obs-area-modal" placeholder="Saisissez vos remarques ici..."></textarea></div>
     <div class="modal-footer">
       <button class="modal-btn modal-btn-cancel" onclick="closeModal('obs')">Annuler</button>
       <button class="modal-btn modal-btn-save" onclick="saveObsAndClose()">Enregistrer</button>
@@ -1335,568 +272,188 @@
   </div>
 </div>
 {% endblock %}
-
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-  let detailsData = [];
-  let libraryData = [];
-  let currentStep = 0;
-  let totalSteps = 0;
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+let detailsData=[],libraryData=[],currentStep=0,totalSteps=0;
 
-  function init() {
-    console.log("Audit Workstation Init...");
-    try {
-      const detailsEl = document.getElementById('details-data');
-      const libraryEl = document.getElementById('library-docs-data');
-      if (detailsEl) detailsData = JSON.parse(detailsEl.textContent);
-      if (libraryEl) libraryData = JSON.parse(libraryEl.textContent);
-    } catch (e) {
-      console.error("JSON Parse Error:", e);
-    }
+function init(){
+  try{
+    const de=document.getElementById('details-data'),le=document.getElementById('library-docs-data');
+    if(de)detailsData=JSON.parse(de.textContent);
+    if(le)libraryData=JSON.parse(le.textContent);
+  }catch(e){console.error('JSON Parse Error:',e);}
+  totalSteps=detailsData.length;
+  if(totalSteps===0){renderStep();return;}
+  const last=localStorage.getItem('audit_{{ resultat.id }}_last_edited');
+  if(last!==null)currentStep=parseInt(last);
+  if(currentStep>=totalSteps)currentStep=0;
+  renderStep();
+}
 
-    totalSteps = detailsData.length;
-    if (totalSteps === 0) { renderStep(); return; }
+function openModal(type){
+  const m=document.getElementById('modal-'+type);
+  if(m){m.classList.add('active');document.body.classList.add('modal-open');
+    if(type==='obs'){const d=detailsData[currentStep],inp=document.getElementById('observation-input');
+      if(inp){inp.value=(d.commentaire&&d.commentaire!=='None')?d.commentaire:'';inp.focus();}}}
+}
+function closeModal(type){const m=document.getElementById('modal-'+type);if(m){m.classList.remove('active');document.body.classList.remove('modal-open');}}
+function handleOutsideClick(e,type){if(e.target.classList.contains('modal-overlay'))closeModal(type);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('justif');closeModal('obs');}});
 
-    const last = localStorage.getItem('audit_{{ resultat.id }}_last_edited');
-    if (last !== null) currentStep = parseInt(last);
-    if (currentStep >= totalSteps) currentStep = 0;
-    renderStep();
+function updateBadges(){
+  const d=detailsData[currentStep];
+  const jb=document.getElementById('justif-badge'),ob=document.getElementById('obs-badge');
+  if(jb){const cnt=(d.evidences?d.evidences.length:0);jb.classList.toggle('hidden',!cnt);
+    if(cnt){jb.textContent=cnt;jb.style.cssText='display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:bold;width:16px;height:16px;background:#10b981;position:absolute;top:-4px;right:-4px;border-radius:50%;border:2px solid #fff;';}}
+  if(ob)ob.classList.toggle('hidden',!d.commentaire||d.commentaire==='None'||d.commentaire.trim()==='');
+}
+
+function renderStep(){
+  const prev=document.getElementById('prevBtn'),next=document.getElementById('nextBtn'),fin=document.getElementById('finishBtn');
+  if(prev)prev.disabled=(currentStep===0);
+  if(next)next.style.display=(currentStep===totalSteps-1)?'none':'inline-flex';
+  if(fin)fin.style.display=(currentStep===totalSteps-1)?'inline-flex':'none';
+  if(!detailsData||totalSteps===0)return;
+  const d=detailsData[currentStep];
+  const ci=document.getElementById('current-idx'),ti=document.getElementById('total-idx');
+  if(ci)ci.textContent=currentStep+1;if(ti)ti.textContent=totalSteps;
+  const chapLink=document.getElementById('item-chapitre-link'),chapEl=document.getElementById('item-chapitre'),normeEl=document.getElementById('item-norme');
+  if(chapEl)chapEl.textContent=(d.chapitre&&d.chapitre!=='--')?d.chapitre:(d.norme||'Document');
+  if(normeEl){
+    const normVal=(d.chapitre&&d.chapitre!=='--')?(d.norme||''):'';
+    normeEl.textContent=normVal;
+    const sep=document.getElementById('item-norme-sep');
+    if(sep)sep.style.display=normVal?'inline':'none';
   }
-
-  function openModal(type) {
-    const modal = document.getElementById('modal-' + type);
-    if (modal) {
-      modal.classList.add('active');
-      document.body.classList.add('modal-open');
-      if (type === 'obs') {
-        const d = detailsData[currentStep];
-        const input = document.getElementById('observation-input');
-        if (input) input.value = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
-        if (input) input.focus();
-      }
-    }
+  if(chapLink){if(d.text_ref_url){chapLink.style.opacity='1';chapLink.style.pointerEvents='auto';chapLink.onclick=e=>{e.preventDefault();openPdfModal(d.text_ref_url,(d.chapitre&&d.chapitre!=='--')?d.chapitre:(d.norme||'Document'),d.pdf_page);};}else{chapLink.style.opacity='0.4';chapLink.style.pointerEvents='none';chapLink.onclick=null;}}
+  const te=document.getElementById('item-title'),de=document.getElementById('item-description'),pe=document.getElementById('item-preuve'),oe=document.getElementById('observation-input'),se=document.getElementById('current-score');
+  if(te)te.textContent=d.critere||'--';
+  if(de)de.textContent=d.sous_critere||'';
+  if(pe)pe.textContent=(d.preuves_attendues&&d.preuves_attendues.length>0)?d.preuves_attendues.join(', '):'';
+  if(oe)oe.value=(d.commentaire&&d.commentaire!=='None')?d.commentaire:'';
+  if(se)se.textContent=(d.value!==undefined&&d.value!==null)?parseFloat(d.value).toFixed(1):'--';
+  document.querySelectorAll('.eval-btn').forEach(b=>{[...b.classList].forEach(c=>{if(c.startsWith('selected-'))b.classList.remove(c);});});
+  if(d.cotation){const ab=document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);if(ab){const safe=d.cotation.toLowerCase().trim().replace(/ /g,'-').normalize('NFD').replace(/[\u0300-\u036f]/g,'');ab.classList.add('selected-'+safe);}}
+  const pc=document.getElementById('file-preview-container'),gal=document.getElementById('evidence-gallery');
+  if(pc&&gal){gal.innerHTML='';const evs=d.evidences||[];
+    if(evs.length>0){pc.classList.remove('hidden');evs.forEach(ev=>{const url=ev.url,isPdf=url.toLowerCase().endsWith('.pdf'),item=document.createElement('div');
+      item.style='position:relative;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;aspect-ratio:1;background:#f8fafc;';
+      item.innerHTML=isPdf?`<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;" onclick="window.open('${url}','_blank')"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="font-size:9px;font-weight:800;color:#ef4444;">PDF</span></div>`:`<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onclick="window.open('${url}','_blank')">`;
+      const db=document.createElement('button');db.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      db.style='position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:6px;background:rgba(239,68,68,.9);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;';
+      db.onclick=e=>{e.stopPropagation();deleteSpecificEvidence(ev.id);};item.appendChild(db);gal.appendChild(item);});}
+    else pc.classList.add('hidden');}
+  updateBadges();
+  const leftCol = document.querySelector('.body-left');
+  if(leftCol){
+    leftCol.classList.remove('updated-step-effect');
+    void leftCol.offsetWidth;
+    leftCol.classList.add('updated-step-effect');
   }
+}
 
-  function closeModal(type) {
-    const modal = document.getElementById('modal-' + type);
-    if (modal) {
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    }
-  }
+async function changeStep(delta){await saveStep();currentStep+=delta;if(currentStep<0)currentStep=0;if(currentStep>=totalSteps)currentStep=totalSteps-1;renderStep();}
 
-  function handleOutsideClick(e, type) {
-    if (e.target.classList.contains('modal-overlay')) {
-      closeModal(type);
-    }
-  }
+async function setStatus(status,value){
+  const d=detailsData[currentStep],ts=status.trim();
+  if(d.cotation===ts){d.cotation=null;d.value=null;}else{d.cotation=ts;d.value=value;}
+  document.querySelectorAll('.eval-btn').forEach(b=>{[...b.classList].forEach(c=>{if(c.startsWith('selected-'))b.classList.remove(c);});});
+  if(d.cotation){const ab=document.querySelector(`.eval-btn[data-status="${status}"]`);if(ab){const safe=status.toLowerCase().trim().replace(/ /g,'-').normalize('NFD').replace(/[\u0300-\u036f]/g,'');ab.classList.add('selected-'+safe);}}
+  const se=document.getElementById('current-score');if(se)se.textContent=value.toFixed(1);
+  await saveStep();
+}
 
-  // Close on ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal('justif');
-      closeModal('obs');
-    }
-  });
+async function saveObsAndClose(){await saveStep();Swal.fire({icon:'success',title:'Observations enregistrees',timer:1000,showConfirmButton:false});closeModal('obs');renderStep();}
 
-  // Interaction Helpers
+async function saveStep(){
+  const d=detailsData[currentStep],oe=document.getElementById('observation-input');
+  const obs=oe?oe.value:(d.commentaire||'');
+  const fd=new FormData();fd.append('csrfmiddlewaretoken','{{ csrf_token }}');fd.append('commentaire',obs);fd.append('cotation',d.cotation||'');fd.append('value',d.value||0);
+  const ind=document.getElementById('save-indicator');if(ind)ind.style.display='flex';
+  try{const r=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});const data=await r.json();
+    if(data.status==='success'){d.commentaire=obs;if(data.evidences)d.evidences=data.evidences;localStorage.setItem('audit_{{ resultat.id }}_last_edited',currentStep);}}
+  catch(e){console.error('Save error:',e);}
+  if(ind)ind.style.display='none';
+}
 
-  function updateBadges() {
-    const d = detailsData[currentStep];
-    const justifBadge = document.getElementById('justif-badge');
-    const obsBadge = document.getElementById('obs-badge');
+async function handleFileUpload(input){
+  if(!input.files||!input.files.length)return;
+  const d=detailsData[currentStep],fd=new FormData();fd.append('id',d.id);
+  for(let i=0;i<input.files.length;i++)fd.append('justificatif',input.files[i]);
+  Swal.fire({title:'Televersement...',text:'Veuillez patienter',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+  try{const r=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'},body:fd});const res=await r.json();Swal.close();
+    if(res.status==='success'){d.evidences=res.evidences;d.has_file=true;renderStep();Swal.fire({icon:'success',title:'Enregistre',timer:1000,showConfirmButton:false});}
+    else Swal.fire('Erreur',res.message||"Echec de l'envoi.",'error');}
+  catch(e){Swal.close();Swal.fire('Erreur',"Echec de la connexion.",'error');}
+  input.value='';
+}
 
-    if (justifBadge) {
-      const count = (d.evidences ? d.evidences.length : 0);
-      const hasEv = count > 0;
-      justifBadge.classList.toggle('hidden', !hasEv);
-      if (hasEv) {
-        justifBadge.textContent = count;
-        justifBadge.style.display = 'flex';
-        justifBadge.style.alignItems = 'center';
-        justifBadge.style.justifyContent = 'center';
-        justifBadge.style.color = '#fff';
-        justifBadge.style.fontSize = '9px';
-        justifBadge.style.fontWeight = 'bold';
-        justifBadge.style.width = '16px';
-        justifBadge.style.height = '16px';
-        justifBadge.style.background = '#10b981';
-      }
-    }
-    if (obsBadge) obsBadge.classList.toggle('hidden', !d.commentaire || d.commentaire === 'None' || d.commentaire.trim() === '');
-  }
+async function clearFile(e){if(e)e.preventDefault();const d=detailsData[currentStep],fd=new FormData();fd.append('csrfmiddlewaretoken','{{ csrf_token }}');fd.append('delete_justificatif','true');
+  try{const r=await fetch(`/audit/resultat/${d.id}/update-detail/`,{method:'POST',body:fd});const data=await r.json();
+    if(data.status==='success'){d.evidences=[];d.has_file=false;renderStep();Swal.fire({icon:'success',title:'Galerie videe',timer:800,showConfirmButton:false});}}
+  catch(e){console.error('Clear error:',e);}
+}
 
-  function toggleSidebarSection(type) {
-    // Legacy function kept for safety but replaced by openModal
-    openModal(type);
-  }
+async function deleteSpecificEvidence(evId){
+  if(evId==='legacy1'||evId==='legacy2'){Swal.fire('Info','Format ancien: utilisez Tout Supprimer.','info');return;}
+  try{const r=await fetch(`/audit/evidence/${evId}/delete/`,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'}});const data=await r.json();
+    if(data.status==='success'){const d=detailsData[currentStep];d.evidences=d.evidences.filter(ev=>ev.id!==evId);if(!d.evidences.length)d.has_file=false;renderStep();}}
+  catch(e){console.error('Delete error:',e);}
+}
 
-  // Core Rendering Logic
-  function renderStep() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const finishBtn = document.getElementById('finishBtn');
-    if (prevBtn) prevBtn.disabled = (currentStep === 0);
-    if (nextBtn) nextBtn.style.display = (currentStep === totalSteps - 1) ? 'none' : 'inline-flex';
-    if (finishBtn) finishBtn.style.display = (currentStep === totalSteps - 1) ? 'inline-flex' : 'none';
-    if (!detailsData || totalSteps === 0) return;
-    const d = detailsData[currentStep];
-    console.log(`Rendering Step ${currentStep + 1} (ID: ${d.id})`);
-
-    // Update Step Counter
-    const curIdx = document.getElementById('current-idx');
-    const totIdx = document.getElementById('total-idx');
-    if (curIdx) curIdx.textContent = currentStep + 1;
-    if (totIdx) totIdx.textContent = totalSteps;
-
-    const chapLink = document.getElementById('item-chapitre-link');
-    const chapEl = document.getElementById('item-chapitre');
-    const normeEl = document.getElementById('item-norme');
-    if (chapEl) {
-      const labelText = (d.chapitre && d.chapitre !== '--') ? d.chapitre : (d.norme || 'Document');
-      chapEl.textContent = labelText;
-    }
-    if (normeEl) {
-      // If we are showing Norme as the main label, maybe hide it here or keep it.
-      // Usually it's better to show the full Norme name below if Chapitre is showing.
-      normeEl.textContent = (d.chapitre && d.chapitre !== '--') ? (d.norme || '') : '';
-    }
-    if (chapLink) {
-      const modalTitle = (d.chapitre && d.chapitre !== '--') ? d.chapitre : (d.norme || 'Document');
-      if (d.text_ref_url) {
-        chapLink.style.opacity = '1';
-        chapLink.style.pointerEvents = 'auto';
-        chapLink.onclick = (e) => { e.preventDefault(); openPdfModal(d.text_ref_url, modalTitle, d.pdf_page); };
-      } else {
-        // No PDF for this step — disable the link so the previous step's handler can't fire
-        chapLink.style.opacity = '0.4';
-        chapLink.style.pointerEvents = 'none';
-        chapLink.onclick = null;
-      }
-    }
-    const titleEl = document.getElementById('item-title');
-    const descEl = document.getElementById('item-description');
-    const preuveEl = document.getElementById('item-preuve');
-    const obsEl = document.getElementById('observation-input');
-    const scoreEl = document.getElementById('current-score');
-    if (titleEl) titleEl.textContent = d.critere || '--';
-    if (descEl) descEl.textContent = d.sous_critere || '';
-    if (preuveEl) preuveEl.textContent = (d.preuves_attendues && d.preuves_attendues.length > 0) ? d.preuves_attendues.join(', ') : '';
-    if (obsEl) obsEl.value = (d.commentaire && d.commentaire !== 'None') ? d.commentaire : '';
-    if (scoreEl) scoreEl.textContent = (d.value !== undefined && d.value !== null) ? parseFloat(d.value).toFixed(1) : '--';
-    // Always clear all cotation highlights first
-    document.querySelectorAll('.eval-btn').forEach(btn => {
-      [...btn.classList].forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
+async function finalizeAudit(){
+  await saveStep();
+  Swal.fire({title:'Analyse IA en cours...',text:'Generation des points forts, sensibles, risques et opportunites...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+  try{
+    const aiResp=await fetch(`/audit/resultat/{{ resultat.id }}/ai-suggestions/`);
+    const suggestions=await aiResp.json();
+    const{value:fv}=await Swal.fire({
+      title:'<span style="font-weight:900;color:#1e3a6e;font-size:20px;">Synthese de l\'Audit (IA)</span>',
+      html:`<div style="text-align:left;font-family:\'Inter\',sans-serif;padding:0 4px;"><p style="font-size:12px;color:#64748b;margin-bottom:12px;text-align:center;">Synthese generee par l\'IA.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div><label style="font-size:9px;font-weight:800;color:#1e3a6e;text-transform:uppercase;display:block;margin-bottom:4px;">Points Forts</label><textarea id="swal-pf" class="swal2-textarea" style="margin:0;width:100%;font-size:12px;min-height:100px;max-height:100px;border-radius:8px;border:1px solid #e2e8f0;padding:8px;font-family:\'Inter\',sans-serif;">${suggestions.point_fort}</textarea></div><div><label style="font-size:9px;font-weight:800;color:#1e3a6e;text-transform:uppercase;display:block;margin-bottom:4px;">Points Sensibles</label><textarea id="swal-ps" class="swal2-textarea" style="margin:0;width:100%;font-size:12px;min-height:100px;max-height:100px;border-radius:8px;border:1px solid #e2e8f0;padding:8px;font-family:\'Inter\',sans-serif;">${suggestions.point_sensible}</textarea></div><div><label style="font-size:9px;font-weight:800;color:#ef4444;text-transform:uppercase;display:block;margin-bottom:4px;">Risques</label><textarea id="swal-risk" class="swal2-textarea" style="margin:0;width:100%;font-size:12px;min-height:100px;max-height:100px;border-radius:8px;border:1px solid #e2e8f0;padding:8px;background:#fff5f5;color:#991b1b;font-family:\'Inter\',sans-serif;">${suggestions.risque}</textarea></div><div><label style="font-size:9px;font-weight:800;color:#0ea5e9;text-transform:uppercase;display:block;margin-bottom:4px;">Opportunites</label><textarea id="swal-opp" class="swal2-textarea" style="margin:0;width:100%;font-size:12px;min-height:100px;max-height:100px;border-radius:8px;border:1px solid #e2e8f0;padding:8px;background:#f0f9ff;font-family:\'Inter\',sans-serif;">${suggestions.opportunite}</textarea></div></div></div>`,
+      focusConfirm:false,showCancelButton:true,confirmButtonText:'Finaliser l\'Audit',cancelButtonText:'Annuler',confirmButtonColor:'#16a34a',width:'750px',
+      preConfirm:()=>({point_fort:document.getElementById('swal-pf').value,point_sensible:document.getElementById('swal-ps').value,risque:document.getElementById('swal-risk').value,opportunite:document.getElementById('swal-opp').value})
     });
-    // Then apply the current step's cotation if it has one
-    if (d.cotation) {
-      const ab = document.querySelector(`.eval-btn[data-status="${d.cotation}"]`);
-      if (ab) {
-        const safe = d.cotation.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        ab.classList.add('selected-' + safe);
-      }
-    }
-
-    // Evidence Gallery (Multiple)
-    const previewContainer = document.getElementById('file-preview-container');
-    const gallery = document.getElementById('evidence-gallery');
-    if (previewContainer && gallery) {
-      gallery.innerHTML = ''; // ALWAYS CLEAR FIRST
-      const evs = d.evidences || [];
-      if (evs.length > 0) {
-        previewContainer.classList.remove('hidden');
-        evs.forEach(ev => {
-          const url = ev.url;
-          const isPdf = url.toLowerCase().endsWith('.pdf');
-          const item = document.createElement('div');
-          item.style = "position:relative; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; aspect-ratio:1; background:#f8fafc; group;";
-
-          let content = '';
-          if (isPdf) {
-            content = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;" onclick="window.open('${url}', '_blank')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span style="font-size:9px; font-weight:800; color:#ef4444;">PDF</span>
-            </div>`;
-          } else {
-            content = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${url}', '_blank')">`;
-          }
-
-          const delBtn = document.createElement('button');
-          delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-          delBtn.style = "position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:6px; background:rgba(239,68,68,0.9); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:10;";
-          delBtn.onclick = (e) => { e.stopPropagation(); deleteSpecificEvidence(ev.id); };
-
-          item.innerHTML = content;
-          item.appendChild(delBtn);
-          gallery.appendChild(item);
-        });
-      } else {
-        previewContainer.classList.add('hidden');
-      }
-    }
-    updateBadges();
-  }
-
-  function updateGlobalScoreDisplay() {
-    // Function kept for backward compatibility if needed, but removed from UI
-  }
-
-  async function changeStep(delta) {
-    await saveStep(false);
-    currentStep += delta;
-    if (currentStep < 0) currentStep = 0;
-    if (currentStep >= totalSteps) currentStep = totalSteps - 1;
-    renderStep();
-  }
-
-  async function setStatus(status, value) {
-    const d = detailsData[currentStep];
-    const trimmedStatus = status.trim();
-
-    // Toggle logic
-    if (d.cotation === trimmedStatus) {
-      d.cotation = null; d.value = null;
-    } else {
-      d.cotation = trimmedStatus; d.value = value;
-    }
-
-    // Clear all visual states
-    document.querySelectorAll('.eval-btn').forEach(btn => {
-      const classes = [...btn.classList];
-      classes.forEach(c => { if (c.startsWith('selected-')) btn.classList.remove(c); });
+    if(!fv)return;
+    Swal.fire({title:'Enregistrement final...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    const fd=new FormData();fd.append('csrfmiddlewaretoken','{{ csrf_token }}');fd.append('point_fort',fv.point_fort);fd.append('point_sensible',fv.point_sensible);fd.append('risque',fv.risque);fd.append('opportunite',fv.opportunite);
+    const r=await fetch(`/audit/resultat/{{ resultat.id }}/close/`,{
+      method:'POST',
+      headers:{'X-Requested-With':'XMLHttpRequest'},
+      body:fd
     });
+    const data=await r.json();
+    if(data.status==='success'){Swal.fire({icon:'success',title:'Audit termine !',text:'Redirection vers le rapport...',timer:2000,showConfirmButton:false}).then(()=>{window.location.href=data.redirect_url;});}
+    else throw new Error('Close failed');
+  }catch(e){console.error(e);Swal.fire('Erreur','Une erreur est survenue lors de la finalisation.','error');}
+}
 
-    if (d.cotation) {
-      const ab = document.querySelector(`.eval-btn[data-status="${status}"]`);
-      if (ab) {
-        const safe = status.toLowerCase().trim().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        ab.classList.add('selected-' + safe);
+function openPdfModal(url,title,page){
+  const modal=document.getElementById('pdf-modal'),loading=document.getElementById('pdf-loading'),container=document.getElementById('pdf-pages-container'),wrapper=document.getElementById('pdf-paper-wrapper');
+  modal.style.display='flex';document.body.style.overflow='hidden';
+  if(loading)loading.style.display='flex';if(container)container.innerHTML='';if(wrapper)wrapper.scrollTop=0;
+  const tryFetch=targetUrl=>{
+    fetch(targetUrl).then(r=>{if(!r.ok)throw new Error('Not found');return r.blob();}).then(async blob=>{
+      const ab=await blob.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;
+      if(loading)loading.style.display='none';
+      const tp=parseInt(page)||1,OS=3.0,ah=wrapper.clientHeight-40,canvases=[];
+      for(let i=1;i<=pdf.numPages;i++){
+        const pp=await pdf.getPage(i),uv=pp.getViewport({scale:1.0}),ls=ah/uv.height,hv=pp.getViewport({scale:ls*OS});
+        if(i===1)wrapper.style.width=(Math.ceil(hv.width/OS)+20)+'px';
+        const cv=document.createElement('canvas'),ctx=cv.getContext('2d');
+        cv.width=hv.width;cv.height=hv.height;cv.style.width=Math.ceil(hv.width/OS)+'px';cv.style.height=Math.ceil(hv.height/OS)+'px';cv.style.display='block';cv.style.marginBottom='2px';
+        container.appendChild(cv);canvases.push(cv);await pp.render({canvasContext:ctx,viewport:hv}).promise;
       }
-    }
-    const scoreEl = document.getElementById('current-score');
-    if (scoreEl) scoreEl.textContent = value.toFixed(1);
-    updateGlobalScoreDisplay();
-    await saveStep(false);
-  }
-
-  async function saveObsAndClose() {
-    await saveStep(false);
-    Swal.fire({ icon: 'success', title: 'Observations enregistrées', timer: 1000, showConfirmButton: false });
-    closeModal('obs');
-    renderStep();
-  }
-
-  async function saveStep(isNav) {
-    const d = detailsData[currentStep];
-    const obsEl = document.getElementById('observation-input');
-    const finalObs = obsEl ? obsEl.value : (d.commentaire || '');
-    const fd = new FormData();
-    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    fd.append('commentaire', finalObs);
-    fd.append('cotation', d.cotation || '');
-    fd.append('value', d.value || 0);
-    const ind = document.getElementById('save-indicator');
-    if (ind) ind.style.display = 'flex';
-    try {
-      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, { method: 'POST', body: fd });
-      const data = await resp.json();
-      if (data.status === 'success') {
-        d.commentaire = finalObs;
-        if (data.evidences) d.evidences = data.evidences;
-        localStorage.setItem('audit_{{ resultat.id }}_last_edited', currentStep);
-      }
-    } catch (e) { console.error('Save error:', e); }
-    if (ind) ind.style.display = 'none';
-  }
-
-  async function handleFileUpload(input) {
-    if (!input.files || input.files.length === 0) return;
-
-    const d = detailsData[currentStep];
-    const formData = new FormData();
-    formData.append("id", d.id);
-
-    for (let i = 0; i < input.files.length; i++) {
-      formData.append("justificatif", input.files[i]);
-    }
-
-    Swal.fire({
-      title: 'Téléversement...',
-      text: 'Veuillez patienter',
-      allowOutsideClick: false,
-      didOpen: () => { Swal.showLoading(); }
+      const tc=canvases[tp-1];if(tc)wrapper.scrollTop=tc.offsetTop;
+    }).catch(err=>{
+      const cp=url.replace(/.*processus_docs\//,''),p1='/processus_docs/'+cp,p2=url.startsWith('/')?url:'/'+url;
+      if(targetUrl===p1)tryFetch(p2);else{console.error('PDF Error:',err);if(loading)loading.style.display='none';Swal.fire('Erreur','Impossible de charger le document PDF.','error');}
     });
-
-    try {
-      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": "{{ csrf_token }}" },
-        body: formData
-      });
-      const result = await resp.json();
-      Swal.close();
-
-      if (result.status === "success") {
-        d.evidences = result.evidences;
-        d.has_file = true;
-        renderStep();
-        Swal.fire({ icon: 'success', title: 'Enregistré', timer: 1000, showConfirmButton: false });
-      } else {
-        Swal.fire('Erreur', result.message || 'Échec de l\'envoi.', 'error');
-      }
-    } catch (e) {
-      Swal.close();
-      console.error('Upload error:', e);
-      Swal.fire('Erreur', 'Échec de la connexion au serveur.', 'error');
-    }
-    input.value = ''; // Reset input to allow re-uploading same file
-  }
-
-  async function clearFile(e) {
-    if (e) e.preventDefault();
-    const d = detailsData[currentStep];
-    const fd = new FormData();
-    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    fd.append('delete_justificatif', 'true');
-
-    try {
-      const resp = await fetch(`/audit/resultat/${d.id}/update-detail/`, {
-        method: 'POST',
-        body: fd
-      });
-      const data = await resp.json();
-      if (data.status === 'success') {
-        d.evidences = [];
-        d.has_file = false;
-        renderStep();
-        Swal.fire({ icon: 'success', title: 'Galerie vidée', timer: 800, showConfirmButton: false });
-      }
-    } catch (e) { console.error('Clear error:', e); }
-  }
-
-  async function deleteSpecificEvidence(evId) {
-    if (evId === 'legacy1' || evId === 'legacy2') {
-      Swal.fire('Info', 'Format ancien : utilisez "Tout Supprimer".', 'info');
-      return;
-    }
-
-    try {
-      const resp = await fetch(`/audit/evidence/${evId}/delete/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-      });
-      const data = await resp.json();
-      if (data.status === 'success') {
-        const d = detailsData[currentStep];
-        d.evidences = d.evidences.filter(ev => ev.id !== evId);
-        if (d.evidences.length === 0) d.has_file = false;
-        renderStep();
-      }
-    } catch (e) { console.error('Delete error:', e); }
-  }
-
-  async function finalizeAudit() {
-    await saveStep(false);
-
-    // Show initial loading for AI generation
-    Swal.fire({
-      title: 'Analyse IA en cours...',
-      text: 'Génération des points forts, sensibles, risques et opportunités...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
-
-    try {
-      // 1. Fetch AI Suggestions
-      const aiResp = await fetch(`/audit/resultat/{{ resultat.id }}/ai-suggestions/`);
-      const suggestions = await aiResp.json();
-
-      // 2. Show Modal with editable suggestions
-      const { value: formValues } = await Swal.fire({
-        title: '<div style="display:flex; align-items:center; gap:10px; justify-content:center;"><div style="width:3px; height:18px; background:#1e3a6e; border-radius:2px;"></div><span style="font-weight:900; color:#1e3a6e; letter-spacing:-0.02em; font-size:20px;">Synthèse de l\'Audit (IA)</span></div>',
-        html: `
-          <div style="text-align:left; font-family:\'Inter\',sans-serif; padding:0 4px;">
-            <p style="font-size:12px; color:#64748b; margin-bottom:12px; font-weight:500; text-align:center;">Synthèse générée par l\'IA basée sur vos observations.</p>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div style="margin-bottom:8px;">
-                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Points Forts <span style="color:#22c55e;">●</span></label>
-                <textarea id="swal-pf" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fcfdfe;">${suggestions.point_fort}</textarea>
-              </div>
-
-              <div style="margin-bottom:8px;">
-                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Points Sensibles <span style="color:#f97316;">●</span></label>
-                <textarea id="swal-ps" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fcfdfe;">${suggestions.point_sensible}</textarea>
-              </div>
-
-              <div style="margin-bottom:8px;">
-                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Risques <span style="color:#ef4444;">●</span></label>
-                <textarea id="swal-risk" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#fff5f5; color:#991b1b;">${suggestions.risque}</textarea>
-              </div>
-
-              <div>
-                <label style="font-size:9px; font-weight:800; color:#1e3a6e; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.05em;">Opportunités <span style="color:#0ea5e9;">●</span></label>
-                <textarea id="swal-opp" class="swal2-textarea" style="margin:0; width:100%; font-size:12px; min-height:100px; max-height:100px; border-radius:8px; border:1px solid #e2e8f0; padding:8px; line-height:1.4; font-family:\'Inter\',sans-serif; background:#f0f9ff;">${suggestions.opportunite}</textarea>
-              </div>
-            </div>
-          </div>
-        `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Finaliser l\'Audit',
-        cancelButtonText: 'Annuler',
-        confirmButtonColor: '#16a34a',
-        width: '750px',
-        padding: '1.25rem',
-        customClass: {
-          container: 'compact-swal-container',
-          popup: 'compact-swal-popup'
-        },
-        preConfirm: () => {
-          return {
-            point_fort: document.getElementById('swal-pf').value,
-            point_sensible: document.getElementById('swal-ps').value,
-            risque: document.getElementById('swal-risk').value,
-            opportunite: document.getElementById('swal-opp').value
-          }
-        }
-      });
-      if (!formValues) return; // User cancelled
-      // 3. Final submission
-      Swal.fire({
-        title: 'Enregistrement final...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      const fd = new FormData();
-      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-      fd.append('point_fort', formValues.point_fort);
-      fd.append('point_sensible', formValues.point_sensible);
-      fd.append('risque', formValues.risque);
-      fd.append('opportunite', formValues.opportunite);
-
-      const resp = await fetch(`/audit/resultat/{{ resultat.id }}/close/`, {
-        method: 'POST',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: fd
-      });
-      const data = await resp.json();
-
-      if (data.status === 'success') {
-        Swal.fire({
-          icon: 'success',
-          title: 'Audit terminé !',
-          text: 'Redirection vers le rapport...',
-          timer: 2000,
-          showConfirmButton: false
-        }).then(() => {
-          window.location.href = data.redirect_url;
-        });
-      } else {
-        throw new Error('Close failed');
-      }
-    } catch (e) {
-      console.error(e);
-      Swal.fire('Erreur', 'Une erreur est survenue lors de la finalisation.', 'error');
-    }
-  }
-
-  function openPdfModal(url, title, page) {
-    const modal = document.getElementById('pdf-modal');
-    const loading = document.getElementById('pdf-loading');
-    const titleEl = document.getElementById('pdf-modal-title');
-    const container = document.getElementById('pdf-pages-container');
-    const wrapper = document.getElementById('pdf-paper-wrapper');
-
-    console.log('[PDF Debug] openPdfModal called:', { url, title, page });
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    if (loading) loading.style.display = 'flex';
-    if (titleEl) titleEl.textContent = title || 'Document';
-    if (container) container.innerHTML = '';
-    if (wrapper) wrapper.scrollTop = 0;
-
-    const tryFetch = (targetUrl) => {
-      fetch(targetUrl).then(r => { if (!r.ok) throw new Error('Not found'); return r.blob(); })
-        .then(async blob => {
-          const ab = await blob.arrayBuffer();
-          const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-
-          if (loading) loading.style.display = 'none';
-
-          const targetPage = parseInt(page) || 1;
-
-          // Fixed 3x super-sampling for razor-sharp text on all screens
-          const OUTPUT_SCALE = 3.0;
-          const availableHeight = wrapper.clientHeight - 40;
-
-          const canvases = [];
-
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const pdfPage = await pdf.getPage(i);
-            const unscaledViewport = pdfPage.getViewport({ scale: 1.0 });
-
-            const logicalScale = availableHeight / unscaledViewport.height;
-            const hiResViewport = pdfPage.getViewport({ scale: logicalScale * OUTPUT_SCALE });
-
-            if (i === 1) {
-              const logicalWidth = Math.ceil(hiResViewport.width / OUTPUT_SCALE);
-              wrapper.style.width = (logicalWidth + 20) + 'px';
-            }
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = hiResViewport.width;
-            canvas.height = hiResViewport.height;
-            canvas.style.width = Math.ceil(hiResViewport.width / OUTPUT_SCALE) + 'px';
-            canvas.style.height = Math.ceil(hiResViewport.height / OUTPUT_SCALE) + 'px';
-            canvas.style.display = 'block';
-            canvas.style.marginBottom = '2px';
-
-            container.appendChild(canvas);
-            canvases.push(canvas);
-
-            await pdfPage.render({ canvasContext: ctx, viewport: hiResViewport }).promise;
-          }
-
-          // Scroll AFTER all pages are rendered for reliable positioning
-          const targetCanvas = canvases[targetPage - 1];
-          if (targetCanvas) {
-            wrapper.scrollTop = targetCanvas.offsetTop;
-          }
-
-          // Update modal title with page info for transparency
-          if (titleEl) titleEl.textContent = (title || 'Document') + (pdf.numPages > 1 ? ` — Page ${targetPage}/${pdf.numPages}` : '');
-
-        })
-        .catch(err => {
-          const cleanPath = url.replace(/.*processus_docs\//, '');
-          const path1 = '/processus_docs/' + cleanPath;
-          const path2 = url.startsWith('/') ? url : '/' + url;
-          if (targetUrl === path1) tryFetch(path2);
-          else {
-            console.error('PDF Error:', err);
-            if (loading) loading.style.display = 'none';
-            Swal.fire('Erreur', 'Impossible de charger le document PDF.', 'error');
-          }
-        });
-    };
-
-    const cleanPath = url.replace(/.*processus_docs\//, '');
-    tryFetch('/processus_docs/' + cleanPath);
-  }
-
-  function closePdfModal() {
-    document.getElementById('pdf-modal').style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
-  window.onload = init;
+  };
+  tryFetch('/processus_docs/'+url.replace(/.*processus_docs\//,''));
+}
+function closePdfModal(){document.getElementById('pdf-modal').style.display='none';document.body.style.overflow='';}
+window.onload=init;
 </script>
 {% endblock %}

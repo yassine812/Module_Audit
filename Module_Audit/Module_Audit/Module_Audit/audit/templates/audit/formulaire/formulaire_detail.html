@@ -30,7 +30,13 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="fw-bold   text-uppercase">Type d'Équipement</label>
-                    <div>{{ formulaire.type_equipement.name|default:"-" }}</div>
+                    <div>
+                        {% for te in formulaire.type_equipement.all %}
+                            <span class="badge bg-light text-dark border me-1">{{ te.name }}</span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="col-md-12 mb-3">
                     <label class="fw-bold   text-uppercase">Sections Concernées</label>

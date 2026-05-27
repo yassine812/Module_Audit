@@ -1,3 +1,4 @@
+import datetime
 from django.urls import reverse_lazy, reverse
 import os
 from django.conf import settings
@@ -13,9 +14,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.admin.models import LogEntry, ADDITION
 from django.http import HttpResponseForbidden
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from textblob import TextBlob
@@ -44,6 +47,14 @@ from Organisation.models import Processus, TypeEquipement, Section
 from django import forms
 
 from django.contrib.auth.models import Group
+
+
+def to_local_display_datetime(value):
+    if not value:
+        return None
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value, datetime.timezone.utc)
+    return timezone.localtime(value, timezone.get_current_timezone())
 
 class UserForm(forms.ModelForm):
     ROLE_CHOICES = [
@@ -127,17 +138,24 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Include audits where user is Auditor OR Participant
             audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
             
-            planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
-            en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
+            from django.utils import timezone
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+            en_retard = audits_assigned.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().count()
             
             # Score average remains for results where user is the lead Auditor
             score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
             
             context['planifies_count'] = planifies
-            en_cours_count = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
+            context['en_retard_count'] = en_retard
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
@@ -495,10 +513,8 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
         return data
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        sous_criteres = context['sous_criteres']
-    def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        self.object.save()
         form.save_m2m() # Ensure M2M is saved
 
         # Handle formset only if present in POST
@@ -549,7 +565,8 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         return data
 
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        self.object.save()
         form.save_m2m() 
         
         # Handle formset only if present in POST
@@ -820,7 +837,7 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
         return [self.template_name]
 
     def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -836,8 +853,9 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
         
         try:
-            return super().delete(request, *args, **kwargs)
+            return super().form_valid(form)
         except ProtectedError:
+            from django.contrib import messages
             messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
             return redirect(self.success_url)
 # =====================================================
@@ -910,7 +928,7 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
     success_url = reverse_lazy("preuveattendu_list")
 
     def form_valid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
@@ -928,8 +946,9 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
         
         try:
-            return super().delete(request, *args, **kwargs)
+            return super().form_valid(form)
         except ProtectedError:
+            from django.contrib import messages
             messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
             return redirect(self.success_url)
 
@@ -1143,7 +1162,7 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["id"]
+    ordering = ["-id"]
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
@@ -1161,6 +1180,21 @@ class FormulaireAuditDetailView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_detail.html"
     context_object_name = "formulaire"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["formulaire_creation_log"] = (
+            LogEntry.objects.select_related("user")
+            .filter(
+                content_type__app_label=self.object._meta.app_label,
+                content_type__model=self.object._meta.model_name,
+                object_id=str(self.object.pk),
+                action_flag=ADDITION,
+            )
+            .order_by("action_time")
+            .first()
+        )
+        return context
 
 
 class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, CreateView):
@@ -1548,6 +1582,7 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
         context["details_json"] = details_json
         context["details"] = details
         context["readonly"] = not self.object.en_cours
+        context["audit_display_date"] = to_local_display_datetime(self.object.audit.date if self.object.audit else None)
         context["library_docs"] = [{"name": d.name, "url": d.content.url} for d in ProcessusDoc.objects.exclude(content="") if d.content]
         context["cotations"] = Cotation.objects.all().order_by('-valeur')
         return context
@@ -1802,10 +1837,22 @@ class CloseAuditView(LoginRequiredMixin, View):
         resultat.recalculate_score()
         resultat.save()
 
-        return JsonResponse({
-            "status": "success", 
-            "redirect_url": reverse("resultat_report", args=[resultat.pk])
-        })
+        redirect_to = request.POST.get("next")
+        if redirect_to == "liste_audit_list":
+            redirect_url = reverse("liste_audit_list")
+        else:
+            redirect_url = reverse("resultat_report", args=[resultat.pk])
+        if (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest" 
+            or request.headers.get("x-requested-with") == "XMLHttpRequest"
+            or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+            or 'application/json' in request.headers.get("accept", "")
+        ):
+            return JsonResponse({
+                "status": "success",
+                "redirect_url": redirect_url
+            })
+        return redirect(redirect_url)
 
 
 class FinishAuditView(LoginRequiredMixin, View):
@@ -1881,8 +1928,8 @@ class ResultatAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
         order = self.request.GET.get('order', 'asc')
 
         qs = ResultatAudit.objects.select_related(
-            "audit", "auditeur"
-        )
+            "audit", "audit__section", "auditeur", "site"
+        ).filter(en_cours=False)
 
         # Determine sort field
         if sort == 'date':
@@ -2240,6 +2287,7 @@ class ListeAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         context['preuves_attendues'] = PreuveAttendu.objects.all()
         context['chapitres_list'] = ChapitreNorme.objects.all()
         context['critere_formset'] = CritereFormSet(prefix='critere')
+        context['audit_display_date'] = to_local_display_datetime(self.object.date) if getattr(self, "object", None) else None
         return context
 
     @transaction.atomic
@@ -2384,6 +2432,7 @@ class ListeAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin,
         context['preuves_attendues'] = PreuveAttendu.objects.all()
         context['chapitres_list'] = ChapitreNorme.objects.all()
         context['critere_formset'] = CritereFormSet(prefix='critere')
+        context['audit_display_date'] = to_local_display_datetime(self.object.date) if getattr(self, "object", None) else None
         return context
 
     @transaction.atomic
@@ -2503,13 +2552,25 @@ def get_structure(request):
         # Get all criteria
         criteres = Critere.objects.all().select_related('chapitre_norme__text_ref')
         
-        # Get sous-critères for this type audit
-        # This handles the filter carefully
-        sous_criteres = SousCritere.objects.filter(type_audit=type_id)
+        # Get all sub-criteria
+        all_sous_criteres = SousCritere.objects.all()
+
+        # Get IDs of sub-criteria that are linked to this type audit
+        linked_sc_ids = set(
+            SousCritereTypeAudit.objects.filter(type_audit_id=type_id)
+            .values_list('sous_critere_id', flat=True)
+        )
+
+        # Group sub-criteria in memory by critere_id to optimize performance
+        sc_by_critere = {}
+        for sc in all_sous_criteres:
+            if sc.critere_id not in sc_by_critere:
+                sc_by_critere[sc.critere_id] = []
+            sc_by_critere[sc.critere_id].append(sc)
 
         result = []
         for critere in criteres:
-            sc_list = sous_criteres.filter(critere=critere)
+            sc_list = sc_by_critere.get(critere.id, [])
             
             result.append({
                 "critere_id": critere.id,
@@ -2519,7 +2580,8 @@ def get_structure(request):
                 "sous_criteres": [
                     {
                         "id": sc.id,
-                        "nom": sc.content
+                        "nom": sc.content,
+                        "is_linked": sc.id in linked_sc_ids
                     }
                     for sc in sc_list
                 ]
@@ -2538,12 +2600,17 @@ def get_formulaire_structure(request):
         return JsonResponse([], safe=False)
 
     try:
-        formulaire = FormulaireAudit.objects.get(pk=formulaire_id)
+        formulaire = FormulaireAudit.objects.select_related(
+            'processus', 'type_audit', 'creator'
+        ).prefetch_related('section', 'type_equipement').get(pk=formulaire_id)
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # 1. Get ALL Critères linked to this formulaire
-    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    # 1. Get ALL Critères linked to this formulaire (directly or via FormulaireSousCritere)
+    from django.db.models import Q
+    criteres = Critere.objects.filter(
+        Q(formulaire=formulaire) | Q(souscritere__formulairesouscritere__formulaire=formulaire)
+    ).distinct().select_related('chapitre_norme__text_ref').order_by('name')
     
     # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
@@ -2553,16 +2620,38 @@ def get_formulaire_structure(request):
         .order_by('ordre')
     )
     
-    # Map sous-critères by critère ID
-    sc_by_critere = {}
-    for fsc in fsc_qs:
-        crit_id = fsc.sous_critere.critere_id
-        if crit_id not in sc_by_critere:
-            sc_by_critere[crit_id] = []
-        sc_by_critere[crit_id].append({
-            "id": fsc.sous_critere.id,
-            "nom": fsc.sous_critere.content,
-        })
+    # 2a. Check if ANY FormulaireSousCritere rows exist for this formulaire
+    has_fsc = fsc_qs.exists()
+
+    if has_fsc:
+        # Map sous-critères by critère ID from FormulaireSousCritere
+        sc_by_critere = {}
+        for fsc in fsc_qs:
+            crit_id = fsc.sous_critere.critere_id
+            if crit_id not in sc_by_critere:
+                sc_by_critere[crit_id] = []
+            sc_by_critere[crit_id].append({
+                "id": fsc.sous_critere.id,
+                "nom": fsc.sous_critere.content,
+                "type_cotation": fsc.sous_critere.type_cotation_id if fsc.sous_critere.type_cotation else None,
+                "type_cotation_name": fsc.sous_critere.type_cotation.name if fsc.sous_critere.type_cotation else None,
+                "reaction": fsc.sous_critere.reaction or "",
+                "preuve_attendu": list(fsc.sous_critere.preuve_attendu.values_list('id', flat=True)),
+            })
+    else:
+        # Fall back: load all SousCritere directly linked to each Critere
+        from .models import SousCritere
+        sc_by_critere = {}
+        for crit in criteres:
+            sc_list = SousCritere.objects.filter(critere=crit).select_related('type_cotation')
+            sc_by_critere[crit.id] = [{
+                "id": sc.id,
+                "nom": sc.content,
+                "type_cotation": sc.type_cotation_id if sc.type_cotation else None,
+                "type_cotation_name": sc.type_cotation.name if sc.type_cotation else None,
+                "reaction": sc.reaction or "",
+                "preuve_attendu": list(sc.preuve_attendu.values_list('id', flat=True)),
+            } for sc in sc_list]
 
     # 3. Build the grouped structure
     grouped = []
@@ -2571,13 +2660,34 @@ def get_formulaire_structure(request):
             "critere_id": crit.id,
             "critere_nom": crit.name,
             "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "chapitre_id": crit.chapitre_norme.id if crit.chapitre_norme else None,
             "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
             "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
+    # 4. Build the flat structure for the mobile app
+    flat_structure = []
+    for crit in grouped:
+        for sc in crit["sous_criteres"]:
+            flat_structure.append({
+                "id": sc["id"],
+                "critere_nom": crit["critere_nom"],
+                "sous_critere_nom": sc["nom"],
+                "cotation": sc["type_cotation_name"] or "-"
+            })
+
     return JsonResponse({
+        "id": formulaire.id,
+        "name": formulaire.name,
+        "processus": formulaire.processus.name if formulaire.processus else "-",
+        "type_audit": formulaire.type_audit.name if formulaire.type_audit else "-",
+        "type_equipement": ", ".join([te.name for te in formulaire.type_equipement.all()]) or "-",
+        "date_creation": formulaire.date_creation.strftime('%d/%m/%Y %H:%M') if formulaire.date_creation else "-",
+        "creator_username": formulaire.creator.username if formulaire.creator else "admin",
+        "sections": list(formulaire.section.values_list('name', flat=True)),
         "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
-        "criteres": grouped
+        "criteres": grouped,
+        "structure": flat_structure
     }, safe=False)
 
 @transaction.atomic
@@ -2608,8 +2718,10 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
-                type_equipement_id=type_equipement_id if type_equipement_id else None
             )
+            
+            if type_equipement_id:
+                formulaire.type_equipement.set([type_equipement_id])
             
             # Set ManyToMany sections
             if section_ids:
@@ -2620,8 +2732,10 @@ def quick_create_formulaire(request):
                 
                 # 1. Existing sub-criteria
                 if sous_critere_ids:
-                    for sc_id in sous_critere_ids:
-                        FormulaireSousCritere.objects.create(
+                    # Filter out duplicate IDs
+                    unique_sc_ids = list(dict.fromkeys(sous_critere_ids))
+                    for sc_id in unique_sc_ids:
+                        FormulaireSousCritere.objects.get_or_create(
                             formulaire=formulaire,
                             sous_critere_id=sc_id
                         )
@@ -2665,7 +2779,7 @@ def quick_create_formulaire(request):
                             types_audit_ids = item.get('types_audit')
                             if types_audit_ids:
                                 for ta_id in types_audit_ids:
-                                    SousCritereTypeAudit.objects.create(
+                                    SousCritereTypeAudit.objects.get_or_create(
                                         sous_critere=new_sc,
                                         type_audit_id=ta_id
                                     )
@@ -2676,7 +2790,7 @@ def quick_create_formulaire(request):
                                 new_sc.preuve_attendu.set(preuve_ids)
 
                             # Link it to the formulaire
-                            FormulaireSousCritere.objects.create(
+                            FormulaireSousCritere.objects.get_or_create(
                                 formulaire=formulaire,
                                 sous_critere=new_sc
                             )
@@ -2698,7 +2812,7 @@ def quick_create_formulaire(request):
 @transaction.atomic
 def save_sous_critere_inline(request):
     """AJAX view to save a single SousCritere linked to an existing Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2743,7 +2857,7 @@ def save_sous_critere_inline(request):
 @transaction.atomic
 def save_critere_inline(request):
     """AJAX view to save a single Critere and its SousCriteres independently."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2811,7 +2925,7 @@ def save_critere_inline(request):
 @transaction.atomic
 def update_critere_inline(request, pk):
     """AJAX view to update a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2854,7 +2968,7 @@ def update_critere_inline(request, pk):
 @transaction.atomic
 def update_sous_critere_inline(request, pk):
     """AJAX view to update a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2996,7 +3110,7 @@ def copy_formulaire(request, pk):
 @transaction.atomic
 def delete_critere_inline(request, pk):
     """AJAX view to delete a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -3014,7 +3128,7 @@ def delete_critere_inline(request, pk):
 @transaction.atomic
 def delete_sous_critere_inline(request, pk):
     """AJAX view to delete a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:

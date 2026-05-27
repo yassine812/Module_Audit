@@ -10,6 +10,14 @@
     margin-top: 1rem;
   }
 
+  /* Keep section multi-select compact like a single-line input */
+  #id_section + .select2-container .select2-selection--multiple,
+  [id$="_section"] + .select2-container .select2-selection--multiple {
+    min-height: 45px !important;
+    max-height: 45px !important;
+    overflow: hidden !important;
+  }
+
   /* MOBILE - FIT ENTIRE PAGE WITHOUT SCROLLING (OPTIMIZED) */
   @media (max-width: 576px) {
 
@@ -53,7 +61,7 @@
       margin-right: 0 !important;
       width: 100% !important;
     }
-
+    
     #step-1 [class*="col-"] {
       flex: 0 0 100% !important;
       max-width: 100% !important;
@@ -440,8 +448,20 @@
   @media (min-width: 768px) {
     #structureMobileList { display: none !important; }
   }
+
+  /* Highlight Flash for builder */
+  @keyframes rowHighlightPulse {
+    0% {
+      background-color: rgba(168, 85, 247, 0.25) !important;
+    }
+    100% {
+      background-color: transparent !important;
+    }
+  }
+  .highlight-fade-pulse {
+    animation: rowHighlightPulse 1.8s ease-out forwards;
+  }
 </style>
-{% endblock %}
 
 {% block content %}
 <div class="page-container bg-light">
@@ -531,7 +551,7 @@
               </div>
 
               <!-- Row 3: Section -->
-              <div class="col-md-12">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="{{ form.section.id_for_label }}"
                     class="form-label fw-bold  text-dark opacity-75 mb-2">Section concernée</label>
@@ -634,9 +654,12 @@
   </div>
   </form>
 </div>
+
 <script>
   function initFormulaireForm() {
-    const scope = document.getElementById('ajaxFormModalBody') || document;
+    const formAudit = document.getElementById('form-audit');
+    const modalBody = document.getElementById('ajaxFormModalBody');
+    const scope = (modalBody && formAudit && modalBody.contains(formAudit)) ? modalBody : document;
     const getEl = (id) => scope.querySelector('#modal-' + id) || scope.querySelector('#' + id) || document.getElementById(id);
     
     const btnSync = getEl('btn-sync');
@@ -683,10 +706,11 @@
 
     if (scCount > 0) {
       crit.sous_criteres.forEach((sc, scIndex) => {
-        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (sc.is_linked || selectedScIds.includes(sc.id));
+        const isHighlightSc = window.lastUpdatedScId === sc.id;
 
         scRowsHtml += `
-          <tr id="sc-item-${sc.id}">
+          <tr id="sc-item-${sc.id}" class="${isHighlightSc ? 'highlight-fade-pulse' : ''}">
               <td>
                   <div class="d-flex align-items-center justify-content-between" style="background: transparent !important;">
                       <div class="d-flex align-items-center gap-3" style="background: transparent !important;">
@@ -711,8 +735,10 @@
       scRowsHtml = `<tr><td class="text-center py-2 text-muted small italic">Aucun sous-critère défini</td></tr>`;
     }
 
+    const isHighlightCrit = window.lastUpdatedCritId === crit.critere_id;
+
     return `
-      <tr class="critere-row" id="crit-item-${crit.critere_id}">
+      <tr class="critere-row ${isHighlightCrit ? 'highlight-fade-pulse' : ''}" id="crit-item-${crit.critere_id}">
           <td class="text-center" style="width: 45px;">
               <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#crit-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
                   <i class="fas fa-chevron-right accordion-icon"></i>
@@ -761,9 +787,10 @@
 
     if (scCount > 0) {
       crit.sous_criteres.forEach(sc => {
-        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (selectedScIds.includes(sc.id) || selectedScIds.length === 0);
+        const isChecked = isEdit ? selectedScIds.includes(sc.id) : (sc.is_linked || selectedScIds.includes(sc.id));
+        const isHighlightSc = window.lastUpdatedScId === sc.id;
         scHtml += `
-          <div class="mobile-sc-item">
+          <div class="mobile-sc-item ${isHighlightSc ? 'highlight-fade-pulse' : ''}">
             <input class="form-check-input sc-checkbox sc-crit-${crit.critere_id}" type="checkbox" name="sous_criteres" value="${sc.id}" ${isChecked ? 'checked' : ''}>
             <div class="flex-grow-1 ms-2">
               <div class="fw-bold text-dark small">${sc.nom}</div>
@@ -778,8 +805,10 @@
       scHtml = '<div class="text-center py-2 text-muted small italic">Aucun sous-critère</div>';
     }
 
+    const isHighlightCrit = window.lastUpdatedCritId === crit.critere_id;
+
     return `
-      <div class="mobile-row-item" id="mobile-crit-${crit.critere_id}">
+      <div class="mobile-row-item ${isHighlightCrit ? 'highlight-fade-pulse' : ''}" id="mobile-crit-${crit.critere_id}">
         <div class="mobile-row-top">
           <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-toggle="collapse" data-target="#mobile-sc-collapse-${crit.critere_id}" onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
             <i class="fas fa-chevron-right accordion-icon"></i>
@@ -895,7 +924,43 @@
       method: 'GET',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
       success: function (html) {
-        $body.html(html);
+        const isCritereModal = html.includes('id="critereModalForm"');
+        if (isCritereModal) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const sourceForm = parsed.querySelector('#critereModalForm');
+          if (sourceForm) {
+            const csrfHtml = sourceForm.querySelector('input[name="csrfmiddlewaretoken"]')?.outerHTML || '';
+            const action = sourceForm.getAttribute('action') || fetchUrl;
+            const nameValue = sourceForm.querySelector('[name="name"]')?.value || '';
+            const chapitreSelect = sourceForm.querySelector('[name="chapitre_norme"]');
+            const chapitreOptions = chapitreSelect ? chapitreSelect.innerHTML : '<option value="">Sélectionnez...</option>';
+            
+            // Beautiful layout with two input fields + context fields
+            $body.html(`
+              <form id="critereModalForm" method="post" action="${action}" autocomplete="off">
+                ${csrfHtml}
+                <div style="padding: 24px 32px 8px;">
+                  <div style="margin-bottom: 18px;">
+                    <label for="id_name" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:14px;">Désignation du Critère <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="id_name" value="${nameValue}" placeholder="Ex: Management de la Qualité..." required
+                      style="width:100%; height:44px; border:1px solid #dbe4f0; border-radius:12px; padding:10px 14px; font-size:14px; color:#0f172a; background:#fff;">
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <label for="id_chapitre_norme" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:14px;">Norme</label>
+                    <select name="chapitre_norme" id="id_chapitre_norme"
+                      style="width:100%; height:44px; border:1px solid #dbe4f0; border-radius:12px; padding:10px 14px; font-size:14px; color:#0f172a; background:#fff;">
+                      ${chapitreOptions}
+                    </select>
+                  </div>
+                </div>
+              </form>
+            `);
+          } else {
+            $body.html(html);
+          }
+        } else {
+          $body.html(html);
+        }
 
         // Re-execute scripts
         $body.find('script').each(function () {
@@ -920,6 +985,19 @@
 
         if (prefillFn) prefillFn($form[0]);
 
+        // Initialize Select2 dynamically for all selects inside the modal
+        if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
+          $body.find('select').each(function () {
+            $(this).select2({
+              theme: 'bootstrap4',
+              width: '100%',
+              dropdownParent: $modal,
+              placeholder: "Sélectionnez...",
+              allowClear: true
+            });
+          });
+        }
+
         // Clean the footer target and inject buttons into the explicit modal-footer
         const $footer = $(getEl('ajaxFormModalFooter'));
         $footer.html(`
@@ -938,111 +1016,212 @@
   };
 
   window.openAddCritereModal = function () {
-    window.openAjaxFormModal("{% url 'critere_create' %}", "<i class='fas fa-plus-circle me-2'></i>Nouveau Critère", "{% url 'save_critere_inline' %}",
-      (res) => {
-        btnSync.click();
-        // Proactively ask if they want to add sub-criteria now
-        Swal.fire({
-          title: 'Critère créé !',
-          text: 'Voulez-vous ajouter un sous-critère à ce nouveau critère ?',
-          icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Oui, ajouter',
-          cancelButtonText: 'Plus tard'
-        }).then((s) => {
-          if (s.isConfirmed) {
-            window.openAddSousCritereModal(res.critere_id);
-          }
-        });
-      },
-      (formNode) => {
-        const modalBody = formNode.closest('.modal-body') || document;
+    const modal = document.getElementById('addCritereStaticModal');
+    if (!modal) return;
 
-        /* REMOVE ONLY THE TAB NAVIGATION */
-        modalBody.querySelectorAll(
-          '#critereTabs, .nav-tabs, .nav-pills'
-        ).forEach(el => {
-          el.remove();
-        });
+    // Reset form
+    const nameInput = modal.querySelector('#critere_name_input');
+    const chapitreSelect = modal.querySelector('#critere_chapitre_select');
+    if (nameInput) nameInput.value = '';
 
-        /* REMOVE ONLY SOUS-CRITÈRES PANE */
-        modalBody.querySelectorAll('#souscritere').forEach(el => {
-          el.remove();
-        });
+    // Load chapitres via API if not yet loaded
+    if (chapitreSelect && chapitreSelect.options.length <= 1) {
+      fetch('/audit/api/chapitre-norme/')
+        .then(r => r.json())
+        .then(resp => {
+          // API returns {status:'success', data:[...]}
+          const items = Array.isArray(resp) ? resp : (resp.data || resp.results || []);
+          items.forEach(ch => {
+            const opt = document.createElement('option');
+            opt.value = ch.id;
+            // Show "name - norme" for better UX
+            opt.textContent = ch.text_ref_norme && ch.text_ref_norme !== 'N/A'
+              ? `${ch.name} (${ch.text_ref_norme})`
+              : ch.name;
+            chapitreSelect.appendChild(opt);
+          });
+        })
+        .catch(() => {});
+    }
 
-        /* KEEP GENERAL CONTENT VISIBLE */
-        const generalPane = modalBody.querySelector('#general');
+    // Show modal (Bootstrap 4 / jQuery)
+    $(modal).modal('show');
 
-        if (generalPane) {
-          generalPane.style.display = 'block';
-          generalPane.classList.add('show', 'active');
+    // Wire up save button (once)
+    const saveBtn = modal.querySelector('#critereStaticSaveBtn');
+    if (saveBtn && !saveBtn._wired) {
+      saveBtn._wired = true;
+      saveBtn.addEventListener('click', function () {
+        const nameVal = nameInput ? nameInput.value.trim() : '';
+        if (!nameVal) {
+          nameInput.focus();
+          nameInput.style.borderColor = '#ef4444';
+          return;
         }
+        nameInput.style.borderColor = '';
 
-        /* REMOVE HIDDEN/BOOTSTRAP CLASSES THAT HIDE CONTENT */
-        modalBody.querySelectorAll('.tab-pane').forEach(pane => {
-          if (pane.id !== 'general') {
-            pane.remove();
-          }
-        });
+        const chapVal = chapitreSelect ? chapitreSelect.value : '';
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+                    || '{{ csrf_token }}';
 
-        // Set values for context fields if they exist
-        const typeAuditField = formNode.querySelector('[name="type_audit"]');
-        if (typeAuditField && typeAuditSelect && typeAuditSelect.value) {
-          const selectedValue = typeAuditSelect.value;
-          if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined' && jQuery(typeAuditField).data('select2')) {
-            jQuery(typeAuditField).val([selectedValue]).trigger('change');
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrf);
+        formData.append('name', nameVal);
+        if (chapVal) formData.append('chapitre_norme', chapVal);
+        if (typeAuditSelect && typeAuditSelect.value)
+          formData.append('type_audit', typeAuditSelect.value);
+        if (currentFormId)
+          formData.append('formulaire', currentFormId);
+
+        // Loading state
+        const origHtml = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...';
+
+        fetch("{% url 'save_critere_inline' %}", {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrf },
+          body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+          if (res.status === 'success') {
+            $(modal).modal('hide');
+            if (res.critere_id) window.lastUpdatedCritId = res.critere_id;
+            btnSync.click();
+            Swal.fire({
+              title: 'Critère créé !',
+              text: 'Voulez-vous ajouter un sous-critère à ce nouveau critère ?',
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonText: 'Oui, ajouter',
+              cancelButtonText: 'Plus tard'
+            }).then(s => {
+              if (s.isConfirmed) window.openAddSousCritereModal(res.critere_id);
+            });
           } else {
-            typeAuditField.value = selectedValue;
+            Swal.fire('Erreur', res.message || 'Impossible de créer le critère.', 'error');
           }
-        } else if (typeAuditSelect && typeAuditSelect.value) {
-          $(formNode).append(`<input type="hidden" name="type_audit" value="${typeAuditSelect.value}">`);
-        }
-
-        const formulaireField = formNode.querySelector('[name="formulaire"]');
-        if (formulaireField && currentFormId) {
-          if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined' && jQuery(formulaireField).data('select2')) {
-            jQuery(formulaireField).val([currentFormId]).trigger('change');
-          } else {
-            formulaireField.value = currentFormId;
-          }
-        } else if (currentFormId) {
-          $(formNode).append(`<input type="hidden" name="formulaire" value="${currentFormId}">`);
-        }
-
-        // Hide the fields
-        const fieldsToHide = ['type_audit', 'formulaire', 'ciblage'];
-        fieldsToHide.forEach(name => {
-          const el = formNode.querySelector(`[name="${name}"]`);
-          if (el) {
-            const container = el.closest('[class*="col-"], .form-group, .mb-3') || el.parentElement;
-            if (container) container.style.setProperty('display', 'none', 'important');
-          }
+        })
+        .catch(() => {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+          Swal.fire('Erreur réseau', 'Impossible de contacter le serveur.', 'error');
         });
-      }
-    );
+      });
+    }
+  };
+
+
+  // ── Open the static "Nouveau Critère" modal ──────────────────────────────
+  window.openAddCritereModal = function () {
+    const modal        = document.getElementById('addCritereStaticModal');
+    const nameInput    = document.getElementById('critere_name_input');
+    const chapitreSelect = document.getElementById('critere_chapitre_select');
+
+    if (!modal) { console.error('addCritereStaticModal not found'); return; }
+
+    // Reset fields
+    if (nameInput)       { nameInput.value = ''; nameInput.style.borderColor = ''; }
+    if (chapitreSelect)  {
+      chapitreSelect.innerHTML = '<option value="">— Sélectionner une norme (optionnel) —</option>';
+
+      // Load chapters from API
+      fetch('/audit/api/chapitres/')
+        .then(r => r.json())
+        .then(resp => {
+          const items = Array.isArray(resp) ? resp : (resp.data || resp.results || []);
+          items.forEach(ch => {
+            const opt = document.createElement('option');
+            opt.value = ch.id;
+            opt.textContent = ch.text_ref_norme && ch.text_ref_norme !== 'N/A'
+              ? `${ch.name} (${ch.text_ref_norme})`
+              : ch.name;
+            chapitreSelect.appendChild(opt);
+          });
+        })
+        .catch(() => {});
+    }
+
+    // Show modal (Bootstrap 4 / jQuery)
+    $(modal).modal('show');
+
+    // Wire up save button (once only)
+    const saveBtn = modal.querySelector('#critereStaticSaveBtn');
+    if (saveBtn && !saveBtn._wired) {
+      saveBtn._wired = true;
+      saveBtn.addEventListener('click', function () {
+        const nameVal = nameInput ? nameInput.value.trim() : '';
+        if (!nameVal) {
+          if (nameInput) { nameInput.focus(); nameInput.style.borderColor = '#ef4444'; }
+          return;
+        }
+        if (nameInput) nameInput.style.borderColor = '';
+
+        const chapVal = chapitreSelect ? chapitreSelect.value : '';
+        const csrf    = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrf);
+        formData.append('name', nameVal);
+        if (chapVal) formData.append('chapitre_norme', chapVal);
+        if (typeAuditSelect && typeAuditSelect.value)
+          formData.append('type_audit', typeAuditSelect.value);
+        if (currentFormId)
+          formData.append('formulaire', currentFormId);
+
+        // Loading state
+        const origHtml = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...';
+
+        fetch("{% url 'save_critere_inline' %}", {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrf },
+          body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+          if (res.status === 'success') {
+            $(modal).modal('hide');
+            if (res.critere_id) window.lastUpdatedCritId = res.critere_id;
+            btnSync.click();
+            Swal.fire({
+              title: 'Critère créé !',
+              text: 'Voulez-vous ajouter un sous-critère à ce nouveau critère ?',
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonText: 'Oui, ajouter',
+              cancelButtonText: 'Plus tard'
+            }).then(s => {
+              if (s.isConfirmed) window.openAddSousCritereModal(res.critere_id);
+            });
+          } else {
+            Swal.fire('Erreur', res.message || 'Impossible de créer le critère.', 'error');
+          }
+        })
+        .catch(() => {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+          Swal.fire('Erreur réseau', 'Impossible de contacter le serveur.', 'error');
+        });
+      });
+    }
   };
 
   window.editCritere = function (id) {
     window.openAjaxFormModal(
       `/audit/critere/${id}/edit/`, "<i class='fas fa-pen me-2'></i>Modifier le Critère",
       `/audit/critere/${id}/update-inline/`,
-      () => btnSync.click(),
+      () => {
+        window.lastUpdatedCritId = id;
+        btnSync.click();
+      },
       (formNode) => {
-        // Hide the Sous-Critères tab and header
-        // Robustly remove the Sous-Critères tab and its header
-        // Robustly remove the Sous-Critères tab system
-        const $form = $(formNode);
-        const $modalBody = $form.closest('.modal-body');
-        
-        // Remove the tab navigation header (the pill buttons)
-        $modalBody.find('#critereTabs').parent().remove();
-        
-        // Remove the Sous-Critères content pane
-        $modalBody.find('#souscritere').remove();
-        
-        // Ensure the General tab content is visible and active
-        $modalBody.find('#general').addClass('active show').show();
-
         // Hide context fields during edit too
         ['type_audit', 'formulaire', 'ciblage'].forEach(name => {
           const el = formNode.querySelector(`[name="${name}"]`);
@@ -1098,6 +1277,7 @@
       (data) => {
         if (data.id) {
           selectedScIds.push(data.id);
+          window.lastUpdatedScId = data.id;
         }
         const syncBtn = document.getElementById('btn-sync');
         if (syncBtn) syncBtn.click();
@@ -1142,6 +1322,7 @@
       `/audit/sous-critere/${id}/edit/`, "<i class='fas fa-pen me-2'></i>Modifier le Sous-critère",
       `/audit/sous-critere/${id}/update-inline/`,
       () => {
+        window.lastUpdatedScId = id;
         const syncBtn = document.getElementById('btn-sync');
         if (syncBtn) syncBtn.click();
       },
@@ -1253,6 +1434,10 @@
           if (mobileList) mobileList.innerHTML = mobileHtml;
         }
 
+        // Clear highlight flags — only flash once per action
+        window.lastUpdatedScId = null;
+        window.lastUpdatedCritId = null;
+
         // Show Step 2 without hiding Step 1
         step2.style.display = 'block';
 
@@ -1298,6 +1483,19 @@
       document.querySelectorAll('.sc-checkbox').forEach(cb => cb.checked = false);
     });
   }
+
+  // Synchronize checkboxes between desktop and mobile views (to prevent duplicate hidden checkboxes from overriding unchecked state)
+  scope.addEventListener('change', (e) => {
+    if (e.target && e.target.classList.contains('sc-checkbox')) {
+      const val = e.target.value;
+      const checked = e.target.checked;
+      scope.querySelectorAll(`.sc-checkbox[value="${val}"]`).forEach(cb => {
+        if (cb !== e.target) {
+          cb.checked = checked;
+        }
+      });
+    }
+  });
   }
 
   if (document.readyState === 'loading') {
@@ -1407,7 +1605,6 @@
 
   .custom-checkbox:checked {
     background-color: #1a56db;
-    border-color: #1a56db;
   }
 
   /* Force hide tab system in AJAX Modal */
@@ -1685,7 +1882,6 @@
     box-shadow: none !important;
     border-radius: 0 !important;
   }
-  }
 </style>
 
 <!-- Ported Ajax Modal -->
@@ -1709,4 +1905,73 @@
     </div>
   </div>
 </div>
+
+<!-- =============================================
+     MODAL STATIQUE: NOUVEAU CRITÈRE
+     Autonome — aucun AJAX de template requis
+     ============================================= -->
+<div class="modal fade" id="addCritereStaticModal" tabindex="-1" aria-labelledby="addCritereStaticModalLabel" aria-hidden="true" style="z-index: 1070;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+
+      <!-- Header -->
+      <div class="modal-header border-0 px-4 pt-4 pb-0">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:44px; height:44px; min-width:44px; border-radius:12px; background:#e0e7ff; display:flex; align-items:center; justify-content:center;">
+            <i class="fas fa-plus-circle" style="font-size:18px; color:#4f46e5;"></i>
+          </div>
+          <div>
+            <h5 class="modal-title font-weight-bold mb-0" id="addCritereStaticModalLabel" style="font-size:1.05rem; font-weight:700; color:#1e293b;">Nouveau Critère</h5>
+            <p class="text-muted mb-0" style="font-size:12px;">Ajoutez un critère d'évaluation à votre audit.</p>
+          </div>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"
+          style="font-size:1.4rem; color:#94a3b8; background:transparent; border:none; cursor:pointer; margin:0; padding:0.6rem 1rem;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body px-4 pt-4 pb-2">
+        <!-- Désignation -->
+        <div style="margin-bottom:20px;">
+          <label for="critere_name_input" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:13px; text-transform:uppercase; letter-spacing:.4px;"
+            >Désignation du Critère <span style="color:#ef4444;">*</span></label>
+          <input
+            type="text"
+            id="critere_name_input"
+            placeholder="Ex: Management de la Qualité..."
+            autocomplete="off"
+            style="width:100%; height:46px; border:1.5px solid #e2e8f0; border-radius:12px; padding:10px 16px; font-size:14px; color:#0f172a; background:#f8fafc; outline:none; transition:border-color .2s;"
+            onfocus="this.style.borderColor='#4f46e5'; this.style.background='#fff';"
+            onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';" />
+        </div>
+
+        <!-- Norme -->
+        <div style="margin-bottom:8px;">
+          <label for="critere_chapitre_select" style="display:block; margin-bottom:8px; font-weight:700; color:#334155; font-size:13px; text-transform:uppercase; letter-spacing:.4px;">Norme</label>
+          <select
+            id="critere_chapitre_select"
+            style="width:100%; height:46px; border:1.5px solid #e2e8f0; border-radius:12px; padding:10px 16px; font-size:14px; color:#0f172a; background:#f8fafc; outline:none; cursor:pointer; appearance:auto;">
+            <option value="">— Sélectionner une norme (optionnel) —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-between align-items-center" style="background:#fff;">
+        <button type="button" class="btn btn-link font-weight-bold text-decoration-none"
+          style="color:#64748b; font-size:0.9rem; font-weight:600; background:transparent; border:none; cursor:pointer; padding:0;"
+          data-dismiss="modal">Annuler</button>
+        <button type="button" id="critereStaticSaveBtn"
+          style="height:44px; padding:0 28px; border:none; border-radius:50px; background:linear-gradient(135deg,#4f46e5,#3730a3); color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(79,70,229,.3); display:flex; align-items:center; gap:8px; transition:opacity .2s;"
+          onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+          <i class="fas fa-save"></i> Enregistrer
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 {% endblock %}

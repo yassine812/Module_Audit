@@ -72,10 +72,11 @@ class FormulaireAudit(models.Model):
     name = models.CharField(max_length=100)
     processus = models.ForeignKey(Processus, on_delete=models.SET_NULL , null=True, blank=True)
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
-    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.SET_NULL , null=True, blank=True)
+    type_equipement = models.ManyToManyField(TypeEquipement, related_name='formulaire_audit_type_equipement', blank=True)
     section = models.ManyToManyField(Section, related_name='formulaire_audit_section', blank=True)
     liste_sous_criteres = models.ManyToManyField(SousCritere,through='FormulaireSousCritere',related_name='liste_sous_critere', blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_formulaires')
     def __str__(self):
         return self.name
     def get_sous_criteres_ordonne(self):
@@ -103,6 +104,7 @@ class ListeAudit(models.Model):
     status = models.BooleanField(default=False)
     number_audit = models.PositiveIntegerField(default=0, editable=False)
     date = models.DateTimeField(default=timezone.now)
+    date_creation = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     affectation = models.ManyToManyField(User, related_name='liste_audit_affectation')
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True)
     formulaire_audit = models.ForeignKey(FormulaireAudit, on_delete=models.SET_NULL, null=True, blank=True)
@@ -110,6 +112,7 @@ class ListeAudit(models.Model):
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
     participants = models.ManyToManyField(User, related_name='liste_audit_participants', blank=True)
     participants_externes = models.TextField(blank=True, null=True, verbose_name="Participants Externes")
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_audits')
     
     def get_audit_status(self):
         """Determine the actual status of the audit based on ResultatAudit"""

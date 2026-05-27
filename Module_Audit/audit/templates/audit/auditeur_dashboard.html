@@ -74,8 +74,8 @@
             </div>
         </header>
 
-        <!-- 📊 2. KPI CARDS (GRID 4x1 on PC) -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <!-- 📊 2. KPI CARDS (GRID 5x1 on PC) -->
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
             <!-- Planifiés -->
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-blue-500/5 transition-all group cursor-pointer border-b-4 border-b-blue-500">
                 <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform">
@@ -99,6 +99,14 @@
                 </div>
                 <p class="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">Terminés</p>
                 <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ termines_count|default:"0" }}</p>
+            </div>
+            <!-- En retard -->
+            <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-red-500/5 transition-all group cursor-pointer border-b-4 border-b-red-500">
+                <div class="w-8 h-8 sm:w-12 sm:h-12 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform">
+                    <i data-lucide="alert-circle" class="w-4 h-4 sm:w-6 sm:h-6"></i>
+                </div>
+                <p class="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">En retard</p>
+                <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ en_retard_count|default:"0" }}</p>
             </div>
             <!-- Score moy. -->
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-purple-500/5 transition-all group cursor-pointer border-b-4 border-b-purple-500">
@@ -133,6 +141,8 @@
                     class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">En cours</button>
                 <button data-filter="termine"
                     class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">Terminé</button>
+                <button data-filter="en_retard"
+                    class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">En retard</button>
             </div>
         </section>
 
@@ -150,14 +160,15 @@
             <!-- Dynamic List using Django Template engine -->
             <div class="flex flex-col gap-4">
                 {% for audit in recent_audits %}
-                {% if audit.get_audit_status == 'en_cours' %}
-                <div class="audit-card" id="audit-{{ audit.id }}" data-status="en_cours"
+                {% with status=audit.get_audit_status result=audit.resultataudit_set.first %}
+                {% if status == 'en_cours' or status == 'en_retard' and result %}
+                <div class="audit-card" id="audit-{{ audit.id }}" data-status="{% if status == 'en_retard' %}en_retard{% else %}en_cours{% endif %}"
                     data-date="{{ audit.date|date:'Y-m-d' }}">
                     <div
-                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group hover:border-orange-300 hover:bg-orange-50/10 transition-all duration-300 border-l-4 border-l-orange-500">
+                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-orange-300 hover:bg-orange-50/10 border-l-4 border-l-orange-500{% endif %} transition-all duration-300">
                         <div class="flex items-start gap-3 sm:gap-4 w-full">
                             <div
-                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 text-orange-600 rounded-xl items-center justify-center shrink-0">
+                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-orange-100 text-orange-600{% endif %} rounded-xl items-center justify-center shrink-0">
                                 <i data-lucide="loader" class="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow"></i>
                             </div>
                             <div class="space-y-1 min-w-0 flex-grow">
@@ -165,9 +176,13 @@
                                     <h3
                                         class="text-base sm:text-lg font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight truncate">
                                         {{ audit.desc }}</h3>
+                                    {% if status == 'en_retard' %}
                                     <span
-                                        class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-orange-200">En
-                                        cours</span>
+                                        class="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-red-200">En retard</span>
+                                    {% else %}
+                                    <span
+                                        class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-orange-200">En cours</span>
+                                    {% endif %}
                                 </div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
                             </div>
@@ -185,30 +200,36 @@
                                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                 {{ audit.date|date:"d M Y" }}
                             </div>
-                            <a href="{% url 'etape_audit' audit.resultataudit_set.first.pk %}"
+                            {% if result %}
+                            <a href="{% url 'etape_audit' result.pk %}"
                                 class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-black flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all w-full sm:w-auto border-0 cursor-pointer">
                                 Continuer <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
-                {% elif audit.get_audit_status == 'planifie' %}
-                <div class="audit-card" id="audit-{{ audit.id }}" data-status="planifie"
+                {% elif status == 'planifie' or status == 'en_retard' and not result %}
+                <div class="audit-card" id="audit-{{ audit.id }}" data-status="{% if status == 'en_retard' %}en_retard{% else %}planifie{% endif %}"
                     data-date="{{ audit.date|date:'Y-m-d' }}">
                     <div
-                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group hover:border-blue-300 hover:bg-blue-50/10 transition-all duration-300 border-l-4 border-l-blue-500">
+                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-blue-300 hover:bg-blue-50/10 border-l-4 border-l-blue-500{% endif %} transition-all duration-300">
                         <div class="flex items-start gap-3 sm:gap-4 w-full">
                             <div
-                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-xl items-center justify-center shrink-0">
+                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-blue-100 text-blue-600{% endif %} rounded-xl items-center justify-center shrink-0">
                                 <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                             </div>
                             <div class="space-y-1 min-w-0 flex-grow">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{
-                                        audit.desc }}</h3>
+                                    <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{ audit.desc }}</h3>
+                                    {% if status == 'en_retard' %}
+                                    <span
+                                        class="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-red-200">En retard</span>
+                                    {% else %}
                                     <span
                                         class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-blue-200">Planifié</span>
+                                    {% endif %}
                                 </div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
                             </div>
@@ -237,7 +258,7 @@
                     </div>
                 </div>
 
-                {% elif audit.get_audit_status == 'termine' %}
+                {% elif status == 'termine' %}
                 <div class="audit-card" id="audit-{{ audit.id }}" data-status="termine"
                     data-date="{{ audit.date|date:'Y-m-d' }}">
                     <div
@@ -277,17 +298,17 @@
 
                         <div
                             class="flex flex-col sm:flex-row items-center justify-between w-full mt-2 pt-4 border-t border-slate-100 gap-4">
-                            {% if audit.resultataudit_set.first %}
+                            {% if result %}
                             <div
                                 class="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-full sm:w-auto">
                                 <i data-lucide="star" class="w-5 h-5 text-green-600 fill-current"></i>
                                 <div class="flex items-baseline gap-1">
                                     <span
                                         class="text-[10px] font-bold text-green-800 uppercase tracking-widest mr-2">Score</span>
-                                    <span class="text-base sm:text-lg font-black text-slate-800">{{ audit.resultataudit_set.first.score_audit|floatformat:1 }}</span>
+                                    <span class="text-base sm:text-lg font-black text-slate-800">{{ result.score_audit|floatformat:1 }}</span>
                                 </div>
                             </div>
-                            <a href="{% url 'resultat_report' audit.resultataudit_set.first.pk %}"
+                            <a href="{% url 'resultat_report' result.pk %}"
                                 class="flex items-center justify-center gap-2 text-slate-600 hover:text-blue-600 text-[11px] sm:text-xs font-black transition-all group/btn bg-white border border-slate-200 px-4 py-2.5 rounded-lg hover:border-blue-200 w-full sm:w-auto">
                                 Voir le rapport
                                 <i data-lucide="file-text"
@@ -297,7 +318,24 @@
                         </div>
                     </div>
                 </div>
+                {% else %}
+                <!-- Fallback card for any unrecognized status -->
+                <div class="audit-card" id="audit-{{ audit.id }}" data-status="{{ status }}"
+                    data-date="{{ audit.date|date:'Y-m-d' }}">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-all duration-300 border-l-4 border-l-slate-400">
+                        <div class="flex items-start gap-3 sm:gap-4 w-full">
+                            <div class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 text-slate-500 rounded-xl items-center justify-center shrink-0">
+                                <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="space-y-1 min-w-0 flex-grow">
+                                <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{ audit.desc }}</h3>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
+                {% endwith %}
                 {% empty %}
                 <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                     <i data-lucide="inbox" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
@@ -350,6 +388,8 @@
                 matchesFilter = (status === 'planifie');
             } else if (currentFilter === 'termine') {
                 matchesFilter = (status === 'termine');
+            } else if (currentFilter === 'en_retard') {
+                matchesFilter = (status === 'en_retard');
             }
 
             const matchesSearch = text.includes(query);

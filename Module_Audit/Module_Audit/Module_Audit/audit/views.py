@@ -124,9 +124,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Include audits where user is Auditor OR Participant
             audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
             
-            planifies = audits_assigned.exclude(resultataudit__isnull=False).count()
-            en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
+            from django.utils import timezone
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+            en_retard = audits_assigned.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().count()
             
             # Score average remains for results where user is the lead Auditor
             score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
@@ -134,6 +141,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['planifies_count'] = planifies
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
+            context['en_retard_count'] = en_retard
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             # --- DEBUG LOGGING ---
@@ -1090,7 +1098,7 @@ class FormulaireAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     model = FormulaireAudit
     template_name = "audit/formulaire/formulaire_list.html"
     context_object_name = "formulaires"
-    ordering = ["id"]
+    ordering = ["-id"]
     paginate_by = 7
 
     def get_paginate_by(self, queryset):
@@ -2179,13 +2187,25 @@ def get_structure(request):
         # Get all criteria
         criteres = Critere.objects.all().select_related('chapitre_norme__text_ref')
         
-        # Get sous-critères for this type audit
-        # This handles the filter carefully
-        sous_criteres = SousCritere.objects.filter(type_audit=type_id)
+        # Get all sub-criteria
+        all_sous_criteres = SousCritere.objects.all()
+
+        # Get IDs of sub-criteria that are linked to this type audit
+        linked_sc_ids = set(
+            SousCritereTypeAudit.objects.filter(type_audit_id=type_id)
+            .values_list('sous_critere_id', flat=True)
+        )
+
+        # Group sub-criteria in memory by critere_id to optimize performance
+        sc_by_critere = {}
+        for sc in all_sous_criteres:
+            if sc.critere_id not in sc_by_critere:
+                sc_by_critere[sc.critere_id] = []
+            sc_by_critere[sc.critere_id].append(sc)
 
         result = []
         for critere in criteres:
-            sc_list = sous_criteres.filter(critere=critere)
+            sc_list = sc_by_critere.get(critere.id, [])
             
             result.append({
                 "critere_id": critere.id,
@@ -2195,7 +2215,8 @@ def get_structure(request):
                 "sous_criteres": [
                     {
                         "id": sc.id,
-                        "nom": sc.content
+                        "nom": sc.content,
+                        "is_linked": sc.id in linked_sc_ids
                     }
                     for sc in sc_list
                 ]
@@ -2218,8 +2239,11 @@ def get_formulaire_structure(request):
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # 1. Get ALL Critères linked to this formulaire
-    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    # 1. Get ALL Critères linked to this formulaire (directly or via FormulaireSousCritere)
+    from django.db.models import Q
+    criteres = Critere.objects.filter(
+        Q(formulaire=formulaire) | Q(souscritere__formulairesouscritere__formulaire=formulaire)
+    ).distinct().select_related('chapitre_norme__text_ref').order_by('name')
     
     # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
@@ -2284,8 +2308,10 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
-                type_equipement_id=type_equipement_id if type_equipement_id else None
             )
+            
+            if type_equipement_id:
+                formulaire.type_equipement.set([type_equipement_id])
             
             # Set ManyToMany sections
             if section_ids:
@@ -2296,8 +2322,10 @@ def quick_create_formulaire(request):
                 
                 # 1. Existing sub-criteria
                 if sous_critere_ids:
-                    for sc_id in sous_critere_ids:
-                        FormulaireSousCritere.objects.create(
+                    # Filter out duplicate IDs
+                    unique_sc_ids = list(dict.fromkeys(sous_critere_ids))
+                    for sc_id in unique_sc_ids:
+                        FormulaireSousCritere.objects.get_or_create(
                             formulaire=formulaire,
                             sous_critere_id=sc_id
                         )
@@ -2341,7 +2369,7 @@ def quick_create_formulaire(request):
                             types_audit_ids = item.get('types_audit')
                             if types_audit_ids:
                                 for ta_id in types_audit_ids:
-                                    SousCritereTypeAudit.objects.create(
+                                    SousCritereTypeAudit.objects.get_or_create(
                                         sous_critere=new_sc,
                                         type_audit_id=ta_id
                                     )
@@ -2352,7 +2380,7 @@ def quick_create_formulaire(request):
                                 new_sc.preuve_attendu.set(preuve_ids)
 
                             # Link it to the formulaire
-                            FormulaireSousCritere.objects.create(
+                            FormulaireSousCritere.objects.get_or_create(
                                 formulaire=formulaire,
                                 sous_critere=new_sc
                             )

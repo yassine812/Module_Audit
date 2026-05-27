@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/storage';
+import { onUnauthorized } from '../utils/api';
 
 interface AuthContextType {
   user: any;
@@ -13,6 +14,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    onUnauthorized(() => {
+      setUser(null);
+    });
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {

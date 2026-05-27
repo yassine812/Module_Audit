@@ -143,6 +143,88 @@
         outline: none;
     }
 
+    /* =======================================
+       PREMIUM AUDIT MODAL STYLES
+       ======================================= */
+    .audit-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .audit-modal-backdrop.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .audit-modal-container {
+        background: #ffffff;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 28px;
+        box-shadow: 0 25px 70px -12px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        transform: translateY(20px) scale(0.95);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .audit-modal-backdrop.active .audit-modal-container {
+        transform: translateY(0) scale(1);
+    }
+
+    .audit-modal-header {
+        padding: 28px 36px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        background: #fff;
+    }
+
+    .audit-modal-header h2 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .audit-modal-header p {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: 6px 0 0 0;
+        font-weight: 500;
+    }
+
+    .audit-modal-close {
+        background: #f1f5f9;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .audit-modal-close:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+        transform: rotate(90deg);
+    }
+
     .filter-pill-group {
         background: #f1f5f9;
         padding: 4px;
@@ -180,6 +262,10 @@
         background: #fff !important;
         color: #2563eb !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+     }
+
+    #mobileAuditList {
+        display: none;
     }
 
     @media (max-width: 767.98px) {
@@ -191,7 +277,8 @@
         }
 
         #auditTable {
-            display: none !important; /* Hide desktop table on mobile */
+            display: none !important;
+            /* Hide desktop table on mobile */
         }
 
         #mobileAuditList {
@@ -201,7 +288,7 @@
             border-radius: 12px;
             overflow: hidden;
             margin-top: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
         }
 
         .mobile-row-item {
@@ -361,6 +448,10 @@
         background: #10b981;
     }
 
+    .stat-card.en-retard::after {
+        background: #ef4444;
+    }
+
     .stat-icon-wrapper {
         width: 48px;
         height: 48px;
@@ -385,6 +476,11 @@
     .termines .stat-icon-wrapper {
         background-color: rgba(16, 185, 129, 0.1);
         color: #10b981;
+    }
+
+    .en-retard .stat-icon-wrapper {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
     }
 
     .stat-card:hover .stat-icon-wrapper {
@@ -440,7 +536,7 @@
 
     <!-- Audit Statistics Dashboard -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card planifies">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="calendar" style="width: 24px; height: 24px;"></i>
@@ -451,7 +547,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card en-cours">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="play" style="width: 24px; height: 24px;"></i>
@@ -462,7 +558,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="stat-card termines">
                 <div class="stat-icon-wrapper">
                     <i data-lucide="check-circle" style="width: 24px; height: 24px;"></i>
@@ -470,6 +566,17 @@
                 <div class="stat-info">
                     <span class="stat-label">Terminés</span>
                     <span class="stat-value">{{ termines_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card en-retard">
+                <div class="stat-icon-wrapper">
+                    <i data-lucide="alert-circle" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">En retard</span>
+                    <span class="stat-value">{{ en_retard_count|default:0 }}</span>
                 </div>
             </div>
         </div>
@@ -491,6 +598,8 @@
                 cours</a>
             <a href="?status=termine"
                 class="filter-pill {% if current_filter == 'termine' %}active{% endif %}">Terminés</a>
+            <a href="?status=en_retard"
+                class="filter-pill {% if current_filter == 'en_retard' %}active{% endif %}">En retard</a>
         </div>
     </div> <!-- Table Desktop -->
     {% if audits %}
@@ -512,7 +621,7 @@
                 <tbody>
                     {% for audit in audits %}
                     <tr class="audit-row">
-                        <td class="fw-bold  col-id ps-2 " data-label="N°">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
+                        <td class="fw-bold col-id ps-2" data-label="N°">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                         <td class="col-name" data-label="Audit">
                             <div class="fw-bold ">{{ audit.desc|default:"Sans description" }}</div>
                         </td>
@@ -520,7 +629,7 @@
                             <span class="">{{ audit.section|default:"-" }}</span>
                         </td>
                         <td class="text-nowrap col-date" data-label="Date">
-                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y H:i" }}
+                            <i data-lucide="calendar" class="me-2 "></i>{{ audit.date|date:"d/m/Y" }}
                         </td>
                         <td class="col-auditores" data-label="Auditeurs">
                             {% if audit.affectation.all %}
@@ -541,6 +650,7 @@
                                     {% if audit.get_audit_status == 'en_cours' %}bg-warning text-dark
                                     {% elif audit.get_audit_status == 'planifie' %}bg-primary
                                     {% elif audit.get_audit_status == 'termine' %}bg-success
+                                    {% elif audit.get_audit_status == 'en_retard' %}bg-danger
                                     {% else %}bg-secondary{% endif %}">
                                 {{ audit.get_audit_status_display|default:audit.get_audit_status|capfirst }}
                             </span>
@@ -548,37 +658,24 @@
                         <td class="text-center col-actions" data-label="Actions">
                             <div class="d-flex justify-content-end align-items-center gap-1">
                                 <!-- Main Actions based on Status -->
-                                {% if audit.get_audit_status == 'planifie' %}
-                                <form method="POST" action="{% url 'start_audit' audit.pk %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit"
-                                        class="btn btn-sm btn-demarrer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
-                                        title="Démarrer">
-                                        <span>Démarrer</span> <i data-lucide="play-circle"></i>
-                                    </button>
-                                </form>
-                                {% elif audit.get_audit_status == 'en_cours' %}
+                                {% if audit.get_audit_status == 'planifie' or audit.get_audit_status == 'en_retard' and not audit.resultataudit_set.first %}
+                                <button type="button" onclick="startAuditWithContext({{ audit.id }}, '{{ audit.desc|escapejs }}', '{{ audit.section|escapejs }}')" 
+                                    class="btn btn-sm btn-demarrer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
+                                    title="Démarrer">
+                                    <span>Démarrer</span> <i data-lucide="play-circle"></i>
+                                </button>
+                                {% elif audit.get_audit_status == 'en_cours' or audit.get_audit_status == 'en_retard' and audit.resultataudit_set.first %}
                                 {% if audit.resultataudit_set.first %}
                                 <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}"
                                     class="btn btn-sm btn-continuer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
                                     title="Continuer">
                                     <span>Continuer</span> <i data-lucide="chevron-right"></i>
                                 </a>
-                                {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
-                                <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="button"
-                                        class="btn btn-sm btn-warning rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1 btn-finish-audit"
-                                        title="Clôturer">
-                                        <span>Clôturer</span> <i data-lucide="lock"></i>
-                                    </button>
-                                </form>
-                                {% endif %}
                                 {% endif %}
                                 {% elif audit.get_audit_status == 'termine' %}
                                 {% if audit.resultataudit_set.first %}
                                 <a href="{% url 'resultat_report' audit.resultataudit_set.first.id %}"
-                                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
+                                    class="btn btn-sm btn-continuer rounded-pill px-2 py-1 flex-shrink-0 d-flex align-items-center gap-1"
                                     title="Rapport">
                                     <span>Rapport</span> <i data-lucide="file-text"></i>
                                 </a>
@@ -618,93 +715,81 @@
             </table>
         </div>
 
-        <!-- Mobile Audit List (Mobile-only rows) -->
+        <!-- Mobile Audit List -->
         <div id="mobileAuditList">
             {% for audit in audits %}
             <div class="mobile-row-item audit-row">
-                <div class="mobile-row-top" data-toggle="collapse" data-target="#mob-audit-collapse-{{ audit.id }}" 
-                     onclick="this.querySelector('.accordion-icon').classList.toggle('rotated')">
-                    <div class="mobile-row-content">
-                        <div class="mobile-row-title">{{ audit.desc|default:"Sans description" }}</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="mobile-row-id">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+
+                    <!-- Left: Title + Status -->
+                    <div style="min-width: 0; flex: 1;">
+                        <div class="mobile-row-title text-truncate">{{ audit.desc|default:"Sans description" }}</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="mobile-row-id">#{{ audit.number_audit }}</span>
                             <span class="badge status-badge rounded-pill
                                     {% if audit.get_audit_status == 'en_cours' %}bg-warning text-dark
                                     {% elif audit.get_audit_status == 'planifie' %}bg-primary
                                     {% elif audit.get_audit_status == 'termine' %}bg-success
+                                    {% elif audit.get_audit_status == 'en_retard' %}bg-danger
                                     {% else %}bg-secondary{% endif %}" style="font-size: 8px; padding: 2px 6px;">
                                 {{ audit.get_audit_status_display|default:audit.get_audit_status|capfirst }}
                             </span>
                         </div>
                     </div>
-                    <i class="fas fa-chevron-right accordion-icon"></i>
-                </div>
 
-                <div id="mob-audit-collapse-{{ audit.id }}" class="collapse">
-                    <div class="mobile-row-details">
-                        <div class="mobile-row-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">Département</span>
-                                <span class="meta-value">{{ audit.section|default:"N/A" }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Date</span>
-                                <span class="meta-value">{{ audit.date|date:"d/m/Y" }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Auditeur</span>
-                                <span class="meta-value">{{ audit.affectation.first.username|default:"Non assigné" }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Formulaire</span>
-                                <span class="meta-value text-truncate" style="max-width: 100px;">{{ audit.formulaire_audit|default:"-" }}</span>
-                            </div>
-                        </div>
+                    <!-- Right: Action Button + Admin Dropdown -->
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
 
-                        <div class="mobile-row-footer">
-                            <div class="d-flex gap-2">
-                                {% if audit.get_audit_status == 'planifie' %}
-                                <form method="POST" action="{% url 'start_audit' audit.pk %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-demarrer rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
-                                        Démarrer
-                                    </button>
-                                </form>
-                                {% elif audit.get_audit_status == 'en_cours' %}
-                                {% if audit.resultataudit_set.first %}
-                                <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}" class="btn btn-sm btn-continuer rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
-                                    Continuer
-                                </a>
-                                {% if user.is_superuser or user == audit.resultataudit_set.first.auditeur %}
-                                <form method="post" action="{% url 'resultat_close' audit.resultataudit_set.first.id %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="button" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold btn-finish-audit" style="font-size: 11px;">
-                                        Clôturer
-                                    </button>
-                                </form>
-                                {% endif %}
-                                {% endif %}
-                                {% elif audit.get_audit_status == 'termine' %}
-                                {% if audit.resultataudit_set.first %}
-                                <a href="{% url 'resultat_report' audit.resultataudit_set.first.id %}" class="btn btn-sm btn-light border rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
-                                    Rapport
-                                </a>
-                                {% endif %}
-                                {% endif %}
-                            </div>
+                        <!-- Main action button directly on card -->
+                        {% if audit.get_audit_status == 'planifie' or audit.get_audit_status == 'en_retard' and not audit.resultataudit_set.first %}
+                        <button type="button" onclick="startAuditWithContext({{ audit.id }}, '{{ audit.desc|escapejs }}', '{{ audit.section|escapejs }}')" 
+                                class="btn btn-sm btn-demarrer rounded-pill px-3 py-1 fw-bold" style="font-size: 11px; white-space: nowrap;">
+                            Démarrer
+                        </button>
+                        {% elif audit.get_audit_status == 'en_cours' or audit.get_audit_status == 'en_retard' and audit.resultataudit_set.first %}
+                        {% if audit.resultataudit_set.first %}
+                        <a href="{% url 'etape_audit' audit.resultataudit_set.first.id %}"
+                            class="btn btn-sm btn-continuer rounded-pill px-3 py-1 fw-bold"
+                            style="font-size: 11px; white-space: nowrap;">
+                            Continuer
+                        </a>
+                        {% endif %}
+                        {% elif audit.get_audit_status == 'termine' %}
+                        {% if audit.resultataudit_set.first %}
+                        <a href="{% url 'resultat_report' audit.resultataudit_set.first.id %}"
+                            class="btn btn-sm btn-continuer rounded-pill px-3 py-1 fw-bold"
+                            style="font-size: 11px; white-space: nowrap;">
+                            Rapport
+                        </a>
+                        {% endif %}
+                        {% endif %}
 
-                            <div class="d-flex gap-1">
-                                {% if user.is_superuser %}
-                                <a href="{% url 'liste_audit_update' audit.id %}" class="btn-mobile-action">
-                                    <i data-lucide="edit-3" style="width: 16px;"></i>
-                                </a>
-                                <button type="button" class="btn-mobile-action text-danger btn-delete-audit" 
+                        <!-- Admin dropdown (Modifier / Supprimer) -->
+                        {% if user.is_superuser %}
+                        <div class="dropdown">
+                            <button class="btn btn-link p-1 d-flex align-items-center" type="button"
+                                data-toggle="dropdown" data-boundary="window" style="color: #94a3b8;">
+                                <i class="fas fa-chevron-right" style="font-size: 12px;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2"
+                                style="min-width: 160px;">
+                                <li>
+                                    <a class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2"
+                                        href="{% url 'liste_audit_update' audit.id %}">
+                                        <i data-lucide="edit-3" style="width:16px;" class="text-warning"></i> Modifier
+                                    </a>
+                                </li>
+                                <li>
+                                    <button
+                                        class="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-danger btn-delete-audit"
                                         data-id="{{ audit.id }}" data-desc="{{ audit.desc }}">
-                                    <i data-lucide="trash-2" style="width: 16px;"></i>
-                                </button>
-                                {% endif %}
-                            </div>
+                                        <i data-lucide="trash-2" style="width:16px;"></i> Supprimer
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
@@ -810,39 +895,328 @@
     {% endif %}
 </div>
 
+<!-- =======================================
+     PREMIUM AUDIT START MODAL
+     ======================================= -->
+<style>
+    .audit-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .audit-modal-backdrop.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .audit-modal-container {
+        background: #ffffff;
+        width: 100%;
+        max-width: 550px;
+        border-radius: 28px;
+        box-shadow: 0 25px 70px -12px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        transform: translateY(20px) scale(0.95);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .audit-modal-backdrop.active .audit-modal-container {
+        transform: translateY(0) scale(1);
+    }
+
+    .audit-modal-header {
+        padding: 28px 36px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        background: #fff;
+    }
+
+    .audit-modal-header h2 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .audit-modal-header p {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: 6px 0 0 0;
+        font-weight: 500;
+    }
+
+    .audit-modal-close {
+        background: #f1f5f9;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .audit-modal-body {
+        padding: 32px 36px;
+    }
+
+    .audit-textarea-wrapper label {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .audit-textarea {
+        width: 100%;
+        min-height: 180px;
+        padding: 20px;
+        border-radius: 20px;
+        border: 2px solid #e2e8f0;
+        background: #ffffff;
+        font-size: 1rem;
+        color: #1e293b;
+        resize: none;
+        transition: all 0.3s ease;
+        line-height: 1.6;
+    }
+
+    .audit-textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .char-counter {
+        text-align: right;
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+    }
+
+    .audit-modal-footer {
+        padding: 28px 36px;
+        background: #f8fafc;
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .btn-modal-cancel {
+        padding: 12px 28px;
+        border-radius: 14px;
+        border: 2px solid #e2e8f0;
+        background: #fff;
+        color: #64748b;
+        font-weight: 800;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .btn-modal-start {
+        padding: 12px 32px;
+        border-radius: 14px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+    }
+
+    .spin-loader {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin-modal 0.8s linear infinite;
+    }
+
+    @keyframes spin-modal { to { transform: rotate(360deg); } }
+</style>
+
+<div id="startAuditModal" class="audit-modal-backdrop">
+    <div class="audit-modal-container">
+        <div class="audit-modal-header">
+            <div>
+                <h2>Démarrage de l’audit</h2>
+                <p>Saisissez le contexte initial avant de commencer</p>
+            </div>
+            <button type="button" class="audit-modal-close" onclick="closeStartModal()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <form id="startAuditForm" onsubmit="handleStartAuditSubmit(event)">
+            <input type="hidden" name="audit_id" id="modal-audit-id">
+            <div class="audit-modal-body">
+                <div class="audit-textarea-wrapper">
+                    <label for="audit-commentaire">Contexte de l'audit</label>
+                    <textarea 
+                        id="audit-commentaire" 
+                        name="commentaire" 
+                        class="audit-textarea"
+                        placeholder="Décrire le contexte, les objectifs ou observations initiales..."
+                        maxlength="1000"
+                        oninput="updateCharCount(this)"
+                    ></textarea>
+                    <div class="char-counter"><span id="current-chars">0</span> / 1000</div>
+                </div>
+            </div>
+
+            <div class="audit-modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeStartModal()">Annuler</button>
+                <button type="submit" class="btn-modal-start" id="btn-submit-start">
+                    <span>Enregistrer et commencer</span>
+                    <i data-lucide="play" class="modal-btn-icon"></i>
+                    <div class="spin-loader"></div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+
+    function startAuditWithContext(auditId, auditDesc, auditDept) {
+        const modal = document.getElementById('startAuditModal');
+        document.getElementById('modal-audit-id').value = auditId;
+        document.getElementById('audit-commentaire').value = '';
+        document.getElementById('current-chars').innerText = '0';
+        
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeStartModal() {
+        const modal = document.getElementById('startAuditModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 400);
+    }
+
+    function updateCharCount(textarea) {
+        document.getElementById('current-chars').innerText = textarea.value.length;
+    }
+
+    function handleStartAuditSubmit(event) {
+        event.preventDefault();
+        const btn = document.getElementById('btn-submit-start');
+        const spinner = btn.querySelector('.spin-loader');
+        const icon = btn.querySelector('.modal-btn-icon');
+        const text = btn.querySelector('span');
+        const auditId = document.getElementById('modal-audit-id').value;
+        const commentaire = document.getElementById('audit-commentaire').value;
+
+        if (!commentaire.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Contexte Requis',
+                text: 'Veuillez saisir le contexte de l\'audit avant de commencer.',
+                confirmButtonColor: '#2563eb'
+            });
+            return;
+        }
+
+        // Show loading state
+        btn.disabled = true;
+        if (spinner) spinner.style.display = 'block';
+        if (icon) icon.style.display = 'none';
+        if (text) text.innerText = 'Initialisation...';
+
+        // Build a real HTML form and submit — lets the browser follow the Django redirect naturally
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/audit/liste-audit/${auditId}/start/`;
+
+        const csrfField = document.createElement('input');
+        csrfField.type = 'hidden';
+        csrfField.name = 'csrfmiddlewaretoken';
+        csrfField.value = '{{ csrf_token }}';
+
+        const ctxField = document.createElement('input');
+        ctxField.type = 'hidden';
+        ctxField.name = 'commentaire';
+        ctxField.value = commentaire;
+
+        form.appendChild(csrfField);
+        form.appendChild(ctxField);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Search Filtering
         const searchInput = document.getElementById('searchInput');
         const auditRows = document.querySelectorAll('.audit-row');
 
-        searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-
-            auditRows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                auditRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
-        });
-        // Delete Audit Confirmation
+        }
+
+        // 2. Delete Audit Confirmation via SweetAlert2
         const deleteButtons = document.querySelectorAll('.btn-delete-audit');
         deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
                 const auditId = this.getAttribute('data-id');
                 const auditDesc = this.getAttribute('data-desc') || 'cet audit';
 
                 Swal.fire({
                     title: 'Supprimer l\'audit ?',
-                    text: `Êtes-vous sûr de vouloir supprimer"${auditDesc}" ? Cette action est irréversible.`,
+                    text: `Êtes-vous sûr de vouloir supprimer "${auditDesc}" ? Cette action est irréversible.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Oui, supprimer',
-                    cancelButtonText: 'Annuler'
+                    cancelButtonText: 'Annuler',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg border-0'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const form = document.createElement('form');
@@ -861,28 +1235,8 @@
                 });
             });
         });
-        const finishButtons = document.querySelectorAll('.btn-finish-audit');
-        finishButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const form = this.closest('form');
-                if (!form) return;
-                Swal.fire({
-                    title: 'Clôturer l\\'audit ?',
-                    text: 'Vous ne pourrez plus modifier cet audit après clôture.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#f59e0b',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Oui, clôturer',
-                    cancelButtonText: 'Annuler'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            });
-        });
-        // Dropdown z-index fix for mobile cards
+
+        // 3. Dropdown z-index fix for mobile cards
         document.addEventListener('show.bs.dropdown', function (e) {
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1050';
@@ -891,10 +1245,8 @@
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1';
         });
-    });
 
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
+        // 4. Preserve URL parameters in pagination links
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.toString()) {
             document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
@@ -908,92 +1260,14 @@
             });
         }
     });
-
 </script>
-<script src="https://unpkg.com/lucide@latest">
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.toString()) {
-            document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
-                const href = link.getAttribute('href');
-                if (href && href.startsWith('?page=')) {
-                    const pageNum = href.split('=')[1];
-                    const newParams = new URLSearchParams(window.location.search);
-                    newParams.set('page', pageNum);
-                    link.setAttribute('href', '?' + newParams.toString());
-                }
-            });
-        }
-    });
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
-      }
-  });
 
-</script>
-<script src="https://unpkg.com/lucide@latest">
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
-      }
-  });
-
-</script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    lucide.createIcons();
-
-    // Preserve URL parameters in pagination links
-    document.addEventListener("DOMContentLoaded", function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.toString()) {
-            document.querySelectorAll('.pagination a.page-link').forEach(function (link) {
-                const href = link.getAttribute('href');
-                if (href && href.startsWith('?page=')) {
-                    const pageNum = href.split('=')[1];
-                    const newParams = new URLSearchParams(window.location.search);
-                    newParams.set('page', pageNum);
-                    link.setAttribute('href', '?' + newParams.toString());
-                }
-            });
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
         }
     });
-  // Preserve URL parameters in pagination links
-  document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.toString()) {
-          document.querySelectorAll('.pagination a.page-link').forEach(function(link) {
-              const href = link.getAttribute('href');
-              if (href && href.startsWith('?page=')) {
-                  const pageNum = href.split('=')[1];
-                  const newParams = new URLSearchParams(window.location.search);
-                  newParams.set('page', pageNum);
-                  link.setAttribute('href', '?' + newParams.toString());
-              }
-          });
-      }
-  });
-
 </script>
 {% endblock %}

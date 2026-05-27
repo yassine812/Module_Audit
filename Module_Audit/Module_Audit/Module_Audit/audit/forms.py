@@ -20,7 +20,7 @@ class FormulaireAuditForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'custom-input'}),
             'type_audit': forms.Select(attrs={'class': 'custom-input form-select'}),
             'processus': forms.Select(attrs={'class': 'custom-input form-select'}),
-            'type_equipement': forms.Select(attrs={'class': 'custom-input form-select'}),
+            'type_equipement': forms.SelectMultiple(attrs={'class': 'custom-input form-select select2-inline', 'data-placeholder': "Sélectionner les types d'équipement...", 'size': '1', 'style': 'height: 45px; min-height: unset;'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -143,9 +143,9 @@ class ListeAuditForm(forms.ModelForm):
             "participants",
         ]
         widgets = {
-            "date": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
+            "date": forms.DateInput(
+                attrs={"type": "date"},
+                format="%Y-%m-%d",
             ),
         }
 
@@ -156,10 +156,14 @@ class ListeAuditForm(forms.ModelForm):
             if timezone.is_naive(value):
                 value = timezone.make_aware(value, dt_timezone.utc)
             value = timezone.localtime(value, timezone.get_current_timezone())
-            self.initial["date"] = value.strftime("%Y-%m-%dT%H:%M")
+            self.initial["date"] = value.strftime("%Y-%m-%d")
 
     def clean_date(self):
         value = self.cleaned_data.get("date")
-        if value and timezone.is_naive(value):
-            value = timezone.make_aware(value, timezone.get_current_timezone())
+        if value:
+            import datetime
+            if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
+                value = datetime.datetime.combine(value, datetime.time.min)
+            if timezone.is_naive(value):
+                value = timezone.make_aware(value, timezone.get_current_timezone())
         return value

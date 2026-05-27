@@ -72,10 +72,11 @@ class FormulaireAudit(models.Model):
     name = models.CharField(max_length=100)
     processus = models.ForeignKey(Processus, on_delete=models.SET_NULL , null=True, blank=True)
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
-    type_equipement = models.ForeignKey(TypeEquipement, on_delete=models.SET_NULL , null=True, blank=True)
+    type_equipement = models.ManyToManyField(TypeEquipement, related_name='formulaire_audit_type_equipement', blank=True)
     section = models.ManyToManyField(Section, related_name='formulaire_audit_section', blank=True)
     liste_sous_criteres = models.ManyToManyField(SousCritere,through='FormulaireSousCritere',related_name='liste_sous_critere', blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_formulaires')
     def __str__(self):
         return self.name
     def get_sous_criteres_ordonne(self):
@@ -111,12 +112,25 @@ class ListeAudit(models.Model):
     type_audit = models.ForeignKey(TypeAudit, on_delete=models.SET_NULL, null=True, blank=True)
     participants = models.ManyToManyField(User, related_name='liste_audit_participants', blank=True)
     participants_externes = models.TextField(blank=True, null=True, verbose_name="Participants Externes")
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_audits')
     
     def get_audit_status(self):
-        """Determine the actual status of the audit based on ResultatAudit"""
+        """Determine the actual status of the audit based on ResultatAudit and planned date"""
         # Check if there are any ResultatAudit for this audit
         resultats = self.resultataudit_set.all()
         
+        # Check if completed
+        is_completed = resultats.exists() and not resultats.filter(en_cours=True).exists()
+        if not is_completed:
+            try:
+                local_now = timezone.localtime(timezone.now()).date()
+                local_date = timezone.localtime(self.date).date()
+            except ValueError:
+                local_now = timezone.now().date()
+                local_date = self.date.date()
+            if local_date < local_now:
+                return 'en_retard'
+            
         if resultats.exists():
             # Check if any are still in progress
             if resultats.filter(en_cours=True).exists():
@@ -133,7 +147,8 @@ class ListeAudit(models.Model):
         status_map = {
             'planifie': 'Planifié',
             'en_cours': 'En cours', 
-            'termine': 'Terminé'
+            'termine': 'Terminé',
+            'en_retard': 'En retard'
         }
         return status_map.get(status, 'Inconnu')
     
