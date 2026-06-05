@@ -494,7 +494,7 @@ const AuditFormScreen = () => {
                 <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12, justifyContent: 'center' }}>
                   <Ionicons name="arrow-back" size={24} color="#1e3a6e" />
                 </TouchableOpacity>
-                <View style={[styles.headerMain, { flex: 1 }]}>
+                <View style={styles.headerMain}>
                   <Text style={styles.normeLabel}>NORME: {currentDetail?.norme || 'ISO9001'}</Text>
                   <TouchableOpacity style={styles.normeRow} onPress={handleOpenPDF}>
                     <Text style={styles.normeText} numberOfLines={1}>{currentDetail?.chapitre_norme || 'Chapitre'}</Text>
@@ -506,7 +506,7 @@ const AuditFormScreen = () => {
                     <Text style={styles.miniLabel}>AUDITEUR</Text>
                     <Text style={styles.infoText}>{auditData.auditeur}</Text>
                   </View>
-                  <View style={styles.infoBox}>
+                  <View style={[styles.infoBox, { flex: 1 }]}>
                     <Text style={styles.miniLabel}>PARTICIPANT</Text>
                     <Text style={styles.infoText} numberOfLines={1}>{auditData.participants}</Text>
                   </View>
@@ -761,13 +761,13 @@ const styles = StyleSheet.create({
   
   webHeader: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerMain: { flex: 1.5 },
+  headerMain: { flex: 1.4, marginRight: 8 },
   miniLabel: { fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, marginBottom: 4 },
   normeRow: { flexDirection: 'row', alignItems: 'center' },
   normeTitle: { fontSize: 18, fontWeight: '900', color: '#1e3a6e' },
-  normeText: { fontSize: 18, fontWeight: '900', color: '#2563eb' },
+  normeText: { fontSize: 18, fontWeight: '900', color: '#2563eb', flexShrink: 1 },
   normeLabel: { fontSize: 11, fontWeight: '800', color: '#0f172a', letterSpacing: 0.5, marginBottom: 4 },
-  headerSide: { flexDirection: 'row', gap: 20 },
+  headerSide: { flex: 1.6, flexDirection: 'row', gap: 12, justifyContent: 'flex-end' },
   infoBox: { alignItems: 'flex-start' },
   infoText: { fontSize: 13, fontWeight: '700', color: '#1e293b' },
 

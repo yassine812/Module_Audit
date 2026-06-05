@@ -92,15 +92,65 @@
   .year-select-container::after {
       content: '';
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
       border-top: 5px solid #6c757d;
       pointer-events: none;
+  }
+
+  /* Premium Dashboard Enhancements */
+  .premium-card {
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+    background: #ffffff !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .premium-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+  }
+  .alert-item {
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+  .alert-item-danger {
+    background: #fdfafb;
+    border-color: #fee2e2 !important;
+  }
+  .alert-item-danger:hover {
+    background: #fef2f2;
+    transform: scale(1.005);
+  }
+  .alert-item-warning {
+    background: #fffbeb;
+    border-color: #fef3c7 !important;
+  }
+  .alert-item-warning:hover {
+    background: #fef3c7;
+    transform: scale(1.005);
+  }
+  .progress-premium-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .progress-premium-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: #10b981;
+    transition: width 0.8s ease-out;
+  }
+  .stat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
   }
 </style>
 <div class="row">
@@ -166,6 +216,170 @@
   </div>
 </div>
 
+<!-- SECTION 1: Alertes prioritaires -->
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="card premium-card">
+      <div class="card-header border-bottom-0 d-flex justify-content-between align-items-center" style="padding: 20px 24px; background: transparent;">
+        <h3 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1.15rem; letter-spacing: -0.01em; float: none !important;">Alertes prioritaires</h3>
+      </div>
+      <div class="card-body" style="padding: 0 24px 24px 24px;">
+        <div class="d-flex flex-column" style="gap: 12px;">
+          <!-- Late Audits List -->
+          {% for audit in late_audits %}
+          <a href="{% url 'liste_audit_list' %}?highlight={{ audit.pk }}#audit-{{ audit.pk }}" class="alert-item alert-item-danger">
+            <div class="d-flex align-items-center" style="gap: 16px;">
+              <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 42px; height: 42px; background: #fef2f2; color: #ef4444;">
+                <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <h5 class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem;">
+                  Audit en retard : {{ audit.formulaire_audit.name }} - {{ audit.site.name }}
+                </h5>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">
+                  Date d'échéance : {{ audit.date|date:"d/m/Y" }}
+                </p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center" style="gap: 16px;">
+              <span class="badge badge-danger px-3 py-2" style="background: #fee2e2; color: #ef4444; border-radius: 9999px; font-weight: 600; font-size: 0.75rem;">En retard</span>
+              <i data-lucide="chevron-right" class="text-muted" style="width: 18px; height: 18px;"></i>
+            </div>
+          </a>
+          {% empty %}
+          <!-- No late audits -->
+          {% endfor %}
+
+          <!-- Non-conformities Alert -->
+          <a href="{% url 'resultat_list' %}" class="alert-item alert-item-warning">
+            <div class="d-flex align-items-center" style="gap: 16px;">
+              <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 42px; height: 42px; background: #fffbeb; color: #d97706;">
+                <i data-lucide="alert-circle" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <h5 class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem;">
+                  {% if open_ncs_count > 1 %}{{ open_ncs_count }} non-conformités ouvertes{% else %}{{ open_ncs_count }} non-conformité ouverte{% endif %}
+                </h5>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">Nécessitent une action</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center" style="gap: 16px;">
+              <i data-lucide="chevron-right" class="text-muted" style="width: 18px; height: 18px;"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTIONS 2 & 3: Répartition par statut & Performance -->
+<div class="row">
+  <!-- Répartition par statut -->
+  <div class="col-lg-6 mb-4">
+    <div class="card premium-card h-100 mb-0">
+      <div class="card-header border-bottom-0" style="padding: 20px 24px 10px 24px; background: transparent;">
+        <h3 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1.15rem; letter-spacing: -0.01em;">Répartition par statut</h3>
+      </div>
+      <div class="card-body d-flex flex-column flex-sm-row align-items-center justify-content-between" style="padding: 10px 24px 24px 24px; gap: 24px;">
+        <div style="width: 160px; height: 160px; position: relative;">
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="d-flex flex-column flex-grow-1" style="gap: 10px; width: 100%;">
+          <div class="d-flex align-items-center justify-content-between py-1 border-bottom" style="border-color: #f1f5f9 !important;">
+            <div class="d-flex align-items-center" style="gap: 8px;">
+              <span class="stat-dot" style="background: #10b981;"></span>
+              <span style="font-size: 0.9rem; font-weight: 500;">Terminés</span>
+            </div>
+            <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{{ status_counts.termines }} ({{ status_percentages.termines }}%)</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between py-1 border-bottom" style="border-color: #f1f5f9 !important;">
+            <div class="d-flex align-items-center" style="gap: 8px;">
+              <span class="stat-dot" style="background: #f59e0b;"></span>
+              <span style="font-size: 0.9rem; font-weight: 500;">En cours</span>
+            </div>
+            <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{{ status_counts.en_cours }} ({{ status_percentages.en_cours }}%)</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between py-1 border-bottom" style="border-color: #f1f5f9 !important;">
+            <div class="d-flex align-items-center" style="gap: 8px;">
+              <span class="stat-dot" style="background: #3b82f6;"></span>
+              <span style="font-size: 0.9rem; font-weight: 500;">Planifiés</span>
+            </div>
+            <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{{ status_counts.planifies }} ({{ status_percentages.planifies }}%)</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between py-1 border-bottom" style="border-color: #f1f5f9 !important;">
+            <div class="d-flex align-items-center" style="gap: 8px;">
+              <span class="stat-dot" style="background: #ef4444;"></span>
+              <span style="font-size: 0.9rem; font-weight: 500;">En retard</span>
+            </div>
+            <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{{ status_counts.en_retard }} ({{ status_percentages.en_retard }}%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance -->
+  <div class="col-lg-6 mb-4">
+    <div class="card premium-card h-100 mb-0">
+      <div class="card-header border-bottom-0" style="padding: 20px 24px 10px 24px; background: transparent;">
+        <h3 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1.15rem; letter-spacing: -0.01em;">Performance</h3>
+      </div>
+      <div class="card-body d-flex flex-column justify-content-between" style="padding: 10px 24px 24px 24px; gap: 16px;">
+        <div class="d-flex flex-column" style="gap: 16px;">
+          <!-- Metric 1 -->
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <div class="d-flex align-items-center" style="gap: 10px;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 28px; height: 28px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
+                  <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                </div>
+                <span class="font-weight-bold text-secondary" style="font-size: 0.9rem;">Respect des délais</span>
+              </div>
+              <span class="font-weight-bold" style="font-size: 1rem; color: #1e293b;">{{ performance.respect_delais }}%</span>
+            </div>
+            <div class="progress-premium-bar">
+              <div class="progress-premium-fill" style="width: {{ performance.respect_delais }}%;"></div>
+            </div>
+          </div>
+
+          <!-- Metric 2 -->
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <div class="d-flex align-items-center" style="gap: 10px;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 28px; height: 28px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
+                  <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i>
+                </div>
+                <span class="font-weight-bold text-secondary" style="font-size: 0.9rem;">Taux de conformité</span>
+              </div>
+              <span class="font-weight-bold" style="font-size: 1rem; color: #1e293b;">{{ performance.taux_conformite }}%</span>
+            </div>
+            <div class="progress-premium-bar">
+              <div class="progress-premium-fill" style="width: {{ performance.taux_conformite }}%;"></div>
+            </div>
+          </div>
+
+          <!-- Metric 3 -->
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <div class="d-flex align-items-center" style="gap: 10px;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 28px; height: 28px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
+                  <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+                </div>
+                <span class="font-weight-bold text-secondary" style="font-size: 0.9rem;">Audits sans NC majeures</span>
+              </div>
+              <span class="font-weight-bold" style="font-size: 1rem; color: #1e293b;">{{ performance.audits_sans_nc_majeures }}%</span>
+            </div>
+            <div class="progress-premium-bar">
+              <div class="progress-premium-fill" style="width: {{ performance.audits_sans_nc_majeures }}%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row d-flex align-items-stretch">
   <!-- Quick Actions -->
   <div class="col-lg-4 col-md-5 mb-4">
@@ -188,6 +402,11 @@
           <div class="col-12 col-sm-12 col-lg-12 mb-2">
             <a href="{% url 'liste_audit_create' %}" class="btn btn-warning btn-block btn-sm text-left py-2 d-flex align-items-center">
               <i data-lucide="plus" class="inline w-4 h-4 mr-2"></i> Planifier Audit
+            </a>
+          </div>
+          <div class="col-12 col-sm-12 col-lg-12 mb-2">
+            <a href="{% url 'resultat_list' %}" class="btn btn-info btn-block btn-sm text-left py-2 d-flex align-items-center" style="background-color: #06b6d4; border-color: #06b6d4; color: #fff;">
+              <i data-lucide="file-bar-chart" class="inline w-4 h-4 mr-2"></i> Voir les Rapports
             </a>
           </div>
         </div>
@@ -526,6 +745,40 @@
 
   yearSelect.addEventListener('change', loadChart);
   loadChart();
+
+  // Initialize Status Donut Chart
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Terminés', 'En cours', 'Planifiés', 'En retard'],
+      datasets: [{
+        data: [
+          {{ status_counts.termines|default:0 }},
+          {{ status_counts.en_cours|default:0 }},
+          {{ status_counts.planifies|default:0 }},
+          {{ status_counts.en_retard|default:0 }}
+        ],
+        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          padding: 10,
+          cornerRadius: 8
+        }
+      }
+    }
+  });
   }) ();
 </script>
 {% endblock %}

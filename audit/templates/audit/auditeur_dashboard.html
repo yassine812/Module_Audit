@@ -74,8 +74,8 @@
             </div>
         </header>
 
-        <!-- 📊 2. KPI CARDS (GRID 4x1 on PC) -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <!-- 📊 2. KPI CARDS (GRID 5x1 on PC) -->
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
             <!-- Planifiés -->
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-blue-500/5 transition-all group cursor-pointer border-b-4 border-b-blue-500">
                 <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform">
@@ -99,6 +99,14 @@
                 </div>
                 <p class="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">Terminés</p>
                 <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ termines_count|default:"0" }}</p>
+            </div>
+            <!-- En retard -->
+            <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-red-500/5 transition-all group cursor-pointer border-b-4 border-b-red-500">
+                <div class="w-8 h-8 sm:w-12 sm:h-12 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform">
+                    <i data-lucide="alert-circle" class="w-4 h-4 sm:w-6 sm:h-6"></i>
+                </div>
+                <p class="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">En retard</p>
+                <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ en_retard_count|default:"0" }}</p>
             </div>
             <!-- Score moy. -->
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-purple-500/5 transition-all group cursor-pointer border-b-4 border-b-purple-500">
@@ -133,195 +141,308 @@
                     class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">En cours</button>
                 <button data-filter="termine"
                     class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">Terminé</button>
+                <button data-filter="en_retard"
+                    class="filter-tab px-4 py-2 sm:px-6 sm:py-4 bg-white text-slate-500 border border-slate-200 rounded-full text-[11px] sm:text-sm font-bold hover:bg-slate-50 transition-all whitespace-nowrap shadow-sm cursor-pointer">En retard</button>
             </div>
         </section>
 
-        <!-- 📋 4. AUDITS LIST -->
-        <section
-            class="space-y-4 sm:space-y-6 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100">
-            <div class="flex items-center justify-between px-1 mb-2 border-b border-slate-100 pb-3">
-                <h2 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight">Audits actifs</h2>
-                <div class="flex gap-1.5 items-center">
-                    <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
-                    <span class="text-slate-400 text-xs sm:text-sm font-semibold">En direct</span>
-                </div>
-            </div>
-
-            <!-- Dynamic List using Django Template engine -->
-            <div class="flex flex-col gap-4">
-                {% for audit in recent_audits %}
-                {% if audit.get_audit_status == 'en_cours' %}
-                <div class="audit-card" id="audit-{{ audit.id }}" data-status="en_cours"
-                    data-date="{{ audit.date|date:'Y-m-d' }}">
-                    <div
-                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group hover:border-orange-300 hover:bg-orange-50/10 transition-all duration-300 border-l-4 border-l-orange-500">
-                        <div class="flex items-start gap-3 sm:gap-4 w-full">
-                            <div
-                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 text-orange-600 rounded-xl items-center justify-center shrink-0">
-                                <i data-lucide="loader" class="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow"></i>
-                            </div>
-                            <div class="space-y-1 min-w-0 flex-grow">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3
-                                        class="text-base sm:text-lg font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight truncate">
-                                        {{ audit.desc }}</h3>
-                                    <span
-                                        class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-orange-200">En
-                                        cours</span>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
-                            </div>
-                        </div>
-
-                        <div
-                            class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
-                            <div
-                                class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
-                                <span class="truncate">{{ audit.site.name|default:"-" }}</span>
-                            </div>
-                            <div
-                                class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                {{ audit.date|date:"d M Y" }}
-                            </div>
-                            <a href="{% url 'etape_audit' audit.resultataudit_set.first.pk %}"
-                                class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-black flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all w-full sm:w-auto border-0 cursor-pointer">
-                                Continuer <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </a>
+        <!-- 📋 4. AUDITS LIST & CALENDAR CONTAINER -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Column: Audits List -->
+            <div class="lg:col-span-8">
+                <!-- 📋 4. AUDITS LIST -->
+                <section
+                    class="space-y-4 sm:space-y-6 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 h-full">
+                    <div class="flex items-center justify-between px-1 mb-2 border-b border-slate-100 pb-3">
+                        <h2 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight">Audits actifs</h2>
+                        <div class="flex gap-1.5 items-center">
+                            <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
+                            <span class="text-slate-400 text-xs sm:text-sm font-semibold">En direct</span>
                         </div>
                     </div>
-                </div>
 
-                {% elif audit.get_audit_status == 'planifie' %}
-                <div class="audit-card" id="audit-{{ audit.id }}" data-status="planifie"
-                    data-date="{{ audit.date|date:'Y-m-d' }}">
-                    <div
-                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group hover:border-blue-300 hover:bg-blue-50/10 transition-all duration-300 border-l-4 border-l-blue-500">
-                        <div class="flex items-start gap-3 sm:gap-4 w-full">
+                    <!-- Dynamic List using Django Template engine -->
+                    <div class="flex flex-col gap-4">
+                        {% for audit in recent_audits %}
+                        {% with status=audit.get_audit_status result=audit.resultataudit_set.first %}
+                        {% if status == 'en_cours' or status == 'en_retard' and result %}
+                        <div class="audit-card" id="audit-{{ audit.id }}" data-status="{% if status == 'en_retard' %}en_retard{% else %}en_cours{% endif %}"
+                            data-date="{{ audit.date|date:'Y-m-d' }}">
                             <div
-                                class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-xl items-center justify-center shrink-0">
-                                <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                            </div>
-                            <div class="space-y-1 min-w-0 flex-grow">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{
-                                        audit.desc }}</h3>
-                                    <span
-                                        class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-blue-200">Planifié</span>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
-                            </div>
-                        </div>
-
-                        <div
-                            class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
-                            <div
-                                class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
-                                <span class="truncate">{{ audit.site.name|default:"-" }}</span>
-                            </div>
-                            <div
-                                class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                {{ audit.date|date:"d M Y" }}
-                            </div>
-                            <form method="POST" action="{% url 'start_audit' audit.pk %}" class="w-full sm:w-auto m-0">
-                                {% csrf_token %}
-                                <button type="submit"
-                                    class="px-5 py-2.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-xs sm:text-sm font-black flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all w-full cursor-pointer">
-                                    Démarrer <i data-lucide="play-circle" class="w-4 h-4"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                {% elif audit.get_audit_status == 'termine' %}
-                <div class="audit-card" id="audit-{{ audit.id }}" data-status="termine"
-                    data-date="{{ audit.date|date:'Y-m-d' }}">
-                    <div
-                        class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col items-start justify-between gap-4 lg:gap-6 relative group hover:border-green-300 hover:bg-green-50/10 transition-all duration-300 border-l-4 border-l-green-500">
-                        <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-4">
-                            <div class="flex items-start gap-3 sm:gap-4 w-full">
-                                <div
-                                    class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-green-100 text-green-600 rounded-xl items-center justify-center shrink-0">
-                                    <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                                </div>
-                                <div class="space-y-1 min-w-0 flex-grow">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <h3
-                                            class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">
-                                            {{ audit.desc }}</h3>
-                                        <span
-                                            class="px-2 py-0.5 bg-green-100 text-green-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-green-200">Terminé</span>
+                                class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-orange-300 hover:bg-orange-50/10 border-l-4 border-l-orange-500{% endif %} transition-all duration-300">
+                                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                    <div
+                                        class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-orange-100 text-orange-600{% endif %} rounded-xl items-center justify-center shrink-0">
+                                        <i data-lucide="loader" class="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow"></i>
                                     </div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                                    <div class="space-y-1 min-w-0 flex-grow">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3
+                                                class="text-base sm:text-lg font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight truncate">
+                                                {{ audit.desc }}</h3>
+                                            {% if status == 'en_retard' %}
+                                            <span
+                                                class="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-red-200">En retard</span>
+                                            {% else %}
+                                            <span
+                                                class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-orange-200">En cours</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div
-                                class="flex flex-col sm:flex-row justify-end items-center gap-3 text-[11px] sm:text-xs font-semibold text-slate-500 w-full lg:w-auto">
                                 <div
-                                    class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg w-full sm:w-auto border border-slate-100">
-                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="truncate">{{ audit.site.name|default:"-" }}</span>
-                                </div>
-                                <div
-                                    class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg w-full sm:w-auto border border-slate-100">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    {{ audit.date|date:"d M Y" }}
+                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
+                                    <div
+                                        class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        <span class="truncate">{{ audit.site.name|default:"-" }}</span>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
+                                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        {{ audit.date|date:"d M Y" }}
+                                    </div>
+                                    {% if result %}
+                                    <a href="{% url 'etape_audit' result.pk %}"
+                                        class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-black flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all w-full sm:w-auto border-0 cursor-pointer">
+                                        Continuer <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                    </a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
 
-                        <div
-                            class="flex flex-col sm:flex-row items-center justify-between w-full mt-2 pt-4 border-t border-slate-100 gap-4">
-                            {% if audit.resultataudit_set.first %}
+                        {% elif status == 'planifie' or status == 'en_retard' and not result %}
+                        <div class="audit-card" id="audit-{{ audit.id }}" data-status="{% if status == 'en_retard' %}en_retard{% else %}planifie{% endif %}"
+                            data-date="{{ audit.date|date:'Y-m-d' }}">
                             <div
-                                class="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-full sm:w-auto">
-                                <i data-lucide="star" class="w-5 h-5 text-green-600 fill-current"></i>
-                                <div class="flex items-baseline gap-1">
-                                    <span
-                                        class="text-[10px] font-bold text-green-800 uppercase tracking-widest mr-2">Score</span>
-                                    <span class="text-base sm:text-lg font-black text-slate-800">{{ audit.resultataudit_set.first.score_audit|floatformat:1 }}</span>
+                                class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-blue-300 hover:bg-blue-50/10 border-l-4 border-l-blue-500{% endif %} transition-all duration-300">
+                                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                    <div
+                                        class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-blue-100 text-blue-600{% endif %} rounded-xl items-center justify-center shrink-0">
+                                        <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                                    </div>
+                                    <div class="space-y-1 min-w-0 flex-grow">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{ audit.desc }}</h3>
+                                            {% if status == 'en_retard' %}
+                                            <span
+                                                class="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-red-200">En retard</span>
+                                            {% else %}
+                                            <span
+                                                class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-blue-200">Planifié</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
+                                    <div
+                                        class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        <span class="truncate">{{ audit.site.name|default:"-" }}</span>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
+                                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        {{ audit.date|date:"d M Y" }}
+                                    </div>
+                                    <form method="POST" action="{% url 'start_audit' audit.pk %}" class="w-full sm:w-auto m-0">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                            class="px-5 py-2.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-xs sm:text-sm font-black flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all w-full cursor-pointer">
+                                            Démarrer <i data-lucide="play-circle" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <a href="{% url 'resultat_report' audit.resultataudit_set.first.pk %}"
-                                class="flex items-center justify-center gap-2 text-slate-600 hover:text-blue-600 text-[11px] sm:text-xs font-black transition-all group/btn bg-white border border-slate-200 px-4 py-2.5 rounded-lg hover:border-blue-200 w-full sm:w-auto">
-                                Voir le rapport
-                                <i data-lucide="file-text"
-                                    class="w-4 h-4 text-slate-400 group-hover/btn:text-blue-500 transition-all"></i>
-                            </a>
-                            {% endif %}
+                        </div>
+
+                        {% elif status == 'termine' %}
+                        <div class="audit-card" id="audit-{{ audit.id }}" data-status="termine"
+                            data-date="{{ audit.date|date:'Y-m-d' }}">
+                            <div
+                                class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col items-start justify-between gap-4 lg:gap-6 relative group hover:border-green-300 hover:bg-green-50/10 transition-all duration-300 border-l-4 border-l-green-500">
+                                <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-4">
+                                    <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                        <div
+                                            class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-green-100 text-green-600 rounded-xl items-center justify-center shrink-0">
+                                            <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                                        </div>
+                                        <div class="space-y-1 min-w-0 flex-grow">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <h3
+                                                    class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">
+                                                    {{ audit.desc }}</h3>
+                                                <span
+                                                    class="px-2 py-0.5 bg-green-100 text-green-700 text-[9px] font-black rounded-md uppercase tracking-wider border border-green-200">Terminé</span>
+                                            </div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-col sm:flex-row justify-end items-center gap-3 text-[11px] sm:text-xs font-semibold text-slate-500 w-full lg:w-auto">
+                                        <div
+                                            class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg w-full sm:w-auto border border-slate-100">
+                                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                                            <span class="truncate">{{ audit.site.name|default:"-" }}</span>
+                                        </div>
+                                        <div
+                                            class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg w-full sm:w-auto border border-slate-100">
+                                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                            {{ audit.date|date:"d M Y" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex flex-col sm:flex-row items-center justify-between w-full mt-2 pt-4 border-t border-slate-100 gap-4">
+                                    {% if result %}
+                                    <div
+                                        class="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-full sm:w-auto">
+                                        <i data-lucide="star" class="w-5 h-5 text-green-600 fill-current"></i>
+                                        <div class="flex items-baseline gap-1">
+                                            <span
+                                                class="text-[10px] font-bold text-green-800 uppercase tracking-widest mr-2">Score</span>
+                                            <span class="text-base sm:text-lg font-black text-slate-800">{{ result.score_audit|floatformat:1 }}</span>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'resultat_report' result.pk %}"
+                                        class="flex items-center justify-center gap-2 text-slate-600 hover:text-blue-600 text-[11px] sm:text-xs font-black transition-all group/btn bg-white border border-slate-200 px-4 py-2.5 rounded-lg hover:border-blue-200 w-full sm:w-auto">
+                                        Voir le rapport
+                                        <i data-lucide="file-text"
+                                            class="w-4 h-4 text-slate-400 group-hover/btn:text-blue-500 transition-all"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Fallback card for any unrecognized status -->
+                        <div class="audit-card" id="audit-{{ audit.id }}" data-status="{{ status }}"
+                            data-date="{{ audit.date|date:'Y-m-d' }}">
+                            <div class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-all duration-300 border-l-4 border-l-slate-400">
+                                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                    <div class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 text-slate-500 rounded-xl items-center justify-center shrink-0">
+                                        <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                                    </div>
+                                    <div class="space-y-1 min-w-0 flex-grow">
+                                        <h3 class="text-base sm:text-lg font-black text-slate-800 leading-tight truncate">{{ audit.desc }}</h3>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">REF: {{ audit.get_reference }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                        {% empty %}
+                        <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 w-full">
+                            <i data-lucide="inbox" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                            <p class="text-base font-semibold text-slate-500">Aucun audit récent n'est assigné.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Empty State for Search/Filters -->
+                    <div id="noResults" class="hidden text-center py-10 animate-in fade-in zoom-in duration-300 w-full">
+                        <div
+                            class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                            <i data-lucide="search-x" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Aucun résultat</h3>
+                        <p class="text-sm text-slate-500">Ajustez vos filtres de recherche.</p>
+                    </div>
+
+                </section>
+            </div>
+            
+            <!-- Right Column: Calendar Widget -->
+            <div class="lg:col-span-4 w-full">
+                <!-- 📅 CALENDAR CARD -->
+                <section class="bg-white p-5 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>
+                            Calendrier
+                        </h3>
+                        <!-- Year Navigation -->
+                        <div class="flex items-center gap-1">
+                            <button id="prevYear" class="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors border-0 bg-transparent cursor-pointer" title="Année précédente">
+                                <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+                            </button>
+                            <button id="nextYear" class="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors border-0 bg-transparent cursor-pointer" title="Année suivante">
+                                <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     </div>
-                </div>
-                {% endif %}
-                {% empty %}
-                <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    <i data-lucide="inbox" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
-                    <p class="text-base font-semibold text-slate-500">Aucun audit récent n'est assigné.</p>
-                </div>
-                {% endfor %}
-            </div>
 
-            <!-- Empty State for Search/Filters -->
-            <div id="noResults" class="hidden text-center py-10 animate-in fade-in zoom-in duration-300">
-                <div
-                    class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                    <i data-lucide="search-x" class="w-8 h-8"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">Aucun résultat</h3>
-                <p class="text-sm text-slate-500">Ajustez vos filtres de recherche.</p>
-            </div>
+                    <!-- Month Navigation -->
+                    <div class="flex items-center justify-between py-2 bg-slate-50 rounded-xl px-3 border border-slate-100">
+                        <button id="prevMonth" class="p-1 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 hover:text-slate-800 transition-all border-0 bg-transparent cursor-pointer" title="Mois précédent">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <span id="currentMonthYear" class="text-sm font-bold text-slate-700 capitalize"></span>
+                        <button id="nextMonth" class="p-1 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 hover:text-slate-800 transition-all border-0 bg-transparent cursor-pointer" title="Mois suivant">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
 
-        </section>
+                    <!-- Weekdays Header (French, Monday-start) -->
+                    <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider py-1 border-b border-slate-100">
+                        <div>Lun</div>
+                        <div>Mar</div>
+                        <div>Mer</div>
+                        <div>Jeu</div>
+                        <div>Ven</div>
+                        <div>Sam</div>
+                        <div>Dim</div>
+                    </div>
+
+                    <!-- Days Grid -->
+                    <div id="calendarDays" class="grid grid-cols-7 gap-y-2 text-center text-xs font-semibold">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="pt-4 border-t border-slate-100 space-y-2.5 text-[11px] font-bold text-slate-500">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+                                <span>Échéance dépassée</span>
+                            </div>
+                            <span id="legendOverdueCount" class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px]">0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                <span>À venir</span>
+                            </div>
+                            <span id="legendPendingCount" class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px]">0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                <span>OK</span>
+                            </div>
+                            <span id="legendOkCount" class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px]">0</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{{ calendar_audits|json_script:"calendar-audits-data" }}
 <script>
     // Initialize Lucide icons
     lucide.createIcons();
@@ -332,10 +453,10 @@
     const noResults = document.getElementById('noResults');
 
     let currentFilter = 'all';
+    let selectedDate = null; // Holds the currently clicked date (YYYY-MM-DD) for filtering
 
     function applyFilters() {
         const query = searchInput.value.toLowerCase().trim();
-        const today = new Date().toISOString().split('T')[0];
         let visibleCount = 0;
 
         cards.forEach(card => {
@@ -350,11 +471,19 @@
                 matchesFilter = (status === 'planifie');
             } else if (currentFilter === 'termine') {
                 matchesFilter = (status === 'termine');
+            } else if (currentFilter === 'en_retard') {
+                matchesFilter = (status === 'en_retard');
             }
 
             const matchesSearch = text.includes(query);
+            
+            // Calendar filter: if selectedDate is set, only show audits matching that date
+            let matchesCalendar = true;
+            if (selectedDate) {
+                matchesCalendar = (date === selectedDate);
+            }
 
-            if (matchesFilter && matchesSearch) {
+            if (matchesFilter && matchesSearch && matchesCalendar) {
                 card.classList.remove('hidden');
                 visibleCount++;
             } else {
@@ -393,10 +522,14 @@
             if (targetEl) {
                 // Reset search and filters
                 if (searchInput) searchInput.value = '';
+                selectedDate = null;
 
-                // Switch to"All" tab
+                // Switch to "All" tab
                 const allTab = document.querySelector('[data-filter="all"]');
                 if (allTab) allTab.click();
+
+                // Reset calendar selection visually
+                renderCalendar(currentCalMonth, currentCalYear);
 
                 // Scroll to target with a slight delay to allow rendering
                 setTimeout(() => {
@@ -419,6 +552,208 @@
         }
     }
 
+    // --- 📅 INTERACTIVE CALENDAR LOGIC ---
+    const calendarDays = document.getElementById('calendarDays');
+    const currentMonthYear = document.getElementById('currentMonthYear');
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    const prevYearBtn = document.getElementById('prevYear');
+    const nextYearBtn = document.getElementById('nextYear');
+
+    const legendOverdueCount = document.getElementById('legendOverdueCount');
+    const legendPendingCount = document.getElementById('legendPendingCount');
+    const legendOkCount = document.getElementById('legendOkCount');
+
+    let calendarAudits = [];
+    try {
+        calendarAudits = JSON.parse(document.getElementById('calendar-audits-data').textContent);
+    } catch(e) {
+        console.error('Failed to parse calendar audits:', e);
+    }
+
+    let currentDate = new Date();
+    let currentCalMonth = currentDate.getMonth();
+    let currentCalYear = currentDate.getFullYear();
+
+    const monthNames = [
+        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+
+    function renderCalendar(month, year) {
+        calendarDays.innerHTML = '';
+        currentMonthYear.textContent = `${monthNames[month]} ${year}`;
+
+        // Get first day of month (Monday start)
+        const firstDay = new Date(year, month, 1);
+        let firstDayIndex = firstDay.getDay(); // 0 is Sun, 1 is Mon...
+        // Adjust for Monday start: Mon=0, Tue=1 ... Sun=6
+        firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+        // Get total days in month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Get total days in previous month
+        const prevDaysInMonth = new Date(year, month, 0).getDate();
+
+        let cellsCount = 0;
+
+        // Reset counts for the current month view
+        let overdueCount = 0;
+        let pendingCount = 0;
+        let okCount = 0;
+
+        // Previous month days (greyed out)
+        for (let i = firstDayIndex - 1; i >= 0; i--) {
+            const dayNum = prevDaysInMonth - i;
+            const cell = document.createElement('div');
+            cell.className = 'py-2 text-slate-300 pointer-events-none select-none text-center';
+            cell.textContent = dayNum;
+            calendarDays.appendChild(cell);
+            cellsCount++;
+        }
+
+        // Current month days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            const dayStr = String(day).padStart(2, '0');
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dateStr = `${year}-${monthStr}-${dayStr}`;
+
+            // Find audits on this date
+            const auditsOnDate = calendarAudits.filter(a => a.date === dateStr);
+
+            let cellClass = 'relative py-1.5 flex flex-col items-center justify-center rounded-xl cursor-pointer hover:bg-slate-50 transition-all select-none w-full min-h-[38px]';
+            
+            // Check if selected
+            if (selectedDate === dateStr) {
+                cellClass = 'relative py-1.5 flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all select-none w-full min-h-[38px] bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20';
+            } else {
+                // If it is today
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (dateStr === todayStr) {
+                    cellClass = 'relative py-1.5 flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all select-none w-full min-h-[38px] border border-blue-500 text-blue-600 font-bold';
+                }
+            }
+
+            cell.className = cellClass;
+            
+            const daySpan = document.createElement('span');
+            daySpan.className = 'text-xs';
+            daySpan.textContent = day;
+            cell.appendChild(daySpan);
+
+            // Dots rendering
+            if (auditsOnDate.length > 0) {
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'flex gap-0.5 justify-center mt-0.5';
+
+                let hasOverdue = false;
+                let hasPending = false;
+                let hasOk = false;
+
+                auditsOnDate.forEach(audit => {
+                    if (audit.dot_type === 'overdue') {
+                        hasOverdue = true;
+                        overdueCount++;
+                    } else if (audit.dot_type === 'pending') {
+                        hasPending = true;
+                        pendingCount++;
+                    } else if (audit.dot_type === 'ok') {
+                        hasOk = true;
+                        okCount++;
+                    }
+                });
+
+                // Display dots (change colors if selected to remain visible against blue background)
+                const dotColorClass = selectedDate === dateStr ? 'bg-white' : '';
+
+                if (hasOverdue) {
+                    const dot = document.createElement('span');
+                    dot.className = `w-1.5 h-1.5 rounded-full ${dotColorClass || 'bg-red-500 animate-pulse'}`;
+                    dotsContainer.appendChild(dot);
+                }
+                if (hasPending) {
+                    const dot = document.createElement('span');
+                    dot.className = `w-1.5 h-1.5 rounded-full ${dotColorClass || 'bg-amber-500'}`;
+                    dotsContainer.appendChild(dot);
+                }
+                if (hasOk) {
+                    const dot = document.createElement('span');
+                    dot.className = `w-1.5 h-1.5 rounded-full ${dotColorClass || 'bg-emerald-500'}`;
+                    dotsContainer.appendChild(dot);
+                }
+
+                // If mockup day 10 red circular highlight (only when NOT selected)
+                if (hasOverdue && selectedDate !== dateStr) {
+                    cell.className = 'relative py-1.5 flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all select-none w-full min-h-[38px] bg-red-50 text-red-600 font-bold hover:bg-red-100/50';
+                }
+
+                cell.appendChild(dotsContainer);
+            }
+
+            // Click event for date selection
+            cell.addEventListener('click', () => {
+                if (selectedDate === dateStr) {
+                    selectedDate = null; // Toggle selection off
+                } else {
+                    selectedDate = dateStr; // Select date
+                }
+                renderCalendar(month, year);
+                applyFilters();
+            });
+
+            calendarDays.appendChild(cell);
+            cellsCount++;
+        }
+
+        // Next month days (greyed out)
+        let nextMonthDay = 1;
+        while (cellsCount % 7 !== 0 || cellsCount < 35) {
+            const cell = document.createElement('div');
+            cell.className = 'py-2 text-slate-300 pointer-events-none select-none text-center';
+            cell.textContent = nextMonthDay;
+            calendarDays.appendChild(cell);
+            cellsCount++;
+            nextMonthDay++;
+        }
+
+        // Update Legend Counters
+        legendOverdueCount.textContent = overdueCount;
+        legendPendingCount.textContent = pendingCount;
+        legendOkCount.textContent = okCount;
+    }
+
+    prevMonthBtn.addEventListener('click', () => {
+        currentCalMonth--;
+        if (currentCalMonth < 0) {
+            currentCalMonth = 11;
+            currentCalYear--;
+        }
+        renderCalendar(currentCalMonth, currentCalYear);
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentCalMonth++;
+        if (currentCalMonth > 11) {
+            currentCalMonth = 0;
+            currentCalYear++;
+        }
+        renderCalendar(currentCalMonth, currentCalYear);
+    });
+
+    prevYearBtn.addEventListener('click', () => {
+        currentCalYear--;
+        renderCalendar(currentCalMonth, currentCalYear);
+    });
+
+    nextYearBtn.addEventListener('click', () => {
+        currentCalYear++;
+        renderCalendar(currentCalMonth, currentCalYear);
+    });
+
+    // Initialize
+    renderCalendar(currentCalMonth, currentCalYear);
     window.addEventListener('load', handleAnchor);
     window.addEventListener('hashchange', handleAnchor);
 </script>

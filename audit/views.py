@@ -132,6 +132,75 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Log activities for superusers (Recent admin actions)
             from django.contrib.admin.models import LogEntry
             context['recent_activities'] = LogEntry.objects.select_related('content_type', 'user').order_by('-action_time')[:3]
+            
+            # --- CUSTOM ADDITIONS FOR ADMIN DASHBOARD (MOCKUP REQUIREMENTS) ---
+            from django.db import models
+            from django.utils import timezone
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # 1. Late audits (planned date in the past, no completed resultat)
+            late_audits = ListeAudit.objects.filter(
+                models.Q(resultataudit__isnull=True) | models.Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).select_related('formulaire_audit', 'site').distinct()
+            context['late_audits'] = late_audits[:5]
+            
+            # 2. Open non-conformities count
+            open_ncs_count = DetailResultatAudit.objects.filter(
+                models.Q(cotation__iexact='Non conforme') | models.Q(code='NC') | models.Q(value=0.0)
+            ).exclude(cotation='').distinct().count()
+            context['open_ncs_count'] = open_ncs_count
+            
+            # 3. Status counts (mutually exclusive breakdown of all audits)
+            total_audits = ListeAudit.objects.count()
+            termines_count = ListeAudit.objects.filter(resultataudit__en_cours=False).distinct().count()
+            en_cours_count = ListeAudit.objects.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
+            planifies_count = ListeAudit.objects.filter(resultataudit__isnull=True, date__gte=today_start).distinct().count()
+            en_retard_count = late_audits.count()
+            autres_count = max(0, total_audits - (termines_count + en_cours_count + planifies_count + en_retard_count))
+            
+            context['status_counts'] = {
+                'termines': termines_count,
+                'en_cours': en_cours_count,
+                'planifies': planifies_count,
+                'en_retard': en_retard_count,
+                'autres': autres_count,
+                'total': total_audits,
+            }
+            
+            def get_pct(cnt):
+                return round((cnt / total_audits) * 100) if total_audits > 0 else 0
+                
+            context['status_percentages'] = {
+                'termines': get_pct(termines_count),
+                'en_cours': get_pct(en_cours_count),
+                'planifies': get_pct(planifies_count),
+                'en_retard': get_pct(en_retard_count),
+                'autres': get_pct(autres_count),
+            }
+            
+            # 4. Performance Metrics
+            respect_delais = round(((total_audits - en_retard_count) / total_audits) * 100) if total_audits > 0 else 100
+            
+            avg_score = ResultatAudit.objects.filter(en_cours=False).aggregate(models.Avg('score_audit'))['score_audit__avg']
+            taux_conformite = round(float(avg_score) * 100) if avg_score is not None else 0
+            
+            completed_results = ResultatAudit.objects.filter(en_cours=False)
+            total_completed = completed_results.count()
+            if total_completed > 0:
+                audits_with_nc = completed_results.filter(
+                    detailresultataudit__value=0.0
+                ).exclude(detailresultataudit__cotation='').distinct().count()
+                audits_sans_nc_majeures = round(((total_completed - audits_with_nc) / total_completed) * 100)
+            else:
+                audits_sans_nc_majeures = 100
+                
+            context['performance'] = {
+                'respect_delais': respect_delais,
+                'taux_conformite': taux_conformite,
+                'audits_sans_nc_majeures': audits_sans_nc_majeures,
+            }
         else:
             from django.db.models import Avg, Q
             user = self.request.user
@@ -141,6 +210,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             from django.utils import timezone
             local_now = timezone.localtime(timezone.now())
             today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
             planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
             en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
@@ -159,6 +229,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
             
             context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
+            
+            # All assigned audits for the calendar
+            calendar_audits = []
+            for audit in audits_assigned.select_related('site'):
+                status = audit.get_audit_status()
+                dot_type = 'ok' if status == 'termine' else ('overdue' if status == 'en_retard' else 'pending')
+                calendar_audits.append({
+                    'id': audit.id,
+                    'desc': audit.desc,
+                    'date': audit.date.strftime('%Y-%m-%d') if audit.date else '',
+                    'status': status,
+                    'dot_type': dot_type,
+                    'site': audit.site.name if audit.site else ''
+                })
+            context['calendar_audits'] = calendar_audits
             
             # DEBUG LOGGING TO FILE
             with open(os.path.join(settings.BASE_DIR, 'dashboard_debug.log'), 'a') as f:
@@ -2206,17 +2291,26 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
         status_filter = self.request.GET.get('status', 'all')
         
         # Consistent with models.py get_audit_status()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
         if status_filter == 'planifie':
-            # Audits without any ResultatAudit
-            return base_qs.exclude(resultataudit__isnull=False).order_by("-id")
+            # Audits without any ResultatAudit and not overdue
+            return base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).order_by("-id")
         elif status_filter == 'en_cours':
-            # Audits with at least one active ResultatAudit
-            return base_qs.filter(resultataudit__en_cours=True).distinct().order_by("-id")
+            # Audits with at least one active ResultatAudit and not overdue
+            return base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().order_by("-id")
         elif status_filter == 'termine':
-            # Audits with ResultatAudit that are NOT en_cours 
-            # (and no active ones to avoid double counting if that's possible, 
-            # though usually it's 1:1)
+            # Audits with ResultatAudit that are completed (regardless of date)
             return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().order_by("-id")
+        elif status_filter == 'en_retard':
+            # Audits not completed whose planned date has passed
+            return base_qs.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().order_by("-id")
         
         # Final sort by ID descending (newest first)
         return base_qs.order_by("-id")
@@ -2233,9 +2327,18 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
             from django.db.models import Q
             base_qs = qs.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
             
-        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).count()
-        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True).distinct().count()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
         context['termines_count'] = base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+        context['en_retard_count'] = base_qs.filter(
+            Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+            date__lt=today_start
+        ).distinct().count()
         
         return context
 
@@ -2718,6 +2821,7 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
+                creator=request.user if request.user.is_authenticated else None
             )
             
             if type_equipement_id:
