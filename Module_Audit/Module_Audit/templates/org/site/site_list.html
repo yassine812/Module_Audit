@@ -143,8 +143,7 @@
             {% for site in page_obj %}
             <div class="site-card">
               <div class="card-header-row">
-                <span class="badge bg-light text-dark border">#{{
-                  page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
+                <span class="badge bg-light text-dark border">#{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</span>
                 <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1">
                   {{ site.section.name }}
                 </span>
@@ -193,8 +192,7 @@
                 <tbody>
                   {% for site in page_obj %}
                   <tr>
-                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter
-                      }}</td>
+                    <td class="text-center col-id">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                     <td class="col-name">
                       <strong class="text-dark">{{ site.name }}</strong>
                     </td>
@@ -250,8 +248,7 @@
         <div class="card-footer bg-white border-top-0 pt-3">
           <div class="pagination-container">
             <div class="pagination-info px-2">
-              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{
-              paginator.count }} éléments
+              <span class="fw-bold text-dark">{{ page_obj.number }}</span> / {{ paginator.num_pages }} &bull; {{ paginator.count }} éléments
             </div>
             <nav aria-label="Page navigation" class="px-2">
               <ul class="pagination pagination-sm mb-0">
@@ -272,8 +269,7 @@
                       data-lucide="chevron-left" class="w-4 h-4"></i></span></li>
                 {% endif %}
 
-                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number
-                    }}</span></li>
+                <li class="page-item active"><span class="page-link shadow-sm border fw-bold px-4">{{ page_obj.number }}</span></li>
 
                 {% if page_obj.has_next %}
                 <li class="page-item">
@@ -298,8 +294,7 @@
         </div>
         {% elif page_obj %}
         <div class="card-footer bg-light border-top-0 py-2 px-4 shadow-inner">
-          <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> site{{ page_obj|length|pluralize
-            }}</small>
+          <small>Affichage de <span class="fw-bold">{{ page_obj|length }}</span> site{{ page_obj|length|pluralize }}</small>
         </div>
         {% endif %}
       </div>

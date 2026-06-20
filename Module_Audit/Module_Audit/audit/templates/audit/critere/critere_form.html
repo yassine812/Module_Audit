@@ -96,8 +96,7 @@
                     <i data-lucide="{% if form.instance.pk %}edit-3{% else %}plus-circle{% endif %}"></i>
                 </div>
                 <div>
-                    <h5 class="modal-title font-weight-bold mb-0 text-dark" style="font-weight: 800 !important;">{% if
-                        form.instance.pk %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
+                    <h5 class="modal-title font-weight-bold mb-0 text-dark" style="font-weight: 800 !important;">{% if form.instance.pk %}Modifier le Critère{% else %}Nouveau Critère{% endif %}</h5>
                     <p class=" mb-0" style="font-size: 0.75rem;">Détaillez les critères d'évaluation pour vos structures
                         d'audit.</p>
                 </div>
@@ -126,8 +125,7 @@
                             placeholder="Nom du critère..." value="{{ form.name.value|default:'' }}" required>
                     </div>
                     {% if form.name.errors %}
-                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors
-                        %}{{ error }}{% endfor %}</small>
+                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
                     {% endif %}
                 </div>
 
@@ -138,8 +136,7 @@
                         <div class="input-icon"><i data-lucide="bookmark"></i></div>
                         <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern">
                             {% for choice in form.chapitre_norme.field.choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify
-                                %}selected{% endif %}>{{ choice.1 }}</option>
+                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>

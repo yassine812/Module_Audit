@@ -1,13 +1,12 @@
 import datetime
 from django.urls import reverse_lazy, reverse
+import os
+from django.conf import settings
 from django.views.generic import (
     ListView, CreateView, UpdateView,
     DeleteView, DetailView, View, TemplateView
 )
 from django.contrib.auth.models import User
-import os
-from django.conf import settings
-
 from django.http import JsonResponse
 from .mixins import SuperuserRequiredMixin, AuditeurOrSuperuserRequiredMixin
 from django.shortcuts import redirect, get_object_or_404, render
@@ -22,6 +21,9 @@ from django.db.models import ProtectedError
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from textblob import TextBlob
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 from .models import (
     TypeAudit,
     TextRef,
@@ -38,6 +40,7 @@ from .models import (
     ResultatAudit,
     DetailResultatAudit,
     SousCritereTypeAudit,
+    EvidenceAudit,
 )
 from .forms import FormulaireAuditForm, CritereFormSet, SousCritereFormSet, TypeAuditForm, CritereForm, TypePreuveForm, PreuveAttenduForm, SousCritereStandaloneForm, ListeAuditForm
 from Organisation.models import Processus, TypeEquipement, Section
@@ -129,6 +132,75 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Log activities for superusers (Recent admin actions)
             from django.contrib.admin.models import LogEntry
             context['recent_activities'] = LogEntry.objects.select_related('content_type', 'user').order_by('-action_time')[:3]
+            
+            # --- CUSTOM ADDITIONS FOR ADMIN DASHBOARD (MOCKUP REQUIREMENTS) ---
+            from django.db import models
+            from django.utils import timezone
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # 1. Late audits (planned date in the past, no completed resultat)
+            late_audits = ListeAudit.objects.filter(
+                models.Q(resultataudit__isnull=True) | models.Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).select_related('formulaire_audit', 'site').distinct()
+            context['late_audits'] = late_audits[:5]
+            
+            # 2. Open non-conformities count
+            open_ncs_count = DetailResultatAudit.objects.filter(
+                models.Q(cotation__iexact='Non conforme') | models.Q(code='NC') | models.Q(value=0.0)
+            ).exclude(cotation='').distinct().count()
+            context['open_ncs_count'] = open_ncs_count
+            
+            # 3. Status counts (mutually exclusive breakdown of all audits)
+            total_audits = ListeAudit.objects.count()
+            termines_count = ListeAudit.objects.filter(resultataudit__en_cours=False).distinct().count()
+            en_cours_count = ListeAudit.objects.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
+            planifies_count = ListeAudit.objects.filter(resultataudit__isnull=True, date__gte=today_start).distinct().count()
+            en_retard_count = late_audits.count()
+            autres_count = max(0, total_audits - (termines_count + en_cours_count + planifies_count + en_retard_count))
+            
+            context['status_counts'] = {
+                'termines': termines_count,
+                'en_cours': en_cours_count,
+                'planifies': planifies_count,
+                'en_retard': en_retard_count,
+                'autres': autres_count,
+                'total': total_audits,
+            }
+            
+            def get_pct(cnt):
+                return round((cnt / total_audits) * 100) if total_audits > 0 else 0
+                
+            context['status_percentages'] = {
+                'termines': get_pct(termines_count),
+                'en_cours': get_pct(en_cours_count),
+                'planifies': get_pct(planifies_count),
+                'en_retard': get_pct(en_retard_count),
+                'autres': get_pct(autres_count),
+            }
+            
+            # 4. Performance Metrics
+            respect_delais = round(((total_audits - en_retard_count) / total_audits) * 100) if total_audits > 0 else 100
+            
+            avg_score = ResultatAudit.objects.filter(en_cours=False).aggregate(models.Avg('score_audit'))['score_audit__avg']
+            taux_conformite = round(float(avg_score) * 100) if avg_score is not None else 0
+            
+            completed_results = ResultatAudit.objects.filter(en_cours=False)
+            total_completed = completed_results.count()
+            if total_completed > 0:
+                audits_with_nc = completed_results.filter(
+                    detailresultataudit__value=0.0
+                ).exclude(detailresultataudit__cotation='').distinct().count()
+                audits_sans_nc_majeures = round(((total_completed - audits_with_nc) / total_completed) * 100)
+            else:
+                audits_sans_nc_majeures = 100
+                
+            context['performance'] = {
+                'respect_delais': respect_delais,
+                'taux_conformite': taux_conformite,
+                'audits_sans_nc_majeures': audits_sans_nc_majeures,
+            }
         else:
             from django.db.models import Avg, Q
             user = self.request.user
@@ -136,38 +208,56 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user))
             
             from django.utils import timezone
-            now = timezone.now()
-            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=now).count()
-            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=now).distinct().count()
+            local_now = timezone.localtime(timezone.now())
+            today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+            en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
             termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
             en_retard = audits_assigned.filter(
                 Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
-                date__lt=now
+                date__lt=today_start
             ).distinct().count()
             
-            # Score average remains for results where user is the lead Auditor
-            score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
+            # Score average remains for results of audits assigned to the user
+            completed_results = ResultatAudit.objects.filter(audit__in=audits_assigned, en_cours=False)
+            score_moy = completed_results.aggregate(Avg('score_audit'))['score_audit__avg']
             
             context['planifies_count'] = planifies
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
             context['en_retard_count'] = en_retard
-            context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
+            context['score_moy'] = round(float(score_moy) * 100, 1) if score_moy is not None else "0.0"
             
-            # --- DEBUG LOGGING ---
-            log_file = os.path.join(settings.BASE_DIR, 'dashboard_debug_v2.log')
-            with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(f"\n--- {timezone.now()} ---")
-                f.write(f"\nFile: Module_Audit/Module_Audit/audit/views.py")
-                f.write(f"\nUser: {user.username}")
-                f.write(f"\nAssigned total: {audits_assigned.count()}")
-                f.write(f"\nPlanifies: {planifies}")
-                f.write(f"\nEn cours: {en_cours}")
-                f.write(f"\nTermines: {termines}")
-                f.write(f"\nScore moy: {score_moy}")
-                f.write("\n------------------------\n")
+            context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date_creation')[:10]
             
-            context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
+            # All assigned audits for the calendar
+            calendar_audits = []
+            for audit in audits_assigned.select_related('site'):
+                status = audit.get_audit_status()
+                dot_type = 'ok' if status == 'termine' else ('overdue' if status == 'en_retard' else 'pending')
+                local_date = to_local_display_datetime(audit.date) if audit.date else None
+                calendar_audits.append({
+                    'id': audit.id,
+                    'desc': audit.desc,
+                    'date': local_date.strftime('%Y-%m-%d') if local_date else '',
+                    'status': status,
+                    'dot_type': dot_type,
+                    'site': audit.site.name if audit.site else ''
+                })
+            context['calendar_audits'] = calendar_audits
+            
+            # DEBUG LOGGING TO FILE
+            with open(os.path.join(settings.BASE_DIR, 'dashboard_debug.log'), 'a') as f:
+                f.write(f"--- DASHBOARD DEBUG ({timezone.now()}) ---\n")
+                f.write(f"User: {user.username} (ID: {user.id})\n")
+                f.write(f"Audits Assigned: {audits_assigned.count()}\n")
+                f.write(f"Planifies: {planifies}\n")
+                f.write(f"En cours: {en_cours}\n")
+                f.write(f"Termines: {termines}\n")
+                f.write(f"Score Moy: {score_moy}\n")
+                f.write(f"-----------------------\n")
+            
         return context
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -315,7 +405,7 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             return ["audit/typeaudit/typeaudit_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -324,7 +414,7 @@ class TypeAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des formulaires d'audit existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #textref
 class TextRefListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = TextRef
@@ -386,7 +476,7 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
             return ["audit/textref/textref_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -397,7 +487,7 @@ class TextRefDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
                     'success': False,
                     'message': "Cette référence ne peut pas être supprimée car elle est utilisée ailleurs."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #chapiteNorme
 class ChapitreNormeListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = ChapitreNorme
@@ -457,7 +547,7 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
             return ["audit/chapitre/chapitre_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -468,7 +558,7 @@ class ChapitreNormeDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
                     'success': False,
                     'message': "Ce chapitre ne peut pas être supprimé car il est utilisé."
                 }, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 #critere
 class CritereListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, ListView):
     model = Critere
@@ -476,6 +566,9 @@ class CritereListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, List
     context_object_name = "criteres"
     ordering = ["id"]
     paginate_by = 7
+
+    def get_queryset(self):
+        return Critere.objects.select_related('chapitre_norme', 'formulaire').prefetch_related('type_audit').all()
 
     def paginate_queryset(self, queryset, page_size):
         from django.http import Http404
@@ -500,7 +593,6 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        data['audit_types'] = TypeAudit.objects.all()
         if self.request.POST:
             data['sous_criteres'] = SousCritereFormSet(self.request.POST)
         else:
@@ -508,34 +600,33 @@ class CritereCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Cr
         return data
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        sous_criteres = context['sous_criteres']
-        if sous_criteres.is_valid():
-            self.object = form.save()
-            sous_criteres.instance = self.object
-            saved_scs = sous_criteres.save()
+        self.object = form.save(commit=False)
+        self.object.save()
+        form.save_m2m() # Ensure M2M is saved
+
+        # Handle formset only if present in POST
+        if 'souscritere_set-TOTAL_FORMS' in self.request.POST:
+            sous_criteres = SousCritereFormSet(self.request.POST, instance=self.object)
+            if sous_criteres.is_valid():
+                sous_criteres.save()
+        
+        # Sync Type Audit from Parent to all Children
+        parent_types = list(self.object.type_audit.all())
+        for sc in self.object.souscritere_set.all():
+            sc.type_audit.set(parent_types)
             
-            # Sync Type Audit from Parent to Children
-            parent_types = list(self.object.type_audit.all())
-            for sc in saved_scs:
-                sc.type_audit.set(parent_types)
-                
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': f"Le critère '{self.object.name}' et ses sous-critères ont été créés avec succès."
-                })
-            return redirect(self.success_url)
-        else:
-            return self.form_invalid(form)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'id': self.object.id,
+                'message': f"Le critère '{self.object.name}' a été créé avec succès."
+            })
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
-        context = self.get_context_data()
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
-                'form': form,
-                'audit_types': TypeAudit.objects.all(),
-                'sous_criteres': context['sous_criteres']
+                'form': form
             })
         return super().form_invalid(form)
 
@@ -561,36 +652,60 @@ class CritereUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, Up
         return data
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        sous_criteres = context['sous_criteres']
-        if sous_criteres.is_valid():
-            self.object = form.save()
-            saved_scs = sous_criteres.save()
-            
-            # Sync Type Audit from Parent to Children
-            parent_types = list(self.object.type_audit.all())
-            for sc in saved_scs:
-                sc.type_audit.set(parent_types)
+        self.object = form.save(commit=False)
+        self.object.save()
+        form.save_m2m() 
+        
+        # Handle formset only if present in POST
+        if 'souscritere_set-TOTAL_FORMS' in self.request.POST:
+            sous_criteres = SousCritereFormSet(self.request.POST, instance=self.object)
+            if sous_criteres.is_valid():
+                sous_criteres.save()
+        
+        # Sync Type Audit from Parent to all Children
+        parent_types = list(self.object.type_audit.all())
+        for sc in self.object.souscritere_set.all():
+            sc.type_audit.set(parent_types)
 
-            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': f"Le critère '{self.object.name}' et ses sous-critères ont été mis à jour avec succès."
-                })
-            return redirect(self.success_url)
-        else:
-            return self.form_invalid(form)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'id': self.object.id,
+                'message': f"Le critère '{self.object.name}' a été mis à jour avec succès."
+            })
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
-        context = self.get_context_data()
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(self.request, "audit/critere/critere_form_modal.html", {
                 'form': form,
-                'audit_types': TypeAudit.objects.all(),
-                'object': self.get_object(),
-                'sous_criteres': context['sous_criteres']
+                'object': self.get_object()
             })
         return super().form_invalid(form)
+class CritereSousCriteresModalView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, View):
+    def get(self, request, pk):
+        critere = get_object_or_404(Critere, pk=pk)
+        formset = SousCritereFormSet(instance=critere)
+        return render(request, "audit/critere/souscritere_manage_modal.html", {
+            'critere': critere,
+            'sous_criteres': formset
+        })
+
+    def post(self, request, pk):
+        critere = get_object_or_404(Critere, pk=pk)
+        formset = SousCritereFormSet(request.POST, instance=critere)
+        if formset.is_valid():
+            formset.save()
+            # Sync Type Audit from Parent to all Children
+            parent_types = list(critere.type_audit.all())
+            for sc in critere.souscritere_set.all():
+                sc.type_audit.set(parent_types)
+            return JsonResponse({'success': True, 'message': 'Sous-critères enregistrés avec succès.'})
+        return render(request, "audit/critere/souscritere_manage_modal.html", {
+            'critere': critere,
+            'sous_criteres': formset
+        })
+
 class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, DeleteView):
     model = Critere
     template_name = "audit/critere/critere_confirm_delete.html"
@@ -601,7 +716,7 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
             return ["audit/critere/critere_delete_modal.html"]
         return ["audit/critere/critere_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -618,7 +733,7 @@ class CritereDeleteView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, De
                         f"{len(related_sous_criteres)} sous-critère(s): {', '.join(sc_names)}{'...' if len(related_sous_criteres) > 3 else ''}."
                     )
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 #SousCritère
 class SousCritereListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -735,7 +850,7 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
             return ["audit/souscritere/souscritere_delete_modal.html"]
         return ["audit/souscritere/souscritere_confirm_delete.html"]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -745,7 +860,7 @@ class SousCritereDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVi
                 # Add specific error handling if it's protected
                 error_msg = f"Impossible de supprimer le sous-critère car il possède des dépendances actives."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 #TypePreuve
 class TypePreuveListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
@@ -808,18 +923,28 @@ class TypePreuveDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteVie
             return ["audit/typepreuve/typepreuve_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
                 self.object.delete()
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'message': "Type de preuve supprimé avec succès."})
             except ProtectedError:
-                return JsonResponse({
-                    'success': False,
-                    'message': "Ce type de preuve ne peut pas être supprimé car il est utilisé ailleurs."
-                }, status=400)
-        return super().delete(request, *args, **kwargs)
+                related_preuves = self.object.preuveattendu_set.all()
+                reasons = []
+                if related_preuves.exists():
+                    items = [f"'{p.name[:30]}...'" for p in related_preuves[:3]]
+                    reasons.append(f"{len(related_preuves)} preuve(s) attendue(s) ({', '.join(items)})")
+                
+                error_msg = f"Impossible de supprimer ce type de preuve car il est lié à : {', '.join(reasons) if reasons else 'des éléments protégés'}."
+                return JsonResponse({'success': False, 'message': error_msg}, status=400)
+        
+        try:
+            return super().form_valid(form)
+        except ProtectedError:
+            from django.contrib import messages
+            messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
+            return redirect(self.success_url)
 # =====================================================
 # LIST VIEW
 # =====================================================
@@ -889,18 +1014,30 @@ class PreuveAttenduDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, Delete
     template_name = "org/preuveattendu/preuveattendu_confirm_delete.html"
     success_url = reverse_lazy("preuveattendu_list")
 
-    def delete(self, request, *args, **kwargs):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            self.object = self.get_object()
+    def form_valid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
+                self.object = self.get_object()
                 self.object.delete()
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'message': "Preuve attendue supprimée avec succès."})
             except ProtectedError:
-                return JsonResponse({
-                    'success': False,
-                    'message': "Cette preuve attendue ne peut pas être supprimée car elle est utilisée ailleurs."
-                }, status=400)
-        return super().delete(request, *args, **kwargs)
+                from .models import SousCritere
+                related_sc = SousCritere.objects.filter(preuve_attendu=self.object)
+                
+                reasons = []
+                if related_sc.exists():
+                    items = [f"'{sc.content[:30]}...'" for sc in related_sc[:3]]
+                    reasons.append(f"{len(related_sc)} sous-critère(s) ({', '.join(items)})")
+                
+                error_msg = f"Impossible de supprimer cette preuve car elle est liée à : {', '.join(reasons) if reasons else 'des éléments protégés'}."
+                return JsonResponse({'success': False, 'message': error_msg}, status=400)
+        
+        try:
+            return super().form_valid(form)
+        except ProtectedError:
+            from django.contrib import messages
+            messages.error(self.request, "Impossible de supprimer cet élément car il est utilisé.")
+            return redirect(self.success_url)
 
     def get(self, request, *args, **kwargs):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -979,7 +1116,7 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             return ["audit/typecotation/typecotation_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -988,7 +1125,7 @@ class TypeCotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteV
             except ProtectedError:
                 error_msg = "Impossible de supprimer ce type car il est lié à des cotations existantes."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 # =====================================================
 # COTATION VIEWS
@@ -1092,7 +1229,7 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             return ["audit/cotation/cotation_delete_modal.html"]
         return [self.template_name]
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.POST.get('ajax') == 'true':
             try:
                 self.object = self.get_object()
@@ -1101,7 +1238,7 @@ class CotationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView)
             except ProtectedError:
                 error_msg = "Impossible de supprimer cette cotation car elle est utilisée dans des audits existants."
                 return JsonResponse({'success': False, 'message': error_msg}, status=400)
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
 
 # =====================================================
@@ -1164,7 +1301,8 @@ class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
     def form_valid(self, form):
         with transaction.atomic():
             self.object = form.save()
-            selected_sc_ids = self.request.POST.getlist('sous_criteres')
+            # Deduplicate selected IDs to avoid redundant records and IntegrityErrors
+            selected_sc_ids = list(dict.fromkeys(self.request.POST.getlist('sous_criteres')))
             if selected_sc_ids:
                 for i, sc_id in enumerate(selected_sc_ids):
                     FormulaireSousCritere.objects.create(
@@ -1172,6 +1310,10 @@ class FormulaireAuditCreateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
                         sous_critere_id=sc_id,
                         ordre=i
                     )
+        
+        if self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'id': self.object.id})
+            
         return redirect(self.success_url)
 
 class FormulaireAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, UpdateView):
@@ -1193,7 +1335,8 @@ class FormulaireAuditUpdateView(LoginRequiredMixin, AuditeurOrSuperuserRequiredM
             self.object = form.save()
             # Refresh associations
             self.object.formulairesouscritere_set.all().delete()
-            selected_sc_ids = self.request.POST.getlist('sous_criteres')
+            # Deduplicate selected IDs to avoid redundant records
+            selected_sc_ids = list(dict.fromkeys(self.request.POST.getlist('sous_criteres')))
             if selected_sc_ids:
                 for i, sc_id in enumerate(selected_sc_ids):
                     FormulaireSousCritere.objects.create(
@@ -1257,6 +1400,10 @@ class FormulaireReorderView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
 class StartAuditView(LoginRequiredMixin, View):
 
     @transaction.atomic
+    def get(self, request, pk):
+        return self.post(request, pk)
+
+    @transaction.atomic
     def post(self, request, pk):
 
         liste_audit = get_object_or_404(ListeAudit, pk=pk)
@@ -1270,6 +1417,9 @@ class StartAuditView(LoginRequiredMixin, View):
         if existing:
             return redirect("etape_audit", pk=existing.pk)
 
+        # Extract commentaire
+        commentaire = request.POST.get('commentaire', '')
+
         # Create ResultatAudit
         resultat = ResultatAudit.objects.create(
             ref_audit=liste_audit.pk,
@@ -1278,43 +1428,60 @@ class StartAuditView(LoginRequiredMixin, View):
             sujet=liste_audit.desc,
             auditeur=request.user,
             site=getattr(liste_audit, "site", None),
-            commentaire=request.POST.get("commentaire", ""),
+            commentaire=commentaire,
             en_cours=True
         )
 
-        # Generate detail rows
+        # Generate detail rows (Support both new association model and legacy direct links)
         formulaire = liste_audit.formulaire_audit
         if not formulaire:
-            # Handle case where no formulaire is attached to the audit
             return JsonResponse({"status": "error", "message": "Aucun formulaire associé à cet audit"}, status=400)
 
-        sous_criteres = formulaire.formulairesouscritere_set.select_related(
+        details = []
+        fscs = formulaire.formulairesouscritere_set.select_related(
             "sous_critere__critere",
             "sous_critere__critere__chapitre_norme",
             "sous_critere__critere__chapitre_norme__text_ref",
-        )
+        ).order_by('ordre')
 
-        details = []
-
-        for fs in sous_criteres:
-            sc = fs.sous_critere
-
-            details.append(
-                DetailResultatAudit(
-                    resultat_audit=resultat,
-                    critere=sc.critere.name if sc.critere else "",
-                    norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
-                    sous_critere=sc.content,
-                    chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
-                    text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
-                    value=0,
-                    value_max=getattr(sc, 'valeur_max', 5),
-                    cotation="",
-                    cotation_option=[],
+        if fscs.exists():
+            for fs in fscs:
+                sc = fs.sous_critere
+                if not sc: continue
+                details.append(
+                    DetailResultatAudit(
+                        resultat_audit=resultat,
+                        critere=sc.critere.name if sc.critere else "",
+                        norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                        sous_critere=sc.content,
+                        chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                        text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
+                        value=0,
+                        value_max=getattr(sc, 'valeur_max', 1),
+                        cotation="",
+                        cotation_option=[],
+                    )
                 )
-            )
+        else:
+            # Legacy Fallback: Criteria linked directly to FormulaireAudit
+            for crit in formulaire.criteres.all():
+                for sc in crit.souscritere_set.all():
+                    details.append(
+                        DetailResultatAudit(
+                            resultat_audit=resultat,
+                            critere=crit.name,
+                            norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                            value=0,
+                            value_max=1,
+                            cotation="",
+                            cotation_option=[],
+                        )
+                    )
 
-        DetailResultatAudit.objects.bulk_create(details)
+        if details:
+            DetailResultatAudit.objects.bulk_create(details)
 
         return redirect("etape_audit", pk=resultat.pk)
 
@@ -1333,6 +1500,42 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         details = list(self.object.detailresultataudit_set.all().order_by('id'))
+        
+        # SELF-HEALING: If no details exist, try to generate them from the form
+        if not details:
+            formulaire = self.object.audit.formulaire_audit
+            if formulaire:
+                new_details = []
+                fscs = formulaire.formulairesouscritere_set.all().order_by('ordre')
+                if fscs.exists():
+                    for fs in fscs:
+                        sc = fs.sous_critere
+                        if not sc: continue
+                        new_details.append(DetailResultatAudit(
+                            resultat_audit=self.object,
+                            critere=sc.critere.name if sc.critere else "",
+                            norme=sc.critere.chapitre_norme.text_ref.norme if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else "",
+                            sous_critere=sc.content,
+                            chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
+                            value=0,
+                            value_max=1
+                        ))
+                else:
+                    # Legacy fallback
+                    for crit in formulaire.criteres.all():
+                        for sc in crit.souscritere_set.all():
+                             new_details.append(DetailResultatAudit(
+                                resultat_audit=self.object,
+                                critere=crit.name,
+                                norme=crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "",
+                                sous_critere=sc.content,
+                                chapitre_norme=crit.chapitre_norme.name if crit.chapitre_norme else "",
+                                value=0,
+                                value_max=1
+                            ))
+                if new_details:
+                    DetailResultatAudit.objects.bulk_create(new_details)
+                    details = list(self.object.detailresultataudit_set.all().order_by('id'))
         
         import re
         def norm(s):
@@ -1361,71 +1564,117 @@ class EtapeAuditView(LoginRequiredMixin, DetailView):
             url = ch.text_ref.text_ref.content.url if ch.text_ref and ch.text_ref.text_ref and ch.text_ref.text_ref.content else ""
             if not url and ch.text_ref:
                 url = all_docs.get(norm(ch.text_ref.norme), "")
+                
+            # Partial match fallback
+            if not url and ch.text_ref:
+                n_key = norm(ch.text_ref.norme)
+                for d_key, d_url in all_docs.items():
+                    if n_key.startswith(d_key) or d_key.startswith(n_key):
+                        url = d_url
+                        break
             
-            if url:
-                global_chap_docs[c_key] = {'url': url, 'id': ch.id, 'text_ref_id': ch.text_ref.id if ch.text_ref else None, 'page': ch.page}
-
-        # 2. Map by Criterion + Sub-Criterion
-        sous_criteres = SousCritere.objects.select_related('critere', 'critere__chapitre_norme', 'critere__chapitre_norme__text_ref__text_ref').all()
-        sc_info_dict = {}
-        sc_content_map = {} # Secondary fallback by sub-criterion content only
+            if not url:
+                for d_key, d_url in all_docs.items():
+                    if c_key.startswith(d_key) or d_key.startswith(c_key):
+                        url = d_url
+                        break
+            
+        # We pre-fetch everything to follow the exact chain requested
+        criteres_chain = Critere.objects.select_related(
+            'chapitre_norme', 
+            'chapitre_norme__text_ref', 
+            'chapitre_norme__text_ref__text_ref'
+        ).all()
         
-        for sc in sous_criteres:
-            if sc.critere:
-                c_norm = norm(sc.critere.name)
-                sc_norm = norm(sc.content)
-                key = f"{c_norm}____{sc_norm}"
-                
-                url = sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else ""
-                
-                if not url and sc.critere.chapitre_norme:
-                    # Try chapter name match in global map
-                    url = global_chap_docs.get(norm(sc.critere.chapitre_norme.name), {}).get('url', "")
-                
-                if not url and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref:
-                    # Try norme name match in global library
-                    url = all_docs.get(norm(sc.critere.chapitre_norme.text_ref.norme), "")
-
-                info = {
-                    'preuves': list(sc.preuve_attendu.values_list('name', flat=True)),
-                    'page': sc.critere.chapitre_norme.page if sc.critere.chapitre_norme else None,
-                    'chapitre_id': sc.critere.chapitre_norme.id if sc.critere.chapitre_norme else None,
-                    'text_ref_id': sc.critere.chapitre_norme.text_ref.id if sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref else None,
-                    'text_ref_url': url
+        # Map by normalized names to match the snapshot data in Details
+        structural_map = {}
+        for c in criteres_chain:
+            c_key = norm(c.name)
+            ch_key = norm(c.chapitre_norme.name) if c.chapitre_norme else ""
+            
+            # Follow the chain: Critere -> Chapitre -> TextRef -> ProcessusDoc
+            url = ""
+            text_ref_id = None
+            chap_id = c.chapitre_norme.id if c.chapitre_norme else None
+            pdf_page = c.chapitre_norme.page if c.chapitre_norme else 1
+            
+            if c.chapitre_norme and c.chapitre_norme.text_ref:
+                tr = c.chapitre_norme.text_ref
+                text_ref_id = tr.id
+                if tr.text_ref and tr.text_ref.content:
+                    url = tr.text_ref.content.url
+            
+            if c_key:
+                structural_map[c_key] = {
+                    'url': url,
+                    'chap_id': chap_id,
+                    'text_ref_id': text_ref_id,
+                    'page': pdf_page
                 }
-                sc_info_dict[key] = info
-                sc_content_map[sc_norm] = info
+
+        # 2. Map proofs (SousCritere)
+        sc_proofs = {}
+        for sc in SousCritere.objects.prefetch_related('preuve_attendu').all():
+            sc_proofs[norm(sc.content)] = list(sc.preuve_attendu.values_list('name', flat=True))
 
         for d in details:
             c_lkp = norm(d.critere)
             sc_lkp = norm(d.sous_critere)
-            lookup_key = f"{c_lkp}____{sc_lkp}"
             
-            # Try primary match
-            info = sc_info_dict.get(lookup_key, {})
+            # Get info from the strict structural chain
+            info = structural_map.get(c_lkp, {})
             
-            # Fallback 1: By Sub-Criterion content alone
-            if not info.get('text_ref_url'):
-                info.update(sc_content_map.get(sc_lkp, {}))
+            url = info.get('url', "")
             
-            # Fallback 2: By Chapter Name
-            if not info.get('text_ref_url') and d.chapitre_norme:
-                ch_lkp = norm(d.chapitre_norme)
-                ch_info = global_chap_docs.get(ch_lkp, {})
-                if ch_info:
-                    info.update(ch_info)
+            # Fallback only if strict chain is missing: Fuzzy match in library by Norme name
+            if not url and d.norme:
+                n_norm = norm(d.norme)
+                for doc_name, doc_url in all_docs.items():
+                    if n_norm in doc_name or doc_name in n_norm:
+                        url = doc_url
+                        break
             
-            d.preuves_attendues = info.get('preuves', [])
-            d.pdf_page = info.get('page')
-            d.chapitre_id = info.get('chapitre_id')
+            # Fallback: Fuzzy match in library by Chapter name
+            if not url and d.chapitre_norme:
+                ch_norm = norm(d.chapitre_norme)
+                for doc_name, doc_url in all_docs.items():
+                    if ch_norm in doc_name or doc_name in ch_norm:
+                        url = doc_url
+                        break
+
+            d.preuves_attendues = sc_proofs.get(sc_lkp, [])
+            d.pdf_page = info.get('page', 1)
+            d.chapitre_id = info.get('chap_id')
             d.text_ref_id = info.get('text_ref_id')
-            d.dynamic_text_ref_url = info.get('text_ref_url', "")
+            d.dynamic_text_ref_url = url
             
+        # 4. Prepare serialized JSON for the frontend to prevent template errors
+        details_json = []
+        for d in details:
+            details_json.append({
+                "id": d.id,
+                "critere": d.critere,
+                "sous_critere": d.sous_critere,
+                "chapitre": d.chapitre_norme,
+                "chapitre_id": d.chapitre_id,
+                "norme": d.norme,
+                "text_ref_id": d.text_ref_id,
+                "cotation": d.cotation,
+                "commentaire": d.commentaire,
+                "value": float(d.value) if d.value else 0.0,
+                "preuves_attendues": d.preuves_attendues,
+                "has_file": bool(d.justificatif or d.evidences.exists()),
+                "file_url": d.justificatif.url if d.justificatif else "",
+                "evidences": [{"id": e.id, "url": e.file.url} for e in d.evidences.all()] + ([{"id": "legacy1", "url": d.justificatif.url}] if d.justificatif else []) + ([{"id": "legacy2", "url": d.justificatif_bis.url}] if d.justificatif_bis else []),
+                "pdf_page": getattr(d, 'pdf_page', 1),
+                "text_ref_url": (d.dynamic_text_ref_url or d.text_ref_url or "").replace('http://127.0.0.1:8000', '').replace('http://localhost:8000', '').replace('/media/processus_docs/', '/processus_docs/')
+            })
+
+        context["details_json"] = details_json
         context["details"] = details
         context["readonly"] = not self.object.en_cours
         context["audit_display_date"] = to_local_display_datetime(self.object.audit.date if self.object.audit else None)
-        
-        # Fetch all available cotations for the wizard buttons
+        context["library_docs"] = [{"name": d.name, "url": d.content.url} for d in ProcessusDoc.objects.exclude(content="") if d.content]
         context["cotations"] = Cotation.objects.all().order_by('-valeur')
         return context
 
@@ -1459,12 +1708,11 @@ class ResultatAuditDetailView(LoginRequiredMixin, DetailView):
                     'name': crit_name,
                     'chapitre': d.chapitre_norme or "",
                     'details': [],
-                    'percentages': []
+                    'values': []
                 }
             groups[crit_name]['details'].append(d)
             if d.value >= 0: # Non N/A
-                perc = d.value / d.value_max if d.value_max > 0 else 0
-                groups[crit_name]['percentages'].append(perc)
+                groups[crit_name]['values'].append(d.value)
 
         # Finalize grouping list with category scores
         grouped_results = []
@@ -1494,45 +1742,173 @@ class DetailResultatAuditUpdateView(LoginRequiredMixin, View):
         if not request.user.is_superuser and resultat.auditeur != request.user:
             return HttpResponseForbidden()
 
-        detail.commentaire = request.POST.get("commentaire", "")
-        detail.cotation = request.POST.get("cotation", "")
-        detail.code = request.POST.get("code", "")
+        if "commentaire" in request.POST:
+            detail.commentaire = request.POST.get("commentaire")
+        if "cotation" in request.POST:
+            detail.cotation = request.POST.get("cotation")
+        if "code" in request.POST:
+            detail.code = request.POST.get("code")
 
-        try:
-            detail.value = float(request.POST.get("value", 0))
-        except ValueError:
-            detail.value = 0
+        if "value" in request.POST:
+            try:
+                detail.value = float(request.POST.get("value", 0))
+            except (ValueError, TypeError):
+                pass
 
-        if request.FILES.get("justificatif"):
-            detail.justificatif = request.FILES.get("justificatif")
-
-        if request.FILES.get("justificatif_bis"):
-            detail.justificatif_bis = request.FILES.get("justificatif_bis")
+        if "justificatif" in request.FILES:
+            files = request.FILES.getlist("justificatif")
+            for f in files:
+                EvidenceAudit.objects.create(detail=detail, file=f)
+        
+        if request.POST.get("delete_justificatif") == "true":
+            # If explicit delete requested, we clear all for now or a specific one?
+            # Let's clear all for simplicity or handle specific ID later.
+            EvidenceAudit.objects.filter(detail=detail).delete()
+            detail.justificatif = None # Legacy field
 
         detail.save()
-        
-        # Explicitly recalculate result score in the view
         resultat.recalculate_score()
 
-        # Calculate category score for the updated detail's critere (average of percentages)
-        crit_name = detail.critere
-        cat_details = DetailResultatAudit.objects.filter(resultat_audit=resultat, critere=crit_name)
-        percentages = []
-        for d in cat_details:
-            if d.value >= 0:
-                percentages.append(d.value)
-        category_score = (sum(percentages) / len(percentages)) if percentages else 0
+        # Get all evidence
+        evidences = []
+        for e in detail.evidences.all():
+            evidences.append({"id": e.id, "url": e.file.url})
+        
+        # Fallback to legacy fields (no ID for these as they are model fields)
+        if detail.justificatif: evidences.append({"id": "legacy1", "url": detail.justificatif.url})
+        if detail.justificatif_bis: evidences.append({"id": "legacy2", "url": detail.justificatif_bis.url})
 
         from django.utils.text import slugify
+        crit_name = detail.critere
+        cat_details = DetailResultatAudit.objects.filter(resultat_audit=resultat, critere=crit_name)
+        percentages = [d.value for d in cat_details if d.value >= 0]
+        category_score = (sum(percentages) / len(percentages)) if percentages else 0
 
         return JsonResponse({
-            "status": "saved",
+            "status": "success",
             "score": round(float(resultat.score_audit), 1),
             "category_id": slugify(crit_name),
-            "category_score": round(category_score, 1)
+            "category_score": round(category_score, 1),
+            "evidences": evidences
+        })
+
+class DeleteEvidenceView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        # Handle legacy pseudo-IDs
+        if str(pk).startswith("legacy"):
+            # This is complex as it's a model field. For now, we clear them in clearFile bulk action.
+            # Or we could handle them specifically here if needed.
+            return JsonResponse({"status": "error", "message": "Legacy files can only be deleted via 'Clear All'"})
+
+        evidence = get_object_or_404(EvidenceAudit, pk=pk)
+        detail = evidence.detail
+        resultat = detail.resultat_audit
+
+        if not resultat.en_cours:
+            return HttpResponseForbidden()
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return HttpResponseForbidden()
+
+        evidence.delete()
+        
+        evidences = []
+        for e in detail.evidences.all():
+            evidences.append({"id": e.id, "url": e.file.url})
+        if detail.justificatif: evidences.append({"id": "legacy1", "url": detail.justificatif.url})
+        if detail.justificatif_bis: evidences.append({"id": "legacy2", "url": detail.justificatif_bis.url})
+
+        return JsonResponse({
+            "status": "success",
+            "evidences": evidences
         })
 
 
+
+class AuditAISuggestionsView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        details = resultat.detailresultataudit_set.all()
+        
+        # --- 1. DATA ANALYSIS ---
+        # Group details by criteria for score analysis
+        criteria_performance = {}
+        for d in details:
+            c_name = d.critere if d.critere else "Général"
+            if c_name not in criteria_performance:
+                criteria_performance[c_name] = {'total': 0, 'count': 0, 'comments': []}
+            if d.value is not None and d.value >= 0:
+                criteria_performance[c_name]['total'] += d.value
+                criteria_performance[c_name]['count'] += 1
+            if d.commentaire:
+                criteria_performance[c_name]['comments'].append(d.commentaire)
+
+        # Identify top and bottom criteria
+        ranked_criteria = []
+        for name, stats in criteria_performance.items():
+            if stats['count'] > 0:
+                avg = stats['total'] / stats['count']
+                ranked_criteria.append({'name': name, 'avg': avg, 'comments': stats['comments']})
+        
+        ranked_criteria.sort(key=lambda x: x['avg'], reverse=True)
+        top_criteres = [c['name'] for c in ranked_criteria if c['avg'] >= 0.8][:2]
+        low_criteres = [c['name'] for c in ranked_criteria if c['avg'] < 0.5][:2]
+
+        # --- 2. GENERATING SECTIONS ---
+        
+        # A. Points Forts (High scores + positive comments)
+        pf_text = "L'audit a démontré une excellente maîtrise sur les domaines suivants : " + ", ".join(top_criteres) + ". " if top_criteres else "Bonne conformité générale observée."
+        all_pf_comments = [d.commentaire for d in details if d.value >= 1.0 and d.commentaire]
+        if all_pf_comments:
+            pf_text += " " + " / ".join(list(dict.fromkeys(all_pf_comments))[:3])
+        
+        # B. Points Sensibles (Partial scores)
+        ps_criteres = [c['name'] for c in ranked_criteria if 0.5 <= c['avg'] < 0.8]
+        ps_text = "Des points de vigilance ont été identifiés concernant : " + ", ".join(ps_criteres[:2]) + ". " if ps_criteres else ""
+        all_ps_comments = [d.commentaire for d in details if 0.0 < d.value < 1.0 and d.commentaire]
+        ps_text += " / ".join(list(dict.fromkeys(all_ps_comments))[:3]) if all_ps_comments else "Aucun point sensible majeur à signaler."
+
+        # C. Risques (Zero scores + critical comments)
+        risk_text = "Écarts critiques et risques identifiés sur : " + ", ".join(low_criteres) + ". " if low_criteres else "Aucun risque majeur immédiat."
+        critical_comments = []
+        for d in details:
+            if d.value == 0.0 and d.commentaire:
+                critical_comments.append(d.commentaire)
+            elif d.commentaire and any(w in d.commentaire.lower() for w in ['risque', 'critique', 'danger', 'non-conformité']):
+                critical_comments.append(d.commentaire)
+        
+        if critical_comments:
+            risk_text += " Détails : " + " / ".join(list(dict.fromkeys(critical_comments))[:3])
+
+        # D. Opportunités (Constructive comments)
+        opp_comments = []
+        for d in details:
+            if d.commentaire:
+                c_low = d.commentaire.lower()
+                if any(w in c_low for w in ['opportunité', 'piste', 'optimiser', 'pourrait', 'suggérer', 'préconiser', 'recommandation']):
+                    opp_comments.append(d.commentaire)
+        
+        opp_text = "Axes de progrès : " + " / ".join(list(dict.fromkeys(opp_comments))[:3]) if opp_comments else "Continuer la démarche d'amélioration continue sur l'ensemble des processus audités."
+
+        return JsonResponse({
+            "point_fort": pf_text[:1200],
+            "point_sensible": ps_text[:1200],
+            "risque": risk_text[:1200],
+            "opportunite": opp_text[:1200]
+        })
+
+class ResultatAuditSaveSynthesisView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        resultat = get_object_or_404(ResultatAudit, pk=pk)
+        if not request.user.is_superuser and resultat.auditeur != request.user:
+            return HttpResponseForbidden()
+            
+        resultat.point_fort = request.POST.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = request.POST.get('point_sensible', resultat.point_sensible)
+        resultat.risque = request.POST.get('risque', resultat.risque)
+        resultat.opportunite = request.POST.get('opportunite', resultat.opportunite)
+        resultat.save()
+        
+        return JsonResponse({"status": "success"})
 
 class CloseAuditView(LoginRequiredMixin, View):
 
@@ -1542,11 +1918,32 @@ class CloseAuditView(LoginRequiredMixin, View):
         if not request.user.is_superuser and resultat.auditeur != request.user:
             return HttpResponseForbidden()
 
+        # Save AI/User synthesis fields
+        resultat.point_fort = request.POST.get('point_fort', resultat.point_fort)
+        resultat.point_sensible = request.POST.get('point_sensible', resultat.point_sensible)
+        resultat.risque = request.POST.get('risque', resultat.risque)
+        resultat.opportunite = request.POST.get('opportunite', resultat.opportunite)
+
         resultat.en_cours = False
         resultat.recalculate_score()
-        resultat.save(update_fields=["en_cours", "score_audit"])
+        resultat.save()
 
-        return redirect("resultat_report", pk=resultat.pk)
+        redirect_to = request.POST.get("next")
+        if redirect_to == "liste_audit_list":
+            redirect_url = reverse("liste_audit_list")
+        else:
+            redirect_url = reverse("resultat_report", args=[resultat.pk])
+        if (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest" 
+            or request.headers.get("x-requested-with") == "XMLHttpRequest"
+            or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+            or 'application/json' in request.headers.get("accept", "")
+        ):
+            return JsonResponse({
+                "status": "success",
+                "redirect_url": redirect_url
+            })
+        return redirect(redirect_url)
 
 
 class FinishAuditView(LoginRequiredMixin, View):
@@ -1572,7 +1969,7 @@ class FinishAuditView(LoginRequiredMixin, View):
                 sujet=liste_audit.desc,
                 auditeur=request.user,
                 site=getattr(liste_audit, "site", None),
-                commentaire=request.POST.get("commentaire", ""),
+                commentaire=request.POST.get('commentaire', ''),
                 en_cours=False
             )
 
@@ -1598,7 +1995,7 @@ class FinishAuditView(LoginRequiredMixin, View):
                             chapitre_norme=sc.critere.chapitre_norme.name if sc.critere and sc.critere.chapitre_norme else "",
                             text_ref_url=sc.critere.chapitre_norme.text_ref.text_ref.content.url if sc.critere and sc.critere.chapitre_norme and sc.critere.chapitre_norme.text_ref and sc.critere.chapitre_norme.text_ref.text_ref and sc.critere.chapitre_norme.text_ref.text_ref.content else "",
                             value=0,
-                            value_max=sc.valeur_max if hasattr(sc, 'valeur_max') else 5, # Fallback to 5
+                            value_max=sc.valeur_max if hasattr(sc, 'valeur_max') else 1, # Fallback to 1
                             cotation="",
                             cotation_option=[],
                         )
@@ -1622,8 +2019,8 @@ class ResultatAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
         order = self.request.GET.get('order', 'asc')
 
         qs = ResultatAudit.objects.select_related(
-            "audit", "auditeur"
-        )
+            "audit", "audit__section", "auditeur", "site"
+        ).filter(en_cours=False)
 
         # Determine sort field
         if sort == 'date':
@@ -1664,11 +2061,29 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         resultat = self.object
-        # Ensure score is recalculated for the report
         resultat.recalculate_score()
         
         details = resultat.detailresultataudit_set.all().order_by('id')
         
+        # Calculate Summary Counts for Teleperformance Table
+        # PF (Points Forts): value >= 1.0
+        # PS/AA (Points Sensibles): 0.0 < value < 1.0
+        # E (Ecarts): value == 0.0
+        # Ignore negative (N/A)
+        pf_count = 0
+        ps_count = 0
+        e_count = 0
+        
+        for d in details:
+            if d.value >= 1.0:
+                pf_count += 1
+            elif d.value > 0.0 and d.value < 1.0:
+                ps_count += 1
+            elif d.value == 0.0:
+                # Only count as Ecart if it was actually evaluated (cotation is not empty)
+                if d.cotation and not any(x in d.cotation.lower() for x in ['n/a', 'non applicable']):
+                    e_count += 1
+
         # Same grouping logic as detail view using CharField snapshot
         groups = {}
         for d in details:
@@ -1696,7 +2111,29 @@ class ResultatAuditReportView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMix
         context["grouped_results"] = grouped_results
         context["nb_criteres"] = len(grouped_results)
         context["readonly"] = True
+        context["pf_count"] = pf_count
+        context["ps_count"] = ps_count
+        context["e_count"] = e_count
         return context
+
+
+class ResultatAuditDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+    model = ResultatAudit
+    success_url = reverse_lazy("resultat_list")
+
+    def form_valid(self, form):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': "Résultat d'audit supprimé avec succès."})
+            return redirect(self.success_url)
+        except ProtectedError:
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': "Impossible de supprimer car des données dépendantes existent."}, status=400)
+            return redirect(self.success_url)
+
+
 
 # =====================================================
 # USER MANAGEMENT
@@ -1836,7 +2273,24 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     model = ListeAudit
     template_name = "audit/listeaudit/liste_audit_list.html"
     context_object_name = "audits"
-    paginate_by = 20
+    paginate_by = 8
+
+    def get(self, request, *args, **kwargs):
+        highlight_id = request.GET.get('highlight')
+        if highlight_id and not request.GET.get('page') and not self.kwargs.get('page'):
+            try:
+                highlight_id = int(highlight_id)
+                queryset = self.get_queryset()
+                audit_ids = list(queryset.values_list('id', flat=True))
+                if highlight_id in audit_ids:
+                    idx = audit_ids.index(highlight_id)
+                    page_size = self.get_paginate_by(queryset)
+                    if page_size:
+                        page_num = (idx // page_size) + 1
+                        self.kwargs['page'] = page_num
+            except Exception as e:
+                pass
+        return super().get(request, *args, **kwargs)
 
     def get_paginate_by(self, queryset):
         user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
@@ -1860,17 +2314,26 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
         status_filter = self.request.GET.get('status', 'all')
         
         # Consistent with models.py get_audit_status()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
         if status_filter == 'planifie':
-            # Audits without any ResultatAudit
-            return base_qs.exclude(resultataudit__isnull=False).order_by("-id")
+            # Audits without any ResultatAudit and not overdue
+            return base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).order_by("-id")
         elif status_filter == 'en_cours':
-            # Audits with at least one active ResultatAudit
-            return base_qs.filter(resultataudit__en_cours=True).distinct().order_by("-id")
+            # Audits with at least one active ResultatAudit and not overdue
+            return base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().order_by("-id")
         elif status_filter == 'termine':
-            # Audits with ResultatAudit that are NOT en_cours 
-            # (and no active ones to avoid double counting if that's possible, 
-            # though usually it's 1:1)
+            # Audits with ResultatAudit that are completed (regardless of date)
             return base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().order_by("-id")
+        elif status_filter == 'en_retard':
+            # Audits not completed whose planned date has passed
+            return base_qs.filter(
+                Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                date__lt=today_start
+            ).distinct().order_by("-id")
         
         # Final sort by ID descending (newest first)
         return base_qs.order_by("-id")
@@ -1887,9 +2350,18 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
             from django.db.models import Q
             base_qs = qs.filter(Q(affectation=self.request.user) | Q(participants=self.request.user))
             
-        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).count()
-        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True).distinct().count()
+        from django.utils import timezone
+        from django.db.models import Q
+        local_now = timezone.localtime(timezone.now())
+        today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        context['planifies_count'] = base_qs.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+        context['en_cours_count'] = base_qs.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
         context['termines_count'] = base_qs.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+        context['en_retard_count'] = base_qs.filter(
+            Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+            date__lt=today_start
+        ).distinct().count()
         
         return context
 
@@ -2206,13 +2678,25 @@ def get_structure(request):
         # Get all criteria
         criteres = Critere.objects.all().select_related('chapitre_norme__text_ref')
         
-        # Get sous-critères for this type audit
-        # This handles the filter carefully
-        sous_criteres = SousCritere.objects.filter(type_audit=type_id)
+        # Get all sub-criteria
+        all_sous_criteres = SousCritere.objects.all()
+
+        # Get IDs of sub-criteria that are linked to this type audit
+        linked_sc_ids = set(
+            SousCritereTypeAudit.objects.filter(type_audit_id=type_id)
+            .values_list('sous_critere_id', flat=True)
+        )
+
+        # Group sub-criteria in memory by critere_id to optimize performance
+        sc_by_critere = {}
+        for sc in all_sous_criteres:
+            if sc.critere_id not in sc_by_critere:
+                sc_by_critere[sc.critere_id] = []
+            sc_by_critere[sc.critere_id].append(sc)
 
         result = []
         for critere in criteres:
-            sc_list = sous_criteres.filter(critere=critere)
+            sc_list = sc_by_critere.get(critere.id, [])
             
             result.append({
                 "critere_id": critere.id,
@@ -2222,7 +2706,8 @@ def get_structure(request):
                 "sous_criteres": [
                     {
                         "id": sc.id,
-                        "nom": sc.content
+                        "nom": sc.content,
+                        "is_linked": sc.id in linked_sc_ids
                     }
                     for sc in sc_list
                 ]
@@ -2241,12 +2726,17 @@ def get_formulaire_structure(request):
         return JsonResponse([], safe=False)
 
     try:
-        formulaire = FormulaireAudit.objects.get(pk=formulaire_id)
+        formulaire = FormulaireAudit.objects.select_related(
+            'processus', 'type_audit', 'creator'
+        ).prefetch_related('section', 'type_equipement').get(pk=formulaire_id)
     except FormulaireAudit.DoesNotExist:
         return JsonResponse({"error": "Formulaire not found"}, status=404)
 
-    # 1. Get ALL Critères linked to this formulaire
-    criteres = Critere.objects.filter(formulaire=formulaire).select_related('chapitre_norme__text_ref').order_by('name')
+    # 1. Get ALL Critères linked to this formulaire (directly or via FormulaireSousCritere)
+    from django.db.models import Q
+    criteres = Critere.objects.filter(
+        Q(formulaire=formulaire) | Q(souscritere__formulairesouscritere__formulaire=formulaire)
+    ).distinct().select_related('chapitre_norme__text_ref').order_by('name')
     
     # 2. Get SousCriteres linked via FormulaireSousCritere
     fsc_qs = (
@@ -2256,16 +2746,38 @@ def get_formulaire_structure(request):
         .order_by('ordre')
     )
     
-    # Map sous-critères by critère ID
-    sc_by_critere = {}
-    for fsc in fsc_qs:
-        crit_id = fsc.sous_critere.critere_id
-        if crit_id not in sc_by_critere:
-            sc_by_critere[crit_id] = []
-        sc_by_critere[crit_id].append({
-            "id": fsc.sous_critere.id,
-            "nom": fsc.sous_critere.content,
-        })
+    # 2a. Check if ANY FormulaireSousCritere rows exist for this formulaire
+    has_fsc = fsc_qs.exists()
+
+    if has_fsc:
+        # Map sous-critères by critère ID from FormulaireSousCritere
+        sc_by_critere = {}
+        for fsc in fsc_qs:
+            crit_id = fsc.sous_critere.critere_id
+            if crit_id not in sc_by_critere:
+                sc_by_critere[crit_id] = []
+            sc_by_critere[crit_id].append({
+                "id": fsc.sous_critere.id,
+                "nom": fsc.sous_critere.content,
+                "type_cotation": fsc.sous_critere.type_cotation_id if fsc.sous_critere.type_cotation else None,
+                "type_cotation_name": fsc.sous_critere.type_cotation.name if fsc.sous_critere.type_cotation else None,
+                "reaction": fsc.sous_critere.reaction or "",
+                "preuve_attendu": list(fsc.sous_critere.preuve_attendu.values_list('id', flat=True)),
+            })
+    else:
+        # Fall back: load all SousCritere directly linked to each Critere
+        from .models import SousCritere
+        sc_by_critere = {}
+        for crit in criteres:
+            sc_list = SousCritere.objects.filter(critere=crit).select_related('type_cotation')
+            sc_by_critere[crit.id] = [{
+                "id": sc.id,
+                "nom": sc.content,
+                "type_cotation": sc.type_cotation_id if sc.type_cotation else None,
+                "type_cotation_name": sc.type_cotation.name if sc.type_cotation else None,
+                "reaction": sc.reaction or "",
+                "preuve_attendu": list(sc.preuve_attendu.values_list('id', flat=True)),
+            } for sc in sc_list]
 
     # 3. Build the grouped structure
     grouped = []
@@ -2274,13 +2786,34 @@ def get_formulaire_structure(request):
             "critere_id": crit.id,
             "critere_nom": crit.name,
             "chapitre": crit.chapitre_norme.name if crit.chapitre_norme else "N/A",
+            "chapitre_id": crit.chapitre_norme.id if crit.chapitre_norme else None,
             "norme": crit.chapitre_norme.text_ref.norme if crit.chapitre_norme and crit.chapitre_norme.text_ref else "N/A",
             "sous_criteres": sc_by_critere.get(crit.id, [])
         })
 
+    # 4. Build the flat structure for the mobile app
+    flat_structure = []
+    for crit in grouped:
+        for sc in crit["sous_criteres"]:
+            flat_structure.append({
+                "id": sc["id"],
+                "critere_nom": crit["critere_nom"],
+                "sous_critere_nom": sc["nom"],
+                "cotation": sc["type_cotation_name"] or "-"
+            })
+
     return JsonResponse({
+        "id": formulaire.id,
+        "name": formulaire.name,
+        "processus": formulaire.processus.name if formulaire.processus else "-",
+        "type_audit": formulaire.type_audit.name if formulaire.type_audit else "-",
+        "type_equipement": ", ".join([te.name for te in formulaire.type_equipement.all()]) or "-",
+        "date_creation": formulaire.date_creation.strftime('%d/%m/%Y %H:%M') if formulaire.date_creation else "-",
+        "creator_username": formulaire.creator.username if formulaire.creator else "admin",
+        "sections": list(formulaire.section.values_list('name', flat=True)),
         "type_audit_id": formulaire.type_audit_id if formulaire.type_audit else None,
-        "criteres": grouped
+        "criteres": grouped,
+        "structure": flat_structure
     }, safe=False)
 
 @transaction.atomic
@@ -2311,6 +2844,7 @@ def quick_create_formulaire(request):
                 name=name,
                 processus_id=processus_id if processus_id else None,
                 type_audit_id=type_audit_id if type_audit_id else None,
+                creator=request.user if request.user.is_authenticated else None
             )
             
             if type_equipement_id:
@@ -2325,8 +2859,10 @@ def quick_create_formulaire(request):
                 
                 # 1. Existing sub-criteria
                 if sous_critere_ids:
-                    for sc_id in sous_critere_ids:
-                        FormulaireSousCritere.objects.create(
+                    # Filter out duplicate IDs
+                    unique_sc_ids = list(dict.fromkeys(sous_critere_ids))
+                    for sc_id in unique_sc_ids:
+                        FormulaireSousCritere.objects.get_or_create(
                             formulaire=formulaire,
                             sous_critere_id=sc_id
                         )
@@ -2370,7 +2906,7 @@ def quick_create_formulaire(request):
                             types_audit_ids = item.get('types_audit')
                             if types_audit_ids:
                                 for ta_id in types_audit_ids:
-                                    SousCritereTypeAudit.objects.create(
+                                    SousCritereTypeAudit.objects.get_or_create(
                                         sous_critere=new_sc,
                                         type_audit_id=ta_id
                                     )
@@ -2381,7 +2917,7 @@ def quick_create_formulaire(request):
                                 new_sc.preuve_attendu.set(preuve_ids)
 
                             # Link it to the formulaire
-                            FormulaireSousCritere.objects.create(
+                            FormulaireSousCritere.objects.get_or_create(
                                 formulaire=formulaire,
                                 sous_critere=new_sc
                             )
@@ -2403,7 +2939,7 @@ def quick_create_formulaire(request):
 @transaction.atomic
 def save_sous_critere_inline(request):
     """AJAX view to save a single SousCritere linked to an existing Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2448,7 +2984,7 @@ def save_sous_critere_inline(request):
 @transaction.atomic
 def save_critere_inline(request):
     """AJAX view to save a single Critere and its SousCriteres independently."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
     if request.method == "POST":
@@ -2471,12 +3007,9 @@ def save_critere_inline(request):
                 formulaire_id=formulaire_id if formulaire_id else None
             )
 
-            type_audits = request.POST.getlist("type_audit") or request.POST.getlist("ciblage")
+            type_audits = request.POST.getlist("type_audit")
             if type_audits:
-                # Remove empty strings
-                type_audits = [ta for ta in type_audits if ta]
-                if type_audits:
-                    critere.type_audit.set(type_audits)
+                critere.type_audit.set(type_audits)
             elif type_audit_id:
                 critere.type_audit.add(type_audit_id)
 
@@ -2519,7 +3052,7 @@ def save_critere_inline(request):
 @transaction.atomic
 def update_critere_inline(request, pk):
     """AJAX view to update a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2536,13 +3069,21 @@ def update_critere_inline(request, pk):
                 critere.formulaire_id = formulaire_id
             critere.save()
 
-            # Handle both old 'type_audit' and new 'ciblage' field names
-            type_audits = request.POST.getlist("type_audit") or request.POST.getlist("ciblage")
-            if type_audits:
-                # Remove empty strings if any
-                type_audits = [ta for ta in type_audits if ta]
-                if type_audits:
-                    critere.type_audit.set(type_audits)
+            critere.save()
+
+            # Handle ManyToMany type_audit/ciblage robustly (Single or Multiple)
+            type_audit_ids = request.POST.getlist("type_audit") or request.POST.getlist("type_audit[]") or \
+                           request.POST.getlist("ciblage") or request.POST.getlist("ciblage[]") or \
+                           [request.POST.get("type_audit")] or [request.POST.get("ciblage")]
+            
+            if any(k in request.POST for k in ["type_audit", "type_audit[]", "ciblage", "ciblage[]"]):
+                # Filter out empty values and set
+                valid_ids = [tid for tid in type_audit_ids if tid and tid != 'None']
+                if valid_ids:
+                    critere.type_audit.set(valid_ids)
+                else:
+                    critere.type_audit.clear()
+            
             return JsonResponse({"status": "success", "id": critere.id, "name": critere.name})
         except Critere.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Critère not found"}, status=404)
@@ -2554,7 +3095,7 @@ def update_critere_inline(request, pk):
 @transaction.atomic
 def update_sous_critere_inline(request, pk):
     """AJAX view to update a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2635,40 +3176,51 @@ def copy_formulaire(request, pk):
         fsc_associations = FormulaireSousCritere.objects.filter(formulaire=original_form).order_by('ordre')
         
         # Keep track of cloned criteria to avoid redundant copies
-        # Map: original_critere_id -> cloned_critere_object
         critere_map = {}
 
-        for assoc in fsc_associations:
-            old_sc = assoc.sous_critere
-            old_crit = old_sc.critere
-            
-            # Get or Create the cloned Criterion for this new Form
-            if old_crit.id not in critere_map:
+        if fsc_associations.exists():
+            for assoc in fsc_associations:
+                old_sc = assoc.sous_critere
+                old_crit = old_sc.critere
+                
+                if old_crit.id not in critere_map:
+                    new_crit = Critere.objects.get(pk=old_crit.pk)
+                    new_crit.pk = None
+                    new_crit.formulaire = new_form 
+                    new_crit.save()
+                    critere_map[old_crit.id] = new_crit
+                else:
+                    new_crit = critere_map[old_crit.id]
+                
+                new_sc = SousCritere.objects.get(pk=old_sc.pk)
+                new_sc.pk = None
+                new_sc.critere = new_crit
+                new_sc.save()
+                
+                new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
+                if hasattr(old_sc, 'type_audit'):
+                    new_sc.type_audit.set(old_sc.type_audit.all())
+                
+                # Ensure we don't create duplicates even if they existed in the original
+                FormulaireSousCritere.objects.get_or_create(
+                    formulaire=new_form,
+                    sous_critere=new_sc,
+                    defaults={'ordre': assoc.ordre}
+                )
+        else:
+            # Legacy Fallback: Copy via direct Critere.formulaire link
+            for old_crit in original_form.criteres.all():
                 new_crit = Critere.objects.get(pk=old_crit.pk)
                 new_crit.pk = None
-                new_crit.formulaire = new_form # Link to new form
+                new_crit.formulaire = new_form
                 new_crit.save()
-                critere_map[old_crit.id] = new_crit
-            else:
-                new_crit = critere_map[old_crit.id]
-            
-            # Duplicate the SousCritere and link to the NEW Criterion
-            new_sc = SousCritere.objects.get(pk=old_sc.pk)
-            new_sc.pk = None
-            new_sc.critere = new_crit
-            new_sc.save()
-            
-            # Copy M2M relations of SousCritere
-            new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
-            if hasattr(old_sc, 'type_audit'):
-                new_sc.type_audit.set(old_sc.type_audit.all())
-            
-            # Create the association in the new form
-            FormulaireSousCritere.objects.create(
-                formulaire=new_form,
-                sous_critere=new_sc,
-                ordre=assoc.ordre
-            )
+                
+                for old_sc in old_crit.souscritere_set.all():
+                    new_sc = SousCritere.objects.get(pk=old_sc.pk)
+                    new_sc.pk = None
+                    new_sc.critere = new_crit
+                    new_sc.save()
+                    new_sc.preuve_attendu.set(old_sc.preuve_attendu.all())
         
         return JsonResponse({
             "status": "success", 
@@ -2685,7 +3237,7 @@ def copy_formulaire(request, pk):
 @transaction.atomic
 def delete_critere_inline(request, pk):
     """AJAX view to delete a single Critere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2703,7 +3255,7 @@ def delete_critere_inline(request, pk):
 @transaction.atomic
 def delete_sous_critere_inline(request, pk):
     """AJAX view to delete a single SousCritere."""
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or request.user.groups.filter(name='Auditeur').exists()):
         return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
     if request.method == "POST":
         try:
@@ -2737,34 +3289,49 @@ import json
 def send_audit_report_email(request, pk):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            email_to = data.get('email_to')
-            email_message = data.get('email_message')
-            pdf_base64 = data.get('pdf_data')
-            
-            if not email_to or not pdf_base64:
-                return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+            # Handle both FormData (standard) and JSON (legacy)
+            if request.content_type == 'application/json':
+                import json, base64
+                data = json.loads(request.body)
+                email_to = data.get('email_to') or data.get('to')
+                email_message = data.get('email_message') or data.get('message')
+                pdf_data = data.get('pdf_data')
                 
-            if ',' in pdf_base64:
-                pdf_base64 = pdf_base64.split(',')[1]
-                
-            pdf_content = base64.b64decode(pdf_base64)
+                if pdf_data and ',' in pdf_data:
+                    pdf_data = pdf_data.split(',')[1]
+                pdf_content = base64.b64decode(pdf_data) if pdf_data else None
+                pdf_name = f'Rapport_Audit_{pk}.pdf'
+            else:
+                email_to = request.POST.get('to')
+                email_message = request.POST.get('message')
+                pdf_file = request.FILES.get('file')
+                pdf_content = pdf_file.read() if pdf_file else None
+                pdf_name = pdf_file.name if pdf_file else f'Rapport_Audit_{pk}.pdf'
+
+            if not email_to or not pdf_content:
+                return JsonResponse({'status': 'error', 'message': 'Données manquantes (email ou fichier)'}, status=400)
             
             # Split recipients by comma or semicolon
             recipients = [e.strip() for e in email_to.replace(';', ' ').replace(',', ' ').split() if e.strip()]
             
+            from django.core.mail import EmailMessage
             email = EmailMessage(
                 subject=f'Rapport d\'Audit #{pk}',
                 body=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=recipients,
             )
-            email.attach(f'Rapport_Audit_{pk}.pdf', pdf_content, 'application/pdf')
+            email.attach(pdf_name, pdf_content, 'application/pdf')
             email.send()
             
-            return JsonResponse({'status': 'success', 'message': 'Email sent successfully'})
+            return JsonResponse({'status': 'success', 'message': 'Email envoyé avec succès'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+            import traceback
+            print(f"EMAIL ERROR: {str(e)}")
+            print(traceback.format_exc())
+            return JsonResponse({'status': 'error', 'message': f"Erreur serveur: {str(e)}"}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
 
 def get_formulaire_type_audit(request, formulaire_id):
     formulaire = get_object_or_404(FormulaireAudit, pk=formulaire_id)
@@ -2773,10 +3340,45 @@ def get_formulaire_type_audit(request, formulaire_id):
         'type_audit_name': formulaire.type_audit.name if formulaire.type_audit else ""
     })
 
-def get_type_audits_json(request):
-    """Simple JSON endpoint: returns all TypeAudit records for frontend dropdowns."""
-    data = list(TypeAudit.objects.values('id', 'name'))
-    return JsonResponse(data, safe=False)
+
+from django.views.static import serve as static_serve
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.conf import settings
+
+@xframe_options_exempt
+def serve_pdf(request, path):
+    response = static_serve(request, path, document_root=settings.MEDIA_ROOT)
+    response["X-Frame-Options"] = "ALLOWALL"
+    return response
+
+
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def dismiss_notification(request, notif_id):
+    dismissed = request.session.get('dismissed_notifications', [])
+    if notif_id not in dismissed:
+        dismissed = list(dismissed)
+        dismissed.append(notif_id)
+        request.session['dismissed_notifications'] = dismissed
+    return JsonResponse({'status': 'success'})
+
+@login_required
+@require_POST
+def clear_all_notifications(request):
+    from .context_processors import notifications as get_notifications
+    notifs_context = get_notifications(request)
+    notifs = notifs_context.get('notifications', [])
+    dismissed = request.session.get('dismissed_notifications', [])
+    dismissed = list(dismissed)
+    for n in notifs:
+        notif_id = n.get('id')
+        if notif_id and notif_id not in dismissed:
+            dismissed.append(notif_id)
+    request.session['dismissed_notifications'] = dismissed
+    return JsonResponse({'status': 'success'})
 
 
 

@@ -507,6 +507,17 @@
         line-height: 1.2;
         margin-top: 2px;
     }
+
+    /* Highlight pulse for focused audit row */
+    @keyframes highlight-fade {
+        0% { background-color: rgba(37, 99, 235, 0.25) !important; }
+        100% { background-color: transparent !important; }
+    }
+    .highlighted-audit-row {
+        animation: highlight-fade 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        border: 2px solid #2563eb !important;
+        border-radius: 12px;
+    }
 </style>
 {% endblock %}
 
@@ -620,7 +631,7 @@
                 </thead>
                 <tbody>
                     {% for audit in audits %}
-                    <tr class="audit-row">
+                    <tr class="audit-row" id="audit-{{ audit.id }}">
                         <td class="fw-bold col-id ps-2" data-label="N°">{{ page_obj.start_index|add:forloop.counter0|default:forloop.counter }}</td>
                         <td class="col-name" data-label="Audit">
                             <div class="fw-bold ">{{ audit.desc|default:"Sans description" }}</div>
@@ -718,7 +729,7 @@
         <!-- Mobile Audit List -->
         <div id="mobileAuditList">
             {% for audit in audits %}
-            <div class="mobile-row-item audit-row">
+            <div class="mobile-row-item audit-row" id="mobile-audit-{{ audit.id }}">
                 <div class="d-flex align-items-center justify-content-between gap-2">
 
                     <!-- Left: Title + Status -->
@@ -1245,6 +1256,54 @@
             const row = e.target.closest('.audit-row');
             if (row) row.style.zIndex = '1';
         });
+
+        // 3.5 Highlight and focus the row from URL param or hash fragment
+        function handleFocusAudit() {
+            let highlightId = null;
+            
+            // Try query param first
+            const urlParamsFocus = new URLSearchParams(window.location.search);
+            highlightId = urlParamsFocus.get('highlight');
+            
+            // If not found in query param, try hash fragment (e.g., #audit-123 or #mobile-audit-123)
+            if (!highlightId) {
+                const hash = window.location.hash;
+                if (hash) {
+                    if (hash.startsWith('#audit-')) {
+                        highlightId = hash.replace('#audit-', '');
+                    } else if (hash.startsWith('#mobile-audit-')) {
+                        highlightId = hash.replace('#mobile-audit-', '');
+                    }
+                }
+            }
+            
+            if (highlightId) {
+                // Check desktop table row or mobile card
+                const row = document.getElementById('audit-' + highlightId) || document.getElementById('mobile-audit-' + highlightId);
+                if (row) {
+                    // Remove existing highlights from other rows
+                    document.querySelectorAll('.highlighted-audit-row').forEach(el => {
+                        el.classList.remove('highlighted-audit-row');
+                    });
+                    
+                    setTimeout(() => {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.classList.add('highlighted-audit-row');
+                        
+                        // If it's a mobile element, expand details if any accordion exists
+                        const mobileHeader = row.querySelector('.mobile-row-top');
+                        if (mobileHeader) {
+                            mobileHeader.click();
+                        }
+                    }, 300);
+                }
+            }
+        }
+
+        // Run on load
+        handleFocusAudit();
+        // Run on hash changes
+        window.addEventListener('hashchange', handleFocusAudit);
 
         // 4. Preserve URL parameters in pagination links
         const urlParams = new URLSearchParams(window.location.search);

@@ -173,8 +173,7 @@
                                     <i data-lucide="id-card" class="text-primary"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{
-                                        user.get_full_name|default:user.username }}</div>
+                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{ user.get_full_name|default:user.username }}</div>
                                     <div class="small text-muted" style="font-size: 0.7rem;">Nom complet</div>
                                 </div>
                             </div>
@@ -188,8 +187,7 @@
                                     <i data-lucide="mail" class="text-success"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{
-                                        user.email|default:"Non renseigné" }}</div>
+                                    <div class="text-dark font-weight-bold text-truncate h6 mb-0">{{ user.email|default:"Non renseigné" }}</div>
                                     <div class="small text-muted" style="font-size: 0.7rem;">Email professionnel</div>
                                 </div>
                             </div>
@@ -218,8 +216,7 @@
                 <hr class="my-2 my-md-5 border-light">
 
                 <div class="text-center mb-2">
-                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">Inscrit le {{ user.date_joined|date:"d
-                        M Y" }}</p>
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">Inscrit le {{ user.date_joined|date:"d M Y" }}</p>
                 </div>
             </div>
 

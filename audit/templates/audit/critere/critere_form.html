@@ -134,8 +134,7 @@
                         <div class="input-icon"><i data-lucide="bookmark" ></i></div>
                         <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern">
                             {% for choice in form.chapitre_norme.field.choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify
-                                %}selected{% endif %}>{{ choice.1 }}</option>
+                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>

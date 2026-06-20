@@ -6,8 +6,7 @@
             <i data-lucide="folder"></i>
         </div>
         <div>
-            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier la Section{% else %}Nouvelle Section{%
-                endif %}</h4>
+            <h4 class="modal-title font-weight-bold mb-0">{% if object %}Modifier la Section{% else %}Nouvelle Section{% endif %}</h4>
             <p class="  mb-0">Définissez une division organisationnelle pour vos audits.</p>
         </div>
     </div>
@@ -41,8 +40,7 @@
                     required>
             </div>
             {% if form.name.errors %}
-            <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{%
-                endfor %}</small>
+            <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
             {% endif %}
             <p class="  mt-2 mb-0">Donnez un nom unique et clair à cette division.</p>
         </div>

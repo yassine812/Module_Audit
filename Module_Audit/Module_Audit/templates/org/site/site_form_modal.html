@@ -6,16 +6,14 @@
             <i data-lucide="building" class="w-5 h-5"></i>
         </div>
         <div>
-            <h5 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Site{% else %}Nouveau Site{% endif
-                %}</h5>
+            <h5 class="modal-title font-weight-bold mb-0">{% if object %}Modifier le Site{% else %}Nouveau Site{% endif %}</h5>
             <div class="modal-header border-bottom-0 pt-3 px-3 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg shadow-sm">
                         <i data-lucide="building" style="width: 18px; height: 18px;"></i>
                     </div>
                     <div>
-                        <h4 class="modal-title font-weight-bold mb-0 text-dark" id="siteModalTitle">{% if object
-                            %}Modifier le Site{% else %}Nouveau Site{% endif %}</h4>
+                        <h4 class="modal-title font-weight-bold mb-0 text-dark" id="siteModalTitle">{% if object %}Modifier le Site{% else %}Nouveau Site{% endif %}</h4>
                         <p class="text-muted small mb-0 mt-1">Définissez les sites physiques et leurs standards.</p>
                     </div>
                 </div>
@@ -87,8 +85,7 @@
                                                                 autofocus aria-required="true">
                                                         </div>
                                                         {% if form.name.errors %}
-                                                        <small class="text-danger font-weight-bold mt-1 d-block">{% for
-                                                            error in form.name.errors %}{{ error }}{% endfor %}</small>
+                                                        <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
                                                         {% endif %}
                                                     </div>
 
@@ -116,11 +113,8 @@
                                                                         </div>
                                                                         <select name="section" id="id_section"
                                                                             class="form-control border-0 py-1">
-                                                                            {% for choice in form.section.field.choices
-                                                                            %}
-                                                                            <option value="{{ choice.0 }}" {% if
-                                                                                choice.0|slugify==form.section.value|slugify
-                                                                                %}selected{% endif %}>{{ choice.1 }}
+                                                                            {% for choice in form.section.field.choices %}
+                                                                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.section.value|slugify %}selected{% endif %}>{{ choice.1 }}
                                                                             </option>
                                                                             {% endfor %}
                                                                         </select>
@@ -139,8 +133,7 @@
                                                                 <label class="level-card"
                                                                     data-raw-label="{{ choice.choice_label }}">
                                                                     <input type="checkbox" name="niveau_evaluation"
-                                                                        value="{{ choice.data.value }}" {% if
-                                                                        choice.data.selected %}checked{% endif %}>
+                                                                        value="{{ choice.data.value }}" {% if choice.data.selected %}checked{% endif %}>
                                                                     <div class="level-check">
                                                                         <i data-lucide="check" class="w-3 h-3"></i>
                                                                     </div>
@@ -161,13 +154,10 @@
                                                                                 <input type="checkbox"
                                                                                     name="niveau_evaluation"
                                                                                     value="{{ choice.data.value }}"
-                                                                                    class="mr-1" {% if
-                                                                                    choice.data.selected %}checked{%
-                                                                                    endif %}>
+                                                                                    class="mr-1" {% if choice.data.selected %}checked{% endif %}>
                                                                                 <div class="card-content">
                                                                                     <span
-                                                                                        class="font-weight-bold text-dark d-block">{{
-                                                                                        choice.choice_label }}</span>
+                                                                                        class="font-weight-bold text-dark d-block">{{ choice.choice_label }}</span>
                                                                                     <small
                                                                                         class="text-emerald-600 font-weight-bold d-block mt-1">--%</small>
                                                                                 </div>
@@ -176,9 +166,7 @@
                                                                         </div>
                                                                         {% if form.niveau_evaluation.errors %}
                                                                         <small
-                                                                            class="text-danger font-weight-bold mt-2 d-block">{%
-                                                                            for error in form.niveau_evaluation.errors
-                                                                            %}{{ error }}{% endfor %}</small>
+                                                                            class="text-danger font-weight-bold mt-2 d-block">{% for error in form.niveau_evaluation.errors %}{{ error }}{% endfor %}</small>
                                                                         {% endif %}
                                                                     </div>
                                                             </div>
@@ -192,8 +180,7 @@
                                                                 class="btn btn-emerald text-white font-weight-bold rounded-pill px-4 shadow-sm"
                                                                 style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                                                 <i data-lucide="save" class="mr-2"></i>
-                                                                {% if object %}Mettre à jour{% else %}Enregistrer{%
-                                                                endif %}
+                                                                {% if object %}Mettre à jour{% else %}Enregistrer{% endif %}
                                                                 <div
                                                                     class="modal-footer border-top-0 p-3 bg-light rounded-bottom-lg modal-actions">
                                                                     <button type="button"
@@ -205,8 +192,7 @@
                                                                         <i data-lucide="save" class="mr-1"
                                                                             style="width: 16px; height: 16px;"></i>
                                                                         <span class="submit-text">{% if object %}Mettre
-                                                                            à jour{% else %}Enregistrer{% endif
-                                                                            %}</span>
+                                                                            à jour{% else %}Enregistrer{% endif %}</span>
                                                                         <span
                                                                             class="spinner-border spinner-border-sm d-none ml-2"
                                                                             role="status" aria-hidden="true"></span>

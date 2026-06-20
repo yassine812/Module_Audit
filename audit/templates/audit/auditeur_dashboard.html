@@ -115,7 +115,7 @@
                 </div>
                 <p class="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">Score moy.</p>
                 <div class="flex items-baseline gap-1">
-                    <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ score_moy|default:"0.0" }}</p>
+                    <p class="text-2xl sm:text-4xl font-black text-slate-800 leading-none">{{ score_moy|default:"0.0" }}%</p>
                 </div>
             </div>
         </section>
@@ -171,7 +171,7 @@
                             data-date="{{ audit.date|date:'Y-m-d' }}">
                             <div
                                 class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-orange-300 hover:bg-orange-50/10 border-l-4 border-l-orange-500{% endif %} transition-all duration-300">
-                                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                <div class="flex items-start gap-3 sm:gap-4 w-full lg:w-auto lg:flex-1 min-w-0">
                                     <div
                                         class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-orange-100 text-orange-600{% endif %} rounded-xl items-center justify-center shrink-0">
                                         <i data-lucide="loader" class="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow"></i>
@@ -194,7 +194,7 @@
                                 </div>
 
                                 <div
-                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
+                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto lg:flex-shrink-0">
                                     <div
                                         class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
                                         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -220,7 +220,7 @@
                             data-date="{{ audit.date|date:'Y-m-d' }}">
                             <div
                                 class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 relative group {% if status == 'en_retard' %}hover:border-red-300 hover:bg-red-50/10 border-l-4 border-l-red-500{% else %}hover:border-blue-300 hover:bg-blue-50/10 border-l-4 border-l-blue-500{% endif %} transition-all duration-300">
-                                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                <div class="flex items-start gap-3 sm:gap-4 w-full lg:w-auto lg:flex-1 min-w-0">
                                     <div
                                         class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 {% if status == 'en_retard' %}bg-red-100 text-red-600{% else %}bg-blue-100 text-blue-600{% endif %} rounded-xl items-center justify-center shrink-0">
                                         <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6"></i>
@@ -241,7 +241,7 @@
                                 </div>
 
                                 <div
-                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto">
+                                    class="flex flex-col sm:flex-row items-center gap-3 text-xs sm:text-sm font-semibold text-slate-500 lg:ml-auto w-full lg:w-auto lg:flex-shrink-0">
                                     <div
                                         class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-2 rounded-lg w-full sm:w-auto border border-slate-100">
                                         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -269,7 +269,7 @@
                             <div
                                 class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col items-start justify-between gap-4 lg:gap-6 relative group hover:border-green-300 hover:bg-green-50/10 transition-all duration-300 border-l-4 border-l-green-500">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-4">
-                                    <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                    <div class="flex items-start gap-3 sm:gap-4 w-full lg:w-auto lg:flex-1 min-w-0">
                                         <div
                                             class="hidden md:flex w-10 h-10 sm:w-12 sm:h-12 bg-green-100 text-green-600 rounded-xl items-center justify-center shrink-0">
                                             <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6"></i>
@@ -287,7 +287,7 @@
                                     </div>
 
                                     <div
-                                        class="flex flex-col sm:flex-row justify-end items-center gap-3 text-[11px] sm:text-xs font-semibold text-slate-500 w-full lg:w-auto">
+                                        class="flex flex-col sm:flex-row justify-end items-center gap-3 text-[11px] sm:text-xs font-semibold text-slate-500 w-full lg:w-auto lg:flex-shrink-0">
                                         <div
                                             class="flex items-center justify-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg w-full sm:w-auto border border-slate-100">
                                             <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -310,7 +310,7 @@
                                         <div class="flex items-baseline gap-1">
                                             <span
                                                 class="text-[10px] font-bold text-green-800 uppercase tracking-widest mr-2">Score</span>
-                                            <span class="text-base sm:text-lg font-black text-slate-800">{{ result.score_audit|floatformat:1 }}</span>
+                                            <span class="text-base sm:text-lg font-black text-slate-800">{{ result.score_percentage|floatformat:"0" }}%</span>
                                         </div>
                                     </div>
                                     <a href="{% url 'resultat_report' result.pk %}"
@@ -415,21 +415,21 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
-                                <span>Échéance dépassée</span>
+                                <span>En retard</span>
                             </div>
                             <span id="legendOverdueCount" class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px]">0</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
-                                <span>À venir</span>
+                                <span>Planifié</span>
                             </div>
                             <span id="legendPendingCount" class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px]">0</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                <span>OK</span>
+                                <span>Terminé</span>
                             </div>
                             <span id="legendOkCount" class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px]">0</span>
                         </div>

@@ -40,8 +40,7 @@
                     {{ form.critere }}
                 </div>
                 {% if form.critere.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.critere.errors %}{{ error
-                    }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.critere.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
@@ -56,8 +55,7 @@
                     {{ form.type_cotation }}
                 </div>
                 {% if form.type_cotation.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.type_cotation.errors %}{{
-                    error }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.type_cotation.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
@@ -70,8 +68,7 @@
                         required>{{ form.content.value|default:'' }}</textarea>
                 </div>
                 {% if form.content.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.content.errors %}{{ error
-                    }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.content.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 
@@ -83,8 +80,7 @@
                         placeholder="Indiquez la réaction souhaitée en cas de non-conformité...">{{ form.reaction.value|default:'' }}</textarea>
                 </div>
                 {% if form.reaction.errors %}
-                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.reaction.errors %}{{ error
-                    }}{% endfor %}</small>
+                <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.reaction.errors %}{{ error }}{% endfor %}</small>
                 {% endif %}
             </div>
 

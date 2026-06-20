@@ -375,7 +375,13 @@ const ListeAuditScreen = () => {
                       style={styles.notifItem}
                       onPress={() => {
                         setShowNotifMenu(false);
-                        router.push({ pathname: '/audit-form', params: { id: notif.target_id } });
+                        if (notif.type === 'audit_finished') {
+                          router.push(`/report?id=${notif.target_id}`);
+                        } else if (notif.type === 'audit_started') {
+                          router.push(`/audit-form?id=${notif.target_id}`);
+                        } else {
+                          router.push('/liste-audit');
+                        }
                       }}
                     >
                       <View style={[styles.notifIconCircle, { backgroundColor: notif.type === 'audit_started' ? '#eff6ff' : '#fff7ed' }]}>

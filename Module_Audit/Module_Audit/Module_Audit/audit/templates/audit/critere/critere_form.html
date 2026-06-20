@@ -121,8 +121,7 @@
                             placeholder="Nom du critère..." value="{{ form.name.value|default:'' }}" required>
                     </div>
                     {% if form.name.errors %}
-                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors
-                        %}{{ error }}{% endfor %}</small>
+                    <small class="text-danger font-weight-bold mt-1 d-block text-xs">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
                     {% endif %}
                 </div>
 
@@ -133,8 +132,7 @@
                         <div class="input-icon"><i data-lucide="bookmark" ></i></div>
                         <select name="chapitre_norme" id="id_chapitre_norme" class="form-control-modern">
                             {% for choice in form.chapitre_norme.field.choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify
-                                %}selected{% endif %}>{{ choice.1 }}</option>
+                            <option value="{{ choice.0 }}" {% if choice.0|slugify==form.chapitre_norme.value|slugify %}selected{% endif %}>{{ choice.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>

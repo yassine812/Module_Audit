@@ -2,13 +2,15 @@ from django.urls import path
 from .views import *
 from .auth import LoginView, LogoutView
 from .api_views import (
-    LoginAPIView, LogoutAPIView, UserListAPIView, TypeAuditListAPIView, 
+    LoginAPIView, LogoutAPIView, ChangePasswordAPIView, UserListAPIView, TypeAuditListAPIView, 
     TypeAuditDetailAPIView, ChapitreNormeListAPIView, ChapitreNormeDetailAPIView, CritereListAPIView, 
     CritereDetailAPIView, TypeCotationListAPIView, TypeCotationDetailAPIView, SousCritereListAPIView, 
     SousCritereDetailAPIView, FormulaireAuditListAPIView, FormulaireAuditDetailAPIView, 
-    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
+    FormulaireAuditCopyAPIView,    ListeAuditListAPIView, ResultatAuditListAPIView, TypePreuveListAPIView, PreuveAttenduListAPIView, 
     SousCritereTypeAuditListAPIView, FormulaireSousCritereListAPIView, TextRefListAPIView, TextRefDetailAPIView, 
-    ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView
+    ActivityAPIView, DashboardStatsAPIView, CotationListAPIView, ChartDataAPIView, ListeAuditStartAPIView,
+    ResultatAuditDetailAPIView, DetailResultatAuditUpdateAPIView, ResultatAuditFinishAPIView,
+    ResultatAuditAISuggestionsAPIView, NotificationsAPIView
 )
 from .views import (
     UserListView, UserCreateView, 
@@ -71,6 +73,7 @@ urlpatterns = [
     path("critere/create/", CritereCreateView.as_view(), name="critere_create"),
     path("critere/<int:pk>/edit/", CritereUpdateView.as_view(), name="critere_update"),
     path("critere/<int:pk>/delete/", CritereDeleteView.as_view(), name="critere_delete"),
+    path("critere/<int:pk>/manage-sous-criteres/", CritereSousCriteresModalView.as_view(), name="critere_manage_sous_criteres"),
 
     # =====================================================
     # SOUS CRITERE
@@ -146,10 +149,14 @@ urlpatterns = [
     path("resultat/", ResultatAuditListView.as_view(), name="resultat_list"),
     path("resultat/<int:pk>/", ResultatAuditDetailView.as_view(), name="resultat_detail"),
     path("resultat/<int:pk>/update-detail/", DetailResultatAuditUpdateView.as_view(), name="detail_update"),
+    path("evidence/<int:pk>/delete/", DeleteEvidenceView.as_view(), name="evidence_delete"),
     path("resultat/<int:pk>/etapes/", EtapeAuditView.as_view(), name="etape_audit"),
     path("resultat/<int:pk>/close/", CloseAuditView.as_view(), name="resultat_close"),
+    path("resultat/<int:pk>/ai-suggestions/", AuditAISuggestionsView.as_view(), name="ai_suggestions"),
+    path("resultat/<int:pk>/save-synthesis/", ResultatAuditSaveSynthesisView.as_view(), name="save_synthesis"),
     path("resultat/<int:pk>/report/", ResultatAuditReportView.as_view(), name="resultat_report"),
     path("resultat/<int:pk>/send-email/", send_audit_report_email, name="resultat_send_email"),
+    path("resultat/<int:pk>/delete/", ResultatAuditDeleteView.as_view(), name="resultat_delete"),
 
     # =====================================================
     # API ENDPOINTS
@@ -157,8 +164,10 @@ urlpatterns = [
     path("api/chart-data/", ChartDataAPIView.as_view(), name="chart_data"),
     path("api/login/", LoginAPIView.as_view(), name="api_login"),
     path("api/logout/", LogoutAPIView.as_view(), name="api_logout"),
+    path("api/change-password/", ChangePasswordAPIView.as_view(), name="api_change_password"),
     path("api/users/", UserListAPIView.as_view(), name="api_user_list"),
     path("api/activities/", ActivityAPIView.as_view(), name="api_activities"),
+    path("api/notifications/", NotificationsAPIView.as_view(), name="api_notifications"),
     path("api/dashboard-stats/", DashboardStatsAPIView.as_view(), name="api_dashboard_stats"),
     path("api/type-audit/", TypeAuditListAPIView.as_view(), name="api_typeaudit_list"),
     path("api/type-audit/<int:pk>/", TypeAuditDetailAPIView.as_view(), name="api_typeaudit_detail"),
@@ -177,12 +186,17 @@ urlpatterns = [
     
     path("api/formulaire-audit/", FormulaireAuditListAPIView.as_view(), name="api_formulaire_audit_list"),
     path("api/formulaire-audit/<int:pk>/", FormulaireAuditDetailAPIView.as_view(), name="api_formulaire_audit_detail"),
+    path("api/formulaire-audit/<int:pk>/copy/", FormulaireAuditCopyAPIView.as_view(), name="api_formulaire_audit_copy"),
     
     path("api/liste-audit/", ListeAuditListAPIView.as_view(), name="api_liste_audit_list"),
     path("api/liste-audit/<int:pk>/", ListeAuditListAPIView.as_view(), name="api_liste_audit_detail"),
+    path("api/liste-audit/<int:pk>/start/", ListeAuditStartAPIView.as_view(), name="api_liste_audit_start"),
     
     path("api/resultat-audit/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_list"),
-    path("api/resultat-audit/<int:pk>/", ResultatAuditListAPIView.as_view(), name="api_resultat_audit_detail"),
+    path("api/resultat-audit/<int:pk>/", ResultatAuditDetailAPIView.as_view(), name="api_resultat_audit_detail"),
+    path("api/resultat-audit/<int:pk>/finish/", ResultatAuditFinishAPIView.as_view(), name="api_resultat_audit_finish"),
+    path("api/resultat-audit/<int:pk>/ai-suggestions/", ResultatAuditAISuggestionsAPIView.as_view(), name="api_resultat_audit_suggestions"),
+    path("api/resultat-detail/<int:pk>/update/", DetailResultatAuditUpdateAPIView.as_view(), name="api_resultat_detail_update"),
     
     path("api/type-preuve/", TypePreuveListAPIView.as_view(), name="api_type_preuve_list"),
     path("api/type-preuve/<int:pk>/", TypePreuveListAPIView.as_view(), name="api_type_preuve_detail"),
@@ -206,5 +220,6 @@ urlpatterns = [
     path("sous-critere/<int:pk>/delete-inline/", delete_sous_critere_inline, name="delete_sous_critere_inline"),
     path("api/critere/<int:pk>/type-audits/", get_critere_type_audits, name="api_get_critere_type_audits"),
     path("get-formulaire-type/<int:formulaire_id>/", get_formulaire_type_audit, name="get_formulaire_type_audit"),
-    path("api/type-audits/", get_type_audits_json, name="get_type_audits_json"),
+    path("notifications/dismiss/<str:notif_id>/", dismiss_notification, name="dismiss_notification"),
+    path("notifications/clear-all/", clear_all_notifications, name="clear_all_notifications"),
 ]

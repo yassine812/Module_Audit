@@ -254,7 +254,13 @@ const AuditeurDashboard = () => {
                       style={styles.notifItem}
                       onPress={() => {
                         setShowNotifMenu(false);
-                        router.push(`/audit-detail?id=${notif.target_id}`);
+                        if (notif.type === 'audit_finished') {
+                          router.push(`/report?id=${notif.target_id}`);
+                        } else if (notif.type === 'audit_started') {
+                          router.push(`/audit-form?id=${notif.target_id}`);
+                        } else {
+                          router.push('/liste-audit');
+                        }
                       }}
                     >
                       <View style={[styles.notifIconCircle, { backgroundColor: notif.type === 'audit_started' ? '#eff6ff' : '#fff7ed' }]}>
@@ -386,7 +392,7 @@ const AuditeurDashboard = () => {
             />
             <KPICard 
               title="SCORE MOY." 
-              value={stats.score_moy} 
+              value={stats.score_moy + '%'} 
               icon={<Feather name="award" size={20} color="#8b5cf6" />} 
               color="#8b5cf6" 
               borderBottomColor="#8b5cf6"

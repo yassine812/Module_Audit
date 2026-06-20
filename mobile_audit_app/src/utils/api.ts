@@ -1,5 +1,5 @@
 // export const TUNNEL_URL = 'https://hungry-moles-happen.loca.lt'; // Active public localtunnel
-export const TUNNEL_URL = 'http://192.168.1.175:8000'; // Current Local Wi-Fi IP (Django running on port 8000)
+export const TUNNEL_URL = 'http://192.168.1.185:8000'; // Current Local Wi-Fi IP (Django running on port 8000)
 // export const TUNNEL_URL = 'https://0a69-105-159-204-58.ngrok-free.app'; // ngrok
 
 export const getApiUrl = (path: string) => {

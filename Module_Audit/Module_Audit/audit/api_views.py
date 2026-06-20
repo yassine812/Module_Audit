@@ -902,13 +902,52 @@ class ActivityAPIView(View):
 class DashboardStatsAPIView(View):
     def get(self, request):
         try:
-            stats = {
-                'type_audits': TypeAudit.objects.count(),
-                'text_refs': TextRef.objects.count(),
-                'formulaires': FormulaireAudit.objects.count(),
-                'liste_audits': ListeAudit.objects.count(),
-                'resultats': ResultatAudit.objects.count(),
-            }
+            user = request.user
+            if not user.is_authenticated:
+                return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=401)
+
+            if user.is_superuser:
+                notifications_count = ResultatAudit.objects.filter(en_cours=True).count()
+                stats = {
+                    'type_audits': TypeAudit.objects.count(),
+                    'text_refs': TextRef.objects.count(),
+                    'formulaires': FormulaireAudit.objects.count(),
+                    'liste_audits': ListeAudit.objects.count(),
+                    'resultats': ResultatAudit.objects.count(),
+                    'notifications_count': notifications_count
+                }
+            else:
+                from django.db.models import Avg, Q, Count
+                from django.utils import timezone
+                # Include audits where user is Auditor OR Participant
+                audits_assigned = ListeAudit.objects.filter(Q(affectation=user) | Q(participants=user)).distinct()
+                
+                local_now = timezone.localtime(timezone.now())
+                today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+                planifies = audits_assigned.exclude(resultataudit__isnull=False).filter(date__gte=today_start).count()
+                en_cours = audits_assigned.filter(resultataudit__en_cours=True, date__gte=today_start).distinct().count()
+                termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
+                en_retard = audits_assigned.filter(
+                    Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
+                    date__lt=today_start
+                ).distinct().count()
+                
+                # Score average remains for results of audits assigned to the user
+                completed_results = ResultatAudit.objects.filter(audit__in=audits_assigned, en_cours=False)
+                score_moy = completed_results.aggregate(Avg('score_audit'))['score_audit__avg']
+                
+                # Notifications count logic matching context_processors.py
+                notif_count = audits_assigned.filter(resultataudit__isnull=True).count()
+
+                stats = {
+                    'planifies': planifies,
+                    'en_cours': en_cours,
+                    'termines': termines,
+                    'en_retard': en_retard,
+                    'score_moy': round(float(score_moy) * 100, 1) if score_moy is not None else "0.0",
+                    'notifications_count': notif_count
+                }
+                
             return JsonResponse({'status': 'success', 'data': stats})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

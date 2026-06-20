@@ -259,10 +259,12 @@ const AdminDashboardContent = () => {
                       style={styles.notifItem}
                       onPress={() => {
                         setShowNotifMenu(false);
-                        if (notif.type === 'audit_started') {
-                          router.push(`/audit-detail?id=${notif.target_id}`);
+                        if (notif.type === 'audit_finished') {
+                          router.push(`/report?id=${notif.target_id}`);
+                        } else if (notif.type === 'audit_started') {
+                          router.push(`/audit-form?id=${notif.target_id}`);
                         } else {
-                          router.push(`/audit-detail?id=${notif.target_id}`);
+                          router.push('/liste-audit');
                         }
                       }}
                     >

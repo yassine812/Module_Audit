@@ -1158,14 +1158,15 @@ class DashboardStatsAPIView(View):
                 en_cours = audits_assigned.filter(resultataudit__en_cours=True).distinct().count()
                 termines = audits_assigned.filter(resultataudit__en_cours=False).exclude(resultataudit__en_cours=True).distinct().count()
                 
-                # Score average remains for results where user is the lead Auditeur
-                score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
+                # Score average remains for results of audits assigned to the user
+                completed_results = ResultatAudit.objects.filter(audit__in=audits_assigned, en_cours=False)
+                score_moy = completed_results.aggregate(Avg('score_audit'))['score_audit__avg']
                 
                 stats = {
                     'planifies': planifies,
                     'en_cours': en_cours,
                     'termines': termines,
-                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0"
+                    'score_moy': round(float(score_moy) * 100, 1) if score_moy is not None else "0.0"
                 }
                 
             return JsonResponse({'status': 'success', 'data': stats})

@@ -298,8 +298,7 @@
                                         placeholder="Ex: Chariot Elévateur A1..."
                                         value="{{ form.name.value|default:'' }}" required>
                                     {% if form.name.errors %}
-                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.name.errors
-                                        %}{{ error }}{% endfor %}</div>
+                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
                                     {% endif %}
                                 </div>
                                 <!-- Type -->
@@ -311,15 +310,13 @@
                                     <select name="type_equipement" id="id_type_equipement"
                                         class="modern-input modern-select">
                                         {% for choice in form.type_equipement.field.choices %}
-                                        <option value="{{ choice.0 }}" {% if choice.0==form.type_equipement.value
-                                            %}selected{% endif %}>
+                                        <option value="{{ choice.0 }}" {% if choice.0==form.type_equipement.value %}selected{% endif %}>
                                             {{ choice.1 }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                     {% if form.type_equipement.errors %}
-                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in
-                                        form.type_equipement.errors %}{{ error }}{% endfor %}</div>
+                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.type_equipement.errors %}{{ error }}{% endfor %}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -339,15 +336,13 @@
                                     </label>
                                     <select name="site" id="id_site" class="modern-input modern-select">
                                         {% for choice in form.site.field.choices %}
-                                        <option value="{{ choice.0 }}" {% if choice.0==form.site.value %}selected{%
-                                            endif %}>
+                                        <option value="{{ choice.0 }}" {% if choice.0==form.site.value %}selected{% endif %}>
                                             {{ choice.1 }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                     {% if form.site.errors %}
-                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.site.errors
-                                        %}{{ error }}{% endfor %}</div>
+                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.site.errors %}{{ error }}{% endfor %}</div>
                                     {% endif %}
                                 </div>
                                 <!-- Serial -->
@@ -360,8 +355,7 @@
                                         placeholder="Ex: S/N 123456789..."
                                         value="{{ form.serial_number.value|default:'' }}">
                                     {% if form.serial_number.errors %}
-                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in
-                                        form.serial_number.errors %}{{ error }}{% endfor %}</div>
+                                    <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.serial_number.errors %}{{ error }}{% endfor %}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -380,8 +374,7 @@
                                 <textarea name="commentaire" id="id_commentaire" class="modern-input" rows="4"
                                     placeholder="Détails techniques, état, historique de maintenance...">{{ form.commentaire.value|default:'' }}</textarea>
                                 {% if form.commentaire.errors %}
-                                <div class="text-rose-500 text-xs font-bold mt-1">{% for error in
-                                    form.commentaire.errors %}{{ error }}{% endfor %}</div>
+                                <div class="text-rose-500 text-xs font-bold mt-1">{% for error in form.commentaire.errors %}{{ error }}{% endfor %}</div>
                                 {% endif %}
                             </div>
                         </div>

@@ -41,8 +41,7 @@
                     value="{{ form.name.value|default:'' }}" required>
             </div>
             {% if form.name.errors %}
-            <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{%
-                endfor %}</small>
+            <small class="text-danger font-weight-bold mt-1 d-block">{% for error in form.name.errors %}{{ error }}{% endfor %}</small>
             {% endif %}
             <p class="  mt-2 mb-0">Identifiez clairement ce processus pour les rapports d'audit.</p>
         </div>

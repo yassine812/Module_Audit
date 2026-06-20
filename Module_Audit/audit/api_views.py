@@ -1174,8 +1174,9 @@ class DashboardStatsAPIView(View):
                     date__lt=today_start
                 ).distinct().count()
                 
-                # Score average
-                score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
+                # Score average remains for results of audits assigned to the user
+                completed_results = ResultatAudit.objects.filter(audit__in=audits_assigned, en_cours=False)
+                score_moy = completed_results.aggregate(Avg('score_audit'))['score_audit__avg']
                 
                 # Notifications count logic matching context_processors.py
                 notif_count = audits_assigned.filter(resultataudit__isnull=True).count()
@@ -1185,7 +1186,7 @@ class DashboardStatsAPIView(View):
                     'en_cours': en_cours,
                     'termines': termines,
                     'en_retard': en_retard,
-                    'score_moy': round(float(score_moy), 1) if score_moy else "0.0",
+                    'score_moy': round(float(score_moy) * 100, 1) if score_moy is not None else "0.0",
                     'notifications_count': notif_count
                 }
                 
@@ -1214,7 +1215,7 @@ class NotificationsAPIView(View):
             late_audits = ListeAudit.objects.filter(
                 Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
                 date__lt=today_start
-            ).distinct().order_by('-date')[:10]
+            ).distinct().order_by('-date_creation')[:10]
             for p in late_audits:
                 formatted_date = p.date.strftime('%d/%m/%Y')
                 notifs.append({
@@ -1223,7 +1224,7 @@ class NotificationsAPIView(View):
                     'type': 'audit_late',
                     'target_id': p.id,
                     'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
-                    'date_sort': make_aware_if_naive(p.date)
+                    'date_sort': make_aware_if_naive(p.date_creation or p.date)
                 })
                 
             # 2. Started (in progress)
@@ -1258,7 +1259,7 @@ class NotificationsAPIView(View):
                 Q(affectation=user) | Q(participants=user),
                 Q(resultataudit__isnull=True) | Q(resultataudit__en_cours=True),
                 date__lt=today_start
-            ).distinct().order_by('-date')[:10]
+            ).distinct().order_by('-date_creation')[:10]
             for p in late_audits:
                 formatted_date = p.date.strftime('%d/%m/%Y')
                 notifs.append({
@@ -1267,7 +1268,7 @@ class NotificationsAPIView(View):
                     'type': 'audit_late',
                     'target_id': p.id,
                     'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
-                    'date_sort': make_aware_if_naive(p.date)
+                    'date_sort': make_aware_if_naive(p.date_creation or p.date)
                 })
                 
             # 2. Started (in progress)
@@ -1306,7 +1307,7 @@ class NotificationsAPIView(View):
                 Q(affectation=user) | Q(participants=user), 
                 resultataudit__isnull=True,
                 date__gte=today_start
-            ).distinct().order_by('-date')[:10]
+            ).distinct().order_by('-date_creation')[:10]
             for p in planifies:
                 notifs.append({
                     'id': f"plan-{p.id}",
@@ -1314,7 +1315,7 @@ class NotificationsAPIView(View):
                     'type': 'audit_planned',
                     'target_id': p.id,
                     'date': p.date.strftime('%Y-%m-%d %H:%M:%S') if p.date else None,
-                    'date_sort': make_aware_if_naive(p.date)
+                    'date_sort': make_aware_if_naive(p.date_creation or p.date)
                 })
                 
         # Sort all notifications from newest to oldest

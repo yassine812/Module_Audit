@@ -94,7 +94,7 @@ class FormulaireAudit(models.Model):
                 ordre += 1
 
 class ListeAudit(models.Model):
-    desc = models.CharField(max_length=50)
+    desc = models.CharField(max_length=255)
     status = models.BooleanField(default=False)
     number_audit = models.PositiveIntegerField(default=0, editable=False)
     date = models.DateTimeField(default=timezone.now)
@@ -178,7 +178,7 @@ class ResultatAudit(models.Model):
     users = models.CharField(max_length=50)
     date_audit = models.DateTimeField(auto_now_add=True)
     score_audit = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    sujet = models.CharField(max_length=50)
+    sujet = models.CharField(max_length=255)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
     niveau_attendu = models.JSONField(default=list, blank=True, null=True)
     auditeur = models.ForeignKey(User, on_delete=models.PROTECT, related_name='auditeur_resultat')

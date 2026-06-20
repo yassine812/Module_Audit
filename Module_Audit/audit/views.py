@@ -219,26 +219,28 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 date__lt=today_start
             ).distinct().count()
             
-            # Score average remains for results where user is the lead Auditor
-            score_moy = ResultatAudit.objects.filter(auditeur=user, en_cours=False).aggregate(Avg('score_audit'))['score_audit__avg']
+            # Score average remains for results of audits assigned to the user
+            completed_results = ResultatAudit.objects.filter(audit__in=audits_assigned, en_cours=False)
+            score_moy = completed_results.aggregate(Avg('score_audit'))['score_audit__avg']
             
             context['planifies_count'] = planifies
             context['en_cours_count'] = en_cours
             context['termines_count'] = termines
             context['en_retard_count'] = en_retard
-            context['score_moy'] = round(score_moy, 1) if score_moy else "0.0"
+            context['score_moy'] = round(float(score_moy) * 100, 1) if score_moy is not None else "0.0"
             
-            context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date')[:10]
+            context['recent_audits'] = audits_assigned.select_related('formulaire_audit', 'site').prefetch_related('affectation', 'participants').order_by('-date_creation')[:10]
             
             # All assigned audits for the calendar
             calendar_audits = []
             for audit in audits_assigned.select_related('site'):
                 status = audit.get_audit_status()
                 dot_type = 'ok' if status == 'termine' else ('overdue' if status == 'en_retard' else 'pending')
+                local_date = to_local_display_datetime(audit.date) if audit.date else None
                 calendar_audits.append({
                     'id': audit.id,
                     'desc': audit.desc,
-                    'date': audit.date.strftime('%Y-%m-%d') if audit.date else '',
+                    'date': local_date.strftime('%Y-%m-%d') if local_date else '',
                     'status': status,
                     'dot_type': dot_type,
                     'site': audit.site.name if audit.site else ''
@@ -247,7 +249,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             # DEBUG LOGGING TO FILE
             with open(os.path.join(settings.BASE_DIR, 'dashboard_debug.log'), 'a') as f:
-                f.write(f"--- DASHBOARD DEBUG ---\n")
+                f.write(f"--- DASHBOARD DEBUG ({timezone.now()}) ---\n")
                 f.write(f"User: {user.username} (ID: {user.id})\n")
                 f.write(f"Audits Assigned: {audits_assigned.count()}\n")
                 f.write(f"Planifies: {planifies}\n")
@@ -1398,6 +1400,10 @@ class FormulaireReorderView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin
 class StartAuditView(LoginRequiredMixin, View):
 
     @transaction.atomic
+    def get(self, request, pk):
+        return self.post(request, pk)
+
+    @transaction.atomic
     def post(self, request, pk):
 
         liste_audit = get_object_or_404(ListeAudit, pk=pk)
@@ -2268,6 +2274,23 @@ class ListeAuditListView(LoginRequiredMixin, AuditeurOrSuperuserRequiredMixin, L
     template_name = "audit/listeaudit/liste_audit_list.html"
     context_object_name = "audits"
     paginate_by = 8
+
+    def get(self, request, *args, **kwargs):
+        highlight_id = request.GET.get('highlight')
+        if highlight_id and not request.GET.get('page') and not self.kwargs.get('page'):
+            try:
+                highlight_id = int(highlight_id)
+                queryset = self.get_queryset()
+                audit_ids = list(queryset.values_list('id', flat=True))
+                if highlight_id in audit_ids:
+                    idx = audit_ids.index(highlight_id)
+                    page_size = self.get_paginate_by(queryset)
+                    if page_size:
+                        page_num = (idx // page_size) + 1
+                        self.kwargs['page'] = page_num
+            except Exception as e:
+                pass
+        return super().get(request, *args, **kwargs)
 
     def get_paginate_by(self, queryset):
         user_agent = self.request.META.get('HTTP_USER_AGENT', '').lower()
@@ -3327,6 +3350,36 @@ def serve_pdf(request, path):
     response = static_serve(request, path, document_root=settings.MEDIA_ROOT)
     response["X-Frame-Options"] = "ALLOWALL"
     return response
+
+
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def dismiss_notification(request, notif_id):
+    dismissed = request.session.get('dismissed_notifications', [])
+    if notif_id not in dismissed:
+        dismissed = list(dismissed)
+        dismissed.append(notif_id)
+        request.session['dismissed_notifications'] = dismissed
+    return JsonResponse({'status': 'success'})
+
+@login_required
+@require_POST
+def clear_all_notifications(request):
+    from .context_processors import notifications as get_notifications
+    notifs_context = get_notifications(request)
+    notifs = notifs_context.get('notifications', [])
+    dismissed = request.session.get('dismissed_notifications', [])
+    dismissed = list(dismissed)
+    for n in notifs:
+        notif_id = n.get('id')
+        if notif_id and notif_id not in dismissed:
+            dismissed.append(notif_id)
+    request.session['dismissed_notifications'] = dismissed
+    return JsonResponse({'status': 'success'})
+
 
 
 
